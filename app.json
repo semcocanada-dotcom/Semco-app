@@ -56,8 +56,8 @@
       "typedRoutes": true
     },
     "extra": {
-      "supabaseUrl": "",
-      "supabaseAnonKey": "",
+      "supabaseUrl": "https://wowlxyxaltgxbbsbcxao.supabase.co",
+      "supabaseAnonKey": "sb_publishable_X9eDFGcf0Vn27-yct5E0dQ_4u-HgtN9",
       "router": {
         "origin": false
       },
