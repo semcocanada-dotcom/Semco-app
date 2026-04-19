@@ -52,6 +52,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="appointments"
+        options={{
+          title: 'Calendar',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="providers"
         options={{
           title: 'Providers',
@@ -59,10 +66,17 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+        }}
+      />
+      {/* Reports is navigable from Profile but not in the tab bar */}
+      <Tabs.Screen
         name="reports"
         options={{
-          title: 'Reports',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" focused={focused} />,
+          href: null,
         }}
       />
     </Tabs>

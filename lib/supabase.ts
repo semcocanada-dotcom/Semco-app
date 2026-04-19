@@ -2,12 +2,12 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
-import type { Database } from './types';
 
 const supabaseUrl: string = Constants.expoConfig?.extra?.supabaseUrl ?? '';
 const supabaseAnonKey: string = Constants.expoConfig?.extra?.supabaseAnonKey ?? '';
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Untyped client — all query results are explicitly cast at call sites
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,

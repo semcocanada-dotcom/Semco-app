@@ -140,41 +140,51 @@ export interface Database {
         Row: Profile;
         Insert: Omit<Profile, 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>;
+        Relationships: [];
       };
       children: {
         Row: Child;
         Insert: Omit<Child, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Child, 'id' | 'parent_id' | 'created_at' | 'updated_at'>>;
+        Relationships: [];
       };
       funding_years: {
         Row: FundingYear;
         Insert: Omit<FundingYear, 'id' | 'created_at'>;
         Update: Partial<Omit<FundingYear, 'id' | 'child_id' | 'created_at'>>;
+        Relationships: [];
       };
       providers: {
         Row: Provider;
         Insert: Omit<Provider, 'id' | 'created_at'>;
         Update: Partial<Omit<Provider, 'id' | 'created_at'>>;
+        Relationships: [];
       };
       expenses: {
         Row: Expense;
         Insert: Omit<Expense, 'id' | 'created_at' | 'updated_at' | 'providers'>;
         Update: Partial<Omit<Expense, 'id' | 'child_id' | 'funding_year_id' | 'logged_by' | 'created_at' | 'updated_at' | 'providers'>>;
+        Relationships: [];
       };
       mileage_logs: {
         Row: MileageLog;
         Insert: Omit<MileageLog, 'id' | 'reimbursement_amount' | 'created_at'>;
         Update: Partial<Omit<MileageLog, 'id' | 'child_id' | 'funding_year_id' | 'reimbursement_amount' | 'created_at'>>;
+        Relationships: [];
       };
       appointments: {
         Row: Appointment;
         Insert: Omit<Appointment, 'id' | 'created_at' | 'updated_at' | 'providers'>;
         Update: Partial<Omit<Appointment, 'id' | 'child_id' | 'created_at' | 'updated_at' | 'providers'>>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
     Enums: {
       provider_category: ProviderCategory;
       expense_status: ExpenseStatus;
     };
+    CompositeTypes: Record<string, never>;
   };
 }

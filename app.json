@@ -50,6 +50,12 @@
         {
           "calendarPermission": "Allow Semco to add appointments to your calendar."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "iosDisplayInForeground": true
+        }
       ]
     ],
     "experiments": {

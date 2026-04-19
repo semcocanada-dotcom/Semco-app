@@ -628,6 +628,297 @@ function QuickAddModal({
   );
 }
 
+// ─── ExpenseDetailModal ───────────────────────────────────────────────────────
+
+function ExpenseDetailModal({
+  expense, visible, onClose, onUpdated,
+}: {
+  expense: Expense | null; visible: boolean;
+  onClose: () => void; onUpdated: () => void;
+}) {
+  const [refNum,   setRefNum]   = useState('');
+  const [saving,   setSaving]   = useState(false);
+
+  useEffect(() => { if (visible) setRefNum(''); }, [visible]);
+
+  if (!expense) return null;
+
+  async function updateStatus(status: ExpenseStatus) {
+    setSaving(true);
+    const update: any = { status };
+    if (status === 'submitted' && refNum.trim()) update.description = refNum.trim();
+    await supabase.from('expenses').update(update).eq('id', expense!.id);
+    setSaving(false);
+    onUpdated(); onClose();
+  }
+
+  async function deleteExpense() {
+    Alert.alert('Delete expense?', CAD(expense!.amount), [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive',
+        onPress: async () => {
+          await supabase.from('expenses').delete().eq('id', expense!.id);
+          onUpdated(); onClose();
+        },
+      },
+    ]);
+  }
+
+  const st   = STATUS_STYLE[expense.status];
+  const prov = (expense as any).providers;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+        <View style={s.mHeader}>
+          <Text style={s.mTitle}>Expense Detail</Text>
+          <TouchableOpacity onPress={onClose} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 16, color: Colors.purple, fontWeight: '500' }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView contentContainerStyle={s.mBody}>
+          {/* Summary */}
+          <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+            <Text style={{ fontSize: 44, fontWeight: '800', color: Colors.textPrimary }}>{CAD(expense.amount)}</Text>
+            <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 4 }}>
+              {prov?.name ?? catLabel(expense.category)} · {format(parseISO(expense.expense_date), 'MMM d, yyyy')}
+            </Text>
+            <View style={[s.statusPill, { backgroundColor: st.bg, marginTop: 10, paddingHorizontal: 14, paddingVertical: 6 }]}>
+              <Text style={[s.statusText, { color: st.text, fontSize: 13 }]}>{st.label}</Text>
+            </View>
+          </View>
+
+          {expense.description && (
+            <View style={s.detailRow}>
+              <Text style={s.detailLabel}>Notes</Text>
+              <Text style={s.detailValue}>{expense.description}</Text>
+            </View>
+          )}
+
+          {/* Status actions */}
+          <Text style={[s.fieldLabel, { marginTop: 20 }]}>Update Status</Text>
+
+          {expense.status === 'pending' && (
+            <>
+              <TextInput
+                style={[s.textField, { marginBottom: 10 }]}
+                value={refNum}
+                onChangeText={setRefNum}
+                placeholder="Submission reference # (optional)"
+                placeholderTextColor={Colors.textMuted}
+              />
+              <TouchableOpacity onPress={() => updateStatus('submitted')} disabled={saving} activeOpacity={0.85}>
+                <LinearGradient colors={Colors.gradients.blue as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
+                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Mark as Submitted</Text>}
+                </LinearGradient>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {expense.status === 'submitted' && (
+            <View style={{ gap: 10 }}>
+              <TouchableOpacity onPress={() => updateStatus('approved')} disabled={saving} activeOpacity={0.85}>
+                <LinearGradient colors={['#34D399', '#10B981'] as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
+                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Mark as Approved ✓</Text>}
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => updateStatus('rejected')} disabled={saving} activeOpacity={0.85} style={[s.saveBtn, { backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECDD3' }]}>
+                <Text style={{ color: '#BE123C', fontWeight: '700', fontSize: 16 }}>Mark as Rejected</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {(expense.status === 'approved' || expense.status === 'rejected') && (
+            <TouchableOpacity onPress={() => updateStatus('pending')} disabled={saving} activeOpacity={0.85} style={[s.saveBtn, { backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border }]}>
+              <Text style={{ color: Colors.textSecondary, fontWeight: '600', fontSize: 15 }}>Reset to Pending</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity style={s.deleteRowBtn} onPress={deleteExpense}>
+            <Text style={s.deleteRowBtnText}>Delete Expense</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+// ─── MileageOnlyModal ─────────────────────────────────────────────────────────
+
+function MileageOnlyModal({
+  visible, onClose, childId, fundingYearId, onSaved,
+}: {
+  visible: boolean; onClose: () => void;
+  childId: string; fundingYearId: string; onSaved: () => void;
+}) {
+  const { profile } = useAuth();
+  const [date,            setDate]            = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [notes,           setNotes]           = useState('');
+  const [providerQuery,   setProviderQuery]   = useState('');
+  const [providerResults, setProviderResults] = useState<Provider[]>([]);
+  const [selectedProvider,setSelectedProvider]= useState<Provider | null>(null);
+  const [distanceKm,      setDistanceKm]      = useState('');
+  const [ratePerKm,       setRatePerKm]       = useState('');
+  const [isRoundTrip,     setIsRoundTrip]     = useState(false);
+  const [calcLoading,     setCalcLoading]     = useState(false);
+  const [isNorthern,      setIsNorthern]      = useState(false);
+  const [saving,          setSaving]          = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setDate(format(new Date(), 'yyyy-MM-dd')); setNotes('');
+      setProviderQuery(''); setSelectedProvider(null); setProviderResults([]);
+      setDistanceKm(''); setRatePerKm(''); setIsRoundTrip(false); setSaving(false);
+    }
+  }, [visible]);
+
+  const searchProviders = useCallback((q: string) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!q.trim()) { setProviderResults([]); return; }
+    searchTimer.current = setTimeout(async () => {
+      const { data } = await supabase.from('providers').select('id,name,category,city,address').ilike('name', `%${q}%`).limit(6);
+      setProviderResults((data ?? []) as Provider[]);
+    }, 250);
+  }, []);
+
+  async function onProviderSelect(p: Provider) {
+    setSelectedProvider(p); setProviderQuery(''); setProviderResults([]);
+    if (profile?.home_address) {
+      setCalcLoading(true);
+      try {
+        const proposal = await buildMileageProposal(profile.home_address, p);
+        if (proposal) {
+          setDistanceKm(String(proposal.distanceKm));
+          setRatePerKm(String(proposal.ratePerKm));
+          setIsNorthern(proposal.isNorthern);
+        }
+      } catch {} finally { setCalcLoading(false); }
+    }
+  }
+
+  async function handleSave() {
+    const km   = parseFloat(distanceKm);
+    const rate = parseFloat(ratePerKm);
+    if (!km || km <= 0) { Alert.alert('Distance required', 'Enter distance in km.'); return; }
+    if (!rate || rate <= 0) { Alert.alert('Rate required', 'Enter rate per km.'); return; }
+    setSaving(true);
+    try {
+      const totalKm = isRoundTrip ? km * 2 : km;
+      await supabase.from('mileage_logs').insert({
+        child_id:        childId,
+        funding_year_id: fundingYearId,
+        description:     notes.trim() || (selectedProvider ? `Trip to ${selectedProvider.name}` : 'Mileage'),
+        distance_km:     totalKm,
+        rate_per_km:     rate,
+        trip_date:       date,
+        is_round_trip:   isRoundTrip,
+      });
+      onSaved(); onClose();
+    } catch (err: any) {
+      Alert.alert('Save failed', err?.message ?? 'Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const km    = parseFloat(distanceKm) || 0;
+  const rate  = parseFloat(ratePerKm) || 0;
+  const total = (isRoundTrip ? km * 2 : km) * rate;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+        <View style={s.mHeader}>
+          <Text style={s.mTitle}>Log Mileage</Text>
+          <TouchableOpacity onPress={onClose} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 16, color: Colors.purple, fontWeight: '500' }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={s.mBody} keyboardShouldPersistTaps="handled">
+
+            <Text style={s.fieldLabel}>Provider (optional)</Text>
+            {selectedProvider ? (
+              <View style={s.selectedProv}>
+                <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
+                <TouchableOpacity onPress={() => { setSelectedProvider(null); setProviderQuery(''); setDistanceKm(''); setRatePerKm(''); }}>
+                  <Text style={{ color: Colors.textMuted, fontSize: 18 }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={s.searchBox}>
+                  <Text style={{ fontSize: 14 }}>🔍</Text>
+                  <TextInput style={s.searchInput} placeholder="Search providers…" placeholderTextColor={Colors.textMuted} value={providerQuery} onChangeText={q => { setProviderQuery(q); searchProviders(q); }} returnKeyType="search" autoCorrect={false} />
+                </View>
+                {providerResults.length > 0 && (
+                  <View style={s.dropdown}>
+                    {providerResults.map((p, i) => (
+                      <TouchableOpacity key={p.id} style={[s.dropItem, i < providerResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]} onPress={() => onProviderSelect(p)}>
+                        <Text style={s.dropName}>{p.name}</Text>
+                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.city}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+
+            {calcLoading && (
+              <View style={s.ocrBanner}><ActivityIndicator size="small" color={Colors.teal} /><Text style={s.ocrBannerText}>Calculating distance…</Text></View>
+            )}
+
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.fieldLabel}>Distance (km) *</Text>
+                <TextInput style={s.textField} value={distanceKm} onChangeText={setDistanceKm} placeholder="0.0" placeholderTextColor={Colors.textMuted} keyboardType="decimal-pad" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={s.fieldLabel}>Rate / km *</Text>
+                <TextInput style={s.textField} value={ratePerKm} onChangeText={setRatePerKm} placeholder="0.6410" placeholderTextColor={Colors.textMuted} keyboardType="decimal-pad" />
+              </View>
+            </View>
+            {isNorthern && <Text style={{ fontSize: 11, color: Colors.teal, marginTop: 4 }}>🌲 Northern rate applied (north of 54°N)</Text>}
+
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }} onPress={() => setIsRoundTrip(!isRoundTrip)} activeOpacity={0.7}>
+              <View style={[s.checkbox, isRoundTrip && s.checkboxOn]}>
+                {isRoundTrip && <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✓</Text>}
+              </View>
+              <Text style={{ fontSize: 14, color: Colors.textSecondary, fontWeight: '500' }}>Round trip (doubles distance)</Text>
+            </TouchableOpacity>
+
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.fieldLabel}>Date</Text>
+                <TextInput style={s.textField} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={s.fieldLabel}>Notes (optional)</Text>
+                <TextInput style={s.textField} value={notes} onChangeText={setNotes} placeholder="e.g. ABA session" placeholderTextColor={Colors.textMuted} returnKeyType="done" />
+              </View>
+            </View>
+
+            {total > 0 && (
+              <View style={s.mileageCard}>
+                <Text style={s.mileageAmount}>{CAD(total)}</Text>
+                <Text style={s.mileageSub}>{isRoundTrip ? km * 2 : km} km × ${rate.toFixed(4)}/km</Text>
+              </View>
+            )}
+
+            <TouchableOpacity style={{ marginTop: 24 }} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+              <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
+                {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>{total > 0 ? `Log Mileage · ${CAD(total)}` : 'Log Mileage'}</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 type FilterType = 'all' | ExpenseStatus;
@@ -643,10 +934,12 @@ const FILTERS: { value: FilterType; label: string }[] = [
 export default function ExpensesScreen() {
   const { activeChild }                         = useChild();
   const { summary, loading: bLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
-  const [expenses,  setExpenses]                = useState<Expense[]>([]);
-  const [loadingExp, setLoadingExp]             = useState(true);
-  const [filter,    setFilter]                  = useState<FilterType>('all');
-  const [showAdd,   setShowAdd]                 = useState(false);
+  const [expenses,     setExpenses]             = useState<Expense[]>([]);
+  const [loadingExp,   setLoadingExp]           = useState(true);
+  const [filter,       setFilter]               = useState<FilterType>('all');
+  const [showAdd,      setShowAdd]              = useState(false);
+  const [showMileage,  setShowMileage]          = useState(false);
+  const [detailExpense,setDetailExpense]        = useState<Expense | null>(null);
 
   const fetchExpenses = useCallback(async () => {
     if (!activeChild || !summary.fundingYear) { setExpenses([]); setLoadingExp(false); return; }
@@ -747,7 +1040,7 @@ export default function ExpensesScreen() {
             )}
           </View>
         )}
-        renderItem={({ item }) => <ExpenseRow expense={item} onPress={() => {}} />}
+        renderItem={({ item }) => <ExpenseRow expense={item} onPress={() => setDetailExpense(item)} />}
         ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border, marginLeft: 56 }} />}
         ListEmptyComponent={() =>
           loadingExp ? (
@@ -762,29 +1055,47 @@ export default function ExpensesScreen() {
         }
       />
 
-      {/* FAB — only shown when a funding year exists */}
+      {/* FABs — only shown when a funding year exists */}
       {summary.fundingYear && (
-        <TouchableOpacity style={s.fabWrap} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
-          <LinearGradient
-            colors={Colors.gradients.purple as unknown as string[]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={s.fab}
-          >
-            <Text style={s.fabPlus}>+</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        <View style={s.fabStack}>
+          <TouchableOpacity style={s.fabMileageWrap} onPress={() => setShowMileage(true)} activeOpacity={0.85}>
+            <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fabSmall}>
+              <Text style={{ fontSize: 18 }}>🚗</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity style={s.fabWrap} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
+            <LinearGradient colors={Colors.gradients.purple as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fab}>
+              <Text style={s.fabPlus}>+</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       )}
 
-      {/* Quick-add modal */}
       {summary.fundingYear && (
-        <QuickAddModal
-          visible={showAdd}
-          onClose={() => setShowAdd(false)}
-          childId={activeChild?.id ?? ''}
-          fundingYearId={summary.fundingYear.id}
-          onSaved={handleSaved}
-        />
+        <>
+          <QuickAddModal
+            visible={showAdd}
+            onClose={() => setShowAdd(false)}
+            childId={activeChild?.id ?? ''}
+            fundingYearId={summary.fundingYear.id}
+            onSaved={handleSaved}
+          />
+          <MileageOnlyModal
+            visible={showMileage}
+            onClose={() => setShowMileage(false)}
+            childId={activeChild?.id ?? ''}
+            fundingYearId={summary.fundingYear.id}
+            onSaved={handleSaved}
+          />
+        </>
       )}
+
+      <ExpenseDetailModal
+        expense={detailExpense}
+        visible={!!detailExpense}
+        onClose={() => setDetailExpense(null)}
+        onUpdated={handleSaved}
+      />
     </SafeAreaView>
   );
 }
@@ -832,14 +1143,24 @@ const s = StyleSheet.create({
   statusPill:{ marginTop: 3, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   statusText:{ fontSize: 10, fontWeight: '600' },
 
-  // FAB
-  fabWrap: {
-    position: 'absolute', bottom: 28, right: 20,
-    shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
-  },
-  fab:    { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
-  fabPlus:{ fontSize: 30, color: '#fff', fontWeight: '300', marginTop: -1 },
+  // FABs
+  fabStack:     { position: 'absolute', bottom: 28, right: 20, alignItems: 'center', gap: 12 },
+  fabWrap:      { shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
+  fabMileageWrap:{ shadowColor: Colors.teal, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
+  fab:          { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
+  fabSmall:     { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  fabPlus:      { fontSize: 30, color: '#fff', fontWeight: '300', marginTop: -1 },
+
+  // Expense detail
+  detailRow:      { backgroundColor: Colors.surfaceAlt, borderRadius: 12, padding: 12, marginTop: 10 },
+  detailLabel:    { fontSize: 11, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
+  detailValue:    { fontSize: 14, color: Colors.textPrimary, marginTop: 4 },
+  deleteRowBtn:   { marginTop: 20, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#FECDD3', alignItems: 'center' },
+  deleteRowBtnText:{ color: '#BE123C', fontWeight: '600', fontSize: 14 },
+
+  // Mileage-only
+  checkbox:    { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
+  checkboxOn:  { backgroundColor: Colors.purple, borderColor: Colors.purple },
 
   // Modal
   mHeader: {
