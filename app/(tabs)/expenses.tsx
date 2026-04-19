@@ -25,6 +25,8 @@ import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear } 
 import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
+import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD } from '@lib/mileageUtils';
+import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -191,7 +193,7 @@ function QuickAddModal({
   visible: boolean; onClose: () => void;
   childId: string; fundingYearId: string; onSaved: () => void;
 }) {
-  const { session } = useAuth();
+  const { session, profile, refetchProfile } = useAuth();
   const [amount,          setAmount]          = useState('');
   const [category,        setCategory]        = useState<ProviderCategory>('speech_language');
   const [description,     setDescription]     = useState('');
@@ -203,6 +205,14 @@ function QuickAddModal({
   const [providerResults, setProviderResults] = useState<Provider[]>([]);
   const [selectedProvider,setSelectedProvider]= useState<Provider | null>(null);
   const [saving,          setSaving]          = useState(false);
+  const [ocrLoading,      setOcrLoading]      = useState(false);
+  const [ocrBizName,      setOcrBizName]      = useState<string | null>(null);
+  const [providerMatches, setProviderMatches] = useState<ReceiptAnalysis['allMatches']>([]);
+  const [mileageProposal, setMileageProposal] = useState<MileageProposal | null>(null);
+  const [mileageLoading,  setMileageLoading]  = useState(false);
+  const [includeMileage,  setIncludeMileage]  = useState(false);
+  const [homeAddress,     setHomeAddress]     = useState(profile?.home_address ?? '');
+  const [savingHome,      setSavingHome]      = useState(false);
   const amountRef  = useRef<TextInput>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -211,6 +221,9 @@ function QuickAddModal({
       setAmount(''); setDescription(''); setDate(format(new Date(), 'yyyy-MM-dd'));
       setReceiptUri(null); setProviderQuery(''); setSelectedProvider(null);
       setProviderResults([]); setSaving(false);
+      setOcrLoading(false); setOcrBizName(null); setProviderMatches([]);
+      setMileageProposal(null); setMileageLoading(false); setIncludeMileage(false);
+      setHomeAddress(profile?.home_address ?? '');
       setTimeout(() => amountRef.current?.focus(), 350);
     }
   }, [visible]);
@@ -228,6 +241,39 @@ function QuickAddModal({
     }, 250);
   }, []);
 
+  async function tryMileage(provider: Provider) {
+    const addr = profile?.home_address;
+    if (!addr) return;
+    setMileageLoading(true);
+    try {
+      const proposal = await buildMileageProposal(addr, provider);
+      if (proposal) { setMileageProposal(proposal); setIncludeMileage(true); }
+    } catch { /* geocoding failed silently */ } finally {
+      setMileageLoading(false);
+    }
+  }
+
+  async function handleReceiptCaptured(uri: string, mime: string, name?: string) {
+    setReceiptUri(uri);
+    setReceiptMime(mime);
+    setReceiptName(name ?? `receipt_${Date.now()}.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`);
+    if (mime === 'application/pdf') return;
+    setOcrLoading(true);
+    try {
+      const analysis = await analyseReceipt(uri);
+      setOcrBizName(analysis.ocrResult.businessName ?? null);
+      setProviderMatches(analysis.allMatches);
+      const top = analysis.topMatch;
+      if (top && top.score >= AUTO_SELECT_THRESHOLD) {
+        setSelectedProvider(top.provider);
+        setCategory(top.provider.category);
+        await tryMileage(top.provider);
+      }
+    } catch { /* OCR failed silently */ } finally {
+      setOcrLoading(false);
+    }
+  }
+
   async function pickCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -235,8 +281,7 @@ function QuickAddModal({
     }
     const r = await ImagePicker.launchCameraAsync({ quality: 0.8, allowsEditing: false });
     if (!r.canceled && r.assets[0]) {
-      setReceiptUri(r.assets[0].uri); setReceiptMime('image/jpeg');
-      setReceiptName(`receipt_${Date.now()}.jpg`);
+      await handleReceiptCaptured(r.assets[0].uri, 'image/jpeg');
     }
   }
 
@@ -247,8 +292,7 @@ function QuickAddModal({
     }
     const r = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
     if (!r.canceled && r.assets[0]) {
-      setReceiptUri(r.assets[0].uri); setReceiptMime('image/jpeg');
-      setReceiptName(`receipt_${Date.now()}.jpg`);
+      await handleReceiptCaptured(r.assets[0].uri, 'image/jpeg');
     }
   }
 
@@ -260,8 +304,7 @@ function QuickAddModal({
       });
       if (!r.canceled && r.assets[0]) {
         const a = r.assets[0];
-        setReceiptUri(a.uri); setReceiptMime(a.mimeType ?? 'application/octet-stream');
-        setReceiptName(a.name ?? `receipt_${Date.now()}`);
+        await handleReceiptCaptured(a.uri, a.mimeType ?? 'application/octet-stream', a.name ?? undefined);
       }
     } catch {
       Alert.alert('Error', 'Could not open file picker.');
@@ -313,6 +356,18 @@ function QuickAddModal({
       if (receiptUri) {
         const url = await uploadReceipt(row.id);
         if (url) await supabase.from('expenses').update({ receipt_urls: [url] }).eq('id', row.id);
+      }
+
+      if (includeMileage && mileageProposal) {
+        await supabase.from('mileage_logs').insert({
+          child_id:        childId,
+          funding_year_id: fundingYearId,
+          description:     `Trip to ${mileageProposal.providerName}`,
+          distance_km:     mileageProposal.distanceKm,
+          rate_per_km:     mileageProposal.ratePerKm,
+          trip_date:       date,
+          is_round_trip:   false,
+        });
       }
 
       onSaved(); onClose();
@@ -391,6 +446,69 @@ function QuickAddModal({
                 <TouchableOpacity style={s.clearBtn} onPress={() => setReceiptUri(null)}>
                   <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>✕</Text>
                 </TouchableOpacity>
+              </View>
+            )}
+
+            {/* ── OCR status & mileage proposal ── */}
+            {(ocrLoading || mileageLoading) && (
+              <View style={s.ocrBanner}>
+                <ActivityIndicator size="small" color={Colors.purple} />
+                <Text style={s.ocrBannerText}>
+                  {ocrLoading ? 'Reading receipt…' : 'Calculating mileage…'}
+                </Text>
+              </View>
+            )}
+
+            {ocrBizName && !ocrLoading && (
+              <View style={s.ocrBanner}>
+                <Text style={s.ocrBannerText}>
+                  🔍 Found: <Text style={{ fontWeight: '700' }}>{ocrBizName}</Text>
+                </Text>
+              </View>
+            )}
+
+            {mileageProposal && !mileageLoading && (
+              <View style={s.mileageCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.mileageTitle}>🚗 Auto-Mileage</Text>
+                    <Text style={s.mileageSub}>
+                      {mileageProposal.distanceKm} km · {mileageProposal.isNorthern ? 'Northern' : 'Southern'} rate ${mileageProposal.ratePerKm.toFixed(4)}/km
+                    </Text>
+                    <Text style={s.mileageAmount}>{CAD(mileageProposal.amount)}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[s.mileageToggle, includeMileage && s.mileageToggleOn]}
+                    onPress={() => setIncludeMileage(!includeMileage)}
+                  >
+                    <Text style={{ color: includeMileage ? '#fff' : Colors.textMuted, fontSize: 12, fontWeight: '600' }}>
+                      {includeMileage ? 'Included ✓' : 'Include'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {!profile?.home_address && !mileageProposal && selectedProvider && !mileageLoading && (
+              <View style={s.homePrompt}>
+                <Text style={s.homePromptText}>📍 Add your home address to auto-calculate mileage</Text>
+                <TextInput
+                  style={[s.textField, { marginTop: 8 }]}
+                  placeholder="123 Main St, Saskatoon, SK"
+                  placeholderTextColor={Colors.textMuted}
+                  value={homeAddress}
+                  onChangeText={setHomeAddress}
+                  returnKeyType="done"
+                  onSubmitEditing={async () => {
+                    if (!homeAddress.trim() || !session) return;
+                    setSavingHome(true);
+                    await supabase.from('profiles').update({ home_address: homeAddress.trim() }).eq('id', session.user.id);
+                    await refetchProfile();
+                    setSavingHome(false);
+                    await tryMileage(selectedProvider);
+                  }}
+                />
+                {savingHome && <ActivityIndicator size="small" color={Colors.purple} style={{ marginTop: 6 }} />}
               </View>
             )}
 
@@ -776,4 +894,20 @@ const s = StyleSheet.create({
   // Save button
   saveBtn:    { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   saveBtnText:{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
+
+  // OCR banner
+  ocrBanner:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: Colors.surfaceAlt, borderRadius: 10, padding: 10 },
+  ocrBannerText: { fontSize: 13, color: Colors.textSecondary, flex: 1 },
+
+  // Mileage proposal card
+  mileageCard:     { marginTop: 10, backgroundColor: '#F0FDF4', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#86EFAC' },
+  mileageTitle:    { fontSize: 14, fontWeight: '700', color: '#15803D' },
+  mileageSub:      { fontSize: 12, color: '#166534', marginTop: 2 },
+  mileageAmount:   { fontSize: 18, fontWeight: '700', color: '#15803D', marginTop: 4 },
+  mileageToggle:   { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
+  mileageToggleOn: { backgroundColor: Colors.purple, borderColor: Colors.purple },
+
+  // Home address prompt
+  homePrompt:     { marginTop: 10, backgroundColor: '#FFFBEB', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FDE68A' },
+  homePromptText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
 });
