@@ -58,7 +58,7 @@
     "extra": {
       "supabaseUrl": "https://wowlxyxaltgxbbsbcxao.supabase.co",
       "supabaseAnonKey": "sb_publishable_X9eDFGcf0Vn27-yct5E0dQ_4u-HgtN9",
-      "googleVisionApiKey": "",
+      "googleVisionApiKey": "AIzaSyDS6Q-EWDE9aI8eI-Y4IwEsS9fpDBw5QOM",
       "router": {
         "origin": false
       },
