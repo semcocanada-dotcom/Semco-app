@@ -16,14 +16,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// Typed table accessors
 export const db = {
-  profiles: () => supabase.from('profiles'),
-  children: () => supabase.from('children'),
+  profiles:     () => supabase.from('profiles'),
+  children:     () => supabase.from('children'),
   fundingYears: () => supabase.from('funding_years'),
-  providers: () => supabase.from('providers'),
-  expenses: () => supabase.from('expenses'),
-  mileageLogs: () => supabase.from('mileage_logs'),
+  providers:    () => supabase.from('providers'),
+  expenses:     () => supabase.from('expenses'),
+  mileageLogs:  () => supabase.from('mileage_logs'),
   appointments: () => supabase.from('appointments'),
 };
 
