@@ -92,4 +92,24 @@ INSERT INTO providers (name, category, phone, email, website, address, city, pro
 -- ============================================================
 ('Saskatchewan Assistive Devices Program', 'assistive_technology', '306-787-7121', NULL, 'saskatchewan.ca', NULL, 'Regina', 'SK', true, NULL),
 ('Neil Squire Society — SK', 'assistive_technology', '306-955-4600', 'sk@neilsquire.ca', 'neilsquire.ca', '2301 Avenue C N', 'Saskatoon', 'SK', true, NULL),
-('CanAssist AT Solutions', 'assistive_technology', '306-585-0022', NULL, NULL, NULL, 'Regina', 'SK', true, NULL);
+('CanAssist AT Solutions', 'assistive_technology', '306-585-0022', NULL, NULL, NULL, 'Regina', 'SK', true, NULL),
+
+-- ============================================================
+-- Additional providers (web research — pending registry verification)
+-- NOTE: Email autismregistry@health.gov.sk.ca to request the full
+-- 400+ provider export from the Ministry of Health (1-800-667-7766)
+-- ============================================================
+
+-- ABA / IBI
+('Saskatoon Autism Treatment Center', 'aba_ibi', '639-916-0934', NULL, 'saskautismcenter.com', '2103 Airport Dr Unit 100', 'Saskatoon', 'SK', true, NULL),
+('Saskatchewan Behaviour Consulting', 'aba_ibi', NULL, NULL, 'saskbehaviourconsulting.com', NULL, 'Saskatoon', 'SK', true, NULL),
+('Behaviour Specialists Saskatoon', 'aba_ibi', NULL, NULL, 'behaviourspecialistsaskatoon.ca', NULL, 'Saskatoon', 'SK', true, NULL),
+('Autism Services of Saskatoon', 'aba_ibi', '306-665-7013', 'admin@autismservices.ca', 'autismservices.ca', '209 Fairmont Dr', 'Saskatoon', 'SK', true, NULL),
+
+-- Psychology
+('Hunt Psychological Services', 'psychology', NULL, NULL, 'huntpsychologicalservices.com', NULL, 'Saskatoon', 'SK', true, NULL),
+('Moose Jaw Psychology Services', 'psychology', NULL, NULL, 'moosejawpsychology.ca', NULL, 'Moose Jaw', 'SK', true, NULL),
+('Alvin Buckwold Child Development Program', 'psychology', '306-655-1070', NULL, NULL, '1319 Colony St', 'Saskatoon', 'SK', true, NULL),
+
+-- Other
+('Autism Resource Centre', 'other', '306-569-0858', NULL, 'autismresourcecentre.com', '199 N Leonard St', 'Regina', 'SK', true, NULL);
