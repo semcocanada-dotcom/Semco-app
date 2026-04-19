@@ -1,20 +1,779 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
+import { supabase } from '@lib/supabase';
+import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear } from '@lib/types';
+import { useChild } from '@context/ChildContext';
+import { useBudget } from '@hooks/useBudget';
+import { useAuth } from '@context/AuthContext';
 
-export default function ExpensesScreen() {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const CAD = (n: number) =>
+  new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
+
+const CATEGORY_CONFIG: { value: ProviderCategory; label: string; emoji: string }[] = [
+  { value: 'aba_ibi',              label: 'ABA / IBI',     emoji: '🧩' },
+  { value: 'speech_language',      label: 'Speech',        emoji: '🗣️' },
+  { value: 'occupational_therapy', label: 'OT',            emoji: '✋' },
+  { value: 'physical_therapy',     label: 'PT',            emoji: '🏃' },
+  { value: 'psychology',           label: 'Psychology',    emoji: '🧠' },
+  { value: 'respite',              label: 'Respite',       emoji: '🏠' },
+  { value: 'swimming',             label: 'Swimming',      emoji: '🏊' },
+  { value: 'social_skills',        label: 'Social Skills', emoji: '👫' },
+  { value: 'music_therapy',        label: 'Music',         emoji: '🎵' },
+  { value: 'art_therapy',          label: 'Art',           emoji: '🎨' },
+  { value: 'assistive_technology', label: 'Assistive Tech',emoji: '📱' },
+  { value: 'other',                label: 'Other',         emoji: '📋' },
+];
+
+const STATUS_STYLE: Record<ExpenseStatus, { bg: string; text: string; label: string }> = {
+  pending:   { bg: '#FFF7ED', text: '#C2410C', label: 'Pending'   },
+  submitted: { bg: '#EFF6FF', text: '#1D4ED8', label: 'Submitted' },
+  approved:  { bg: '#F0FDF4', text: '#15803D', label: 'Approved'  },
+  rejected:  { bg: '#FFF1F2', text: '#BE123C', label: 'Rejected'  },
+};
+
+const catEmoji = (cat: ProviderCategory) =>
+  CATEGORY_CONFIG.find(c => c.value === cat)?.emoji ?? '📋';
+const catLabel = (cat: ProviderCategory) =>
+  CATEGORY_CONFIG.find(c => c.value === cat)?.label ?? cat;
+
+// ─── BudgetBar ────────────────────────────────────────────────────────────────
+
+function BudgetBar({
+  totalBudget, totalSpent, totalPending, totalMileage, remaining, fundingYear,
+}: {
+  totalBudget: number; totalSpent: number; totalPending: number;
+  totalMileage: number; remaining: number; fundingYear: FundingYear;
+}) {
+  const spentPct   = Math.min((totalSpent   / totalBudget) * 100, 100);
+  const pendingPct = Math.min((totalPending / totalBudget) * 100, 100 - spentPct);
+  const milagePct  = Math.min((totalMileage / totalBudget) * 100, 100 - spentPct - pendingPct);
+  const usedTotal  = totalSpent + totalPending + totalMileage;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-        <Text style={{ fontSize: 48, marginBottom: 16 }}>🧾</Text>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center' }}>
-          Expenses
-        </Text>
-        <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginTop: 8 }}>
-          Track and manage grant expenses with receipt capture. Coming soon.
+    <View style={s.budgetCard}>
+      <View style={s.budgetTop}>
+        <View>
+          <Text style={s.budgetBig}>{CAD(usedTotal)}</Text>
+          <Text style={s.budgetSub}>used of {CAD(totalBudget)}</Text>
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Text style={[s.budgetBig, { color: remaining > 0 ? Colors.green : Colors.purple }]}>
+            {CAD(Math.max(remaining, 0))}
+          </Text>
+          <Text style={s.budgetSub}>remaining</Text>
+        </View>
+      </View>
+
+      <View style={s.track}>
+        <View style={[s.fill, { width: `${spentPct}%`, backgroundColor: Colors.purple }]} />
+        <View style={[s.fill, { width: `${pendingPct}%`, backgroundColor: Colors.amber }]} />
+        {milagePct > 0 && (
+          <View style={[s.fill, { width: `${milagePct}%`, backgroundColor: Colors.teal }]} />
+        )}
+      </View>
+
+      <View style={s.legend}>
+        <View style={s.legendItem}>
+          <View style={[s.dot, { backgroundColor: Colors.purple }]} />
+          <Text style={s.legendText}>Approved</Text>
+        </View>
+        <View style={s.legendItem}>
+          <View style={[s.dot, { backgroundColor: Colors.amber }]} />
+          <Text style={s.legendText}>Pending</Text>
+        </View>
+        {milagePct > 0 && (
+          <View style={s.legendItem}>
+            <View style={[s.dot, { backgroundColor: Colors.teal }]} />
+            <Text style={s.legendText}>Mileage</Text>
+          </View>
+        )}
+        <Text style={[s.legendText, { marginLeft: 'auto' }]}>
+          {fundingYear.label}
         </Text>
       </View>
+    </View>
+  );
+}
+
+// ─── PaceAlert ────────────────────────────────────────────────────────────────
+
+function PaceAlert({ remaining, daysRemaining }: { remaining: number; daysRemaining: number }) {
+  if (remaining <= 0) {
+    return (
+      <View style={[s.paceBox, { backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }]}>
+        <Text style={[s.paceText, { color: '#15803D' }]}>
+          🎉 Grant fully utilized — you're in an excellent position for next year's approval!
+        </Text>
+      </View>
+    );
+  }
+  if (daysRemaining <= 0) return null;
+
+  const weeksLeft    = daysRemaining / 7;
+  const weeklyNeeded = remaining / weeksLeft;
+
+  let bg = '#F0FDF4', border = '#86EFAC', color = '#15803D';
+  let msg = `On track · spend ~${CAD(weeklyNeeded)}/week to fully utilize your grant`;
+
+  if (weeklyNeeded > 400 || daysRemaining < 30) {
+    bg = '#FFF1F2'; border = '#FECDD3'; color = '#BE123C';
+    msg = `🚨 ${daysRemaining} days left — you need ${CAD(weeklyNeeded)}/week to reach $8,000`;
+  } else if (weeklyNeeded > 150 || daysRemaining < 90) {
+    bg = '#FFFBEB'; border = '#FDE68A'; color = '#92400E';
+    msg = `⚠️ ${daysRemaining} days left — aim for ${CAD(weeklyNeeded)}/week to fully utilize`;
+  } else {
+    msg = `✅ On track · aim for ~${CAD(weeklyNeeded)}/week to reach ${CAD(8000)}`;
+  }
+
+  return (
+    <View style={[s.paceBox, { backgroundColor: bg, borderColor: border }]}>
+      <Text style={[s.paceText, { color }]}>{msg}</Text>
+    </View>
+  );
+}
+
+// ─── ExpenseRow ───────────────────────────────────────────────────────────────
+
+function ExpenseRow({ expense, onPress }: { expense: Expense; onPress: () => void }) {
+  const st         = STATUS_STYLE[expense.status];
+  const hasReceipt = (expense.receipt_urls?.length ?? 0) > 0;
+  const name       = (expense as any).providers?.name ?? catLabel(expense.category);
+
+  return (
+    <TouchableOpacity style={s.expRow} onPress={onPress} activeOpacity={0.75}>
+      <View style={s.catBubble}>
+        <Text style={{ fontSize: 20 }}>{catEmoji(expense.category)}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={s.expName} numberOfLines={1}>{name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }}>
+          <Text style={s.expDate}>{format(parseISO(expense.expense_date), 'MMM d, yyyy')}</Text>
+          {hasReceipt && <Text style={{ fontSize: 11, color: Colors.teal }}>📎 receipt</Text>}
+        </View>
+      </View>
+      <View style={{ alignItems: 'flex-end' }}>
+        <Text style={s.expAmount}>{CAD(expense.amount)}</Text>
+        <View style={[s.statusPill, { backgroundColor: st.bg }]}>
+          <Text style={[s.statusText, { color: st.text }]}>{st.label}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── QuickAddModal ────────────────────────────────────────────────────────────
+
+function QuickAddModal({
+  visible, onClose, childId, fundingYearId, onSaved,
+}: {
+  visible: boolean; onClose: () => void;
+  childId: string; fundingYearId: string; onSaved: () => void;
+}) {
+  const { session } = useAuth();
+  const [amount,          setAmount]          = useState('');
+  const [category,        setCategory]        = useState<ProviderCategory>('speech_language');
+  const [description,     setDescription]     = useState('');
+  const [date,            setDate]            = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [receiptUri,      setReceiptUri]      = useState<string | null>(null);
+  const [receiptMime,     setReceiptMime]     = useState('image/jpeg');
+  const [receiptName,     setReceiptName]     = useState('receipt.jpg');
+  const [providerQuery,   setProviderQuery]   = useState('');
+  const [providerResults, setProviderResults] = useState<Provider[]>([]);
+  const [selectedProvider,setSelectedProvider]= useState<Provider | null>(null);
+  const [saving,          setSaving]          = useState(false);
+  const amountRef  = useRef<TextInput>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      setAmount(''); setDescription(''); setDate(format(new Date(), 'yyyy-MM-dd'));
+      setReceiptUri(null); setProviderQuery(''); setSelectedProvider(null);
+      setProviderResults([]); setSaving(false);
+      setTimeout(() => amountRef.current?.focus(), 350);
+    }
+  }, [visible]);
+
+  const searchProviders = useCallback((q: string) => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!q.trim()) { setProviderResults([]); return; }
+    searchTimer.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from('providers')
+        .select('id, name, category, city')
+        .ilike('name', `%${q}%`)
+        .limit(6);
+      setProviderResults((data ?? []) as Provider[]);
+    }, 250);
+  }, []);
+
+  async function pickCamera() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Camera access needed', 'Allow camera access in Settings.'); return;
+    }
+    const r = await ImagePicker.launchCameraAsync({ quality: 0.8, allowsEditing: false });
+    if (!r.canceled && r.assets[0]) {
+      setReceiptUri(r.assets[0].uri); setReceiptMime('image/jpeg');
+      setReceiptName(`receipt_${Date.now()}.jpg`);
+    }
+  }
+
+  async function pickGallery() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Gallery access needed', 'Allow photo access in Settings.'); return;
+    }
+    const r = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
+    if (!r.canceled && r.assets[0]) {
+      setReceiptUri(r.assets[0].uri); setReceiptMime('image/jpeg');
+      setReceiptName(`receipt_${Date.now()}.jpg`);
+    }
+  }
+
+  async function pickFile() {
+    try {
+      const r = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+      if (!r.canceled && r.assets[0]) {
+        const a = r.assets[0];
+        setReceiptUri(a.uri); setReceiptMime(a.mimeType ?? 'application/octet-stream');
+        setReceiptName(a.name ?? `receipt_${Date.now()}`);
+      }
+    } catch {
+      Alert.alert('Error', 'Could not open file picker.');
+    }
+  }
+
+  async function uploadReceipt(expenseId: string): Promise<string | null> {
+    if (!receiptUri || !session) return null;
+    try {
+      const resp = await fetch(receiptUri);
+      const blob = await resp.blob();
+      const path = `${session.user.id}/${childId}/${expenseId}/${receiptName}`;
+      const { data, error } = await supabase.storage
+        .from('receipts').upload(path, blob, { contentType: receiptMime, upsert: true });
+      if (error || !data) return null;
+      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(data.path);
+      return urlData.publicUrl ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleSave() {
+    const parsed = parseFloat(amount.replace(/[^0-9.]/g, ''));
+    if (!parsed || parsed <= 0) {
+      Alert.alert('Amount required', 'Enter the expense amount.'); return;
+    }
+    if (!session) return;
+    setSaving(true);
+    try {
+      const { data: row, error } = await supabase
+        .from('expenses')
+        .insert({
+          child_id:        childId,
+          funding_year_id: fundingYearId,
+          provider_id:     selectedProvider?.id ?? null,
+          category,
+          amount:          parsed,
+          description:     description.trim() || null,
+          expense_date:    date,
+          status:          'pending' as ExpenseStatus,
+          receipt_urls:    [],
+          logged_by:       session.user.id,
+        })
+        .select('id').single();
+
+      if (error || !row) throw error;
+
+      if (receiptUri) {
+        const url = await uploadReceipt(row.id);
+        if (url) await supabase.from('expenses').update({ receipt_urls: [url] }).eq('id', row.id);
+      }
+
+      onSaved(); onClose();
+    } catch (err: any) {
+      Alert.alert('Save failed', err?.message ?? 'Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const parsedAmount = parseFloat(amount.replace(/[^0-9.]/g, '')) || 0;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+        {/* Header */}
+        <View style={s.mHeader}>
+          <Text style={s.mTitle}>Log Expense</Text>
+          <TouchableOpacity onPress={onClose} style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 16, color: Colors.purple, fontWeight: '500' }}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={s.mBody}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ── Amount (primary field, top of form) ── */}
+            <Text style={s.fieldLabel}>Amount *</Text>
+            <View style={s.amountRow}>
+              <Text style={s.amountSign}>$</Text>
+              <TextInput
+                ref={amountRef}
+                style={s.amountInput}
+                placeholder="0.00"
+                placeholderTextColor={Colors.textMuted}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
+
+            {/* ── Receipt capture ── */}
+            <Text style={[s.fieldLabel, { marginTop: 20 }]}>Receipt</Text>
+            <View style={s.receiptRow}>
+              <TouchableOpacity style={s.receiptBtn} onPress={pickCamera} activeOpacity={0.8}>
+                <Text style={s.receiptIcon}>📷</Text>
+                <Text style={s.receiptBtnLabel}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.receiptBtn} onPress={pickGallery} activeOpacity={0.8}>
+                <Text style={s.receiptIcon}>🖼️</Text>
+                <Text style={s.receiptBtnLabel}>Gallery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.receiptBtn} onPress={pickFile} activeOpacity={0.8}>
+                <Text style={s.receiptIcon}>📄</Text>
+                <Text style={s.receiptBtnLabel}>File / PDF</Text>
+              </TouchableOpacity>
+            </View>
+
+            {receiptUri && (
+              <View style={s.previewWrap}>
+                {receiptMime === 'application/pdf' ? (
+                  <View style={s.pdfPreview}>
+                    <Text style={{ fontSize: 28 }}>📄</Text>
+                    <Text style={s.pdfName} numberOfLines={1}>{receiptName}</Text>
+                  </View>
+                ) : (
+                  <Image source={{ uri: receiptUri }} style={s.previewImg} resizeMode="cover" />
+                )}
+                <TouchableOpacity style={s.clearBtn} onPress={() => setReceiptUri(null)}>
+                  <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* ── Category ── */}
+            <Text style={[s.fieldLabel, { marginTop: 20 }]}>Category *</Text>
+            <ScrollView
+              horizontal showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+              keyboardShouldPersistTaps="always"
+            >
+              {CATEGORY_CONFIG.map(cat => {
+                const active = category === cat.value;
+                return active ? (
+                  <LinearGradient
+                    key={cat.value}
+                    colors={Colors.gradients.purple as unknown as string[]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={s.catActive}
+                  >
+                    <TouchableOpacity onPress={() => setCategory(cat.value)} activeOpacity={0.9}>
+                      <Text style={s.catActiveText}>{cat.emoji} {cat.label}</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                ) : (
+                  <TouchableOpacity key={cat.value} style={s.cat} onPress={() => setCategory(cat.value)} activeOpacity={0.7}>
+                    <Text style={s.catText}>{cat.emoji} {cat.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* ── Provider (optional) ── */}
+            <Text style={[s.fieldLabel, { marginTop: 20 }]}>Provider (optional)</Text>
+            {selectedProvider ? (
+              <View style={s.selectedProv}>
+                <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
+                <TouchableOpacity onPress={() => { setSelectedProvider(null); setProviderQuery(''); }}>
+                  <Text style={{ color: Colors.textMuted, fontSize: 18 }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={s.searchBox}>
+                  <Text style={{ fontSize: 14 }}>🔍</Text>
+                  <TextInput
+                    style={s.searchInput}
+                    placeholder="Search providers…"
+                    placeholderTextColor={Colors.textMuted}
+                    value={providerQuery}
+                    onChangeText={q => { setProviderQuery(q); searchProviders(q); }}
+                    returnKeyType="search"
+                    autoCorrect={false}
+                  />
+                </View>
+                {providerResults.length > 0 && (
+                  <View style={s.dropdown}>
+                    {providerResults.map((p, i) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={[s.dropItem, i < providerResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]}
+                        onPress={() => { setSelectedProvider(p); setCategory(p.category); setProviderQuery(''); setProviderResults([]); }}
+                      >
+                        <Text style={s.dropName}>{p.name}</Text>
+                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.city}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+
+            {/* ── Date & Notes ── */}
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={s.fieldLabel}>Date</Text>
+                <TextInput
+                  style={s.textField}
+                  value={date}
+                  onChangeText={setDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={Colors.textMuted}
+                />
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={s.fieldLabel}>Notes (optional)</Text>
+                <TextInput
+                  style={s.textField}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="e.g. session 12"
+                  placeholderTextColor={Colors.textMuted}
+                  returnKeyType="done"
+                />
+              </View>
+            </View>
+
+            {/* ── Save ── */}
+            <TouchableOpacity style={{ marginTop: 28 }} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+              <LinearGradient
+                colors={Colors.gradients.purple as unknown as string[]}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={s.saveBtn}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={s.saveBtnText}>
+                    Log Expense{parsedAmount > 0 ? `  ·  ${CAD(parsedAmount)}` : ''}
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
+type FilterType = 'all' | ExpenseStatus;
+
+const FILTERS: { value: FilterType; label: string }[] = [
+  { value: 'all',       label: 'All'       },
+  { value: 'pending',   label: 'Pending'   },
+  { value: 'submitted', label: 'Submitted' },
+  { value: 'approved',  label: 'Approved'  },
+  { value: 'rejected',  label: 'Rejected'  },
+];
+
+export default function ExpensesScreen() {
+  const { activeChild }                         = useChild();
+  const { summary, loading: bLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
+  const [expenses,  setExpenses]                = useState<Expense[]>([]);
+  const [loadingExp, setLoadingExp]             = useState(true);
+  const [filter,    setFilter]                  = useState<FilterType>('all');
+  const [showAdd,   setShowAdd]                 = useState(false);
+
+  const fetchExpenses = useCallback(async () => {
+    if (!activeChild || !summary.fundingYear) { setExpenses([]); setLoadingExp(false); return; }
+    setLoadingExp(true);
+    const { data } = await supabase
+      .from('expenses')
+      .select('*, providers(name, category)')
+      .eq('child_id', activeChild.id)
+      .eq('funding_year_id', summary.fundingYear.id)
+      .order('expense_date', { ascending: false });
+    setExpenses((data ?? []) as Expense[]);
+    setLoadingExp(false);
+  }, [activeChild, summary.fundingYear]);
+
+  useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
+
+  const filtered = filter === 'all' ? expenses : expenses.filter(e => e.status === filter);
+
+  const handleSaved = useCallback(() => { refetchBudget(); fetchExpenses(); }, [refetchBudget, fetchExpenses]);
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+      <FlatList
+        data={filtered}
+        keyExtractor={item => item.id}
+        contentContainerStyle={s.listContent}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={() => (
+          <View style={{ gap: 10 }}>
+            {/* Page title */}
+            <View style={s.header}>
+              <Text style={s.headerTitle}>Expenses</Text>
+              {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+            </View>
+
+            {/* Budget bar */}
+            {!bLoading && summary.fundingYear && (
+              <BudgetBar
+                totalBudget={summary.totalBudget}
+                totalSpent={summary.totalSpent}
+                totalPending={summary.totalPending}
+                totalMileage={summary.totalMileage}
+                remaining={summary.remaining}
+                fundingYear={summary.fundingYear}
+              />
+            )}
+
+            {/* No funding year message */}
+            {!bLoading && !summary.fundingYear && (
+              <View style={[s.budgetCard, { alignItems: 'center', paddingVertical: 28 }]}>
+                <Text style={{ fontSize: 32, marginBottom: 8 }}>📅</Text>
+                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16 }}>
+                  No active funding year
+                </Text>
+                <Text style={{ color: Colors.textMuted, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
+                  Add a funding year for {activeChild?.name ?? 'this child'} to start logging expenses
+                </Text>
+              </View>
+            )}
+
+            {/* Pace / utilization alert */}
+            {!bLoading && summary.fundingYear && (
+              <PaceAlert remaining={summary.remaining} daysRemaining={summary.daysRemaining} />
+            )}
+
+            {/* Filter chips */}
+            <ScrollView
+              horizontal showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+              keyboardShouldPersistTaps="always"
+            >
+              {FILTERS.map(f => {
+                const active = filter === f.value;
+                return active ? (
+                  <LinearGradient
+                    key={f.value}
+                    colors={Colors.gradients.purple as unknown as string[]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={s.filterActive}
+                  >
+                    <TouchableOpacity onPress={() => setFilter(f.value)} activeOpacity={0.9}>
+                      <Text style={s.filterActiveText}>{f.label}</Text>
+                    </TouchableOpacity>
+                  </LinearGradient>
+                ) : (
+                  <TouchableOpacity key={f.value} style={s.filter} onPress={() => setFilter(f.value)} activeOpacity={0.7}>
+                    <Text style={s.filterText}>{f.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {!loadingExp && (
+              <Text style={s.countText}>
+                {filtered.length} expense{filtered.length !== 1 ? 's' : ''}
+                {filter !== 'all' ? ` · ${filter}` : ''}
+              </Text>
+            )}
+          </View>
+        )}
+        renderItem={({ item }) => <ExpenseRow expense={item} onPress={() => {}} />}
+        ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border, marginLeft: 56 }} />}
+        ListEmptyComponent={() =>
+          loadingExp ? (
+            <ActivityIndicator color={Colors.purple} style={{ marginTop: 40 }} />
+          ) : (
+            <View style={{ alignItems: 'center', paddingTop: 40, gap: 8 }}>
+              <Text style={{ fontSize: 40 }}>🧾</Text>
+              <Text style={{ fontWeight: '600', color: Colors.textPrimary, fontSize: 16 }}>No expenses yet</Text>
+              <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Tap + to log your first expense</Text>
+            </View>
+          )
+        }
+      />
+
+      {/* FAB — only shown when a funding year exists */}
+      {summary.fundingYear && (
+        <TouchableOpacity style={s.fabWrap} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
+          <LinearGradient
+            colors={Colors.gradients.purple as unknown as string[]}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={s.fab}
+          >
+            <Text style={s.fabPlus}>+</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+
+      {/* Quick-add modal */}
+      {summary.fundingYear && (
+        <QuickAddModal
+          visible={showAdd}
+          onClose={() => setShowAdd(false)}
+          childId={activeChild?.id ?? ''}
+          fundingYearId={summary.fundingYear.id}
+          onSaved={handleSaved}
+        />
+      )}
     </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  headerSub:   { fontSize: 14, color: Colors.textMuted },
+  listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
+
+  // Budget card
+  budgetCard: {
+    backgroundColor: Colors.surface, borderRadius: 18,
+    padding: 16, borderWidth: 1, borderColor: Colors.border, gap: 10,
+  },
+  budgetTop: { flexDirection: 'row', justifyContent: 'space-between' },
+  budgetBig: { fontSize: 22, fontWeight: '700', color: Colors.textPrimary },
+  budgetSub: { fontSize: 12, color: Colors.textMuted, marginTop: 1 },
+  track:     { height: 10, backgroundColor: Colors.border, borderRadius: 6, flexDirection: 'row', overflow: 'hidden' },
+  fill:      { height: '100%' },
+  legend:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  legendItem:{ flexDirection: 'row', alignItems: 'center', gap: 5 },
+  dot:       { width: 8, height: 8, borderRadius: 4 },
+  legendText:{ fontSize: 12, color: Colors.textSecondary },
+
+  // Pace alert
+  paceBox:  { borderRadius: 12, borderWidth: 1, padding: 12 },
+  paceText: { fontSize: 13, fontWeight: '500' },
+
+  // Filters
+  filter:          { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
+  filterText:      { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
+  filterActive:    { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  filterActiveText:{ fontSize: 13, color: '#fff', fontWeight: '600' },
+  countText:       { fontSize: 12, color: Colors.textMuted, paddingHorizontal: 2 },
+
+  // Expense row
+  expRow:    { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
+  catBubble: { width: 44, height: 44, borderRadius: 14, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
+  expName:   { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  expDate:   { fontSize: 12, color: Colors.textMuted },
+  expAmount: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  statusPill:{ marginTop: 3, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  statusText:{ fontSize: 10, fontWeight: '600' },
+
+  // FAB
+  fabWrap: {
+    position: 'absolute', bottom: 28, right: 20,
+    shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
+  },
+  fab:    { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
+  fabPlus:{ fontSize: 30, color: '#fff', fontWeight: '300', marginTop: -1 },
+
+  // Modal
+  mHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderColor: Colors.border,
+  },
+  mTitle: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
+  mBody:  { padding: 20, paddingBottom: 48 },
+
+  // Amount
+  amountRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.purple,
+    borderRadius: 14, paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 6, gap: 4,
+  },
+  amountSign: { fontSize: 28, color: Colors.textMuted, fontWeight: '300' },
+  amountInput:{ flex: 1, fontSize: 36, fontWeight: '700', color: Colors.textPrimary, padding: 0 },
+
+  // Receipt
+  receiptRow:    { flexDirection: 'row', gap: 10 },
+  receiptBtn:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: Colors.surfaceAlt, borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed', gap: 4 },
+  receiptIcon:   { fontSize: 24 },
+  receiptBtnLabel: { fontSize: 11, color: Colors.textSecondary, fontWeight: '500' },
+  previewWrap:   { marginTop: 10, borderRadius: 12, overflow: 'hidden', position: 'relative' },
+  previewImg:    { width: '100%', height: 180 },
+  pdfPreview:    { height: 72, backgroundColor: Colors.surfaceAlt, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },
+  pdfName:       { flex: 1, fontSize: 13, color: Colors.textSecondary },
+  clearBtn:      { position: 'absolute', top: 8, right: 8, width: 26, height: 26, borderRadius: 13, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+
+  // Category chips
+  cat:          { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
+  catText:      { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
+  catActive:    { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20 },
+  catActiveText:{ fontSize: 13, color: '#fff', fontWeight: '600' },
+
+  // Provider search
+  searchBox:    { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 10 : 4, gap: 8 },
+  searchInput:  { flex: 1, fontSize: 15, color: Colors.textPrimary },
+  dropdown:     { marginTop: 4, backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
+  dropItem:     { padding: 12 },
+  dropName:     { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
+  dropSub:      { fontSize: 12, color: Colors.textMuted, marginTop: 1 },
+  selectedProv: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.surfaceAlt, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: Colors.border },
+  selectedProvText: { fontSize: 15, fontWeight: '600', color: Colors.purple },
+
+  // Text field
+  fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 },
+  textField:  { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 12 : 8, fontSize: 15, color: Colors.textPrimary },
+
+  // Save button
+  saveBtn:    { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  saveBtnText:{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
+});
