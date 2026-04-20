@@ -103,7 +103,7 @@ function AddAppointmentModal({
   visible, onClose, childId, fundingYearId, onSaved,
 }: {
   visible: boolean; onClose: () => void;
-  childId: string; fundingYearId: string; onSaved: () => void;
+  childId: string; fundingYearId: string | null; onSaved: () => void;
 }) {
   const { profile } = useAuth();
   const [title,           setTitle]           = useState('');
@@ -208,8 +208,8 @@ function AddAppointmentModal({
       await requestNotificationPermission();
       await scheduleAppointmentReminder(row.id, title.trim(), scheduledAt);
 
-      // Log mileage if requested
-      if (addMileage && mileageKm && mileageRate) {
+      // Log mileage if requested and a funding year exists
+      if (addMileage && mileageKm && mileageRate && fundingYearId) {
         const km = isRoundTrip ? mileageKm * 2 : mileageKm;
         await supabase.from('mileage_logs').insert({
           child_id:        childId,
@@ -522,8 +522,8 @@ export default function AppointmentsScreen() {
         }
       />
 
-      {/* FAB */}
-      {summary.fundingYear && (
+      {/* FAB — always visible when a child is selected */}
+      {activeChild && (
         <TouchableOpacity style={s.fabWrap} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
           <LinearGradient
             colors={Colors.gradients.purple as unknown as string[]}
@@ -535,12 +535,12 @@ export default function AppointmentsScreen() {
         </TouchableOpacity>
       )}
 
-      {summary.fundingYear && (
+      {activeChild && (
         <AddAppointmentModal
           visible={showAdd}
           onClose={() => setShowAdd(false)}
-          childId={activeChild?.id ?? ''}
-          fundingYearId={summary.fundingYear.id}
+          childId={activeChild.id}
+          fundingYearId={summary.fundingYear?.id ?? null}
           onSaved={refetch}
         />
       )}

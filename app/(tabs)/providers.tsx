@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { Provider, ProviderCategory } from '@lib/types';
@@ -254,6 +255,21 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
               </View>
             </>
           )}
+
+          {/* Book Appointment */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => { onClose(); router.push('/(tabs)/appointments'); }}
+          >
+            <LinearGradient
+              colors={Colors.gradients.purple as unknown as string[]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.bookBtn}
+            >
+              <Text style={styles.bookBtnText}>📅  Book Appointment</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
           {/* SK Approved badge */}
           {provider.is_approved_sk && (
@@ -708,8 +724,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     marginHorizontal: 14,
   },
+  bookBtn: {
+    marginTop: 20,
+    borderRadius: 16,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  bookBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
   approvedBadge: {
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: '#ECFDF5',
     borderWidth: 1,
     borderColor: '#6EE7B7',

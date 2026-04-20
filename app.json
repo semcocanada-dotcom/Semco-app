@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Semco",
+    "name": "Autism Fund Tracker",
     "slug": "semco-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -41,14 +41,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Semco to access your photos to attach receipts.",
-          "cameraPermission": "Allow Semco to use your camera to capture receipts."
+          "photosPermission": "Allow Autism Fund Tracker to access your photos to attach receipts.",
+          "cameraPermission": "Allow Autism Fund Tracker to use your camera to capture receipts."
         }
       ],
       [
         "expo-calendar",
         {
-          "calendarPermission": "Allow Semco to add appointments to your calendar."
+          "calendarPermission": "Allow Autism Fund Tracker to add appointments to your calendar."
         }
       ],
       [
