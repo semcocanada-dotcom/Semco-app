@@ -39,6 +39,21 @@ function isoToDateDisplay(iso: string | null | undefined): string {
   return iso.replace(/-/g, '/');
 }
 
+// SK ASD-IF tiered amounts: <6 → $8,000 | 6–11 → $6,000 | 12+ → ineligible
+function calcASDIFAmount(dobISO: string | null, atISO?: string): number {
+  if (!dobISO) return 8000;
+  try {
+    const dob = parseISO(dobISO);
+    const ref = atISO ? parseISO(atISO) : new Date();
+    const age = differenceInYears(ref, dob);
+    if (age < 6) return 8000;
+    if (age < 12) return 6000;
+    return 0;
+  } catch {
+    return 8000;
+  }
+}
+
 // Returns eligibility info string from a YYYY/MM/DD display value
 function grantEligibilityText(dobDisplay: string): string | null {
   const iso = dateDisplayToISO(dobDisplay);
@@ -48,9 +63,11 @@ function grantEligibilityText(dobDisplay: string): string | null {
     if (!isValid(dob)) return null;
     const age = differenceInYears(new Date(), dob);
     if (age < 0 || age > 25) return null;
-    if (age < 2) return `${age} year${age !== 1 ? 's' : ''} old · IAF eligibility begins at age 2`;
-    if (age >= 18) return `${age} years old · IAF grant period has ended (program is for under 18)`;
-    return `${age} years old · Eligible for $8,000/year IAF grant`;
+    if (age < 2) return `${age} year${age !== 1 ? 's' : ''} old · ASD-IF eligibility requires an ASD diagnosis`;
+    if (age < 6) return `${age} years old · $8,000/year ASD-IF (under 6 tier)`;
+    if (age < 12) return `${age} years old · $6,000/year ASD-IF (ages 6–11 tier)`;
+    if (age < 18) return `${age} years old · ASD-IF childhood funding ends at age 12 — check Saskatchewan.ca for other programs`;
+    return `${age} years old · ASD-IF program is for children under 12`;
   } catch {
     return null;
   }
@@ -83,6 +100,15 @@ function ChildModal({
   const [fyBudget, setFyBudget] = useState('8000');
   const [fyActive, setFyActive] = useState(true);
   const [savingFY, setSavingFY] = useState(false);
+
+  // Auto-recalculate suggested budget when start date changes
+  useEffect(() => {
+    if (!child?.date_of_birth || !fyStart) return;
+    const startISO = dateDisplayToISO(fyStart);
+    if (!startISO) return;
+    const suggested = calcASDIFAmount(child.date_of_birth, startISO);
+    setFyBudget(String(suggested));
+  }, [fyStart, child?.date_of_birth]);
 
   useEffect(() => {
     if (!visible) return;
@@ -289,8 +315,9 @@ function ChildModal({
                         <TextInput style={s.textField} value={fyEnd} onChangeText={v => setFyEnd(autoFormatDate(v))} placeholder="YYYY/MM/DD" placeholderTextColor={Colors.textMuted} keyboardType="number-pad" maxLength={10} />
                       </View>
                     </View>
-                    <Text style={[s.fieldLabel, { marginTop: 10 }]}>Budget</Text>
+                    <Text style={[s.fieldLabel, { marginTop: 10 }]}>Grant Amount</Text>
                     <TextInput style={s.textField} value={fyBudget} onChangeText={setFyBudget} keyboardType="decimal-pad" placeholder="8000" placeholderTextColor={Colors.textMuted} />
+                    <Text style={s.fieldHint}>SK ASD-IF: $8,000/yr (under 6) · $6,000/yr (ages 6–11) · auto-set from child's age</Text>
                     <TouchableOpacity style={{ marginTop: 12 }} onPress={handleAddFundingYear} disabled={savingFY} activeOpacity={0.85}>
                       <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
                         {savingFY ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Create Funding Year</Text>}

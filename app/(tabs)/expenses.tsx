@@ -121,7 +121,7 @@ function BudgetBar({
 
 // ─── PaceAlert ────────────────────────────────────────────────────────────────
 
-function PaceAlert({ remaining, daysRemaining }: { remaining: number; daysRemaining: number }) {
+function PaceAlert({ remaining, daysRemaining, totalBudget }: { remaining: number; daysRemaining: number; totalBudget: number }) {
   if (remaining <= 0) {
     return (
       <View style={[s.paceBox, { backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }]}>
@@ -141,12 +141,12 @@ function PaceAlert({ remaining, daysRemaining }: { remaining: number; daysRemain
 
   if (weeklyNeeded > 400 || daysRemaining < 30) {
     bg = '#FFF1F2'; border = '#FECDD3'; color = '#BE123C';
-    msg = `🚨 ${daysRemaining} days left — you need ${CAD(weeklyNeeded)}/week to reach $8,000`;
+    msg = `🚨 ${daysRemaining} days left — you need ${CAD(weeklyNeeded)}/week to reach ${CAD(totalBudget)}`;
   } else if (weeklyNeeded > 150 || daysRemaining < 90) {
     bg = '#FFFBEB'; border = '#FDE68A'; color = '#92400E';
     msg = `⚠️ ${daysRemaining} days left — aim for ${CAD(weeklyNeeded)}/week to fully utilize`;
   } else {
-    msg = `✅ On track · aim for ~${CAD(weeklyNeeded)}/week to reach ${CAD(8000)}`;
+    msg = `✅ On track · aim for ~${CAD(weeklyNeeded)}/week to fully utilize your grant`;
   }
 
   return (
@@ -1009,7 +1009,7 @@ export default function ExpensesScreen() {
 
             {/* Pace / utilization alert */}
             {!bLoading && summary.fundingYear && (
-              <PaceAlert remaining={summary.remaining} daysRemaining={summary.daysRemaining} />
+              <PaceAlert remaining={summary.remaining} daysRemaining={summary.daysRemaining} totalBudget={summary.totalBudget} />
             )}
 
             {/* Filter chips */}
