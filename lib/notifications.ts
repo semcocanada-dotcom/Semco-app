@@ -16,7 +16,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
   if (status !== 'granted') return false;
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
-      name: 'Semco',
+      name: 'Autism Fund Tracker',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
     });
