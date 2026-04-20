@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
+import { Linking } from 'react-native';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '@context/AuthContext';
 import { ChildProvider } from '@context/ChildContext';
+import { supabase } from '@lib/supabase';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,6 +31,23 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    // Handle OAuth deep-link callback — extracts tokens from URL fragment
+    async function handleUrl({ url }: { url: string }) {
+      const fragment = url.split('#')[1] ?? url.split('?')[1] ?? '';
+      const params = Object.fromEntries(new URLSearchParams(fragment));
+      if (params.access_token && params.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: params.access_token,
+          refresh_token: params.refresh_token,
+        });
+      }
+    }
+    const sub = Linking.addEventListener('url', handleUrl);
+    Linking.getInitialURL().then(url => { if (url) handleUrl({ url }); });
+    return () => sub.remove();
+  }, []);
+
   return (
     <AuthProvider>
       <ChildProvider>

@@ -367,6 +367,7 @@ export default function ProfileScreen() {
   const [editName,        setEditName]        = useState(profile?.full_name ?? '');
   const [editAddress,     setEditAddress]     = useState(profile?.home_address ?? '');
   const [editCity,        setEditCity]        = useState(profile?.home_city ?? '');
+  const [editPostal,      setEditPostal]      = useState(profile?.home_postal_code ?? '');
   const [savingProfile,   setSavingProfile]   = useState(false);
   const [profileDirty,    setProfileDirty]    = useState(false);
   const [childModal,      setChildModal]      = useState<{ visible: boolean; child: Child | null }>({ visible: false, child: null });
@@ -375,15 +376,17 @@ export default function ProfileScreen() {
     setEditName(profile?.full_name ?? '');
     setEditAddress(profile?.home_address ?? '');
     setEditCity(profile?.home_city ?? '');
+    setEditPostal(profile?.home_postal_code ?? '');
   }, [profile]);
 
   async function saveProfile() {
     if (!session) return;
     setSavingProfile(true);
     await supabase.from('profiles').update({
-      full_name:    editName.trim() || null,
-      home_address: editAddress.trim() || null,
-      home_city:    editCity.trim() || null,
+      full_name:         editName.trim() || null,
+      home_address:      editAddress.trim() || null,
+      home_city:         editCity.trim() || null,
+      home_postal_code:  editPostal.trim().toUpperCase() || null,
     }).eq('id', session.user.id);
     await refetchProfile();
     setSavingProfile(false);
@@ -439,15 +442,32 @@ export default function ProfileScreen() {
           />
           <Text style={s.fieldHint}>Used for mileage calculations</Text>
 
-          <Text style={[s.fieldLabel, { marginTop: 14 }]}>Home City</Text>
-          <TextInput
-            style={s.textField}
-            value={editCity}
-            onChangeText={v => { setEditCity(v); setProfileDirty(true); }}
-            placeholder="Saskatoon"
-            placeholderTextColor={Colors.textMuted}
-            returnKeyType="done"
-          />
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
+            <View style={{ flex: 2 }}>
+              <Text style={s.fieldLabel}>Home City</Text>
+              <TextInput
+                style={s.textField}
+                value={editCity}
+                onChangeText={v => { setEditCity(v); setProfileDirty(true); }}
+                placeholder="Saskatoon"
+                placeholderTextColor={Colors.textMuted}
+                returnKeyType="next"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={s.fieldLabel}>Postal Code</Text>
+              <TextInput
+                style={s.textField}
+                value={editPostal}
+                onChangeText={v => { setEditPostal(v); setProfileDirty(true); }}
+                placeholder="S7K 1A1"
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="characters"
+                returnKeyType="done"
+                maxLength={7}
+              />
+            </View>
+          </View>
 
           {profileDirty && (
             <TouchableOpacity style={{ marginTop: 16 }} onPress={saveProfile} disabled={savingProfile} activeOpacity={0.85}>

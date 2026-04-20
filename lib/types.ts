@@ -28,6 +28,7 @@ export interface Profile {
   avatar_url: string | null;
   home_address: string | null;
   home_city: string | null;
+  home_postal_code: string | null;
   created_at: string;
   updated_at: string;
 }
