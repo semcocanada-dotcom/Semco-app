@@ -259,7 +259,10 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
           {/* Book Appointment */}
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => { onClose(); router.push('/(tabs)/appointments'); }}
+            onPress={() => {
+              onClose();
+              router.push({ pathname: '/(tabs)/appointments', params: { preselectId: provider.id } });
+            }}
           >
             <LinearGradient
               colors={Colors.gradients.purple as unknown as string[]}

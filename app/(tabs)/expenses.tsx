@@ -1191,9 +1191,9 @@ const s = StyleSheet.create({
 
   // Receipt
   receiptRow:    { flexDirection: 'row', gap: 10 },
-  receiptBtn:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, backgroundColor: Colors.surfaceAlt, borderWidth: 1.5, borderColor: Colors.border, borderStyle: 'dashed', gap: 4 },
-  receiptIcon:   { fontSize: 24 },
-  receiptBtnLabel: { fontSize: 11, color: Colors.textSecondary, fontWeight: '500' },
+  receiptBtn:    { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 18, borderRadius: 14, backgroundColor: Colors.surfaceAlt, borderWidth: 1.5, borderColor: Colors.border, gap: 6 },
+  receiptIcon:   { fontSize: 26 },
+  receiptBtnLabel: { fontSize: 12, color: Colors.purple, fontWeight: '600' },
   previewWrap:   { marginTop: 10, borderRadius: 12, overflow: 'hidden', position: 'relative' },
   previewImg:    { width: '100%', height: 180 },
   pdfPreview:    { height: 72, backgroundColor: Colors.surfaceAlt, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16 },

@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as CalendarAPI from 'expo-calendar';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO, isFuture, isPast } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
@@ -100,10 +101,11 @@ function AppointmentCard({
 // ─── AddAppointmentModal ──────────────────────────────────────────────────────
 
 function AddAppointmentModal({
-  visible, onClose, childId, fundingYearId, onSaved,
+  visible, onClose, childId, fundingYearId, onSaved, initialProvider,
 }: {
   visible: boolean; onClose: () => void;
   childId: string; fundingYearId: string | null; onSaved: () => void;
+  initialProvider?: Provider | null;
 }) {
   const { profile } = useAuth();
   const [title,           setTitle]           = useState('');
@@ -125,12 +127,13 @@ function AddAppointmentModal({
 
   useEffect(() => {
     if (visible) {
-      setTitle(''); setDate(format(new Date(), 'yyyy-MM-dd')); setTime('09:00');
-      setNotes(''); setProviderQuery(''); setSelectedProvider(null);
+      setTitle(initialProvider?.name ?? '');
+      setDate(format(new Date(), 'yyyy-MM-dd')); setTime('09:00');
+      setNotes(''); setProviderQuery(''); setSelectedProvider(initialProvider ?? null);
       setProviderResults([]); setSyncCalendar(true); setAddMileage(false);
       setMileageKm(null); setMileageRate(null); setSaving(false); setIsRoundTrip(true);
     }
-  }, [visible]);
+  }, [visible, initialProvider]);
 
   const searchProviders = useCallback((q: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -433,6 +436,26 @@ export default function AppointmentsScreen() {
   const { appointments, loading, refetch }           = useAppointments(activeChild?.id ?? null);
   const [showAdd, setShowAdd]                        = useState(false);
   const [showPast, setShowPast]                      = useState(false);
+  const [preselectProvider, setPreselectProvider]    = useState<Provider | null>(null);
+  const { preselectId }                              = useLocalSearchParams<{ preselectId?: string }>();
+  const router                                       = useRouter();
+
+  useEffect(() => {
+    if (!preselectId || !activeChild) return;
+    supabase
+      .from('providers')
+      .select('*')
+      .eq('id', preselectId)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setPreselectProvider(data as Provider);
+          setShowAdd(true);
+        }
+      });
+    // Clear the param after handling so re-visiting the tab doesn't re-open
+    router.setParams({ preselectId: undefined });
+  }, [preselectId, activeChild]);
 
   const upcoming = appointments.filter(a => isFuture(parseISO(a.scheduled_at)));
   const past     = appointments.filter(a => isPast(parseISO(a.scheduled_at)));
@@ -538,10 +561,11 @@ export default function AppointmentsScreen() {
       {activeChild && (
         <AddAppointmentModal
           visible={showAdd}
-          onClose={() => setShowAdd(false)}
+          onClose={() => { setShowAdd(false); setPreselectProvider(null); }}
           childId={activeChild.id}
           fundingYearId={summary.fundingYear?.id ?? null}
           onSaved={refetch}
+          initialProvider={preselectProvider}
         />
       )}
     </SafeAreaView>

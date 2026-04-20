@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "semco",
+    "scheme": "autismfundtracker",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FAF8FF",
     "splash": {

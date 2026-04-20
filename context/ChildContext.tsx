@@ -4,7 +4,7 @@ import { db } from '@lib/supabase';
 import type { Child } from '@lib/types';
 import { useAuth } from './AuthContext';
 
-const ACTIVE_CHILD_KEY = 'semco:activeChildId';
+const ACTIVE_CHILD_KEY = 'aft:activeChildId';
 
 interface ChildContextValue {
   children: Child[];
