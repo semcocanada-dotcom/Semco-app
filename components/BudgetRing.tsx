@@ -82,16 +82,16 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
     >
       <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={SIZE} height={SIZE} style={{ position: 'absolute' }}>
-          {/* Full purple ring — represents total available budget */}
+          {/* Full purple ring — shows total budget, visible where unspent */}
           <Circle
             cx={SIZE / 2}
             cy={SIZE / 2}
             r={RADIUS}
-            stroke={Colors.ringTrack}
+            stroke={Colors.ringSpent}
             strokeWidth={STROKE}
             fill="none"
           />
-          {/* Amber pending arc — follows spent portion */}
+          {/* Amber pending arc — paints over purple, follows spent portion */}
           <AnimatedCircle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -105,12 +105,12 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
             rotation="-90"
             origin={`${SIZE / 2}, ${SIZE / 2}`}
           />
-          {/* Grey spent arc — from top, clockwise */}
+          {/* Grey spent arc — paints over purple from top clockwise as money is spent */}
           <AnimatedCircle
             cx={SIZE / 2}
             cy={SIZE / 2}
             r={RADIUS}
-            stroke={Colors.ringSpent}
+            stroke="#CBD5E1"
             strokeWidth={STROKE}
             fill="none"
             strokeLinecap="round"
@@ -142,8 +142,8 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
 
       {/* Legend */}
       <View style={{ flexDirection: 'row', gap: 20, marginTop: 16 }}>
-        <LegendDot color={Colors.ringTrack} label="Available" />
-        <LegendDot color={Colors.ringSpent} label="Spent" />
+        <LegendDot color={Colors.ringSpent} label="Remaining" />
+        <LegendDot color="#CBD5E1" label="Spent" />
         <LegendDot color={Colors.ringPending} label="Pending" />
       </View>
     </View>
