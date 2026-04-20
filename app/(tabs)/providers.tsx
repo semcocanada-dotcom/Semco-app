@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   },
   catScroll: {
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingVertical: 6,
     gap: 8,
     flexDirection: 'row',
   },
@@ -531,11 +531,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   listContent: {
-    paddingHorizontal: 16,
     paddingBottom: 32,
     gap: 10,
   },
   card: {
+    marginHorizontal: 16,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
