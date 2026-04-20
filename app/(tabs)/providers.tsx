@@ -21,19 +21,19 @@ import type { Provider, ProviderCategory } from '@lib/types';
 // ─── Category config ────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: ProviderCategory | 'all'; label: string; emoji: string }[] = [
-  { value: 'all',                  label: 'All',              emoji: '🔍' },
-  { value: 'aba_ibi',              label: 'ABA / IBI',        emoji: '🧩' },
-  { value: 'speech_language',      label: 'Speech',           emoji: '🗣️' },
-  { value: 'occupational_therapy', label: 'OT',               emoji: '✋' },
-  { value: 'physical_therapy',     label: 'PT',               emoji: '🏃' },
-  { value: 'psychology',           label: 'Psychology',       emoji: '🧠' },
-  { value: 'respite',              label: 'Respite',          emoji: '🏠' },
-  { value: 'swimming',             label: 'Swimming',         emoji: '🏊' },
-  { value: 'social_skills',        label: 'Social Skills',    emoji: '👫' },
-  { value: 'music_therapy',        label: 'Music',            emoji: '🎵' },
-  { value: 'art_therapy',          label: 'Art',              emoji: '🎨' },
-  { value: 'assistive_technology', label: 'Assistive Tech',   emoji: '📱' },
-  { value: 'other',                label: 'Other',            emoji: '📋' },
+  { value: 'all',                  label: 'All',                    emoji: '🔍' },
+  { value: 'aba_ibi',              label: 'ABA / IBI',              emoji: '🧩' },
+  { value: 'speech_language',      label: 'Speech & Language',      emoji: '🗣️' },
+  { value: 'occupational_therapy', label: 'Occupational Therapy',   emoji: '✋' },
+  { value: 'physical_therapy',     label: 'Physical Therapy',       emoji: '🏃' },
+  { value: 'psychology',           label: 'Psychology',             emoji: '🧠' },
+  { value: 'respite',              label: 'Respite',                emoji: '🏠' },
+  { value: 'swimming',             label: 'Swimming',               emoji: '🏊' },
+  { value: 'social_skills',        label: 'Social Skills',          emoji: '👫' },
+  { value: 'music_therapy',        label: 'Music Therapy',          emoji: '🎵' },
+  { value: 'art_therapy',          label: 'Art Therapy',            emoji: '🎨' },
+  { value: 'assistive_technology', label: 'Assistive Technology',   emoji: '📱' },
+  { value: 'other',                label: 'Other',                  emoji: '📋' },
 ];
 
 const CATEGORY_GRADIENT: Record<string, readonly [string, string]> = {
@@ -79,6 +79,11 @@ function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () =
 
         {/* Name */}
         <Text style={styles.providerName} numberOfLines={2}>{provider.name}</Text>
+
+        {/* Organization */}
+        {!!provider.organization && (
+          <Text style={styles.providerOrg} numberOfLines={1}>{provider.organization}</Text>
+        )}
 
         {/* City */}
         {!!provider.city && (
@@ -151,6 +156,9 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
           <Text style={styles.modalEmoji}>{categoryEmoji(provider.category)}</Text>
           <Text style={styles.modalCategory}>{categoryLabel(provider.category)}</Text>
           <Text style={styles.modalName}>{provider.name}</Text>
+          {!!provider.organization && (
+            <Text style={styles.modalOrg}>{provider.organization}</Text>
+          )}
           {!!provider.city && (
             <Text style={styles.modalCity}>
               📍 {provider.city}{provider.postal_code ? ` ${provider.postal_code}` : ''}, SK
@@ -294,6 +302,7 @@ export default function ProvidersScreen() {
         if (!q) return true;
         return (
           p.name.toLowerCase().includes(q) ||
+          (p.organization?.toLowerCase().includes(q) ?? false) ||
           (p.city?.toLowerCase().includes(q) ?? false) ||
           (p.email?.toLowerCase().includes(q) ?? false) ||
           (p.website?.toLowerCase().includes(q) ?? false) ||
@@ -339,7 +348,7 @@ export default function ProvidersScreen() {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name, city, specialty…"
+            placeholder="Search by name, organization, city…"
             placeholderTextColor={Colors.textMuted}
             value={search}
             onChangeText={handleSearch}
@@ -362,17 +371,20 @@ export default function ProvidersScreen() {
             ? Colors.gradients.purple
             : (CATEGORY_GRADIENT[cat.value] ?? Colors.gradients.purple);
           return active ? (
-            <LinearGradient
+            <TouchableOpacity
               key={cat.value}
-              colors={gradient as unknown as string[]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.catChipActive}
+              onPress={() => handleCategory(cat.value)}
+              activeOpacity={0.9}
+              style={styles.catChipActiveWrapper}
             >
-              <TouchableOpacity onPress={() => handleCategory(cat.value)} activeOpacity={0.9}>
-                <Text style={styles.catChipTextActive}>{cat.emoji} {cat.label}</Text>
-              </TouchableOpacity>
-            </LinearGradient>
+              <LinearGradient
+                colors={gradient as unknown as string[]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <Text style={styles.catChipTextActive}>{cat.emoji} {cat.label}</Text>
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity
               key={cat.value}
@@ -486,6 +498,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontWeight: '500',
   },
+  catChipActiveWrapper: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   catChipActive: {
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -533,6 +551,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
     marginTop: 2,
+  },
+  providerOrg: {
+    fontSize: 13,
+    color: Colors.purple,
+    fontWeight: '500',
   },
   providerCity: {
     fontSize: 13,
@@ -616,6 +639,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
+  },
+  modalOrg: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
+    marginTop: 2,
   },
   modalCity: {
     fontSize: 14,

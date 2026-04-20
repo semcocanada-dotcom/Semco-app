@@ -58,6 +58,7 @@ export interface FundingYear {
 export interface Provider {
   id: string;
   name: string;
+  organization: string | null;
   category: ProviderCategory;
   phone: string | null;
   email: string | null;

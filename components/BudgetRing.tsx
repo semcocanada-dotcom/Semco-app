@@ -49,14 +49,19 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
     });
   }, [totalBudget, totalSpent, totalPending]);
 
+  // Grey spent arc — starts at top, covers spentRatio of the ring
   const spentProps = useAnimatedProps(() => ({
     strokeDashoffset: CIRCUMFERENCE * (1 - spentProgress.value),
   }));
 
-  const pendingProps = useAnimatedProps(() => ({
-    strokeDashoffset: CIRCUMFERENCE * (1 - pendingProgress.value),
-    strokeDasharray: `${CIRCUMFERENCE * pendingProgress.value} ${CIRCUMFERENCE * (1 - pendingProgress.value)}`,
-  }));
+  // Amber pending arc — starts right after the spent arc ends
+  const pendingProps = useAnimatedProps(() => {
+    const pendingLen = CIRCUMFERENCE * pendingProgress.value;
+    return {
+      strokeDashoffset: CIRCUMFERENCE - CIRCUMFERENCE * spentProgress.value,
+      strokeDasharray: `${pendingLen} ${CIRCUMFERENCE - pendingLen}`,
+    };
+  });
 
   const isLow = remaining < 500;
 
@@ -77,7 +82,7 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
     >
       <View style={{ width: SIZE, height: SIZE, alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={SIZE} height={SIZE} style={{ position: 'absolute' }}>
-          {/* Track ring */}
+          {/* Full purple ring — represents total available budget */}
           <Circle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -86,7 +91,7 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
             strokeWidth={STROKE}
             fill="none"
           />
-          {/* Pending arc (amber) — rendered first so spent overlaps */}
+          {/* Amber pending arc — follows spent portion */}
           <AnimatedCircle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -100,7 +105,7 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
             rotation="-90"
             origin={`${SIZE / 2}, ${SIZE / 2}`}
           />
-          {/* Spent arc (purple) */}
+          {/* Grey spent arc — from top, clockwise */}
           <AnimatedCircle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -137,9 +142,9 @@ export function BudgetRing({ totalBudget, totalSpent, totalPending, remaining }:
 
       {/* Legend */}
       <View style={{ flexDirection: 'row', gap: 20, marginTop: 16 }}>
+        <LegendDot color={Colors.ringTrack} label="Available" />
         <LegendDot color={Colors.ringSpent} label="Spent" />
         <LegendDot color={Colors.ringPending} label="Pending" />
-        <LegendDot color={Colors.ringTrack} label="Available" />
       </View>
     </View>
   );

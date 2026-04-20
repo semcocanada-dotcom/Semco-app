@@ -516,7 +516,7 @@ export default function ProfileScreen() {
           <Text style={[s.actionBtnText, { color: '#BE123C' }]}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={s.version}>Semco v1.0 · Saskatchewan IAF Grant Tracker</Text>
+        <Text style={s.version}>Autism Fund Tracker v1.0 · Saskatchewan ASD-IF</Text>
       </ScrollView>
 
       <ChildModal

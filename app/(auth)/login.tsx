@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@lib/supabase';
 import { Colors } from '@constants/colors';
+import { AppLogo } from '@components/AppLogo';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -65,21 +66,21 @@ export default function LoginScreen() {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                width: 68,
-                height: 68,
-                borderRadius: 20,
+                width: 80,
+                height: 80,
+                borderRadius: 22,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 20,
               }}
             >
-              <Text style={{ fontSize: 32 }}>🌟</Text>
+              <AppLogo size={62} variant="light" />
             </LinearGradient>
-            <Text style={{ fontSize: 28, fontWeight: '700', color: Colors.textPrimary, letterSpacing: -0.5 }}>
-              Welcome to Semco
+            <Text style={{ fontSize: 26, fontWeight: '700', color: Colors.textPrimary, letterSpacing: -0.5, textAlign: 'center' }}>
+              Autism Fund Tracker
             </Text>
             <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 8, textAlign: 'center' }}>
-              Saskatchewan Autism Funding Tracker
+              Saskatchewan ASD-IF Grant Management
             </Text>
           </View>
 
