@@ -21,19 +21,19 @@ import type { Provider, ProviderCategory } from '@lib/types';
 // ─── Category config ────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: ProviderCategory | 'all'; label: string; emoji: string }[] = [
-  { value: 'all',                 label: 'All',              emoji: '🔍' },
-  { value: 'aba_ibi',             label: 'ABA / IBI',        emoji: '🧩' },
-  { value: 'speech_language',     label: 'Speech',           emoji: '🗣️' },
-  { value: 'occupational_therapy',label: 'OT',               emoji: '✋' },
-  { value: 'physical_therapy',    label: 'PT',               emoji: '🏃' },
-  { value: 'psychology',          label: 'Psychology',       emoji: '🧠' },
-  { value: 'respite',             label: 'Respite',          emoji: '🏠' },
-  { value: 'swimming',            label: 'Swimming',         emoji: '🏊' },
-  { value: 'social_skills',       label: 'Social Skills',    emoji: '👫' },
-  { value: 'music_therapy',       label: 'Music',            emoji: '🎵' },
-  { value: 'art_therapy',         label: 'Art',              emoji: '🎨' },
-  { value: 'assistive_technology',label: 'Assistive Tech',   emoji: '📱' },
-  { value: 'other',               label: 'Other',            emoji: '📋' },
+  { value: 'all',                  label: 'All',              emoji: '🔍' },
+  { value: 'aba_ibi',              label: 'ABA / IBI',        emoji: '🧩' },
+  { value: 'speech_language',      label: 'Speech',           emoji: '🗣️' },
+  { value: 'occupational_therapy', label: 'OT',               emoji: '✋' },
+  { value: 'physical_therapy',     label: 'PT',               emoji: '🏃' },
+  { value: 'psychology',           label: 'Psychology',       emoji: '🧠' },
+  { value: 'respite',              label: 'Respite',          emoji: '🏠' },
+  { value: 'swimming',             label: 'Swimming',         emoji: '🏊' },
+  { value: 'social_skills',        label: 'Social Skills',    emoji: '👫' },
+  { value: 'music_therapy',        label: 'Music',            emoji: '🎵' },
+  { value: 'art_therapy',          label: 'Art',              emoji: '🎨' },
+  { value: 'assistive_technology', label: 'Assistive Tech',   emoji: '📱' },
+  { value: 'other',                label: 'Other',            emoji: '📋' },
 ];
 
 const CATEGORY_GRADIENT: Record<string, readonly [string, string]> = {
@@ -82,7 +82,14 @@ function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () =
 
         {/* City */}
         {!!provider.city && (
-          <Text style={styles.providerCity}>📍 {provider.city}, SK</Text>
+          <Text style={styles.providerCity}>
+            📍 {provider.city}{provider.postal_code ? `, ${provider.postal_code}` : ''}, SK
+          </Text>
+        )}
+
+        {/* Notes preview */}
+        {!!provider.notes && (
+          <Text style={styles.notesPreview} numberOfLines={2}>{provider.notes}</Text>
         )}
 
         {/* Contact chips */}
@@ -123,6 +130,11 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
   if (!provider) return null;
   const gradient = CATEGORY_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
 
+  const fullAddress = [
+    provider.address,
+    [provider.city, provider.province, provider.postal_code].filter(Boolean).join(' '),
+  ].filter(Boolean).join('\n');
+
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
@@ -140,11 +152,26 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
           <Text style={styles.modalCategory}>{categoryLabel(provider.category)}</Text>
           <Text style={styles.modalName}>{provider.name}</Text>
           {!!provider.city && (
-            <Text style={styles.modalCity}>📍 {provider.city}, SK</Text>
+            <Text style={styles.modalCity}>
+              📍 {provider.city}{provider.postal_code ? ` ${provider.postal_code}` : ''}, SK
+            </Text>
           )}
         </LinearGradient>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.modalBody}>
+
+          {/* Notes / description */}
+          {!!provider.notes && (
+            <>
+              <Text style={styles.sectionLabel}>About</Text>
+              <View style={[styles.detailCard, { padding: 14 }]}>
+                <Text style={{ fontSize: 14, color: Colors.textPrimary, lineHeight: 20 }}>
+                  {provider.notes}
+                </Text>
+              </View>
+            </>
+          )}
+
           {/* Contact section */}
           <Text style={styles.sectionLabel}>Contact</Text>
           <View style={styles.detailCard}>
@@ -213,8 +240,7 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
                 <View style={styles.detailRow}>
                   <Text style={styles.detailIcon}>📍</Text>
                   <View style={{ flex: 1 }}>
-                    {!!provider.address && <Text style={styles.detailValue}>{provider.address}</Text>}
-                    <Text style={styles.detailValue}>{[provider.city, provider.province].filter(Boolean).join(', ')}</Text>
+                    <Text style={styles.detailValue}>{fullAddress}</Text>
                   </View>
                 </View>
               </View>
@@ -244,7 +270,6 @@ export default function ProvidersScreen() {
   const [selected, setSelected] = useState<Provider | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load all providers once
   useEffect(() => {
     supabase
       .from('providers')
@@ -260,7 +285,6 @@ export default function ProvidersScreen() {
       });
   }, []);
 
-  // Filter whenever search or category changes
   const applyFilter = useCallback(
     (query: string, cat: ProviderCategory | 'all', list: Provider[]) => {
       const q = query.toLowerCase().trim();
@@ -272,7 +296,8 @@ export default function ProvidersScreen() {
           p.name.toLowerCase().includes(q) ||
           (p.city?.toLowerCase().includes(q) ?? false) ||
           (p.email?.toLowerCase().includes(q) ?? false) ||
-          (p.website?.toLowerCase().includes(q) ?? false)
+          (p.website?.toLowerCase().includes(q) ?? false) ||
+          (p.notes?.toLowerCase().includes(q) ?? false)
         );
       });
       setFiltered(result);
@@ -298,13 +323,13 @@ export default function ProvidersScreen() {
     []
   );
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+  const ListHeader = useCallback(() => (
+    <View>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>SK Providers</Text>
         <Text style={styles.headerSub}>
-          {loading ? 'Loading...' : `${filtered.length} of ${providers.length} providers`}
+          {loading ? 'Loading…' : `${filtered.length} of ${providers.length} providers`}
         </Text>
       </View>
 
@@ -314,7 +339,7 @@ export default function ProvidersScreen() {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name, city…"
+            placeholder="Search by name, city, specialty…"
             placeholderTextColor={Colors.textMuted}
             value={search}
             onChangeText={handleSearch}
@@ -361,31 +386,39 @@ export default function ProvidersScreen() {
         })}
       </ScrollView>
 
-      {/* List */}
-      {loading ? (
+      {loading && (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.purple} />
           <Text style={styles.loadingText}>Loading providers…</Text>
         </View>
-      ) : filtered.length === 0 ? (
-        <View style={styles.centered}>
-          <Text style={{ fontSize: 40, marginBottom: 12 }}>🔎</Text>
-          <Text style={styles.emptyTitle}>No providers found</Text>
-          <Text style={styles.emptySubtitle}>Try a different search or category</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          keyboardShouldPersistTaps="handled"
-          initialNumToRender={12}
-          maxToRenderPerBatch={20}
-          windowSize={10}
-          removeClippedSubviews
-        />
       )}
+    </View>
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [search, activeCategory, loading, filtered.length, providers.length]);
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+      <FlatList
+        data={loading ? [] : filtered}
+        keyExtractor={item => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={ListHeader}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        initialNumToRender={12}
+        maxToRenderPerBatch={20}
+        windowSize={10}
+        removeClippedSubviews
+        ListEmptyComponent={
+          !loading && filtered.length === 0 ? (
+            <View style={styles.centered}>
+              <Text style={{ fontSize: 40, marginBottom: 12 }}>🔎</Text>
+              <Text style={styles.emptyTitle}>No providers found</Text>
+              <Text style={styles.emptySubtitle}>Try a different search or category</Text>
+            </View>
+          ) : null
+        }
+      />
 
       {/* Detail modal */}
       <ProviderDetailModal provider={selected} onClose={() => setSelected(null)} />
@@ -398,7 +431,7 @@ export default function ProvidersScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 4,
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -505,6 +538,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
   },
+  notesPreview: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    lineHeight: 17,
+  },
   contactRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -525,10 +563,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   centered: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
+    paddingTop: 48,
   },
   loadingText: {
     marginTop: 12,

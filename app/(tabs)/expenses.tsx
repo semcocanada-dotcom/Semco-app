@@ -188,10 +188,10 @@ function ExpenseRow({ expense, onPress }: { expense: Expense; onPress: () => voi
 // ─── QuickAddModal ────────────────────────────────────────────────────────────
 
 function QuickAddModal({
-  visible, onClose, childId, fundingYearId, onSaved,
+  visible, onClose, childId, fundingYearId, currentRemaining, onSaved,
 }: {
   visible: boolean; onClose: () => void;
-  childId: string; fundingYearId: string; onSaved: () => void;
+  childId: string; fundingYearId: string; currentRemaining: number; onSaved: () => void;
 }) {
   const { session, profile, refetchProfile } = useAuth();
   const [amount,          setAmount]          = useState('');
@@ -370,7 +370,14 @@ function QuickAddModal({
         });
       }
 
-      onSaved(); onClose();
+      const newRemaining = Math.max(currentRemaining - parsed, 0);
+      onSaved();
+      onClose();
+      Alert.alert(
+        '✅ Expense Logged',
+        `${CAD(parsed)} has been added as pending.\n\nEstimated grant remaining: ${CAD(newRemaining)}`,
+        [{ text: 'OK' }]
+      );
     } catch (err: any) {
       Alert.alert('Save failed', err?.message ?? 'Please try again.');
     } finally {
@@ -1078,6 +1085,7 @@ export default function ExpensesScreen() {
             onClose={() => setShowAdd(false)}
             childId={activeChild?.id ?? ''}
             fundingYearId={summary.fundingYear.id}
+            currentRemaining={summary.remaining}
             onSaved={handleSaved}
           />
           <MileageOnlyModal

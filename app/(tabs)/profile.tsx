@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { format } from 'date-fns';
+import { differenceInYears, parseISO, isValid } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import { useAuth } from '@context/AuthContext';
@@ -17,6 +17,44 @@ import type { Child, FundingYear } from '@lib/types';
 
 const CAD = (n: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
+
+// Auto-formats digits as YYYY/MM/DD as user types
+function autoFormatDate(text: string): string {
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 4)}/${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}/${digits.slice(4, 6)}/${digits.slice(6)}`;
+}
+
+// YYYY/MM/DD → YYYY-MM-DD for DB storage
+function dateDisplayToISO(display: string): string | null {
+  const digits = display.replace(/\D/g, '');
+  if (digits.length !== 8) return null;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+}
+
+// YYYY-MM-DD → YYYY/MM/DD for display
+function isoToDateDisplay(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return iso.replace(/-/g, '/');
+}
+
+// Returns eligibility info string from a YYYY/MM/DD display value
+function grantEligibilityText(dobDisplay: string): string | null {
+  const iso = dateDisplayToISO(dobDisplay);
+  if (!iso) return null;
+  try {
+    const dob = parseISO(iso);
+    if (!isValid(dob)) return null;
+    const age = differenceInYears(new Date(), dob);
+    if (age < 0 || age > 25) return null;
+    if (age < 2) return `${age} year${age !== 1 ? 's' : ''} old · IAF eligibility begins at age 2`;
+    if (age >= 18) return `${age} years old · IAF grant period has ended (program is for under 18)`;
+    return `${age} years old · Eligible for $8,000/year IAF grant`;
+  } catch {
+    return null;
+  }
+}
 
 // ─── ChildModal ───────────────────────────────────────────────────────────────
 
@@ -49,9 +87,9 @@ function ChildModal({
   useEffect(() => {
     if (!visible) return;
     setName(child?.name ?? '');
-    setDob(child?.date_of_birth ?? '');
+    setDob(isoToDateDisplay(child?.date_of_birth));
     setHealthCard(child?.health_card_number ?? '');
-    setDiagDate(child?.diagnosis_date ?? '');
+    setDiagDate(isoToDateDisplay(child?.diagnosis_date));
     setDiagNotes(child?.diagnosis_notes ?? '');
     setShowAddYear(false);
     if (child) fetchFundingYears(child.id);
@@ -72,21 +110,23 @@ function ChildModal({
     if (!session) return;
     setSaving(true);
     try {
+      const dobISO = dateDisplayToISO(dob);
+      const diagDateISO = dateDisplayToISO(diagDate);
       if (child) {
         await supabase.from('children').update({
           name: name.trim(),
-          date_of_birth: dob || null,
+          date_of_birth: dobISO,
           health_card_number: healthCard || null,
-          diagnosis_date: diagDate || null,
+          diagnosis_date: diagDateISO,
           diagnosis_notes: diagNotes || null,
         }).eq('id', child.id);
       } else {
         await supabase.from('children').insert({
           parent_id: session.user.id,
           name: name.trim(),
-          date_of_birth: dob || null,
+          date_of_birth: dobISO,
           health_card_number: healthCard || null,
-          diagnosis_date: diagDate || null,
+          diagnosis_date: diagDateISO,
           diagnosis_notes: diagNotes || null,
         });
       }
@@ -113,8 +153,10 @@ function ChildModal({
   }
 
   async function handleAddFundingYear() {
-    if (!child || !fyLabel.trim() || !fyStart || !fyEnd) {
-      Alert.alert('Fill in all funding year fields');
+    const startISO = dateDisplayToISO(fyStart);
+    const endISO   = dateDisplayToISO(fyEnd);
+    if (!child || !fyLabel.trim() || !startISO || !endISO) {
+      Alert.alert('Fill in all funding year fields', 'Use YYYY/MM/DD format for dates.');
       return;
     }
     setSavingFY(true);
@@ -126,8 +168,8 @@ function ChildModal({
         child_id:     child.id,
         label:        fyLabel.trim(),
         total_budget: parseFloat(fyBudget) || 8000,
-        start_date:   fyStart,
-        end_date:     fyEnd,
+        start_date:   startISO,
+        end_date:     endISO,
         is_active:    fyActive,
       });
       setFyLabel(''); setFyStart(''); setFyEnd(''); setFyBudget('8000'); setFyActive(true);
@@ -167,7 +209,20 @@ function ChildModal({
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
               <View style={{ flex: 1 }}>
                 <Text style={s.fieldLabel}>Date of Birth</Text>
-                <TextInput style={s.textField} value={dob} onChangeText={setDob} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+                <TextInput
+                  style={s.textField}
+                  value={dob}
+                  onChangeText={v => setDob(autoFormatDate(v))}
+                  placeholder="YYYY/MM/DD"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+                {!!grantEligibilityText(dob) && (
+                  <View style={s.eligibilityBanner}>
+                    <Text style={s.eligibilityText}>{grantEligibilityText(dob)}</Text>
+                  </View>
+                )}
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.fieldLabel}>SK Health Card #</Text>
@@ -178,7 +233,15 @@ function ChildModal({
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
               <View style={{ flex: 1 }}>
                 <Text style={s.fieldLabel}>Diagnosis Date</Text>
-                <TextInput style={s.textField} value={diagDate} onChangeText={setDiagDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+                <TextInput
+                  style={s.textField}
+                  value={diagDate}
+                  onChangeText={v => setDiagDate(autoFormatDate(v))}
+                  placeholder="YYYY/MM/DD"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
               </View>
             </View>
 
@@ -219,11 +282,11 @@ function ChildModal({
                     <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
                       <View style={{ flex: 1 }}>
                         <Text style={s.fieldLabel}>Start Date</Text>
-                        <TextInput style={s.textField} value={fyStart} onChangeText={setFyStart} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+                        <TextInput style={s.textField} value={fyStart} onChangeText={v => setFyStart(autoFormatDate(v))} placeholder="YYYY/MM/DD" placeholderTextColor={Colors.textMuted} keyboardType="number-pad" maxLength={10} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={s.fieldLabel}>End Date</Text>
-                        <TextInput style={s.textField} value={fyEnd} onChangeText={setFyEnd} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+                        <TextInput style={s.textField} value={fyEnd} onChangeText={v => setFyEnd(autoFormatDate(v))} placeholder="YYYY/MM/DD" placeholderTextColor={Colors.textMuted} keyboardType="number-pad" maxLength={10} />
                       </View>
                     </View>
                     <Text style={[s.fieldLabel, { marginTop: 10 }]}>Budget</Text>
@@ -459,6 +522,8 @@ const s = StyleSheet.create({
   fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 },
   fieldHint:  { fontSize: 11, color: Colors.textMuted, marginTop: 4 },
   textField:  { backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: Platform.OS === 'ios' ? 12 : 8, fontSize: 15, color: Colors.textPrimary },
+  eligibilityBanner: { marginTop: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#86EFAC' },
+  eligibilityText: { fontSize: 12, color: '#15803D', fontWeight: '500' },
 
   saveBtn:    { borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   saveBtnText:{ fontSize: 16, fontWeight: '700', color: '#fff' },

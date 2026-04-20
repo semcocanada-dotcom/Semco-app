@@ -65,6 +65,8 @@ export interface Provider {
   address: string | null;
   city: string;
   province: string;
+  postal_code: string | null;
+  notes: string | null;
   is_approved_sk: boolean;
   parent_id: string | null;
   created_at: string;
