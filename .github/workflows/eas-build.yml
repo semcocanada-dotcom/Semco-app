@@ -1,4 +1,4 @@
-name: EAS Build (iOS Preview)
+name: EAS Build (iOS Production → TestFlight)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Build iOS Preview
+    name: Build and Submit iOS
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,7 +31,12 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas whoami
 
-      - name: Build iOS preview
+      - name: Build iOS production
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform ios --profile preview --non-interactive --clear-cache
+        run: eas build --platform ios --profile production --non-interactive
+
+      - name: Submit to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas submit --platform ios --latest --non-interactive
