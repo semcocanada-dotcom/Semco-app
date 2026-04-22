@@ -13,7 +13,6 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '@lib/supabase';
 import { Colors } from '@constants/colors';
 import { AppLogo } from '@components/AppLogo';
@@ -52,28 +51,6 @@ export default function LoginScreen() {
       if (data.url) await WebBrowser.openAuthSessionAsync(data.url, 'autismfundtracker://');
     } catch (e: any) {
       setError(e.message ?? 'Google sign-in failed. Try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleAppleSignIn() {
-    setError(null); setLoading(true);
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      if (!credential.identityToken) throw new Error('No identity token received');
-      const { error: authError } = await supabase.auth.signInWithIdToken({
-        provider: 'apple',
-        token: credential.identityToken,
-      });
-      if (authError) throw authError;
-    } catch (e: any) {
-      if (e.code !== 'ERR_REQUEST_CANCELED') setError(e.message ?? 'Apple sign-in failed.');
     } finally {
       setLoading(false);
     }
@@ -228,17 +205,6 @@ export default function LoginScreen() {
               <Text style={ls.oauthBtnIcon}>G</Text>
               <Text style={ls.oauthBtnText}>Sign in with Google</Text>
             </Pressable>
-
-            {/* Apple — iOS only */}
-            {Platform.OS === 'ios' && (
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                cornerRadius={14}
-                style={{ height: 50, marginTop: 12 }}
-                onPress={handleAppleSignIn}
-              />
-            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
