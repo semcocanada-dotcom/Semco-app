@@ -11,7 +11,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "ingest:pdf": "tsx scripts/ingest-pdf.ts",
-    "ingest:colors": "tsx scripts/ingest-colors.ts"
+    "ingest:colors": "tsx scripts/ingest-colors.ts",
+    "ingest:colors-csv": "tsx scripts/ingest-colors-csv.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.0",

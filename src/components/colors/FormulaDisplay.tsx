@@ -1,28 +1,54 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from '@/components/ui/Card';
-import type { ScaledColorFormula } from '@/services/color-scaler';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import type { PigmentRatio } from '@/database/schema/colors';
+import { getFormulaForBatch, BATCH_SIZES, type BatchSize } from '@/services/color-scaler';
+import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 
 interface FormulaDisplayProps {
-  formula: ScaledColorFormula;
+  pigments: PigmentRatio[];
   colorName: string;
 }
 
-export function FormulaDisplay({ formula, colorName }: FormulaDisplayProps) {
+export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
+  const [batchSize, setBatchSize] = useState<BatchSize>('quart');
+  const formula = getFormulaForBatch(pigments, batchSize);
+  const selected = BATCH_SIZES.find((b) => b.key === batchSize)!;
+
   return (
     <Card>
       <Text style={styles.heading}>{colorName}</Text>
-      <Text style={styles.subheading}>Mix: {formula.totalMixKg} kg batch</Text>
+      <Text style={styles.subheading}>XBond tint formula</Text>
+
+      <View style={styles.batchSelector}>
+        {BATCH_SIZES.map((b) => (
+          <TouchableOpacity
+            key={b.key}
+            style={[styles.batchBtn, batchSize === b.key && styles.batchBtnActive]}
+            onPress={() => setBatchSize(b.key)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.batchBtnLabel, batchSize === b.key && styles.batchBtnLabelActive]}>
+              {b.label}
+            </Text>
+            <Text style={[styles.batchBtnVolume, batchSize === b.key && styles.batchBtnVolumeActive]}>
+              {b.volumeLabel}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <View style={styles.divider} />
 
-      {formula.pigments.length === 0 || formula.pigments.every((p) => p.totalGrams === 0) ? (
+      {formula.pigments.length === 0 ? (
         <Text style={styles.noPigment}>No pigment addition required</Text>
       ) : (
         formula.pigments.map((p, i) => (
           <View key={i} style={styles.row}>
-            <Text style={styles.pigmentName}>{p.pigmentName}</Text>
+            <View style={styles.pigmentInfo}>
+              <Text style={styles.pigmentName}>{p.pigmentName}</Text>
+              <Text style={styles.pigmentCode}>{p.pigmentCode}</Text>
+            </View>
             <Text style={styles.amount}>{p.displayAmount}</Text>
           </View>
         ))
@@ -41,6 +67,36 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   subheading: { color: Colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
+  batchSelector: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  batchBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  batchBtnActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.surfaceElevated,
+  },
+  batchBtnLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  batchBtnLabelActive: { color: Colors.primary },
+  batchBtnVolume: {
+    color: Colors.textDisabled,
+    fontSize: Typography.size.xs,
+    marginTop: 2,
+  },
+  batchBtnVolumeActive: { color: Colors.primaryMuted },
   divider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.md },
   row: {
     flexDirection: 'row',
@@ -50,7 +106,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  pigmentName: { color: Colors.textPrimary, fontSize: Typography.size.base, flex: 1 },
+  pigmentInfo: { flex: 1 },
+  pigmentName: { color: Colors.textPrimary, fontSize: Typography.size.base },
+  pigmentCode: { color: Colors.textDisabled, fontSize: Typography.size.xs, marginTop: 1 },
   amount: { color: Colors.primary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
   noPigment: { color: Colors.textSecondary, fontSize: Typography.size.base, fontStyle: 'italic' },
   notes: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.6 },

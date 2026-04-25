@@ -14,16 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/database/client';
 import { colors } from '@/database/schema/colors';
 import type { Color, PigmentRatio } from '@/database/schema/colors';
-import { Input, Card, Badge } from '@/components/ui';
+import { Card, Badge } from '@/components/ui';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
-import { scalePigmentFormula } from '@/services/color-scaler';
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 
 export default function ColorDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [color, setColor] = useState<Color | null>(null);
-  const [mixKg, setMixKg] = useState('5');
 
   useEffect(() => {
     if (!id) return;
@@ -41,8 +39,6 @@ export default function ColorDetailScreen() {
   }
 
   const pigments = (color.pigments as PigmentRatio[]) ?? [];
-  const mixKgNum = parseFloat(mixKg) || 5;
-  const formula = scalePigmentFormula(pigments, mixKgNum);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -76,15 +72,7 @@ export default function ColorDetailScreen() {
           </View>
         )}
 
-        <Input
-          label="Calculate for batch size"
-          value={mixKg}
-          onChangeText={setMixKg}
-          keyboardType="decimal-pad"
-          suffix="kg"
-        />
-
-        <FormulaDisplay formula={formula} colorName={color.name} />
+        <FormulaDisplay pigments={pigments} colorName={color.name} />
 
         {color.notes ? (
           <Card>

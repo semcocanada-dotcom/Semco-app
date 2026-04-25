@@ -1,56 +1,77 @@
 import type { PigmentRatio } from '@/database/schema/colors';
 
-export interface ScaledFormula {
-  pigmentSku: string;
+export type BatchSize = 'quart' | 'gallon' | 'five_gallon';
+
+export const BATCH_SIZES: { key: BatchSize; label: string; volumeLabel: string }[] = [
+  { key: 'quart', label: 'Quart', volumeLabel: '946 ml' },
+  { key: 'gallon', label: 'Gallon', volumeLabel: '3.8 L' },
+  { key: 'five_gallon', label: '5 Gallon', volumeLabel: '18.9 L' },
+];
+
+export interface FormulaLine {
+  pigmentCode: string;
   pigmentName: string;
-  ratioGPerKg: number;
-  totalGrams: number;
+  mlAmount: number;
   displayAmount: string;
 }
 
-export interface ScaledColorFormula {
-  totalMixKg: number;
-  pigments: ScaledFormula[];
+export interface BatchFormula {
+  batchSize: BatchSize;
+  pigments: FormulaLine[];
   mixingNotes: string;
 }
 
-/**
- * Scales a standard pigment formula to a specific mix volume.
- * ratioGPerKg is the reference ratio per 1 kg of microcement powder.
- */
-export function scalePigmentFormula(
-  pigments: PigmentRatio[],
-  totalMixKg: number,
-): ScaledColorFormula {
-  if (totalMixKg <= 0) throw new Error('Mix volume must be greater than 0');
+export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSize): BatchFormula {
+  const getMl = (p: PigmentRatio): number => {
+    switch (batchSize) {
+      case 'quart': return p.mlPerQuart;
+      case 'gallon': return p.mlPerGallon;
+      case 'five_gallon': return p.mlPerFiveGallon;
+    }
+  };
 
-  const scaled: ScaledFormula[] = pigments.map((p) => {
-    const totalGrams = p.ratioGPerKg * totalMixKg;
-    return {
-      pigmentSku: p.pigmentSku,
-      pigmentName: p.pigmentName,
-      ratioGPerKg: p.ratioGPerKg,
-      totalGrams,
-      displayAmount: formatGrams(totalGrams),
-    };
-  });
-
-  const hasPigments = scaled.some((p) => p.totalGrams > 0);
+  const lines: FormulaLine[] = pigments
+    .filter((p) => getMl(p) > 0)
+    .map((p) => {
+      const ml = getMl(p);
+      return {
+        pigmentCode: p.pigmentCode,
+        pigmentName: p.pigmentName,
+        mlAmount: ml,
+        displayAmount: formatMl(ml),
+      };
+    });
 
   return {
-    totalMixKg,
-    pigments: scaled,
-    mixingNotes: hasPigments
-      ? `Add pigments to the mix water and dissolve thoroughly before adding powder. Mix at low speed (300–400 rpm) for 3 minutes. All pigment must come from the same manufacturing lot.`
-      : `No pigment addition required for this colour. Natural cement tone.`,
+    batchSize,
+    pigments: lines,
+    mixingNotes:
+      lines.length > 0
+        ? 'Add all tints to XBond liquid and mix thoroughly before applying to substrate. All tints must be from the same manufacturing lot.'
+        : 'No pigment addition required. Natural cement tone.',
   };
 }
 
-function formatGrams(grams: number): string {
-  if (grams === 0) return '0 g';
-  if (grams >= 1000) return `${(grams / 1000).toFixed(2)} kg`;
-  if (grams < 1) return `${(grams * 1000).toFixed(0)} mg`;
-  return `${grams.toFixed(1)} g`;
+function formatMl(ml: number): string {
+  if (ml === 0) return '0 ml';
+  if (ml >= 1000) return `${(ml / 1000).toFixed(2)} L`;
+  if (ml < 1) return `${(ml * 1000).toFixed(0)} µl`;
+  return `${Number.isInteger(ml) ? ml.toFixed(0) : ml.toFixed(1)} ml`;
+}
+
+/** For custom colours — installer enters ml per quart, we auto-scale. */
+export function buildPigmentRatio(
+  pigmentCode: string,
+  pigmentName: string,
+  mlPerQuart: number,
+): PigmentRatio {
+  return {
+    pigmentCode,
+    pigmentName,
+    mlPerQuart,
+    mlPerGallon: Math.round(mlPerQuart * 4 * 10) / 10,
+    mlPerFiveGallon: Math.round(mlPerQuart * 20 * 10) / 10,
+  };
 }
 
 export const PACK_SIZES_KG = [5, 10, 15, 20, 25] as const;

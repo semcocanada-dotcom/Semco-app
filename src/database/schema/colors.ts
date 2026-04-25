@@ -25,7 +25,9 @@ export type Color = typeof colors.$inferSelect;
 export type NewColor = typeof colors.$inferInsert;
 
 export interface PigmentRatio {
-  pigmentSku: string;
-  pigmentName: string;
-  ratioGPerKg: number;
+  pigmentCode: string;       // XBond tint code (e.g. "KX", "T", "R S SS") or custom identifier
+  pigmentName: string;       // Full display name (e.g. "Titanium White")
+  mlPerQuart: number;        // mL to add per quart (946 ml) of XBond base
+  mlPerGallon: number;       // mL to add per gallon (3.785 L) of XBond base
+  mlPerFiveGallon: number;   // mL to add per 5-gallon (18.9 L) of XBond base
 }

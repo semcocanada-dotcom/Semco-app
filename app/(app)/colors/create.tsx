@@ -13,21 +13,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { Input, Button } from '@/components/ui';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
 import { useColorCamera } from '@/hooks/useColorCamera';
-import { scalePigmentFormula } from '@/services/color-scaler';
+import { buildPigmentRatio } from '@/services/color-scaler';
 import { db } from '@/database/client';
 import { colors } from '@/database/schema/colors';
 import type { PigmentRatio } from '@/database/schema/colors';
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 import { useAuthStore } from '@/store/auth';
 
+// Common XBond tints available to installers for custom mixes
 const AVAILABLE_PIGMENTS = [
-  { sku: 'PIG-BLACK', name: 'Carbon Black' },
-  { sku: 'PIG-WHITE', name: 'Titanium White' },
-  { sku: 'PIG-YELLOW-OCHRE', name: 'Yellow Ochre' },
-  { sku: 'PIG-BURNT-SIENNA', name: 'Burnt Sienna' },
-  { sku: 'PIG-BLUE-IRON', name: 'Iron Blue' },
-  { sku: 'PIG-GREEN-CHROME', name: 'Chrome Green Oxide' },
-  { sku: 'PIG-RED-OXIDE', name: 'Red Oxide' },
+  { code: 'KX', name: 'Titanium White' },
+  { code: 'LAMP-BLK', name: 'Lamp Black' },
+  { code: 'RAW-UMB', name: 'Raw Umber' },
+  { code: 'BRN-UMB', name: 'Burnt Umber' },
+  { code: 'YLW-OCH', name: 'Yellow Ochre' },
+  { code: 'EXT-RED', name: 'Exterior Red' },
+  { code: 'PHTH-BLU', name: 'Phthalo Blue' },
+  { code: 'CHR-GRN', name: 'Chrome Green Oxide' },
 ];
 
 export default function CreateColorScreen() {
@@ -37,27 +39,25 @@ export default function CreateColorScreen() {
 
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
-  const [mixKg, setMixKg] = useState('5');
   const [pigments, setPigments] = useState<PigmentRatio[]>([]);
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updatePigment = (sku: string, pigmentName: string, gValue: string) => {
-    const g = parseFloat(gValue) || 0;
+  const updatePigment = (pigmentCode: string, pigmentName: string, mlValue: string) => {
+    const ml = parseFloat(mlValue) || 0;
     setPigments((prev) => {
-      const existing = prev.find((p) => p.pigmentSku === sku);
+      const existing = prev.find((p) => p.pigmentCode === pigmentCode);
       if (existing) {
-        return g === 0
-          ? prev.filter((p) => p.pigmentSku !== sku)
-          : prev.map((p) => p.pigmentSku === sku ? { ...p, ratioGPerKg: g } : p);
+        return ml === 0
+          ? prev.filter((p) => p.pigmentCode !== pigmentCode)
+          : prev.map((p) =>
+              p.pigmentCode === pigmentCode ? buildPigmentRatio(pigmentCode, pigmentName, ml) : p,
+            );
       }
-      return g > 0 ? [...prev, { pigmentSku: sku, pigmentName, ratioGPerKg: g }] : prev;
+      return ml > 0 ? [...prev, buildPigmentRatio(pigmentCode, pigmentName, ml)] : prev;
     });
   };
-
-  const mixKgNum = parseFloat(mixKg) || 5;
-  const scaledFormula = scalePigmentFormula(pigments, mixKgNum);
 
   const handleSave = async () => {
     if (!name.trim()) { setError('Color name is required'); return; }
@@ -98,34 +98,30 @@ export default function CreateColorScreen() {
         <Input label="Color Name" value={name} onChangeText={setName} placeholder="e.g. Coastal Mist" error={error ?? undefined} />
         <Input label="Code (optional)" value={code} onChangeText={setCode} placeholder="e.g. MY-001" autoCapitalize="characters" />
 
-        <Text style={styles.sectionLabel}>Pigments (g per kg of powder)</Text>
+        <Text style={styles.sectionLabel}>Tints (ml per quart of XBond)</Text>
+        <Text style={styles.sectionHint}>Enter amounts for a quart batch. Gallon and 5-gallon scale automatically.</Text>
         {AVAILABLE_PIGMENTS.map((pig) => {
-          const existing = pigments.find((p) => p.pigmentSku === pig.sku);
+          const existing = pigments.find((p) => p.pigmentCode === pig.code);
           return (
-            <View key={pig.sku} style={styles.pigmentRow}>
-              <Text style={styles.pigmentName}>{pig.name}</Text>
+            <View key={pig.code} style={styles.pigmentRow}>
+              <View style={styles.pigmentLabel}>
+                <Text style={styles.pigmentName}>{pig.name}</Text>
+                <Text style={styles.pigmentCode}>{pig.code}</Text>
+              </View>
               <Input
-                value={existing ? String(existing.ratioGPerKg) : ''}
-                onChangeText={(v) => updatePigment(pig.sku, pig.name, v)}
+                value={existing ? String(existing.mlPerQuart) : ''}
+                onChangeText={(v) => updatePigment(pig.code, pig.name, v)}
                 keyboardType="decimal-pad"
                 placeholder="0"
-                suffix="g/kg"
+                suffix="ml"
                 containerStyle={styles.pigmentInput}
               />
             </View>
           );
         })}
 
-        <Input
-          label="Batch Size (for preview)"
-          value={mixKg}
-          onChangeText={setMixKg}
-          keyboardType="decimal-pad"
-          suffix="kg"
-        />
-
         {pigments.length > 0 && (
-          <FormulaDisplay formula={scaledFormula} colorName={name || 'Custom Color'} />
+          <FormulaDisplay pigments={pigments} colorName={name || 'Custom Color'} />
         )}
 
         <Text style={styles.sectionLabel}>Cured Color Photo</Text>
@@ -160,9 +156,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginTop: Spacing.sm,
   },
+  sectionHint: {
+    color: Colors.textDisabled,
+    fontSize: Typography.size.sm,
+    marginTop: -Spacing.sm,
+  },
   pigmentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  pigmentName: { flex: 1, color: Colors.textPrimary, fontSize: Typography.size.base },
-  pigmentInput: { width: 140, marginBottom: 0 },
+  pigmentLabel: { flex: 1 },
+  pigmentName: { color: Colors.textPrimary, fontSize: Typography.size.base },
+  pigmentCode: { color: Colors.textDisabled, fontSize: Typography.size.xs },
+  pigmentInput: { width: 130, marginBottom: 0 },
   cameraSection: { gap: Spacing.sm },
   preview: { width: '100%', height: 200, borderRadius: Radius.lg, backgroundColor: Colors.surfaceElevated },
   cameraBtn: {

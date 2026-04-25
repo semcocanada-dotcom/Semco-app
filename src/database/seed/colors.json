@@ -5,9 +5,7 @@
     "code": "SC-001",
     "isStandard": true,
     "installerId": null,
-    "pigments": [
-      { "pigmentSku": "PIG-WHITE", "pigmentName": "Titanium White", "ratioGPerKg": 0 }
-    ],
+    "pigments": [],
     "photoUrl": null,
     "notes": "Pure white — no pigment addition required. Natural cement tone.",
     "createdAt": "2026-04-18T00:00:00.000Z",
@@ -20,26 +18,11 @@
     "isStandard": true,
     "installerId": null,
     "pigments": [
-      { "pigmentSku": "PIG-BLACK", "pigmentName": "Carbon Black", "ratioGPerKg": 45 },
-      { "pigmentSku": "PIG-BLUE-IRON", "pigmentName": "Iron Blue", "ratioGPerKg": 5 }
+      { "pigmentCode": "LAMP-BLK", "pigmentName": "Lamp Black", "mlPerQuart": 6.0, "mlPerGallon": 24.0, "mlPerFiveGallon": 120.0 },
+      { "pigmentCode": "RAW-UMB", "pigmentName": "Raw Umber", "mlPerQuart": 2.5, "mlPerGallon": 10.0, "mlPerFiveGallon": 50.0 }
     ],
     "photoUrl": null,
-    "notes": "Deep charcoal. Slightly cool undertone from iron blue.",
-    "createdAt": "2026-04-18T00:00:00.000Z",
-    "updatedAt": "2026-04-18T00:00:00.000Z"
-  },
-  {
-    "id": "col-ash",
-    "name": "Ash",
-    "code": "SC-003",
-    "isStandard": true,
-    "installerId": null,
-    "pigments": [
-      { "pigmentSku": "PIG-BLACK", "pigmentName": "Carbon Black", "ratioGPerKg": 18 },
-      { "pigmentSku": "PIG-WHITE", "pigmentName": "Titanium White", "ratioGPerKg": 3 }
-    ],
-    "photoUrl": null,
-    "notes": "Mid-grey with warm cement undertone.",
+    "notes": "Deep charcoal. Run ingest-colors-csv.ts to replace with real Semco XBond formula.",
     "createdAt": "2026-04-18T00:00:00.000Z",
     "updatedAt": "2026-04-18T00:00:00.000Z"
   },
@@ -50,74 +33,11 @@
     "isStandard": true,
     "installerId": null,
     "pigments": [
-      { "pigmentSku": "PIG-YELLOW-OCHRE", "pigmentName": "Yellow Ochre", "ratioGPerKg": 20 },
-      { "pigmentSku": "PIG-BURNT-SIENNA", "pigmentName": "Burnt Sienna", "ratioGPerKg": 5 }
+      { "pigmentCode": "YLW-OCH", "pigmentName": "Yellow Ochre", "mlPerQuart": 4.0, "mlPerGallon": 16.0, "mlPerFiveGallon": 80.0 },
+      { "pigmentCode": "BRN-UMB", "pigmentName": "Burnt Umber", "mlPerQuart": 1.5, "mlPerGallon": 6.0, "mlPerFiveGallon": 30.0 }
     ],
     "photoUrl": null,
-    "notes": "Warm sandy beige. Natural earthy tone.",
-    "createdAt": "2026-04-18T00:00:00.000Z",
-    "updatedAt": "2026-04-18T00:00:00.000Z"
-  },
-  {
-    "id": "col-slate",
-    "name": "Slate",
-    "code": "SC-005",
-    "isStandard": true,
-    "installerId": null,
-    "pigments": [
-      { "pigmentSku": "PIG-BLACK", "pigmentName": "Carbon Black", "ratioGPerKg": 25 },
-      { "pigmentSku": "PIG-BLUE-IRON", "pigmentName": "Iron Blue", "ratioGPerKg": 8 },
-      { "pigmentSku": "PIG-GREEN-CHROME", "pigmentName": "Chrome Green Oxide", "ratioGPerKg": 3 }
-    ],
-    "photoUrl": null,
-    "notes": "Blue-grey slate. Cooler than Graphite with more blue and green character.",
-    "createdAt": "2026-04-18T00:00:00.000Z",
-    "updatedAt": "2026-04-18T00:00:00.000Z"
-  },
-  {
-    "id": "col-linen",
-    "name": "Linen",
-    "code": "SC-006",
-    "isStandard": true,
-    "installerId": null,
-    "pigments": [
-      { "pigmentSku": "PIG-YELLOW-OCHRE", "pigmentName": "Yellow Ochre", "ratioGPerKg": 8 },
-      { "pigmentSku": "PIG-BURNT-SIENNA", "pigmentName": "Burnt Sienna", "ratioGPerKg": 2 },
-      { "pigmentSku": "PIG-BLACK", "pigmentName": "Carbon Black", "ratioGPerKg": 1 }
-    ],
-    "photoUrl": null,
-    "notes": "Very light warm off-white. Subtle warmth without reading yellow.",
-    "createdAt": "2026-04-18T00:00:00.000Z",
-    "updatedAt": "2026-04-18T00:00:00.000Z"
-  },
-  {
-    "id": "col-concrete-raw",
-    "name": "Concrete Raw",
-    "code": "SC-007",
-    "isStandard": true,
-    "installerId": null,
-    "pigments": [
-      { "pigmentSku": "PIG-BLACK", "pigmentName": "Carbon Black", "ratioGPerKg": 5 },
-      { "pigmentSku": "PIG-YELLOW-OCHRE", "pigmentName": "Yellow Ochre", "ratioGPerKg": 3 }
-    ],
-    "photoUrl": null,
-    "notes": "Mimics raw poured concrete. Slight warm-grey tone.",
-    "createdAt": "2026-04-18T00:00:00.000Z",
-    "updatedAt": "2026-04-18T00:00:00.000Z"
-  },
-  {
-    "id": "col-dune",
-    "name": "Dune",
-    "code": "SC-008",
-    "isStandard": true,
-    "installerId": null,
-    "pigments": [
-      { "pigmentSku": "PIG-YELLOW-OCHRE", "pigmentName": "Yellow Ochre", "ratioGPerKg": 30 },
-      { "pigmentSku": "PIG-BURNT-SIENNA", "pigmentName": "Burnt Sienna", "ratioGPerKg": 8 },
-      { "pigmentSku": "PIG-BLACK", "pigmentName": "Carbon Black", "ratioGPerKg": 2 }
-    ],
-    "photoUrl": null,
-    "notes": "Rich warm terracotta-sand. Strong warm presence.",
+    "notes": "Warm sandy beige. Run ingest-colors-csv.ts to replace with real Semco XBond formula.",
     "createdAt": "2026-04-18T00:00:00.000Z",
     "updatedAt": "2026-04-18T00:00:00.000Z"
   }
