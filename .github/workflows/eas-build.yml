@@ -4,49 +4,13 @@ on:
   push:
     branches:
       - claude/autism-grant-app-eUE6R
-  workflow_dispatch:
-    inputs:
-      task:
-        description: 'Task to run'
-        required: true
-        default: 'update'
-        type: choice
-        options:
-          - update
-          - build-preview
 
 jobs:
-  # ── Runs on every push: pushes JS bundle OTA (~30 seconds) ──────────────────
-  update:
-    name: Push OTA Update
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.task == 'update')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install EAS CLI
-        run: npm install -g eas-cli@latest
-
-      - name: Push OTA update
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas update --branch preview --message "${{ github.event.head_commit.message || 'Manual update' }}" --non-interactive
-
-  # ── Manual only: full native build (use when adding native packages) ─────────
+  # Runs when BUILD_TRIGGER file changes — full native build
   build-preview:
     name: Build iOS Preview (Native)
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && inputs.task == 'build-preview'
+    if: contains(github.event.commits[0].modified, 'BUILD_TRIGGER') || contains(github.event.commits[0].added, 'BUILD_TRIGGER')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,3 +31,29 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build --platform ios --profile preview --non-interactive --clear-cache
+
+  # Runs on all other pushes — fast OTA update (~30 seconds)
+  update:
+    name: Push OTA Update
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.commits[0].modified, 'BUILD_TRIGGER') && !contains(github.event.commits[0].added, 'BUILD_TRIGGER')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@latest
+
+      - name: Push OTA update
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas update --branch preview --message "${{ github.event.head_commit.message }}" --non-interactive
