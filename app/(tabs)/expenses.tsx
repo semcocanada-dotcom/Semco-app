@@ -25,7 +25,7 @@ import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear } 
 import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
-import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD } from '@lib/mileageUtils';
+import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -777,7 +777,7 @@ function MileageOnlyModal({
     if (visible) {
       setDate(format(new Date(), 'yyyy-MM-dd')); setNotes('');
       setProviderQuery(''); setSelectedProvider(null); setProviderResults([]);
-      setDistanceKm(''); setRatePerKm(''); setIsRoundTrip(false); setSaving(false);
+      setDistanceKm(''); setRatePerKm(String(SOUTHERN_RATE_PER_KM)); setIsRoundTrip(false); setSaving(false);
     }
   }, [visible]);
 
@@ -1062,21 +1062,39 @@ export default function ExpensesScreen() {
         }
       />
 
-      {/* FABs — only shown when a funding year exists */}
-      {summary.fundingYear && (
-        <View style={s.fabStack}>
-          <TouchableOpacity style={s.fabMileageWrap} onPress={() => setShowMileage(true)} activeOpacity={0.85}>
-            <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fabSmall}>
-              <Text style={{ fontSize: 18 }}>🚗</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          <TouchableOpacity style={s.fabWrap} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
-            <LinearGradient colors={Colors.gradients.purple as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fab}>
-              <Text style={s.fabPlus}>+</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* FABs — always visible; alert if no funding year */}
+      <View style={s.fabStack}>
+        <TouchableOpacity
+          style={s.fabMileageWrap}
+          onPress={() => {
+            if (!summary.fundingYear) {
+              Alert.alert('No Active Funding Year', 'Set up a funding year for this child in the Profile tab before logging mileage.');
+              return;
+            }
+            setShowMileage(true);
+          }}
+          activeOpacity={0.85}
+        >
+          <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fabSmall}>
+            <Text style={{ fontSize: 18 }}>🚗</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={s.fabWrap}
+          onPress={() => {
+            if (!summary.fundingYear) {
+              Alert.alert('No Active Funding Year', 'Set up a funding year for this child in the Profile tab before logging expenses.');
+              return;
+            }
+            setShowAdd(true);
+          }}
+          activeOpacity={0.85}
+        >
+          <LinearGradient colors={Colors.gradients.purple as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fab}>
+            <Text style={s.fabPlus}>+</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
       {summary.fundingYear && (
         <>

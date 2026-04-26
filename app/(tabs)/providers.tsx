@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { Provider, ProviderCategory } from '@lib/types';
 
-// ─── Category config ────────────────────────────────────────────────────────
+// ─── Category config ─────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: ProviderCategory | 'all'; label: string; emoji: string }[] = [
   { value: 'all',                  label: 'All',                    emoji: '🔍' },
@@ -52,21 +52,20 @@ const CATEGORY_GRADIENT: Record<string, readonly [string, string]> = {
   other:                ['#9CA3AF', '#6B7280'] as const,
 };
 
-function categoryLabel(cat: ProviderCategory): string {
+function categoryLabel(cat: ProviderCategory) {
   return CATEGORIES.find(c => c.value === cat)?.label ?? cat;
 }
-function categoryEmoji(cat: ProviderCategory): string {
+function categoryEmoji(cat: ProviderCategory) {
   return CATEGORIES.find(c => c.value === cat)?.emoji ?? '📋';
 }
 
-// ─── ProviderCard ────────────────────────────────────────────────────────────
+// ─── ProviderCard ─────────────────────────────────────────────────────────────
 
 function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () => void }) {
   const gradient = CATEGORY_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
   return (
     <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.card}>
       <View style={styles.cardInner}>
-        {/* Category badge */}
         <LinearGradient
           colors={gradient as unknown as string[]}
           start={{ x: 0, y: 0 }}
@@ -78,27 +77,22 @@ function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () =
           </Text>
         </LinearGradient>
 
-        {/* Name */}
         <Text style={styles.providerName} numberOfLines={2}>{provider.name}</Text>
 
-        {/* Organization */}
         {!!provider.organization && (
           <Text style={styles.providerOrg} numberOfLines={1}>{provider.organization}</Text>
         )}
 
-        {/* City */}
         {!!provider.city && (
           <Text style={styles.providerCity}>
             📍 {provider.city}{provider.postal_code ? `, ${provider.postal_code}` : ''}, SK
           </Text>
         )}
 
-        {/* Notes preview */}
         {!!provider.notes && (
           <Text style={styles.notesPreview} numberOfLines={2}>{provider.notes}</Text>
         )}
 
-        {/* Contact chips */}
         <View style={styles.contactRow}>
           {!!provider.phone && (
             <TouchableOpacity
@@ -130,12 +124,11 @@ function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () =
   );
 }
 
-// ─── ProviderDetail modal ────────────────────────────────────────────────────
+// ─── ProviderDetail modal ─────────────────────────────────────────────────────
 
 function ProviderDetailModal({ provider, onClose }: { provider: Provider | null; onClose: () => void }) {
   if (!provider) return null;
   const gradient = CATEGORY_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
-
   const fullAddress = [
     provider.address,
     [provider.city, provider.province, provider.postal_code].filter(Boolean).join(' '),
@@ -144,7 +137,6 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
-        {/* Header */}
         <LinearGradient
           colors={gradient as unknown as string[]}
           start={{ x: 0, y: 0 }}
@@ -168,8 +160,6 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
         </LinearGradient>
 
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.modalBody}>
-
-          {/* Notes / description */}
           {!!provider.notes && (
             <>
               <Text style={styles.sectionLabel}>About</Text>
@@ -181,7 +171,6 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
             </>
           )}
 
-          {/* Contact section */}
           <Text style={styles.sectionLabel}>Contact</Text>
           <View style={styles.detailCard}>
             {provider.phone ? (
@@ -241,7 +230,6 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
             )}
           </View>
 
-          {/* Location */}
           {(!!provider.address || !!provider.city) && (
             <>
               <Text style={styles.sectionLabel}>Location</Text>
@@ -256,7 +244,6 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
             </>
           )}
 
-          {/* Book Appointment */}
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => {
@@ -274,7 +261,6 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* SK Approved badge */}
           {provider.is_approved_sk && (
             <View style={styles.approvedBadge}>
               <Text style={styles.approvedText}>✓ Saskatchewan IAF Approved Provider</Text>
@@ -286,15 +272,16 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
   );
 }
 
-// ─── Main screen ─────────────────────────────────────────────────────────────
+// ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function ProvidersScreen() {
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [filtered, setFiltered] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [providers,      setProviders]      = useState<Provider[]>([]);
+  const [filtered,       setFiltered]       = useState<Provider[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [search,         setSearch]         = useState('');
   const [activeCategory, setActiveCategory] = useState<ProviderCategory | 'all'>('all');
-  const [selected, setSelected] = useState<Provider | null>(null);
+  const [activeCity,     setActiveCity]     = useState<string>('');
+  const [selected,       setSelected]       = useState<Provider | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -312,12 +299,18 @@ export default function ProvidersScreen() {
       });
   }, []);
 
+  const cities = useMemo(
+    () => [...new Set(providers.map(p => p.city).filter(Boolean) as string[])].sort(),
+    [providers]
+  );
+
   const applyFilter = useCallback(
-    (query: string, cat: ProviderCategory | 'all', list: Provider[]) => {
+    (query: string, cat: ProviderCategory | 'all', city: string, list: Provider[]) => {
       const q = query.toLowerCase().trim();
-      const result = list.filter(p => {
-        const matchCat = cat === 'all' || p.category === cat;
-        if (!matchCat) return false;
+      setFiltered(list.filter(p => {
+        const matchCat  = cat === 'all' || p.category === cat;
+        const matchCity = !city || p.city?.toLowerCase() === city.toLowerCase();
+        if (!matchCat || !matchCity) return false;
         if (!q) return true;
         return (
           p.name.toLowerCase().includes(q) ||
@@ -327,8 +320,7 @@ export default function ProvidersScreen() {
           (p.website?.toLowerCase().includes(q) ?? false) ||
           (p.notes?.toLowerCase().includes(q) ?? false)
         );
-      });
-      setFiltered(result);
+      }));
     },
     []
   );
@@ -336,12 +328,17 @@ export default function ProvidersScreen() {
   const handleSearch = (text: string) => {
     setSearch(text);
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => applyFilter(text, activeCategory, providers), 200);
+    searchTimer.current = setTimeout(() => applyFilter(text, activeCategory, activeCity, providers), 200);
   };
 
   const handleCategory = (cat: ProviderCategory | 'all') => {
     setActiveCategory(cat);
-    applyFilter(search, cat, providers);
+    applyFilter(search, cat, activeCity, providers);
+  };
+
+  const handleCity = (city: string) => {
+    setActiveCity(city);
+    applyFilter(search, activeCategory, city, providers);
   };
 
   const renderItem = useCallback(
@@ -351,9 +348,10 @@ export default function ProvidersScreen() {
     []
   );
 
-  const ListHeader = useCallback(() => (
-    <View>
-      {/* Header */}
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+
+      {/* Static header — outside FlatList so the TextInput never re-mounts */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>SK Providers</Text>
         <Text style={styles.headerSub}>
@@ -373,11 +371,44 @@ export default function ProvidersScreen() {
             onChangeText={handleSearch}
             returnKeyType="search"
             clearButtonMode="while-editing"
+            autoCorrect={false}
           />
         </View>
       </View>
 
-      {/* Category filter chips */}
+      {/* City filter */}
+      {cities.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.cityScroll}
+          keyboardShouldPersistTaps="always"
+        >
+          <TouchableOpacity
+            style={[styles.cityChip, !activeCity && styles.cityChipActive]}
+            onPress={() => handleCity('')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.cityChipText, !activeCity && styles.cityChipTextActive]}>
+              All Cities
+            </Text>
+          </TouchableOpacity>
+          {cities.map(city => (
+            <TouchableOpacity
+              key={city}
+              style={[styles.cityChip, activeCity === city && styles.cityChipActive]}
+              onPress={() => handleCity(city)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.cityChipText, activeCity === city && styles.cityChipTextActive]}>
+                📍 {city}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Category chips */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -423,17 +454,11 @@ export default function ProvidersScreen() {
           <Text style={styles.loadingText}>Loading providers…</Text>
         </View>
       )}
-    </View>
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [search, activeCategory, loading, filtered.length, providers.length]);
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
       <FlatList
         data={loading ? [] : filtered}
         keyExtractor={item => item.id}
         renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         initialNumToRender={12}
@@ -441,17 +466,16 @@ export default function ProvidersScreen() {
         windowSize={10}
         removeClippedSubviews
         ListEmptyComponent={
-          !loading && filtered.length === 0 ? (
+          !loading ? (
             <View style={styles.centered}>
               <Text style={{ fontSize: 40, marginBottom: 12 }}>🔎</Text>
               <Text style={styles.emptyTitle}>No providers found</Text>
-              <Text style={styles.emptySubtitle}>Try a different search or category</Text>
+              <Text style={styles.emptySubtitle}>Try a different search, city, or category</Text>
             </View>
           ) : null
         }
       />
 
-      {/* Detail modal */}
       <ProviderDetailModal provider={selected} onClose={() => setSelected(null)} />
     </SafeAreaView>
   );
@@ -461,297 +485,73 @@ export default function ProvidersScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 4,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4,
+    flexDirection: 'row', alignItems: 'baseline', gap: 8,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: Colors.textMuted,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  headerSub:   { fontSize: 13, color: Colors.textMuted },
+
+  searchContainer: { paddingHorizontal: 16, paddingVertical: 8 },
   searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 12,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 4,
-    gap: 8,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.surface, borderRadius: 14,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: 12, paddingVertical: Platform.OS === 'ios' ? 10 : 4, gap: 8,
   },
-  searchIcon: { fontSize: 16 },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  catScroll: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    gap: 8,
-    flexDirection: 'row',
-  },
-  catChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  catChipText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  catChipActiveWrapper: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  catChipActive: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  catChipTextActive: {
-    fontSize: 13,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  listContent: {
-    paddingBottom: 32,
-    gap: 10,
-  },
-  card: {
-    marginHorizontal: 16,
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-    shadowColor: Colors.purple,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardInner: {
-    padding: 14,
-    gap: 6,
-  },
-  badge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  providerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginTop: 2,
-  },
-  providerOrg: {
-    fontSize: 13,
-    color: Colors.purple,
-    fontWeight: '500',
-  },
-  providerCity: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  notesPreview: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    lineHeight: 17,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  contactChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    backgroundColor: Colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  contactChipText: {
-    fontSize: 12,
-    color: Colors.purple,
-    fontWeight: '500',
-  },
-  centered: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    paddingTop: 48,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: Colors.textSecondary,
-    fontSize: 14,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: Colors.textMuted,
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  // Modal
-  modalHeader: {
-    padding: 24,
-    paddingTop: 16,
-    alignItems: 'center',
-    gap: 4,
-  },
-  closeBtn: {
-    alignSelf: 'flex-end',
-    padding: 8,
-  },
-  closeBtnText: {
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600',
-  },
-  modalEmoji: {
-    fontSize: 40,
-    marginBottom: 4,
-  },
-  modalCategory: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.75)',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  modalName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    textAlign: 'center',
-  },
-  modalOrg: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  modalCity: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.75)',
-    marginTop: 2,
-  },
-  modalBody: {
-    padding: 20,
-    gap: 8,
-    paddingBottom: 48,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  detailCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    gap: 12,
-  },
-  detailIcon: { fontSize: 20 },
-  detailLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    marginBottom: 1,
-  },
-  detailValue: {
-    fontSize: 15,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-  detailMuted: {
-    fontSize: 14,
-    color: Colors.textMuted,
-  },
-  link: {
-    color: Colors.purple,
-  },
-  chevron: {
-    fontSize: 22,
-    color: Colors.textMuted,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginHorizontal: 14,
-  },
-  bookBtn: {
-    marginTop: 20,
-    borderRadius: 16,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  bookBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.2,
-  },
-  approvedBadge: {
-    marginTop: 12,
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#6EE7B7',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  approvedText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#059669',
-  },
+  searchIcon:  { fontSize: 16 },
+  searchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary },
+
+  cityScroll:         { paddingHorizontal: 16, paddingBottom: 4, gap: 8, flexDirection: 'row' },
+  cityChip:           { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
+  cityChipActive:     { backgroundColor: Colors.purple, borderColor: Colors.purple },
+  cityChipText:       { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
+  cityChipTextActive: { color: '#FFFFFF', fontWeight: '600' },
+
+  catScroll:           { paddingHorizontal: 16, paddingVertical: 6, gap: 8, flexDirection: 'row' },
+  catChip:             { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
+  catChipText:         { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
+  catChipActiveWrapper:{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, overflow: 'hidden' },
+  catChipTextActive:   { fontSize: 13, color: '#FFFFFF', fontWeight: '600' },
+
+  listContent:  { paddingBottom: 32, gap: 10, paddingTop: 6 },
+  card:         { marginHorizontal: 16, backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', shadowColor: Colors.purple, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  cardInner:    { padding: 14, gap: 6 },
+  badge:        { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
+  badgeText:    { fontSize: 11, fontWeight: '600', color: '#FFFFFF' },
+  providerName: { fontSize: 16, fontWeight: '600', color: Colors.textPrimary, marginTop: 2 },
+  providerOrg:  { fontSize: 13, color: Colors.purple, fontWeight: '500' },
+  providerCity: { fontSize: 13, color: Colors.textSecondary },
+  notesPreview: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
+  contactRow:   { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  contactChip:  { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
+  contactChipText: { fontSize: 12, color: Colors.purple, fontWeight: '500' },
+
+  centered:     { alignItems: 'center', justifyContent: 'center', padding: 32, paddingTop: 48 },
+  loadingText:  { marginTop: 12, color: Colors.textSecondary, fontSize: 14 },
+  emptyTitle:   { fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
+  emptySubtitle:{ fontSize: 14, color: Colors.textMuted, marginTop: 6, textAlign: 'center' },
+
+  modalHeader:  { padding: 24, paddingTop: 16, alignItems: 'center', gap: 4 },
+  closeBtn:     { alignSelf: 'flex-end', padding: 8 },
+  closeBtnText: { fontSize: 18, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
+  modalEmoji:   { fontSize: 40, marginBottom: 4 },
+  modalCategory:{ fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  modalName:    { fontSize: 22, fontWeight: '700', color: '#FFFFFF', textAlign: 'center' },
+  modalOrg:     { fontSize: 14, color: 'rgba(255,255,255,0.9)', fontWeight: '500', marginTop: 2 },
+  modalCity:    { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
+  modalBody:    { padding: 20, gap: 8, paddingBottom: 48 },
+  sectionLabel: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12, marginBottom: 4 },
+  detailCard:   { backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
+  detailRow:    { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
+  detailIcon:   { fontSize: 20 },
+  detailLabel:  { fontSize: 11, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 1 },
+  detailValue:  { fontSize: 15, color: Colors.textPrimary, fontWeight: '500' },
+  detailMuted:  { fontSize: 14, color: Colors.textMuted },
+  link:         { color: Colors.purple },
+  chevron:      { fontSize: 22, color: Colors.textMuted },
+  divider:      { height: 1, backgroundColor: Colors.border, marginHorizontal: 14 },
+  bookBtn:      { marginTop: 20, borderRadius: 16, paddingVertical: 15, alignItems: 'center' },
+  bookBtnText:  { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.2 },
+  approvedBadge:{ marginTop: 12, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
+  approvedText: { fontSize: 13, fontWeight: '600', color: '#059669' },
 });
