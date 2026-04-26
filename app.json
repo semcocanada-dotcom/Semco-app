@@ -8,6 +8,12 @@
     "scheme": "autismfundtracker",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FAF8FF",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6300fb3b-12f9-4b5c-9d1d-66dba1f328ee"
+    },
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -31,6 +37,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-updates",
       "expo-font",
       [
         "expo-splash-screen",
