@@ -117,11 +117,11 @@ function SearchContent() {
       {itemCount > 0 && (
         <div className="fixed bottom-20 left-0 right-0 px-4 pointer-events-none z-30">
           <button
-            onClick={() => router.push("/cart")}
+            onClick={() => router.push("/toolbox")}
             className="spring-tap w-full max-w-lg mx-auto flex items-center justify-between bg-brand text-white rounded-2xl px-5 py-3.5 shadow-card-lg pointer-events-auto"
-            style={{ background: "linear-gradient(135deg, #1A8FA8, #136F84)" }}
+            style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
           >
-            <span className="text-[15px] font-bold">View Cart</span>
+            <span className="text-[15px] font-bold">View Toolbox</span>
             <span className="bg-white/20 text-white text-[13px] font-bold px-2.5 py-1 rounded-full">
               {itemCount} {itemCount === 1 ? "item" : "items"}
             </span>

@@ -53,7 +53,7 @@ export default function CalculatorPage() {
     });
     setAdded(true);
     setTimeout(() => {
-      router.push("/cart");
+      router.push("/toolbox");
     }, 500);
   }
 

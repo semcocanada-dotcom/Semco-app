@@ -16,7 +16,7 @@ export default function ReorderButton() {
     setTimeout(() => {
       reorder();
       setState("done");
-      setTimeout(() => router.push("/cart"), 380);
+      setTimeout(() => router.push("/toolbox"), 380);
     }, 320);
   }
 
@@ -33,7 +33,7 @@ export default function ReorderButton() {
         background:
           state === "done"
             ? "#34C759"
-            : "linear-gradient(135deg, #1A8FA8 0%, #136F84 100%)",
+            : "linear-gradient(135deg, #1C3A6E 0%, #142B52 100%)",
       }}
     >
       {/* Decorative circles */}
@@ -61,11 +61,11 @@ export default function ReorderButton() {
               </svg>
             )}
             <span className="text-[17px] font-bold text-white">
-              {state === "done" ? "Opening cart…" : "Reorder Last Order"}
+              {state === "done" ? "Opening Toolbox…" : "Reorder Last Order"}
             </span>
           </div>
           <p className="text-[13px] text-white/70 font-medium">
-            {itemCount} items · ${total.toFixed(2)} CAD
+            Takes 30 seconds · {itemCount} items
           </p>
         </div>
 

@@ -9,58 +9,60 @@ const tabs = [
   {
     href: "/",
     label: "Home",
+    match: (p: string) => p === "/",
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9 21 9 15 12 15C15 15 15 21 15 21M9 21H15"
-          stroke={active ? "#1A8FA8" : "#6E6E73"}
-          strokeWidth={active ? "2" : "1.5"}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.55 5.45 21 6 21H9M19 10L21 12M19 10V20C19 20.55 18.55 21 18 21H15M9 21V15C9 14.45 9.45 14 10 14H14C14.55 14 15 14.45 15 15V21M9 21H15"
+          stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"}
+          strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
   {
     href: "/search",
     label: "Search",
+    match: (p: string) => p.startsWith("/search") || p.startsWith("/product"),
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <circle cx="11" cy="11" r="7" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
-        <path d="M16.5 16.5L21 21" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
+        <circle cx="11" cy="11" r="7" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <path d="M16.5 16.5L21 21" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
       </svg>
     ),
   },
   {
-    href: "/cart",
-    label: "Cart",
+    href: "/kits",
+    label: "Kits",
+    match: (p: string) => p.startsWith("/kits"),
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M6 2L3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6L18 2H6Z"
-          stroke={active ? "#1A8FA8" : "#6E6E73"}
-          strokeWidth={active ? "2" : "1.5"}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path d="M3 6H21" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
-        <path
-          d="M16 10C16 12.2091 14.2091 14 12 14C9.79086 14 8 12.2091 8 10"
-          stroke={active ? "#1A8FA8" : "#6E6E73"}
-          strokeWidth={active ? "2" : "1.5"}
-          strokeLinecap="round"
-        />
+        <rect x="3" y="3" width="8" height="8" rx="1.5" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <rect x="13" y="3" width="8" height="8" rx="1.5" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <rect x="3" y="13" width="8" height="8" rx="1.5" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <rect x="13" y="13" width="8" height="8" rx="1.5" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
       </svg>
     ),
   },
   {
-    href: "/calculator",
-    label: "Calculate",
+    href: "/toolbox",
+    label: "Toolbox",
+    match: (p: string) => p.startsWith("/toolbox") || p.startsWith("/confirmation"),
     icon: (active: boolean) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="2" width="16" height="20" rx="2" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
-        <path d="M8 6H16" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
-        <path d="M8 10H10M14 10H16M8 14H10M14 14H16M8 18H10M14 18H16" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
+        <rect x="2" y="7" width="20" height="14" rx="2" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <path d="M8 7V5C8 3.895 8.895 3 10 3H14C15.105 3 16 3.895 16 5V7" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <path d="M2 12H22" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <path d="M12 12V15" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: "/account",
+    label: "Account",
+    match: (p: string) => p.startsWith("/account"),
+    icon: (active: boolean) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="8" r="4" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} />
+        <path d="M4 20C4 17 7.582 14 12 14C16.418 14 20 17 20 20" stroke={active ? "#1C3A6E" : "#6E6E73"} strokeWidth={active ? "2" : "1.5"} strokeLinecap="round" />
       </svg>
     ),
   },
@@ -83,38 +85,27 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-separator/40 safe-area-pb">
-      <div className="flex items-center justify-around px-2 pt-1.5 pb-1 max-w-lg mx-auto">
+      <div className="flex items-center justify-around px-1 pt-1.5 pb-1 max-w-lg mx-auto">
         {tabs.map((tab) => {
-          const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
+          const active = tab.match(pathname);
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className="spring-tap flex flex-col items-center gap-0.5 min-w-[64px] py-1 px-2 relative"
+              className="spring-tap flex flex-col items-center gap-0.5 flex-1 py-1 px-1 relative"
             >
-              {/* Active indicator pill */}
-              <div
-                className={`absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-brand transition-all duration-300 ease-out ${
-                  active ? "w-5 opacity-100" : "w-0 opacity-0"
-                }`}
-              />
+              {/* Active pill indicator */}
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-navy transition-all duration-300 ${active ? "w-5 opacity-100" : "w-0 opacity-0"}`} />
 
               <div className="relative">
                 {tab.icon(active)}
-                {tab.href === "/cart" && itemCount > 0 && (
-                  <span
-                    key={badgeKey}
-                    className="animate-badge absolute -top-1.5 -right-1.5 bg-brand text-white text-[10px] font-bold min-w-[17px] h-[17px] flex items-center justify-center rounded-full px-1 leading-none"
-                  >
+                {tab.href === "/toolbox" && itemCount > 0 && (
+                  <span key={badgeKey} className="animate-badge absolute -top-1.5 -right-2 bg-navy text-white text-[9px] font-bold min-w-[16px] h-4 flex items-center justify-center rounded-full px-1 leading-none">
                     {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 )}
               </div>
-              <span
-                className={`text-[10px] font-semibold tracking-tight transition-colors duration-200 ${
-                  active ? "text-brand" : "text-text2"
-                }`}
-              >
+              <span className={`text-[10px] font-semibold transition-colors duration-200 ${active ? "text-navy" : "text-text2"}`}>
                 {tab.label}
               </span>
             </Link>

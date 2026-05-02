@@ -3,6 +3,7 @@
 import { useCart } from "@/lib/store";
 import { smartSuggestions } from "@/lib/data";
 import { useState } from "react";
+import ProductImage from "./ProductImage";
 
 export default function SmartSuggestions() {
   const { addItem, items } = useCart();
@@ -31,7 +32,8 @@ export default function SmartSuggestions() {
         {visible.slice(0, 3).map((product, idx) => (
           <div key={product.id}>
             {idx > 0 && <div className="h-px bg-separator ml-4" />}
-            <div className="flex items-center justify-between px-4 py-3.5">
+            <div className="flex items-center gap-3 px-4 py-3.5">
+              <ProductImage product={product} size="sm" />
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-semibold text-text1 truncate">{product.name}</p>
                 <p className="text-[12px] text-text2 mt-0.5">

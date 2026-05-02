@@ -5,9 +5,27 @@ export interface Product {
   price: number;
   unit: string;
   category: string;
+  brand: string;
+  description: string;
+  prosUsing: number;
+  inStock: boolean;
+  image?: string; // URL — drop real photo here; component falls back to placeholder
 }
 
 export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export interface Kit {
+  id: number;
+  name: string;
+  description: string;
+  items: KitItem[];
+  category: string;
+}
+
+export interface KitItem {
   product: Product;
   quantity: number;
 }

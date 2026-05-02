@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { recentItems, savedJobs } from "@/lib/data";
+import { recentItems, savedJobs, proTools } from "@/lib/data";
 import ReorderButton from "@/components/ReorderButton";
 import { useCart } from "@/lib/store";
 import { useState } from "react";
+import ProductImage from "@/components/ProductImage";
+import AvatarStack from "@/components/AvatarStack";
 
 /* ─── Category tile config ───────────────────────────── */
 const categories = [
@@ -141,13 +143,20 @@ export default function HomePage() {
           </div>
 
           {/* Avatar */}
-          <div
-            className="spring-tap-strong w-9 h-9 rounded-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #1A8FA8, #136F84)" }}
-          >
-            <span className="text-[14px] font-bold text-white">M</span>
-          </div>
+          <Link href="/account">
+            <div
+              className="spring-tap-strong w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
+            >
+              <span className="text-[14px] font-bold text-white">M</span>
+            </div>
+          </Link>
         </div>
+
+        {/* Greeting */}
+        <p className="text-[15px] font-semibold text-text1 mb-3">
+          Good morning, Mike
+        </p>
 
         {/* Search bar */}
         <Link href="/search" className="spring-tap block">
@@ -218,6 +227,34 @@ export default function HomePage() {
                   </span>
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Tools Pros Are Using ─────────────── */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-[12px] font-bold text-text2 uppercase tracking-widest">Tools Pros Are Using</h2>
+            <Link href="/search" className="text-[13px] text-brand font-semibold">See All</Link>
+          </div>
+          <div className="bg-surface rounded-2xl overflow-hidden border border-separator shadow-card">
+            {proTools.map(({ product, prosCount }, idx) => (
+              <div key={product.id}>
+                {idx > 0 && <div className="h-px bg-separator" />}
+                <Link href={`/product/${product.id}`} className="flex items-center gap-3.5 px-4 py-3.5 active:bg-bg transition-colors">
+                  <ProductImage product={product} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-text1 truncate">{product.name}</p>
+                    <div className="mt-1">
+                      <AvatarStack count={prosCount} size="sm" max={3} />
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[14px] font-bold text-text1">${product.price.toFixed(2)}</p>
+                    <p className="text-[11px] text-text2">{product.unit}</p>
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         </div>
