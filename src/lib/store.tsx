@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useReducer } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useReducer } from "react";
 import { CartItem, Product } from "./types";
 import { lastOrder } from "./data";
 
@@ -33,9 +33,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       if (existing) {
         return {
           items: state.items.map((i) =>
-            i.product.id === action.product.id
-              ? { ...i, quantity: i.quantity + 1 }
-              : i
+            i.product.id === action.product.id ? { ...i, quantity: i.quantity + 1 } : i
           ),
         };
       }
@@ -44,9 +42,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "REMOVE_ITEM":
       return { items: state.items.filter((i) => i.product.id !== action.productId) };
     case "SET_QUANTITY": {
-      if (action.quantity <= 0) {
+      if (action.quantity <= 0)
         return { items: state.items.filter((i) => i.product.id !== action.productId) };
-      }
       return {
         items: state.items.map((i) =>
           i.product.id === action.productId ? { ...i, quantity: action.quantity } : i
@@ -67,25 +64,21 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
 
-  const itemCount = state.items.reduce((sum, i) => sum + i.quantity, 0);
-  const total = state.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const addItem    = useCallback((product: Product) => dispatch({ type: "ADD_ITEM", product }), []);
+  const removeItem = useCallback((productId: number) => dispatch({ type: "REMOVE_ITEM", productId }), []);
+  const setQuantity = useCallback((productId: number, quantity: number) => dispatch({ type: "SET_QUANTITY", productId, quantity }), []);
+  const clearCart  = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
+  const reorder    = useCallback(() => dispatch({ type: "REORDER" }), []);
 
-  return (
-    <CartContext.Provider
-      value={{
-        items: state.items,
-        itemCount,
-        total,
-        addItem: (product) => dispatch({ type: "ADD_ITEM", product }),
-        removeItem: (productId) => dispatch({ type: "REMOVE_ITEM", productId }),
-        setQuantity: (productId, quantity) => dispatch({ type: "SET_QUANTITY", productId, quantity }),
-        clearCart: () => dispatch({ type: "CLEAR_CART" }),
-        reorder: () => dispatch({ type: "REORDER" }),
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+  const itemCount = state.items.reduce((sum, i) => sum + i.quantity, 0);
+  const total     = state.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+
+  const value = useMemo<CartContextValue>(
+    () => ({ items: state.items, itemCount, total, addItem, removeItem, setQuantity, clearCart, reorder }),
+    [state.items, itemCount, total, addItem, removeItem, setQuantity, clearCart, reorder]
   );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

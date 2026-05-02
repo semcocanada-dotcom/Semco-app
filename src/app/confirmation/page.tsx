@@ -14,11 +14,12 @@ export default function ConfirmationPage() {
   const { clearCart } = useCart();
   const router = useRouter();
   const [visible, setVisible] = useState(false);
-  const [orderNumber] = useState(() => `BTT-${Math.floor(10000 + Math.random() * 90000)}`);
+  const [orderNumber, setOrderNumber] = useState("BTT-00000");
 
   useEffect(() => {
+    setOrderNumber(`BTT-${Math.floor(10000 + Math.random() * 90000)}`);
     clearCart();
-    const t = setTimeout(() => setVisible(true), 100);
+    const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
   }, [clearCart]);
 
@@ -66,7 +67,7 @@ export default function ConfirmationPage() {
 
         <h1 className="text-[28px] font-bold text-text1 mb-1">Order Received</h1>
         <p className="text-[15px] text-text2 mb-1">{orderNumber}</p>
-        <p className="text-[14px] text-text2 mb-8">
+        <p className="text-[14px] text-text2 mb-8" suppressHydrationWarning>
           {new Date().toLocaleDateString("en-CA", {
             weekday: "long",
             month: "short",
