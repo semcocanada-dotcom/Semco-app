@@ -12,7 +12,7 @@ const tabs = [
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
           d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.5523 5.44772 21 6 21H9M19 10L21 12M19 10V20C19 20.5523 18.5523 21 18 21H15M9 21C9 21 9 15 12 15C15 15 15 21 15 21M9 21H15"
-          stroke={active ? "#C8102E" : "#6E6E73"}
+          stroke={active ? "#1A8FA8" : "#6E6E73"}
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -25,8 +25,8 @@ const tabs = [
     label: "Search",
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <circle cx="11" cy="11" r="7" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" />
-        <path d="M16.5 16.5L21 21" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <circle cx="11" cy="11" r="7" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" />
+        <path d="M16.5 16.5L21 21" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -37,15 +37,15 @@ const tabs = [
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
           d="M6 2L3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6L18 2H6Z"
-          stroke={active ? "#C8102E" : "#6E6E73"}
+          stroke={active ? "#1A8FA8" : "#6E6E73"}
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path d="M3 6H21" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M3 6H21" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
         <path
           d="M16 10C16 12.2091 14.2091 14 12 14C9.79086 14 8 12.2091 8 10"
-          stroke={active ? "#C8102E" : "#6E6E73"}
+          stroke={active ? "#1A8FA8" : "#6E6E73"}
           strokeWidth="1.75"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -58,14 +58,14 @@ const tabs = [
     label: "Calculate",
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="2" width="16" height="20" rx="2" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" />
-        <path d="M8 6H16" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M8 10H10" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M14 10H16" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M8 14H10" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M14 14H16" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M8 18H10" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
-        <path d="M14 18H16" stroke={active ? "#C8102E" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <rect x="4" y="2" width="16" height="20" rx="2" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" />
+        <path d="M8 6H16" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M8 10H10" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M14 10H16" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M8 14H10" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M14 14H16" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M8 18H10" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
+        <path d="M14 18H16" stroke={active ? "#1A8FA8" : "#6E6E73"} strokeWidth="1.75" strokeLinecap="round" />
       </svg>
     ),
   },

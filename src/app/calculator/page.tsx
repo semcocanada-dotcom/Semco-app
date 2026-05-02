@@ -167,8 +167,8 @@ export default function CalculatorPage() {
           <div className="text-center py-8 px-4">
             <div className="w-14 h-14 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-3">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <rect x="4" y="2" width="16" height="20" rx="2" stroke="#C8102E" strokeWidth="1.5" />
-                <path d="M8 7H16M8 11H16M8 15H12" stroke="#C8102E" strokeWidth="1.5" strokeLinecap="round" />
+                <rect x="4" y="2" width="16" height="20" rx="2" stroke="#1A8FA8" strokeWidth="1.5" />
+                <path d="M8 7H16M8 11H16M8 15H12" stroke="#1A8FA8" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
             <p className="text-[15px] font-medium text-text1">Enter your room size</p>

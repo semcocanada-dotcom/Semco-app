@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 :root {
-  --color-brand: #C8102E;
-  --color-brand-dark: #A00E25;
+  --color-brand: #1A8FA8;
+  --color-brand-dark: #136F84;
   --color-bg: #F5F5F7;
   --color-surface: #FFFFFF;
   --color-text1: #1D1D1F;

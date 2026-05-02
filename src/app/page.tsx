@@ -14,15 +14,20 @@ export default function HomePage() {
       <div className="bg-surface px-4 pt-14 pb-4 border-b border-separator">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-brand rounded-lg flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2L3 5.5V12.5L9 16L15 12.5V5.5L9 2Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M9 2V16M3 5.5L15 12.5M15 5.5L3 12.5" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+            {/* Bart's logo mark */}
+            <div className="w-9 h-9 bg-brand rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <rect x="3" y="10" width="16" height="9" rx="1" fill="white" fillOpacity="0.25" />
+                <path d="M5 10V7C5 4.79 7.69 3 11 3C14.31 3 17 4.79 17 7V10" stroke="white" strokeWidth="1.75" strokeLinecap="round" />
+                <circle cx="11" cy="14" r="2" fill="white" />
+                <path d="M11 16V19" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
             <div>
-              <p className="text-[11px] text-text2 leading-none">Welcome back</p>
-              <p className="text-[15px] font-semibold text-text1 leading-tight">Mike's Drywall</p>
+              <p className="text-[17px] font-bold text-text1 leading-tight tracking-tight">
+                Bart&apos;s <span className="text-brand font-semibold text-[13px] uppercase tracking-wide">Taping Tools</span>
+              </p>
+              <p className="text-[11px] text-text2 leading-none">Welcome back, Mike</p>
             </div>
           </div>
           <div className="w-9 h-9 bg-brand rounded-full flex items-center justify-center">
@@ -99,9 +104,9 @@ export default function HomePage() {
             </div>
             <div className="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="5" width="16" height="12" rx="2" stroke="#C8102E" strokeWidth="1.5" />
-                <path d="M2 9H18" stroke="#C8102E" strokeWidth="1.5" />
-                <circle cx="6" cy="13" r="1" fill="#C8102E" />
+                <rect x="2" y="5" width="16" height="12" rx="2" stroke="#1A8FA8" strokeWidth="1.5" />
+                <path d="M2 9H18" stroke="#1A8FA8" strokeWidth="1.5" />
+                <circle cx="6" cy="13" r="1" fill="#1A8FA8" />
               </svg>
             </div>
           </div>
