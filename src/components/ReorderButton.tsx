@@ -8,20 +8,16 @@ import { lastOrder } from "@/lib/data";
 export default function ReorderButton() {
   const { reorder } = useCart();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
 
   function handleReorder() {
-    if (loading || done) return;
-    setLoading(true);
+    if (state !== "idle") return;
+    setState("loading");
     setTimeout(() => {
       reorder();
-      setLoading(false);
-      setDone(true);
-      setTimeout(() => {
-        router.push("/cart");
-      }, 400);
-    }, 350);
+      setState("done");
+      setTimeout(() => router.push("/cart"), 380);
+    }, 320);
   }
 
   const itemCount = lastOrder.reduce((s, i) => s + i.quantity, 0);
@@ -30,42 +26,55 @@ export default function ReorderButton() {
   return (
     <button
       onClick={handleReorder}
-      className={`w-full rounded-2xl py-4 px-5 text-left transition-all duration-200 active:scale-[0.98] shadow-card-lg ${
-        done
-          ? "bg-success"
-          : "bg-brand hover:bg-brand-dark"
+      className={`spring-tap w-full rounded-2xl px-5 py-4 text-left relative overflow-hidden shadow-card-lg transition-opacity ${
+        state !== "idle" ? "opacity-90" : ""
       }`}
+      style={{
+        background:
+          state === "done"
+            ? "#34C759"
+            : "linear-gradient(135deg, #1A8FA8 0%, #136F84 100%)",
+      }}
     >
-      <div className="flex items-center justify-between">
+      {/* Decorative circles */}
+      <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-white/10 pointer-events-none" />
+      <div className="absolute -right-1 bottom-0 w-16 h-16 rounded-full bg-white/6 pointer-events-none" />
+
+      <div className="relative flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
-            {loading ? (
-              <svg className="animate-spin" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
-                <path d="M8 2C8 2 14 2 14 8" stroke="white" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            ) : done ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8L6.5 11.5L13 4.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M13 3V7H9" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13 7C12.2 4.6 9.9 3 7 3C4.2 3 2 5.2 2 8C2 10.8 4.2 13 7 13C9.3 13 11.3 11.6 12.2 9.6" stroke="white" strokeWidth="1.75" strokeLinecap="round" />
+            {state === "loading" && (
+              <svg className="animate-spin flex-shrink-0" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <circle cx="7.5" cy="7.5" r="6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+                <path d="M7.5 1.5C7.5 1.5 13.5 1.5 13.5 7.5" stroke="white" strokeWidth="2" strokeLinecap="round" />
               </svg>
             )}
-            <span className="text-[17px] font-semibold text-white">
-              {done ? "Loading cart…" : "Reorder Last Order"}
+            {state === "done" && (
+              <svg className="animate-check-pop flex-shrink-0" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M2 7.5L5.5 11L13 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            {state === "idle" && (
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="flex-shrink-0">
+                <path d="M12 3V6.5H8.5" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M12 6.5C11.3 4.3 9.2 2.5 6.5 2.5C3.7 2.5 1.5 4.7 1.5 7.5C1.5 10.3 3.7 12.5 6.5 12.5C8.9 12.5 10.9 11 11.7 8.8" stroke="white" strokeWidth="1.75" strokeLinecap="round" />
+              </svg>
+            )}
+            <span className="text-[17px] font-bold text-white">
+              {state === "done" ? "Opening cart…" : "Reorder Last Order"}
             </span>
           </div>
-          <p className="text-[13px] text-white/75">
+          <p className="text-[13px] text-white/70 font-medium">
             {itemCount} items · ${total.toFixed(2)} CAD
           </p>
         </div>
-        {!loading && !done && (
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="opacity-60">
-            <path d="M7 4L13 10L7 16" stroke="white" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+
+        {state === "idle" && (
+          <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M6 4L10 8L6 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         )}
       </div>
     </button>
