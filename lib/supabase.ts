@@ -23,7 +23,8 @@ export const db = {
   providers:    () => supabase.from('providers'),
   expenses:     () => supabase.from('expenses'),
   mileageLogs:  () => supabase.from('mileage_logs'),
-  appointments: () => supabase.from('appointments'),
+  appointments:  () => supabase.from('appointments'),
+  monthlyClaims: () => supabase.from('monthly_claims'),
 };
 
 export const receiptsStorage = () => supabase.storage.from('receipts');

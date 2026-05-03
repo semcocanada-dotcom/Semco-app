@@ -18,6 +18,8 @@ export type ProviderCategory =
 
 export type ExpenseStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
 
+export type ClaimStatus = 'submitted';
+
 // ============================================================
 // Table Row Types
 // ============================================================
@@ -117,6 +119,21 @@ export interface Appointment {
   updated_at: string;
   // Joined
   providers?: Pick<Provider, 'name' | 'category'> | null;
+}
+
+export interface MonthlyClaim {
+  id: string;
+  child_id: string;
+  funding_year_id: string;
+  month: string;             // 'YYYY-MM'
+  status: ClaimStatus;
+  submitted_at: string;
+  total_amount: number;
+  expense_ids: string[];
+  mileage_ids: string[];
+  expense_count: number;
+  resend_message_id: string | null;
+  created_at: string;
 }
 
 // ============================================================
