@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -340,6 +341,7 @@ function ClaimDetail({
 }: ClaimDetailProps) {
   const isSubmitted = !!group.claim || justSubmitted;
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const router = useRouter();
 
   async function handleGeneratePdf() {
     if (group.mileage.length === 0) {
@@ -450,23 +452,32 @@ function ClaimDetail({
         )}
       </ScrollView>
 
-      {!isSubmitted && (
-        <View style={s.modalFooter}>
-          <TouchableOpacity
-            style={[s.submitBtn, submitting && s.submitBtnDisabled]}
-            onPress={onSubmit}
-            disabled={submitting}
-            activeOpacity={0.85}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={s.submitBtnText}>Submit Claim to Government</Text>
-            )}
-          </TouchableOpacity>
-          <Text style={s.submitNote}>Sends directly to Saskatchewan ASD-IF program</Text>
-        </View>
-      )}
+      <View style={s.modalFooter}>
+        {!isSubmitted && (
+          <>
+            <TouchableOpacity
+              style={[s.submitBtn, submitting && s.submitBtnDisabled]}
+              onPress={onSubmit}
+              disabled={submitting}
+              activeOpacity={0.85}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={s.submitBtnText}>Submit Claim to Government</Text>
+              )}
+            </TouchableOpacity>
+            <Text style={s.submitNote}>Sends directly to Saskatchewan ASD-IF program</Text>
+          </>
+        )}
+        <TouchableOpacity
+          style={s.addExpenseBtn}
+          onPress={() => { onClose(); router.navigate('/(tabs)/expenses'); }}
+          activeOpacity={0.7}
+        >
+          <Text style={s.addExpenseBtnText}>+ Add Expense or Mileage</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
