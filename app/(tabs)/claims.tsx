@@ -18,6 +18,7 @@ import { supabase, db } from '@lib/supabase';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import type { Expense, MileageLog, MonthlyClaim, FundingYear, Provider } from '@lib/types';
+import { generateAndShareMileagePdf } from '@lib/pdfForms';
 
 const CATEGORY_LABELS: Record<string, string> = {
   aba_ibi: 'ABA/IBI',
@@ -310,6 +311,10 @@ export default function ClaimsScreen() {
             onSubmit={() => handleSubmit(selectedGroup)}
             submitting={submitting}
             justSubmitted={justSubmitted}
+            childName={activeChild?.name ?? ''}
+            healthServicesNumber={activeChild?.health_card_number ?? null}
+            parentName={profile?.full_name ?? ''}
+            parentEmail={session?.user.email ?? ''}
           />
         )}
       </Modal>
@@ -323,10 +328,41 @@ interface ClaimDetailProps {
   onSubmit: () => void;
   submitting: boolean;
   justSubmitted: boolean;
+  childName: string;
+  healthServicesNumber: string | null;
+  parentName: string;
+  parentEmail: string;
 }
 
-function ClaimDetail({ group, onClose, onSubmit, submitting, justSubmitted }: ClaimDetailProps) {
+function ClaimDetail({
+  group, onClose, onSubmit, submitting, justSubmitted,
+  childName, healthServicesNumber, parentName, parentEmail,
+}: ClaimDetailProps) {
   const isSubmitted = !!group.claim || justSubmitted;
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  async function handleGeneratePdf() {
+    if (group.mileage.length === 0) {
+      Alert.alert('No Mileage', 'This month has no mileage entries to include in the form.');
+      return;
+    }
+    setGeneratingPdf(true);
+    try {
+      await generateAndShareMileagePdf({
+        childName,
+        healthServicesNumber,
+        parentName,
+        parentEmail,
+        monthLabel: group.monthLabel,
+        rows: group.mileage,
+        total: group.mileage.reduce((sum, m) => sum + Number(m.reimbursement_amount), 0),
+      });
+    } catch (err) {
+      Alert.alert('PDF Error', 'Could not generate the PDF. Please try again.');
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }
 
   return (
     <View style={s.modal}>
@@ -340,7 +376,7 @@ function ClaimDetail({ group, onClose, onSubmit, submitting, justSubmitted }: Cl
       <ScrollView style={s.modalScroll} contentContainerStyle={s.modalScrollContent}>
         {group.expenses.length > 0 && (
           <>
-            <Text style={s.sectionLabel}>Expenses</Text>
+            <Text style={[s.sectionLabel, { marginTop: 20, marginBottom: 8 }]}>Expenses</Text>
             {group.expenses.map((e) => (
               <View key={e.id} style={s.lineItem}>
                 <View style={s.lineItemLeft}>
@@ -362,7 +398,20 @@ function ClaimDetail({ group, onClose, onSubmit, submitting, justSubmitted }: Cl
 
         {group.mileage.length > 0 && (
           <>
-            <Text style={s.sectionLabel}>Mileage</Text>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionLabel}>Mileage</Text>
+              <TouchableOpacity
+                style={s.pdfBtn}
+                onPress={handleGeneratePdf}
+                disabled={generatingPdf}
+                activeOpacity={0.7}
+              >
+                {generatingPdf
+                  ? <ActivityIndicator size="small" color={Colors.purple} />
+                  : <Text style={s.pdfBtnText}>📄 SK Form PDF</Text>
+                }
+              </TouchableOpacity>
+            </View>
             {group.mileage.map((m) => (
               <View key={m.id} style={s.lineItem}>
                 <View style={s.lineItemLeft}>
@@ -473,14 +522,34 @@ const s = StyleSheet.create({
   modalScroll: { flex: 1 },
   modalScrollContent: { padding: 20, paddingBottom: 40 },
 
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 8,
+  },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginTop: 20,
-    marginBottom: 8,
+  },
+  pdfBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  pdfBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.purple,
   },
 
   lineItem: {

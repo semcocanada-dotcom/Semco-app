@@ -9,5 +9,9 @@
       "@context/*": ["./context/*"],
       "@constants/*": ["./constants/*"]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "supabase/functions"
+  ]
 }
