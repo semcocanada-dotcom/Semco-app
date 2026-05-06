@@ -7,7 +7,7 @@ A React Native (Expo SDK 51) iOS app for managing Saskatchewan's **$8,000/year A
 
 ## Repository
 - **Repo:** `semcocanada-dotcom/semco-app`
-- **Active branch:** `claude/autism-grant-app-eUE6R`
+- **Active branch:** `claude/continue-project-SpBVZ` (merged from `claude/autism-grant-app-eUE6R`)
 - **All development must stay on this branch**
 
 ---
@@ -60,6 +60,14 @@ supabase/
 - Provider directory pre-seeded with ~50 SK autism providers, city filter, search
 - Appointments/calendar tab with device calendar sync
 
+### Expense Entry Improvements (Done — branch `claude/continue-project-SpBVZ`, PR #2)
+- **"Scan Receipt or Invoice" card** is now the primary action at the top of the Add Expense modal — Camera / Gallery / File PDF buttons front and centre
+- **Full OCR auto-fill**: after scanning, amount, date, provider name, and category all fill in automatically. Previously only the provider name was matched.
+- **Date extraction**: `lib/ocr.ts` now parses dates from receipt text in ISO, NA (MM/DD/YYYY), European (DD/MM/YYYY), and written-month ("January 5, 2024") formats
+- **Prominent add button**: "＋ Add Expense" gradient button in the screen header — no more hunting for the FAB
+- **Empty-state CTA**: empty list shows a large "📷 Add First Expense" button
+- **Filename sanitizer**: `sanitizeFilename()` strips all digits before upload to Supabase Storage (SK portal rejects filenames with numbers)
+
 ### Monthly Claims Tab (NEW — needs DB migration)
 - Groups all expenses + mileage by month automatically
 - List view: ✅ submitted months, 📋 ready months with totals
@@ -78,47 +86,52 @@ The Claims tab will not load until this is done. Open Supabase → SQL Editor �
 supabase/monthly_claims.sql
 ```
 
-### 2. Government Email Submission — WAITING ON RESPONSE
-The user emailed `autismif@gov.sk.ca` asking for permission to submit monthly claims by email (batch format) rather than through their one-at-a-time web portal. The email also asked whether their portal has an API for direct integration.
+### 2. Government Email Submission — RESOLVED (different approach)
+The user received a reply from `autismif@gov.sk.ca` (Jibina):
+> "You are welcome to submit a whole year worth of the same type of appointment as one expense. Many families ask their service provider for a print out of all the appointments for their approval year and upload it as a single expense entry. Similarly for mileage you are welcome to enter one expense for the whole year of mileage."
 
-**If approved:** User provides:
-- Resend API key (from resend.com)
-- A verified sender email/domain
-- Government receiving email address
+**This changes the submission model:**
+- Track individual expenses in the app throughout the year (for your own records and budget tracking — keep doing this)
+- At year-end, get a printout from each provider → upload as a **single expense entry** per provider type
+- For mileage → enter **one total mileage entry** for the whole year
+- The app's year-end summary / totals view (future task) will make this easy
 
-Then set these as Supabase Edge Function environment secrets:
-```
-RESEND_API_KEY=re_xxxx
-GOVT_EMAIL=autismif@gov.sk.ca
-FROM_EMAIL=Autism Fund Tracker <noreply@yourdomain.com>
-```
-Then deploy: `supabase functions deploy submit-claim`
-
-**If rejected:** Pivot to portal automation — `autismfunding.saskatchewan.ca` is a single-page app (`#/expensesubmit`). Inspect its network requests to find the underlying API endpoint. If found, the app can submit directly and receive the official Exp Batch # confirmation automatically.
+The Resend API / email submission edge function is now lower priority. The portal submission is manageable with the annual batch approach.
 
 ---
 
-## Next Steps (Priority Order)
+## Next Task — Mileage Calculation Bugs ⚠️ START HERE
 
-1. **Run `supabase/monthly_claims.sql`** in Supabase SQL Editor (Claims tab broken without this)
-2. **Receipt filename sanitizer** — Saskatchewan portal rejects filenames containing numbers. When uploading receipts to Supabase Storage, strip/replace numbers from the filename before saving
-3. **Expense PDF form** — Same as the mileage PDF but for therapy/equipment expenses. Build a filled expense claim form using expo-print
-4. **Portal API investigation** — Inspect network requests on `autismfunding.saskatchewan.ca` to find the API endpoint behind the submission form. If found, submit directly from the app and capture the Exp Batch # confirmation number
-5. **Store that Exp Batch # in the app** — Add a `batch_number` field to `monthly_claims` table. After submission user can enter it; the claim card then shows the official confirmation number
-6. **Apple Sign In** — Deferred to App Store release. Needs ASC API key to set up provisioning profile with the entitlement
-7. **App Store submission** — Production EAS profile needs ASC API key for non-interactive CI builds
+**Problem:** When entering mileage (especially via provider auto-select from OCR), users are getting wrong distances or the same distance regardless of provider. The round-trip flag may also not be working correctly.
+
+**What needs to be fixed and verified:**
+1. **Geocoding accuracy** — `lib/geocoding.ts` uses OSRM open routing. Verify it correctly reads the user's home address from their profile and the provider's address/city. Log or surface the raw geocode result during testing to confirm the right coordinates are being used.
+2. **Provider address data** — Many seeded providers only have a city, no street address. When only a city is available, the geocode destination is `"City, SK, Canada"` which may resolve to the city centre and give a plausible but imprecise result. Check whether this is causing the "same mileage" symptom.
+3. **Round-trip logic** — The `is_round_trip` checkbox doubles the distance for display and saving. Confirm this is reflected correctly in both the mileage log record and the reimbursement calculation.
+4. **Auto-mileage from OCR** — When a provider is auto-selected from a scanned receipt, `buildMileageProposal()` is called automatically. If the home address is missing from the profile, this silently fails. Confirm the failure is handled gracefully and the user is prompted to add their address.
+5. **Rate selection** — SOUTHERN ($0.6410/km) vs NORTHERN ($0.6910/km) is determined by whether the provider is north of the 54th parallel. Verify this is correct for providers the user actually uses.
+
+**Key files:**
+- `lib/geocoding.ts` — geocodes addresses, calls OSRM for route distance, checks 54th parallel
+- `lib/mileageUtils.ts` — `buildMileageProposal()` orchestrates geocoding → rate selection → proposal
+- `app/(tabs)/expenses.tsx` — `tryMileage()` calls `buildMileageProposal()` after provider select; `MileageOnlyModal` for standalone mileage entry
+- `constants/mileage.ts` — SK government rate constants
 
 ---
 
-## Government Advocacy Status
-User has contacted SK government (`autismif@gov.sk.ca`) requesting email batch submission approval. Key arguments made in the email:
-- Portal requires 10+ individual submissions per month (one per expense)
-- Mileage requires manual calculation, file renaming (no numbers allowed in filenames), manual entry
-- Email batch submission is easier for government staff to process than individual portal entries
-- User built the app at personal expense; it standardizes every submission
-- Asked specifically whether the portal has an API or bulk upload option
+## Remaining Backlog (after mileage is fixed)
 
-If government says no at the program level, next step is escalating to the user's MLA (contact info not yet looked up).
+1. **Expense PDF form** — Same as the mileage PDF but for therapy/equipment expenses. Build a filled expense claim form using expo-print
+2. **Year-end summary view** — A screen that groups all expenses by provider/category and shows annual totals, making it easy to prepare the single annual submission per provider type
+3. **Apple Sign In** — Deferred to App Store release. Needs ASC API key for provisioning profile
+4. **App Store submission** — Production EAS profile needs ASC API key for non-interactive CI builds
+
+---
+
+## Government Communication Status
+- ✅ User emailed `autismif@gov.sk.ca` asking about batch/email submission and portal API
+- ✅ Response received from Jibina (Autism IF SS): annual batch submission per provider type is allowed; one mileage entry for the whole year is also fine
+- Submission model updated accordingly — see "Pending Setup Steps" above
 
 ---
 
