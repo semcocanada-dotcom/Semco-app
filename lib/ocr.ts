@@ -5,6 +5,7 @@ export interface OcrResult {
   businessName: string | null;
   address:      string | null;
   amount:       number | null;
+  date:         string | null;  // ISO yyyy-MM-dd
   rawText:      string;
 }
 
@@ -19,7 +20,7 @@ export async function extractReceiptData(imageUri: string): Promise<OcrResult> {
   const apiKey: string | undefined =
     (Constants.expoConfig?.extra as any)?.googleVisionApiKey;
 
-  const empty: OcrResult = { businessName: null, address: null, amount: null, rawText: '' };
+  const empty: OcrResult = { businessName: null, address: null, amount: null, date: null, rawText: '' };
   if (!apiKey) return empty;
 
   try {
@@ -60,6 +61,7 @@ function parseReceiptText(text: string): Omit<OcrResult, 'rawText'> {
     businessName: extractBusinessName(lines),
     address:      extractAddress(lines),
     amount:       extractAmount(lines),
+    date:         extractDate(lines),
   };
 }
 
@@ -93,6 +95,48 @@ function extractAddress(lines: string[]): string | null {
     if (/[A-Z]\d[A-Z]\s?\d[A-Z]\d/.test(c) && c.length < 60) return c;
     // Street address: digits followed by street name
     if (/^\d{1,5}\s+[A-Za-z]/.test(c) && c.length < 80) return c;
+  }
+  return null;
+}
+
+// Month name → number map for parsing "January 5, 2024" style dates
+const MONTH_MAP: Record<string, string> = {
+  january: '01', february: '02', march: '03', april: '04',
+  may: '05', june: '06', july: '07', august: '08',
+  september: '09', october: '10', november: '11', december: '12',
+  jan: '01', feb: '02', mar: '03', apr: '04', jun: '06',
+  jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12',
+};
+
+function extractDate(lines: string[]): string | null {
+  for (const line of lines) {
+    // yyyy-MM-dd or yyyy/MM/dd
+    let m = line.match(/\b(20\d{2})[-\/](0?[1-9]|1[0-2])[-\/](0?[1-9]|[12]\d|3[01])\b/);
+    if (m) {
+      return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    }
+    // MM/DD/YYYY or MM-DD-YYYY (North American style)
+    m = line.match(/\b(0?[1-9]|1[0-2])[-\/](0?[1-9]|[12]\d|3[01])[-\/](20\d{2})\b/);
+    if (m) {
+      return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+    }
+    // DD/MM/YYYY (European) — only when day > 12 to disambiguate
+    m = line.match(/\b(1[3-9]|2\d|3[01])[-\/](0?[1-9]|1[0-2])[-\/](20\d{2})\b/);
+    if (m) {
+      return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    }
+    // "January 5, 2024" or "Jan 5 2024"
+    m = line.match(/\b([A-Za-z]+)\s+(\d{1,2})[,\s]+\s*(20\d{2})\b/);
+    if (m) {
+      const mon = MONTH_MAP[m[1].toLowerCase()];
+      if (mon) return `${m[3]}-${mon}-${m[2].padStart(2, '0')}`;
+    }
+    // "5 January 2024"
+    m = line.match(/\b(\d{1,2})\s+([A-Za-z]+)[,\s]+\s*(20\d{2})\b/);
+    if (m) {
+      const mon = MONTH_MAP[m[2].toLowerCase()];
+      if (mon) return `${m[3]}-${mon}-${m[1].padStart(2, '0')}`;
+    }
   }
   return null;
 }

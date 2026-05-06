@@ -30,6 +30,15 @@ import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function sanitizeFilename(name: string): string {
+  const dot = name.lastIndexOf('.');
+  const stem = (dot >= 0 ? name.slice(0, dot) : name)
+    .replace(/[0-9]/g, '')
+    .replace(/[-_\s]+$/, '') || 'receipt';
+  const ext = dot >= 0 ? name.slice(dot) : '';
+  return stem + ext;
+}
+
 const CAD = (n: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 
@@ -256,13 +265,22 @@ function QuickAddModal({
   async function handleReceiptCaptured(uri: string, mime: string, name?: string) {
     setReceiptUri(uri);
     setReceiptMime(mime);
-    setReceiptName(name ?? `receipt_${Date.now()}.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`);
+    const baseName = name ?? `receipt.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`;
+    setReceiptName(sanitizeFilename(baseName));
     if (mime === 'application/pdf') return;
     setOcrLoading(true);
     try {
       const analysis = await analyseReceipt(uri);
       setOcrBizName(analysis.ocrResult.businessName ?? null);
       setProviderMatches(analysis.allMatches);
+      // Auto-fill amount if detected and field is still empty
+      if (analysis.ocrResult.amount && analysis.ocrResult.amount > 0) {
+        setAmount(String(analysis.ocrResult.amount.toFixed(2)));
+      }
+      // Auto-fill date if detected
+      if (analysis.ocrResult.date) {
+        setDate(analysis.ocrResult.date);
+      }
       const top = analysis.topMatch;
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);
@@ -407,40 +425,27 @@ function QuickAddModal({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* ── Amount (primary field, top of form) ── */}
-            <Text style={s.fieldLabel}>Amount *</Text>
-            <View style={s.amountRow}>
-              <Text style={s.amountSign}>$</Text>
-              <TextInput
-                ref={amountRef}
-                style={s.amountInput}
-                placeholder="0.00"
-                placeholderTextColor={Colors.textMuted}
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="decimal-pad"
-                returnKeyType="done"
-              />
-            </View>
-
-            {/* ── Receipt capture ── */}
-            <Text style={[s.fieldLabel, { marginTop: 20 }]}>Receipt</Text>
-            <View style={s.receiptRow}>
-              <TouchableOpacity style={s.receiptBtn} onPress={pickCamera} activeOpacity={0.8}>
-                <Text style={s.receiptIcon}>📷</Text>
-                <Text style={s.receiptBtnLabel}>Camera</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.receiptBtn} onPress={pickGallery} activeOpacity={0.8}>
-                <Text style={s.receiptIcon}>🖼️</Text>
-                <Text style={s.receiptBtnLabel}>Gallery</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.receiptBtn} onPress={pickFile} activeOpacity={0.8}>
-                <Text style={s.receiptIcon}>📄</Text>
-                <Text style={s.receiptBtnLabel}>File / PDF</Text>
-              </TouchableOpacity>
-            </View>
-
-            {receiptUri && (
+            {/* ── Scan Receipt (primary action) ── */}
+            {!receiptUri ? (
+              <View style={s.scanCard}>
+                <Text style={s.scanTitle}>Scan Receipt or Invoice</Text>
+                <Text style={s.scanSub}>We'll read the amount, date & provider automatically</Text>
+                <View style={s.receiptRow}>
+                  <TouchableOpacity style={s.receiptBtn} onPress={pickCamera} activeOpacity={0.8}>
+                    <Text style={s.receiptIcon}>📷</Text>
+                    <Text style={s.receiptBtnLabel}>Camera</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.receiptBtn} onPress={pickGallery} activeOpacity={0.8}>
+                    <Text style={s.receiptIcon}>🖼️</Text>
+                    <Text style={s.receiptBtnLabel}>Gallery</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.receiptBtn} onPress={pickFile} activeOpacity={0.8}>
+                    <Text style={s.receiptIcon}>📄</Text>
+                    <Text style={s.receiptBtnLabel}>File / PDF</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
               <View style={s.previewWrap}>
                 {receiptMime === 'application/pdf' ? (
                   <View style={s.pdfPreview}>
@@ -456,12 +461,12 @@ function QuickAddModal({
               </View>
             )}
 
-            {/* ── OCR status & mileage proposal ── */}
+            {/* ── OCR status ── */}
             {(ocrLoading || mileageLoading) && (
               <View style={s.ocrBanner}>
                 <ActivityIndicator size="small" color={Colors.purple} />
                 <Text style={s.ocrBannerText}>
-                  {ocrLoading ? 'Reading receipt…' : 'Calculating mileage…'}
+                  {ocrLoading ? 'Reading receipt — filling fields automatically…' : 'Calculating mileage…'}
                 </Text>
               </View>
             )}
@@ -469,10 +474,28 @@ function QuickAddModal({
             {ocrBizName && !ocrLoading && (
               <View style={s.ocrBanner}>
                 <Text style={s.ocrBannerText}>
-                  🔍 Found: <Text style={{ fontWeight: '700' }}>{ocrBizName}</Text>
+                  ✅ Detected: <Text style={{ fontWeight: '700' }}>{ocrBizName}</Text>
                 </Text>
               </View>
             )}
+
+            <View style={s.divider}><View style={s.dividerLine} /><Text style={s.dividerText}>Details</Text><View style={s.dividerLine} /></View>
+
+            {/* ── Amount ── */}
+            <Text style={s.fieldLabel}>Amount *</Text>
+            <View style={s.amountRow}>
+              <Text style={s.amountSign}>$</Text>
+              <TextInput
+                ref={amountRef}
+                style={s.amountInput}
+                placeholder="0.00"
+                placeholderTextColor={Colors.textMuted}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                returnKeyType="done"
+              />
+            </View>
 
             {mileageProposal && !mileageLoading && (
               <View style={s.mileageCard}>
@@ -976,10 +999,26 @@ export default function ExpensesScreen() {
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={() => (
           <View style={{ gap: 10 }}>
-            {/* Page title */}
+            {/* Page title + add button */}
             <View style={s.header}>
-              <Text style={s.headerTitle}>Expenses</Text>
-              {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+              <View>
+                <Text style={s.headerTitle}>Expenses</Text>
+                {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+              </View>
+              {summary.fundingYear && (
+                <TouchableOpacity
+                  onPress={() => setShowAdd(true)}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={Colors.gradients.purple as unknown as string[]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={s.addHeaderBtn}
+                  >
+                    <Text style={s.addHeaderBtnText}>＋ Add Expense</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Budget bar */}
@@ -1053,10 +1092,27 @@ export default function ExpensesScreen() {
           loadingExp ? (
             <ActivityIndicator color={Colors.purple} style={{ marginTop: 40 }} />
           ) : (
-            <View style={{ alignItems: 'center', paddingTop: 40, gap: 8 }}>
-              <Text style={{ fontSize: 40 }}>🧾</Text>
-              <Text style={{ fontWeight: '600', color: Colors.textPrimary, fontSize: 16 }}>No expenses yet</Text>
-              <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Tap + to log your first expense</Text>
+            <View style={{ alignItems: 'center', paddingTop: 48, paddingHorizontal: 32, gap: 12 }}>
+              <Text style={{ fontSize: 52 }}>🧾</Text>
+              <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 18 }}>No expenses yet</Text>
+              <Text style={{ color: Colors.textMuted, fontSize: 14, textAlign: 'center', lineHeight: 20 }}>
+                Tap the button below to scan a receipt or invoice — we'll fill in the details automatically.
+              </Text>
+              {summary.fundingYear && (
+                <TouchableOpacity
+                  onPress={() => setShowAdd(true)}
+                  activeOpacity={0.85}
+                  style={{ marginTop: 8, width: '100%' }}
+                >
+                  <LinearGradient
+                    colors={Colors.gradients.purple as unknown as string[]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={s.saveBtn}
+                  >
+                    <Text style={s.saveBtnText}>📷  Add First Expense</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
             </View>
           )
         }
@@ -1129,7 +1185,6 @@ export default function ExpensesScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
   headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
   listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
@@ -1257,4 +1312,21 @@ const s = StyleSheet.create({
   // Home address prompt
   homePrompt:     { marginTop: 10, backgroundColor: '#FFFBEB', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FDE68A' },
   homePromptText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
+
+  // Scan receipt card (top of Add Expense modal)
+  scanCard:  { backgroundColor: Colors.surfaceAlt, borderRadius: 18, padding: 18, borderWidth: 1.5, borderColor: Colors.border, gap: 10 },
+  scanTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, textAlign: 'center' },
+  scanSub:   { fontSize: 13, color: Colors.textMuted, textAlign: 'center' },
+
+  // Divider between scan and manual fields
+  divider:     { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
+  dividerText: { fontSize: 12, color: Colors.textMuted, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  // Header add button
+  addHeaderBtn:     { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  addHeaderBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+
+  // Updated header to accommodate button
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 },
 });
