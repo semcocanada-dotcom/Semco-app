@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - claude/autism-grant-app-eUE6R
+      - claude/autism-grant-app-eUE6R-kqhpH
 
 jobs:
   # Runs when BUILD_TRIGGER file changes — full native build
