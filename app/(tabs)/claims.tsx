@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import {
   View,
   Text,
+  TextInput,
   FlatList,
   TouchableOpacity,
   Modal,
@@ -19,7 +20,7 @@ import { supabase, db } from '@lib/supabase';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import type { Expense, MileageLog, MonthlyClaim, FundingYear, Provider } from '@lib/types';
-import { generateAndShareMileagePdf } from '@lib/pdfForms';
+import { generateAndShareMileagePdf, generateAndShareExpensePdf } from '@lib/pdfForms';
 
 const CATEGORY_LABELS: Record<string, string> = {
   aba_ibi: 'ABA/IBI',
@@ -340,8 +341,18 @@ function ClaimDetail({
   childName, healthServicesNumber, parentName, parentEmail,
 }: ClaimDetailProps) {
   const isSubmitted = !!group.claim || justSubmitted;
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingPdf,    setGeneratingPdf]    = useState(false);
+  const [generatingExpPdf, setGeneratingExpPdf] = useState(false);
+  const [batchNumber,      setBatchNumber]      = useState(group.claim?.batch_number ?? '');
+  const [savingBatch,      setSavingBatch]      = useState(false);
   const router = useRouter();
+
+  async function handleSaveBatch() {
+    if (!group.claim || !batchNumber.trim()) return;
+    setSavingBatch(true);
+    await supabase.from('monthly_claims').update({ batch_number: batchNumber.trim() }).eq('id', group.claim.id);
+    setSavingBatch(false);
+  }
 
   async function handleGeneratePdf() {
     if (group.mileage.length === 0) {
@@ -359,10 +370,39 @@ function ClaimDetail({
         rows: group.mileage,
         total: group.mileage.reduce((sum, m) => sum + Number(m.reimbursement_amount), 0),
       });
-    } catch (err) {
+    } catch {
       Alert.alert('PDF Error', 'Could not generate the PDF. Please try again.');
     } finally {
       setGeneratingPdf(false);
+    }
+  }
+
+  async function handleGenerateExpensePdf() {
+    if (group.expenses.length === 0) {
+      Alert.alert('No Expenses', 'This month has no expenses to include in the form.');
+      return;
+    }
+    setGeneratingExpPdf(true);
+    try {
+      await generateAndShareExpensePdf({
+        childName,
+        healthServicesNumber,
+        parentName,
+        parentEmail,
+        monthLabel: group.monthLabel,
+        rows: group.expenses.map((e) => ({
+          expense_date:   e.expense_date,
+          provider_name:  e.providers?.name ?? (CATEGORY_LABELS[e.category] ?? e.category),
+          category_label: CATEGORY_LABELS[e.category] ?? e.category,
+          amount:         Number(e.amount),
+          description:    e.description ?? null,
+        })),
+        total: group.expenses.reduce((sum, e) => sum + Number(e.amount), 0),
+      });
+    } catch {
+      Alert.alert('PDF Error', 'Could not generate the expense PDF. Please try again.');
+    } finally {
+      setGeneratingExpPdf(false);
     }
   }
 
@@ -378,7 +418,20 @@ function ClaimDetail({
       <ScrollView style={s.modalScroll} contentContainerStyle={s.modalScrollContent}>
         {group.expenses.length > 0 && (
           <>
-            <Text style={[s.sectionLabel, { marginTop: 20, marginBottom: 8 }]}>Expenses</Text>
+            <View style={s.sectionRow}>
+              <Text style={[s.sectionLabel, { marginTop: 20 }]}>Expenses</Text>
+              <TouchableOpacity
+                style={s.pdfBtn}
+                onPress={handleGenerateExpensePdf}
+                disabled={generatingExpPdf}
+                activeOpacity={0.7}
+              >
+                {generatingExpPdf
+                  ? <ActivityIndicator size="small" color={Colors.purple} />
+                  : <Text style={s.pdfBtnText}>📄 Expense PDF</Text>
+                }
+              </TouchableOpacity>
+            </View>
             {group.expenses.map((e) => (
               <View key={e.id} style={s.lineItem}>
                 <View style={s.lineItemLeft}>
@@ -439,16 +492,34 @@ function ClaimDetail({
         </View>
 
         {isSubmitted && (
-          <View style={s.successBanner}>
-            <Text style={s.successIcon}>✅</Text>
-            <Text style={s.successText}>
-              {justSubmitted
-                ? 'Claim submitted! A copy was sent to you and the Saskatchewan ASD-IF program.'
-                : `Submitted ${group.claim?.submitted_at
-                    ? format(parseISO(group.claim.submitted_at), 'MMMM d, yyyy')
-                    : ''}`}
-            </Text>
-          </View>
+          <>
+            <View style={s.successBanner}>
+              <Text style={s.successIcon}>✅</Text>
+              <Text style={s.successText}>
+                {justSubmitted
+                  ? 'Claim submitted! A copy was sent to you and the Saskatchewan ASD-IF program.'
+                  : `Submitted ${group.claim?.submitted_at
+                      ? format(parseISO(group.claim.submitted_at), 'MMMM d, yyyy')
+                      : ''}`}
+              </Text>
+            </View>
+            {group.claim && (
+              <View style={s.batchRow}>
+                <Text style={s.batchLabel}>Exp Batch #</Text>
+                <TextInput
+                  style={s.batchInput}
+                  placeholder="Enter govt batch number…"
+                  placeholderTextColor={Colors.textMuted}
+                  value={batchNumber}
+                  onChangeText={setBatchNumber}
+                  onBlur={handleSaveBatch}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSaveBatch}
+                />
+                {savingBatch && <ActivityIndicator size="small" color={Colors.purple} style={{ marginLeft: 8 }} />}
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -603,6 +674,21 @@ const s = StyleSheet.create({
   },
   successIcon: { fontSize: 22 },
   successText: { flex: 1, fontSize: 15, color: '#065F46', lineHeight: 22 },
+
+  batchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+    backgroundColor: Colors.surfaceAlt,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  batchLabel: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, minWidth: 90 },
+  batchInput: { flex: 1, fontSize: 14, color: Colors.textPrimary, padding: 0 },
 
   modalFooter: {
     padding: 20,
