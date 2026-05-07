@@ -1,16 +1,16 @@
-name: EAS — Native Build
+name: EAS — OTA Update
 
 on:
   push:
     branches:
       - claude/autism-grant-app-eUE6R
       - claude/autism-grant-app-eUE6R-kqhpH
-    paths:
+    paths-ignore:
       - 'BUILD_TRIGGER'
 
 jobs:
-  build-preview:
-    name: Build iOS Preview (Native)
+  update:
+    name: Push OTA Update
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@latest
 
-      - name: Build iOS preview
+      - name: Push OTA update
         env:
           EXPO_TOKEN: ${{ secrets.AUTISM_APP }}
-        run: eas build --platform ios --profile preview --non-interactive --clear-cache
+        run: eas update --branch preview --message "${{ github.event.head_commit.message }}" --non-interactive

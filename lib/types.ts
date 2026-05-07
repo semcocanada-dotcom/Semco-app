@@ -133,6 +133,7 @@ export interface MonthlyClaim {
   mileage_ids: string[];
   expense_count: number;
   resend_message_id: string | null;
+  batch_number: string | null;
   created_at: string;
 }
 

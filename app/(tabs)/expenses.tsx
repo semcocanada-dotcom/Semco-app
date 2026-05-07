@@ -14,7 +14,8 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -29,6 +30,8 @@ import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_R
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const TAB_BAR_HEIGHT = 80; // matches _layout.tsx tabBarStyle.height
 
 const CAD = (n: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
@@ -311,12 +314,21 @@ function QuickAddModal({
     }
   }
 
+  function sanitizeFilename(name: string): string {
+    const dot = name.lastIndexOf('.');
+    const stem = dot >= 0 ? name.slice(0, dot) : name;
+    const ext  = dot >= 0 ? name.slice(dot)    : '';
+    // SK portal rejects filenames with digits — strip them, collapse separators
+    const clean = stem.replace(/[0-9]/g, '').replace(/[^a-zA-Z]+/g, '-').replace(/^-|-$/g, '') || 'receipt';
+    return clean + ext;
+  }
+
   async function uploadReceipt(expenseId: string): Promise<string | null> {
     if (!receiptUri || !session) return null;
     try {
       const resp = await fetch(receiptUri);
       const blob = await resp.blob();
-      const path = `${session.user.id}/${childId}/${expenseId}/${receiptName}`;
+      const path = `${session.user.id}/${childId}/${expenseId}/${sanitizeFilename(receiptName)}`;
       const { data, error } = await supabase.storage
         .from('receipts').upload(path, blob, { contentType: receiptMime, upsert: true });
       if (error || !data) return null;
@@ -941,12 +953,18 @@ const FILTERS: { value: FilterType; label: string }[] = [
 export default function ExpensesScreen() {
   const { activeChild }                         = useChild();
   const { summary, loading: bLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
+  const insets                                  = useSafeAreaInsets();
+  const router                                  = useRouter();
   const [expenses,     setExpenses]             = useState<Expense[]>([]);
   const [loadingExp,   setLoadingExp]           = useState(true);
   const [filter,       setFilter]               = useState<FilterType>('all');
   const [showAdd,      setShowAdd]              = useState(false);
   const [showMileage,  setShowMileage]          = useState(false);
   const [detailExpense,setDetailExpense]        = useState<Expense | null>(null);
+
+  // Position FABs above the tab bar regardless of whether the screen extends
+  // behind it (React Navigation renders screens at full device height).
+  const fabBottom = 28 + TAB_BAR_HEIGHT + insets.bottom;
 
   const fetchExpenses = useCallback(async () => {
     if (!activeChild || !summary.fundingYear) { setExpenses([]); setLoadingExp(false); return; }
@@ -996,14 +1014,26 @@ export default function ExpensesScreen() {
 
             {/* No funding year message */}
             {!bLoading && !summary.fundingYear && (
-              <View style={[s.budgetCard, { alignItems: 'center', paddingVertical: 28 }]}>
-                <Text style={{ fontSize: 32, marginBottom: 8 }}>📅</Text>
+              <View style={[s.budgetCard, { alignItems: 'center', paddingVertical: 28, gap: 12 }]}>
+                <Text style={{ fontSize: 32 }}>📅</Text>
                 <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16 }}>
                   No active funding year
                 </Text>
-                <Text style={{ color: Colors.textMuted, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
-                  Add a funding year for {activeChild?.name ?? 'this child'} to start logging expenses
+                <Text style={{ color: Colors.textMuted, fontSize: 13, textAlign: 'center' }}>
+                  Add a funding year for {activeChild?.name ?? 'this child'} to start logging expenses.
                 </Text>
+                <TouchableOpacity
+                  onPress={() => router.navigate('/(tabs)/profile')}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={Colors.gradients.purple as unknown as string[]}
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    style={{ paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20 }}
+                  >
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Set Up in Profile →</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -1062,13 +1092,20 @@ export default function ExpensesScreen() {
         }
       />
 
-      {/* FABs — always visible; alert if no funding year */}
-      <View style={s.fabStack}>
+      {/* FABs — always visible; guides to Profile when no funding year */}
+      <View style={[s.fabStack, { bottom: fabBottom }]}>
         <TouchableOpacity
           style={s.fabMileageWrap}
           onPress={() => {
             if (!summary.fundingYear) {
-              Alert.alert('No Active Funding Year', 'Set up a funding year for this child in the Profile tab before logging mileage.');
+              Alert.alert(
+                'No Active Funding Year',
+                'Set up a funding year for this child in the Profile tab first.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Go to Profile', onPress: () => router.navigate('/(tabs)/profile') },
+                ],
+              );
               return;
             }
             setShowMileage(true);
@@ -1083,7 +1120,14 @@ export default function ExpensesScreen() {
           style={s.fabWrap}
           onPress={() => {
             if (!summary.fundingYear) {
-              Alert.alert('No Active Funding Year', 'Set up a funding year for this child in the Profile tab before logging expenses.');
+              Alert.alert(
+                'No Active Funding Year',
+                'Set up a funding year for this child in the Profile tab first.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Go to Profile', onPress: () => router.navigate('/(tabs)/profile') },
+                ],
+              );
               return;
             }
             setShowAdd(true);
@@ -1132,7 +1176,7 @@ const s = StyleSheet.create({
   header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
   headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
-  listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 160, gap: 0, paddingTop: 8 },
 
   // Budget card
   budgetCard: {
@@ -1170,7 +1214,7 @@ const s = StyleSheet.create({
   statusText:{ fontSize: 10, fontWeight: '600' },
 
   // FABs
-  fabStack:     { position: 'absolute', bottom: 28, right: 20, alignItems: 'center', gap: 12 },
+  fabStack:     { position: 'absolute', right: 20, alignItems: 'center', gap: 12 },
   fabWrap:      { shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
   fabMileageWrap:{ shadowColor: Colors.teal, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
   fab:          { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
