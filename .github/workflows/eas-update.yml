@@ -30,5 +30,5 @@ jobs:
 
       - name: Push OTA update
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.AUTISM_APP }}
         run: eas update --branch preview --message "${{ github.event.head_commit.message }}" --non-interactive
