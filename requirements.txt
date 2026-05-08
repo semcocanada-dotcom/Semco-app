@@ -1,0 +1,5 @@
+# No pip packages required for Task 1 (frame_extractor.py)
+# System requirements:
+#   ffmpeg >= 4.0  (sudo apt install ffmpeg)
+#   ffprobe >= 4.0 (ships with ffmpeg)
+#   Python >= 3.8

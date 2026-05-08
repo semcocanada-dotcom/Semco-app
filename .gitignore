@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+/tmp/semco_frames/
+*_frames/
+.env
