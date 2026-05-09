@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { sendMessage } from '@/services/ai/assistant';
 import { useNetworkStore } from '@/store/network';
+import { useAuthStore } from '@/store/auth';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 function generateId(): string {
@@ -12,6 +13,7 @@ export function useAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isOnline = useNetworkStore((s) => s.isOnline);
+  const installerId = useAuthStore((s) => s.user?.id);
 
   const send = useCallback(
     async (text: string) => {
@@ -30,7 +32,7 @@ export function useAssistant() {
       setError(null);
 
       try {
-        const response = await sendMessage(text, messages, isOnline);
+        const response = await sendMessage(text, messages, isOnline, installerId);
 
         const assistantMsg: ConversationMessage = {
           id: generateId(),
@@ -48,7 +50,7 @@ export function useAssistant() {
         setIsLoading(false);
       }
     },
-    [messages, isLoading, isOnline],
+    [messages, isLoading, isOnline, installerId],
   );
 
   const clearMessages = useCallback(() => setMessages([]), []);

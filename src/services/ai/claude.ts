@@ -6,7 +6,7 @@ const MODEL = 'claude-sonnet-4-6';
 const MAX_TOKENS = 1024;
 const MAX_HISTORY_MESSAGES = 20;
 
-const SYSTEM_PROMPT = `You are the Semco Pro Assistant — an expert technical advisor for certified Semco microcement installers.
+const BASE_SYSTEM_PROMPT = `You are the Semco Pro Assistant — an expert technical advisor and mentor for certified Semco microcement installers.
 
 Your role:
 - Answer technical questions about Semco product specifications, application procedures, curing times, adhesion requirements, and troubleshooting.
@@ -14,6 +14,7 @@ Your role:
 - Be precise, clear, and field-practical. Installers are on jobsites — keep answers actionable.
 - Always flag critical safety or adhesion warnings prominently.
 - If the context doesn't contain enough information to answer confidently, say so clearly and recommend the installer contact Semco technical support.
+- You remember this installer's learning journey. If they've asked about a topic before, acknowledge it naturally and focus on what they still need to reinforce. If it's a weak area, give extra detail and a memorable key point. If they've mastered a topic, be concise and skip the basics.
 
 Formatting:
 - Use short paragraphs. Bullet points for steps or lists.
@@ -39,8 +40,13 @@ export async function askClaude(
   userMessage: string,
   contextBlock: string,
   history: ConversationMessage[],
+  progressContext?: string,
 ): Promise<ClaudeResponse> {
   const anthropic = getClient();
+
+  const systemPrompt = progressContext
+    ? `${BASE_SYSTEM_PROMPT}\n\n<installer_progress>\n${progressContext}\n</installer_progress>`
+    : BASE_SYSTEM_PROMPT;
 
   const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
   const messages: Anthropic.MessageParam[] = recentHistory.map((m) => ({
@@ -57,7 +63,7 @@ export async function askClaude(
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: MAX_TOKENS,
-    system: SYSTEM_PROMPT,
+    system: systemPrompt,
     messages,
   });
 
