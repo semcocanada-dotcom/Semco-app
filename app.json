@@ -51,6 +51,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cc9001d8-b1f9-44b2-b59c-c7b35d8c6129"
+      }
+    },
+    "owner": "kitzul88"
   }
 }
