@@ -7,8 +7,12 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useCalculator } from '@/hooks/useCalculator';
+import { useUiStore } from '@/store/ui';
 import { Input, Button } from '@/components/ui';
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
@@ -22,17 +26,27 @@ const SEALER_OPTIONS = [
 ];
 
 export default function CalculatorScreen() {
+  const router = useRouter();
+  const showToast = useUiStore((s) => s.showToast);
+
   const {
     form,
     result,
     error,
+    saving,
     setAreaSqm,
     setSubstrate,
     setWastePct,
     setSealerSku,
     runCalculation,
+    saveCalculation,
     reset,
   } = useCalculator();
+
+  const handleSave = async () => {
+    await saveCalculation();
+    showToast('Calculation saved', 'success');
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -41,7 +55,16 @@ export default function CalculatorScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={styles.heading}>Coverage Calculator</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.heading}>Coverage Calculator</Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/calculator/history')}
+              style={styles.historyBtn}
+            >
+              <Ionicons name="time-outline" size={20} color={Colors.primary} />
+              <Text style={styles.historyLabel}>History</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.subheading}>
             Input your area and substrate to get the full material list.
           </Text>
@@ -95,7 +118,20 @@ export default function CalculatorScreen() {
           {result && (
             <View style={styles.resultSection}>
               <MaterialBreakdownCard result={result} />
-              <Button label="Reset" onPress={reset} variant="ghost" fullWidth />
+              <View style={styles.actionRow}>
+                <Button
+                  label={saving ? 'Saving…' : 'Save Calculation'}
+                  onPress={handleSave}
+                  variant="secondary"
+                  style={styles.actionBtn}
+                />
+                <Button
+                  label="Reset"
+                  onPress={reset}
+                  variant="ghost"
+                  style={styles.actionBtn}
+                />
+              </View>
             </View>
           )}
         </ScrollView>
@@ -108,7 +144,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   flex: { flex: 1 },
   scroll: { padding: Spacing.base, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   heading: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
+  historyBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  historyLabel: { color: Colors.primary, fontSize: Typography.size.sm, fontWeight: Typography.weight.medium },
   subheading: { color: Colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
   section: { gap: Spacing.sm },
   label: {
@@ -122,4 +161,6 @@ const styles = StyleSheet.create({
   sealerBtn: { flex: 1 },
   error: { color: Colors.danger, fontSize: Typography.size.sm },
   resultSection: { gap: Spacing.md },
+  actionRow: { flexDirection: 'row', gap: Spacing.sm },
+  actionBtn: { flex: 1 },
 });

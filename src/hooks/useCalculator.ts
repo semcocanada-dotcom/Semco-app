@@ -1,5 +1,8 @@
 import { useState, useCallback } from 'react';
 import { calculate } from '@/services/calculator';
+import { db } from '@/database/client';
+import { calculations } from '@/database/schema/calculations';
+import { useAuthStore } from '@/store/auth';
 import type { SubstrateId } from '@/constants/substrates';
 import type { CalculationResult } from '@/database/schema/calculations';
 
@@ -11,6 +14,7 @@ interface CalculatorState {
 }
 
 export function useCalculator() {
+  const user = useAuthStore((s) => s.user);
   const [form, setForm] = useState<CalculatorState>({
     areaSqm: '',
     substrateType: null,
@@ -19,6 +23,7 @@ export function useCalculator() {
   });
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const setAreaSqm = useCallback((v: string) => setForm((f) => ({ ...f, areaSqm: v })), []);
   const setSubstrate = useCallback((v: SubstrateId) => setForm((f) => ({ ...f, substrateType: v })), []);
@@ -51,6 +56,25 @@ export function useCalculator() {
     }
   }, [form]);
 
+  const saveCalculation = useCallback(async (projectId?: string): Promise<void> => {
+    if (!result || !form.substrateType) return;
+    setSaving(true);
+    try {
+      await db.insert(calculations).values({
+        id: `calc-${Date.now()}`,
+        projectId: projectId ?? null,
+        installerId: user?.id ?? 'local',
+        areaSqm: parseFloat(form.areaSqm),
+        substrateType: form.substrateType,
+        wastePct: form.wastePct,
+        result: JSON.stringify(result),
+        createdAt: new Date().toISOString(),
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [result, form, user]);
+
   const reset = useCallback(() => {
     setResult(null);
     setError(null);
@@ -61,11 +85,13 @@ export function useCalculator() {
     form,
     result,
     error,
+    saving,
     setAreaSqm,
     setSubstrate,
     setWastePct,
     setSealerSku,
     runCalculation,
+    saveCalculation,
     reset,
   };
 }

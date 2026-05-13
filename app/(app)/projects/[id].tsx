@@ -14,8 +14,10 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { projects, projects_photos, PHOTO_STAGES } from '@/database/schema/projects';
 import { batchLogs } from '@/database/schema/batches';
+import { calculations } from '@/database/schema/calculations';
 import type { Project, ProjectPhoto, PhotoStage } from '@/database/schema/projects';
 import type { BatchLog } from '@/database/schema/batches';
+import type { Calculation } from '@/database/schema/calculations';
 import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
 import { Card, Badge } from '@/components/ui';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
@@ -36,12 +38,14 @@ export default function ProjectDetailScreen() {
   const [project, setProject] = useState<Project | null>(null);
   const [photos, setPhotos] = useState<ProjectPhoto[]>([]);
   const [batches, setBatches] = useState<BatchLog[]>([]);
+  const [calcs, setCalcs] = useState<Calculation[]>([]);
 
   const load = useCallback(() => {
     if (!id) return;
     db.select().from(projects).where(eq(projects.id, id)).then((rows) => setProject(rows[0] ?? null));
     db.select().from(projects_photos).where(eq(projects_photos.projectId, id)).then(setPhotos);
     db.select().from(batchLogs).where(eq(batchLogs.projectId, id)).then(setBatches);
+    db.select().from(calculations).where(eq(calculations.projectId, id)).then(setCalcs);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -147,6 +151,22 @@ export default function ProjectDetailScreen() {
                   {b.quantityKg != null ? `${b.quantityKg} kg` : ''}{b.coverageAchievedSqm != null ? ` · ${b.coverageAchievedSqm} m²` : ''}
                 </Text>
                 {b.notes ? <Text style={styles.batchNotes}>{b.notes}</Text> : null}
+              </Card>
+            ))}
+          </View>
+        )}
+
+        {calcs.length > 0 && (
+          <View>
+            <Text style={styles.sectionHeading}>Calculations</Text>
+            {calcs.map((c) => (
+              <Card key={c.id} style={styles.batchCard}>
+                <Text style={styles.batchNumber}>
+                  {c.substrateType.replace(/_/g, ' ')} · {c.areaSqm} m²
+                </Text>
+                <Text style={styles.batchDetail}>
+                  {c.wastePct}% waste · saved {new Date(c.createdAt).toLocaleDateString('en-CA')}
+                </Text>
               </Card>
             ))}
           </View>
