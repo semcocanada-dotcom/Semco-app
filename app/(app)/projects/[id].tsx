@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ import type { Calculation } from '@/database/schema/calculations';
 import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
 import { Card, Badge } from '@/components/ui';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
+import { generateWarrantyPdf, shareWarrantyPdf } from '@/services/warranty-pdf';
 import { useAuthStore } from '@/store/auth';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 
@@ -39,6 +41,7 @@ export default function ProjectDetailScreen() {
   const [photos, setPhotos] = useState<ProjectPhoto[]>([]);
   const [batches, setBatches] = useState<BatchLog[]>([]);
   const [calcs, setCalcs] = useState<Calculation[]>([]);
+  const [generating, setGenerating] = useState(false);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -78,6 +81,20 @@ export default function ProjectDetailScreen() {
     });
 
     load();
+  };
+
+  const handleGeneratePdf = async () => {
+    if (!project) return;
+    setGenerating(true);
+    try {
+      const installerName = user?.email ?? 'Semco Certified Installer';
+      const uri = await generateWarrantyPdf(project, batches, installerName);
+      await shareWarrantyPdf(uri);
+    } catch (err) {
+      Alert.alert('PDF Error', err instanceof Error ? err.message : 'Could not generate PDF');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleMarkComplete = () => {
@@ -178,6 +195,23 @@ export default function ProjectDetailScreen() {
             <Text style={styles.completeBtnText}>Mark as Complete</Text>
           </TouchableOpacity>
         )}
+
+        {project.status === 'complete' && (
+          <TouchableOpacity
+            onPress={handleGeneratePdf}
+            style={[styles.completeBtn, styles.pdfBtn]}
+            disabled={generating}
+          >
+            {generating ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Ionicons name="document-text-outline" size={20} color={Colors.primary} />
+            )}
+            <Text style={styles.pdfBtnText}>
+              {generating ? 'Generating…' : 'Generate Warranty PDF'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -230,5 +264,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.success,
   },
   completeBtnText: { color: Colors.success, fontSize: Typography.size.base, fontWeight: Typography.weight.semibold },
+  pdfBtn: { borderColor: Colors.primary, marginTop: Spacing.sm },
+  pdfBtnText: { color: Colors.primary, fontSize: Typography.size.base, fontWeight: Typography.weight.semibold },
   loading: { color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.xl },
 });
