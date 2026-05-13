@@ -271,11 +271,9 @@ Test on a physical device (recommended) or simulator. Walk through:
 
 ### Step 8 — Outstanding features to build
 
-These features are not yet implemented. Build them one at a time:
+1. **Warranty PDF generation** ✅ DONE — `src/services/warranty-pdf.ts`; button in `projects/[id].tsx` when status = complete.
 
-1. **Warranty PDF generation** — On project completion, generate a PDF warranty certificate (client name, site address, products used, batch numbers, installer details, completion date). Use `expo-print` or a Supabase edge function. Attach to the project record and email to the client.
-
-2. **Batch number QR/barcode scanner** — In the batch log entry screen, allow the installer to scan the barcode on Semco packaging to auto-fill the batch number field. Use `expo-barcode-scanner`.
+2. **Batch number QR/barcode scanner** ✅ DONE — `src/components/projects/BatchLogForm.tsx`; Add Batch button inline in `projects/[id].tsx`.
 
 3. **Push notifications** — Notify the installer when a sync conflict is resolved, or when Semco pushes a product update. Use Expo Push Notifications + a Supabase database webhook.
 
@@ -283,9 +281,9 @@ These features are not yet implemented. Build them one at a time:
 
 5. **Colour camera matching** — The `useColorCamera` hook already captures photos. The missing piece is sending the photo to Claude Vision to identify the closest matching Semco colour from the library.
 
-6. **Calculation history** — The `calculations` table and schema are fully built. The UI to list past calculations per project is missing. Add a "Calculations" tab or section within the project detail screen.
+6. **Calculation history** ✅ DONE — `app/(app)/calculator/history.tsx`; Save button in calculator; Calculations section in `projects/[id].tsx`.
 
-7. **Onboarding flow** — First-launch walkthrough explaining the five app features. Use `expo-router` modal stack.
+7. **Onboarding flow** ✅ DONE — `app/(onboarding)/index.tsx`; 5-slide FlatList pager; AsyncStorage flag; redirected from `app/_layout.tsx` on first launch.
 
 ---
 
@@ -310,11 +308,11 @@ These features are not yet implemented. Build them one at a time:
 All development is on:
 
 ```
-claude/semco-pro-assistant-setup-wsigG
+claude/code-review-cleanup-ao5e5
 ```
 
 Push all commits to this branch. Do not push to `main` without explicit approval.
 
 ```bash
-git push -u origin claude/semco-pro-assistant-setup-wsigG
+git push -u origin claude/code-review-cleanup-ao5e5
 ```
