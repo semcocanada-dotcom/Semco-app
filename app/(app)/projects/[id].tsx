@@ -20,6 +20,7 @@ import type { Project, ProjectPhoto, PhotoStage } from '@/database/schema/projec
 import type { BatchLog } from '@/database/schema/batches';
 import type { Calculation } from '@/database/schema/calculations';
 import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
+import { BatchLogForm } from '@/components/projects/BatchLogForm';
 import { Card, Badge } from '@/components/ui';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
 import { generateWarrantyPdf, shareWarrantyPdf } from '@/services/warranty-pdf';
@@ -42,6 +43,7 @@ export default function ProjectDetailScreen() {
   const [batches, setBatches] = useState<BatchLog[]>([]);
   const [calcs, setCalcs] = useState<Calculation[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [showBatchForm, setShowBatchForm] = useState(false);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -158,20 +160,44 @@ export default function ProjectDetailScreen() {
 
         <PhotoTimeline photos={photos} onAddPhoto={handleAddPhoto} />
 
-        {batches.length > 0 && (
-          <View>
+        <View>
+          <View style={styles.sectionRow}>
             <Text style={styles.sectionHeading}>Batch Log</Text>
-            {batches.map((b) => (
-              <Card key={b.id} style={styles.batchCard}>
-                <Text style={styles.batchNumber}>Batch: {b.batchNumber}</Text>
-                <Text style={styles.batchDetail}>
-                  {b.quantityKg != null ? `${b.quantityKg} kg` : ''}{b.coverageAchievedSqm != null ? ` · ${b.coverageAchievedSqm} m²` : ''}
-                </Text>
-                {b.notes ? <Text style={styles.batchNotes}>{b.notes}</Text> : null}
-              </Card>
-            ))}
+            {!showBatchForm && (
+              <TouchableOpacity
+                onPress={() => setShowBatchForm(true)}
+                style={styles.addBatchBtn}
+              >
+                <Ionicons name="add" size={18} color={Colors.primary} />
+                <Text style={styles.addBatchText}>Add Batch</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        )}
+
+          {showBatchForm && id && (
+            <BatchLogForm
+              projectId={id}
+              onSave={() => { setShowBatchForm(false); load(); }}
+              onCancel={() => setShowBatchForm(false)}
+            />
+          )}
+
+          {batches.map((b) => (
+            <Card key={b.id} style={styles.batchCard}>
+              <Text style={styles.batchNumber}>Batch: {b.batchNumber}</Text>
+              <Text style={styles.batchDetail}>
+                {b.productId}
+                {b.quantityKg != null ? ` · ${b.quantityKg} kg` : ''}
+                {b.coverageAchievedSqm != null ? ` · ${b.coverageAchievedSqm} m²` : ''}
+              </Text>
+              {b.notes ? <Text style={styles.batchNotes}>{b.notes}</Text> : null}
+            </Card>
+          ))}
+
+          {batches.length === 0 && !showBatchForm && (
+            <Text style={styles.emptyText}>No batch logs yet. Tap Add Batch to record product usage.</Text>
+          )}
+        </View>
 
         {calcs.length > 0 && (
           <View>
@@ -249,6 +275,10 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.xs },
   infoLabel: { color: Colors.textSecondary, fontSize: Typography.size.base },
   infoValue: { color: Colors.textPrimary, fontSize: Typography.size.base, fontWeight: Typography.weight.medium },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm },
+  addBatchBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  addBatchText: { color: Colors.primary, fontSize: Typography.size.sm, fontWeight: Typography.weight.medium },
+  emptyText: { color: Colors.textDisabled, fontSize: Typography.size.sm, textAlign: 'center', paddingVertical: Spacing.md },
   batchCard: { marginBottom: Spacing.sm },
   batchNumber: { color: Colors.primary, fontSize: Typography.size.base, fontWeight: Typography.weight.semibold },
   batchDetail: { color: Colors.textSecondary, fontSize: Typography.size.sm },
