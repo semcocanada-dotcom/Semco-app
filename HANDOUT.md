@@ -4,6 +4,36 @@
 
 ---
 
+## ⚠️ CURRENT STATUS — Read This First
+
+The user is trying to preview the app on their iPhone using Expo Go on **Windows**.
+
+**What has been done this session:**
+- Cloned repo to `C:\semco\app` (short path to avoid Windows 260-char limit)
+- Node 20 installed via nvm-windows
+- `.env` file created with real Supabase URL, anon key, service role key, and Anthropic API key
+- `npm install` completed successfully (1291 packages)
+- `ajv@^8` and `hermes-parser@0.29.1` pinned in package.json and pushed to fix Windows bundling errors
+- Firewall rule added for port 8081
+- **The app DID bundle successfully once** via `npx expo start --tunnel` (1711 modules, 20s)
+- The tunnel expired (ERR_NGROK_3200 — free ngrok sessions time out)
+- `--lan` mode times out because Metro exits silently after "Starting Metro Bundler" with no QR code shown
+
+**Root cause suspected:** `EXPO_DEBUG=true` env var set in the session may be interfering, OR Metro is starting as a detached background process and the terminal returns to prompt without showing the QR code/interactive UI.
+
+**What to try next session:**
+1. Open a **fresh PowerShell** (do NOT reuse old session — env vars may be polluted)
+2. `cd C:\semco\app`
+3. `npx expo start --lan` — if Metro exits silently again, check `netstat -ano | findstr :8081` to see if it's actually running
+4. If still failing, try: `npx expo start --tunnel` — the bundle is cached so it will load fast. Rescan QR code before the 2-hour ngrok free limit expires.
+5. If tunnel also fails, the issue is likely the Expo Go SDK version mismatch (phone has SDK 55, project targets SDK 54/55). Consider using `npx expo start --go` or building a development client.
+
+**User's `.env` is at:** `C:\semco\app\.env` — already filled in. Do NOT overwrite it.
+
+**The Supabase project is untouched** — no migrations have been run yet (Steps 2–3 not done). Do not run migrations until the app loads successfully on the phone first.
+
+---
+
 ## IMPORTANT: How to Work on This Project
 
 **Complete ONE task fully before starting the next.**
