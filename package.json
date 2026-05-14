@@ -21,6 +21,8 @@
     "@shopify/flash-list": "^1.7.1",
     "@supabase/supabase-js": "^2.45.0",
     "drizzle-orm": "^0.38.0",
+    "ajv": "^8.17.1",
+    "hermes-parser": "0.29.1",
     "expo": "~54.0.0",
     "expo-camera": "~16.0.0",
     "expo-constants": "~17.0.0",
