@@ -22,15 +22,15 @@ import { ExpenseListItem } from '@components/ExpenseListItem';
 
 export default function DashboardScreen() {
   const { profile, signOut } = useAuth();
-  const { children, activeChild, setActiveChild } = useChild();
+  const { children, activeChild, setActiveChild, refetch: refetchChildren } = useChild();
   const { summary, loading: budgetLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
   const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useRecentExpenses(activeChild?.id ?? null);
 
   const isRefreshing = budgetLoading || expensesLoading;
 
   const onRefresh = useCallback(async () => {
-    await Promise.all([refetchBudget(), refetchExpenses()]);
-  }, [refetchBudget, refetchExpenses]);
+    await Promise.all([refetchChildren(), refetchBudget(), refetchExpenses()]);
+  }, [refetchChildren, refetchBudget, refetchExpenses]);
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there';
   const yearLabel = summary.fundingYear?.label ?? 'No active grant year';
