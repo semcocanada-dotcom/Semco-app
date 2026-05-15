@@ -234,9 +234,9 @@ function QuickAddModal({
     searchTimer.current = setTimeout(async () => {
       const { data } = await supabase
         .from('providers')
-        .select('id, name, category, city')
-        .ilike('name', `%${q}%`)
-        .limit(6);
+        .select('id, name, category, city, organization, address')
+        .or(`name.ilike.%${q}%,organization.ilike.%${q}%`)
+        .limit(8);
       setProviderResults((data ?? []) as Provider[]);
     }, 250);
   }, []);
@@ -247,7 +247,15 @@ function QuickAddModal({
     setMileageLoading(true);
     try {
       const proposal = await buildMileageProposal(addr, provider);
-      if (proposal) { setMileageProposal(proposal); setIncludeMileage(true); }
+      if (proposal) {
+        // Always save as round trip — SK ASD-IF mileage is claimed both ways
+        setMileageProposal({
+          ...proposal,
+          distanceKm: Math.round(proposal.distanceKm * 2 * 10) / 10,
+          amount:     Math.round(proposal.distanceKm * 2 * proposal.ratePerKm * 100) / 100,
+        });
+        setIncludeMileage(true);
+      }
     } catch { /* geocoding failed silently */ } finally {
       setMileageLoading(false);
     }
@@ -362,11 +370,11 @@ function QuickAddModal({
         await supabase.from('mileage_logs').insert({
           child_id:        childId,
           funding_year_id: fundingYearId,
-          description:     `Trip to ${mileageProposal.providerName}`,
+          description:     `Round trip to ${mileageProposal.providerName}`,
           distance_km:     mileageProposal.distanceKm,
           rate_per_km:     mileageProposal.ratePerKm,
           trip_date:       date,
-          is_round_trip:   false,
+          is_round_trip:   true,
         });
       }
 
@@ -480,7 +488,7 @@ function QuickAddModal({
                   <View style={{ flex: 1 }}>
                     <Text style={s.mileageTitle}>🚗 Auto-Mileage</Text>
                     <Text style={s.mileageSub}>
-                      {mileageProposal.distanceKm} km · {mileageProposal.isNorthern ? 'Northern' : 'Southern'} rate ${mileageProposal.ratePerKm.toFixed(4)}/km
+                      {mileageProposal.distanceKm} km round trip · {mileageProposal.isNorthern ? 'Northern' : 'Southern'} rate ${mileageProposal.ratePerKm.toFixed(4)}/km
                     </Text>
                     <Text style={s.mileageAmount}>{CAD(mileageProposal.amount)}</Text>
                   </View>
@@ -576,10 +584,10 @@ function QuickAddModal({
                       <TouchableOpacity
                         key={p.id}
                         style={[s.dropItem, i < providerResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]}
-                        onPress={() => { setSelectedProvider(p); setCategory(p.category); setProviderQuery(''); setProviderResults([]); }}
+                        onPress={() => { setSelectedProvider(p); setCategory(p.category); setProviderQuery(''); setProviderResults([]); tryMileage(p); }}
                       >
                         <Text style={s.dropName}>{p.name}</Text>
-                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.city}</Text>
+                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.organization ?? p.city}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -865,7 +873,7 @@ function MileageOnlyModal({
                     {providerResults.map((p, i) => (
                       <TouchableOpacity key={p.id} style={[s.dropItem, i < providerResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]} onPress={() => onProviderSelect(p)}>
                         <Text style={s.dropName}>{p.name}</Text>
-                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.city}</Text>
+                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.organization ?? p.city}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
