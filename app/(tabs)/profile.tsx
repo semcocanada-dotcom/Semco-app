@@ -12,6 +12,7 @@ import { supabase } from '@lib/supabase';
 import { useAuth } from '@context/AuthContext';
 import { useChildren } from '@hooks/useChildren';
 import type { Child, FundingYear } from '@lib/types';
+import { AddressAutocomplete } from '@components/AddressAutocomplete';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -432,15 +433,18 @@ export default function ProfileScreen() {
           />
 
           <Text style={[s.fieldLabel, { marginTop: 14 }]}>Home Address</Text>
-          <TextInput
-            style={s.textField}
+          <AddressAutocomplete
             value={editAddress}
             onChangeText={v => { setEditAddress(v); setProfileDirty(true); }}
+            onSelect={suggestion => {
+              setEditAddress(suggestion.street);
+              if (suggestion.city)   setEditCity(suggestion.city);
+              if (suggestion.postal) setEditPostal(suggestion.postal);
+              setProfileDirty(true);
+            }}
             placeholder="123 Main St"
-            placeholderTextColor={Colors.textMuted}
-            returnKeyType="next"
           />
-          <Text style={s.fieldHint}>Used for mileage calculations</Text>
+          <Text style={s.fieldHint}>Type your address and pick from the suggestions</Text>
 
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
             <View style={{ flex: 2 }}>

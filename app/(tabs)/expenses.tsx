@@ -27,6 +27,7 @@ import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
+import { AddressAutocomplete } from '@components/AddressAutocomplete';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -242,7 +243,8 @@ function QuickAddModal({
   }, []);
 
   async function tryMileage(provider: Provider) {
-    const addr = profile?.home_address;
+    const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
+    const addr  = parts.length > 0 ? parts.join(', ') : null;
     if (!addr) return;
     setMileageLoading(true);
     try {
@@ -507,17 +509,19 @@ function QuickAddModal({
             {!profile?.home_address && !mileageProposal && selectedProvider && !mileageLoading && (
               <View style={s.homePrompt}>
                 <Text style={s.homePromptText}>📍 Add your home address to auto-calculate mileage</Text>
-                <TextInput
-                  style={[s.textField, { marginTop: 8 }]}
-                  placeholder="123 Main St, Saskatoon, SK"
-                  placeholderTextColor={Colors.textMuted}
+                <AddressAutocomplete
                   value={homeAddress}
                   onChangeText={setHomeAddress}
-                  returnKeyType="done"
-                  onSubmitEditing={async () => {
-                    if (!homeAddress.trim() || !session) return;
+                  placeholder="Start typing your address…"
+                  onSelect={async suggestion => {
+                    if (!session) return;
                     setSavingHome(true);
-                    await supabase.from('profiles').update({ home_address: homeAddress.trim() }).eq('id', session.user.id);
+                    setHomeAddress(suggestion.street);
+                    await supabase.from('profiles').update({
+                      home_address:     suggestion.street,
+                      home_city:        suggestion.city || null,
+                      home_postal_code: suggestion.postal || null,
+                    }).eq('id', session.user.id);
                     await refetchProfile();
                     setSavingHome(false);
                     await tryMileage(selectedProvider);
@@ -800,10 +804,11 @@ function MileageOnlyModal({
 
   async function onProviderSelect(p: Provider) {
     setSelectedProvider(p); setProviderQuery(''); setProviderResults([]);
-    if (profile?.home_address) {
+    const homeParts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
+    if (homeParts.length > 0) {
       setCalcLoading(true);
       try {
-        const proposal = await buildMileageProposal(profile.home_address, p);
+        const proposal = await buildMileageProposal(homeParts.join(', '), p);
         if (proposal) {
           setDistanceKm(String(proposal.distanceKm));
           setRatePerKm(String(proposal.ratePerKm));
