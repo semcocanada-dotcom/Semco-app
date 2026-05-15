@@ -109,6 +109,22 @@ supabase/
 
 ## Task Queue — Work Through In Order
 
+### TASK 0 — ⚠️ URGENT: App Stuck on Splash Screen / Cannot Login
+**Symptom:** App never gets past the open/splash screen. User cannot log in.
+**Root cause to investigate:** `SplashScreen.preventAutoHideAsync()` is called in `app/_layout.tsx`. If anything throws during startup — a missing component, a bad import, a Supabase config error — `SplashScreen.hideAsync()` never gets called and the app appears frozen.
+**Files to check in this order:**
+1. `app/_layout.tsx` — wrap `SplashScreen.hideAsync()` in a try/catch so it always fires
+2. `context/AuthContext.tsx` — verify `getSession()` doesn't hang or throw
+3. `app/(auth)/login.tsx` — imports `AppLogo` from `@components/AppLogo` and uses `expo-web-browser` — confirm both resolve correctly
+4. `lib/supabase.ts` — confirm `supabaseUrl` and `supabaseAnonKey` are non-empty strings at runtime
+
+**Fix pattern:** In `app/_layout.tsx`, the `SplashScreen.hideAsync()` call inside the `useEffect` should be wrapped in try/catch and also called in a `finally` block so it fires even if routing throws. Additionally add a timeout fallback — if `loading` stays true for more than 5 seconds, force hide the splash and redirect to login.
+
+**After fixing:** Run `npx tsc --noEmit` → zero errors → commit → push → wait for user to confirm app loads.
+**Status:** ⚠️ NOT FIXED — START HERE
+
+---
+
 ### TASK 1 — DB Migration (User does this, not Claude)
 **Action:** Open Supabase → SQL Editor → run `supabase/monthly_claims.sql`
 **Why:** Claims tab crashes without the `monthly_claims` table
