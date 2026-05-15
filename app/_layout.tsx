@@ -11,14 +11,25 @@ SplashScreen.preventAutoHideAsync();
 function RootNavigator() {
   const { session, loading } = useAuth();
 
+  // Fallback: if loading hangs for >5s, force-hide splash and go to login
+  useEffect(() => {
+    if (loading) {
+      const t = setTimeout(async () => {
+        try { await SplashScreen.hideAsync(); } catch (_) {}
+        router.replace('/(auth)/login');
+      }, 5000);
+      return () => clearTimeout(t);
+    }
+  }, [loading]);
+
   useEffect(() => {
     if (!loading) {
-      SplashScreen.hideAsync();
-      if (!session) {
-        router.replace('/(auth)/login');
-      } else {
-        router.replace('/(tabs)');
-      }
+      (async () => {
+        try { await SplashScreen.hideAsync(); } catch (_) {}
+        try {
+          router.replace(session ? '/(tabs)' : '/(auth)/login');
+        } catch (_) {}
+      })();
     }
   }, [session, loading]);
 
