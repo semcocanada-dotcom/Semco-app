@@ -34,6 +34,19 @@ import { AddressAutocomplete } from '@components/AddressAutocomplete';
 const CAD = (n: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 
+// SK government portal rejects filenames containing digits — strip them
+function sanitizeReceiptFilename(name: string): string {
+  const dotIdx = name.lastIndexOf('.');
+  const ext    = dotIdx >= 0 ? name.slice(dotIdx).toLowerCase() : '';
+  const base   = dotIdx >= 0 ? name.slice(0, dotIdx) : name;
+  const clean  = base
+    .replace(/[0-9]/g, '')          // strip all digits
+    .replace(/[-_]{2,}/g, '_')      // collapse consecutive separators
+    .replace(/^[-_]+|[-_]+$/g, '')  // trim leading/trailing separators
+    || 'receipt';                    // fallback if entirely numeric
+  return `${clean}${ext}`;
+}
+
 const CATEGORY_CONFIG: { value: ProviderCategory; label: string; emoji: string }[] = [
   { value: 'aba_ibi',              label: 'ABA / IBI',     emoji: '🧩' },
   { value: 'speech_language',      label: 'Speech',        emoji: '🗣️' },
@@ -266,7 +279,7 @@ function QuickAddModal({
   async function handleReceiptCaptured(uri: string, mime: string, name?: string) {
     setReceiptUri(uri);
     setReceiptMime(mime);
-    setReceiptName(name ?? `receipt_${Date.now()}.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`);
+    setReceiptName(sanitizeReceiptFilename(name ?? `receipt.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`));
     if (mime === 'application/pdf') return;
     setOcrLoading(true);
     try {
