@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
@@ -224,6 +225,12 @@ export default function ClaimsScreen() {
     setJustSubmitted(false);
   }
 
+  async function saveBatchNumber(claimId: string, value: string) {
+    const trimmed = value.trim() || null;
+    await db.monthlyClaims().update({ batch_number: trimmed }).eq('id', claimId);
+    setClaims(prev => prev.map(c => c.id === claimId ? { ...c, batch_number: trimmed } : c));
+  }
+
   function renderRow({ item }: { item: MonthGroup }) {
     const isSubmitted = !!item.claim;
     const count = item.expenses.length + item.mileage.length;
@@ -316,6 +323,7 @@ export default function ClaimsScreen() {
             healthServicesNumber={activeChild?.health_card_number ?? null}
             parentName={profile?.full_name ?? ''}
             parentEmail={session?.user.email ?? ''}
+            onSaveBatchNumber={saveBatchNumber}
           />
         )}
       </Modal>
@@ -333,14 +341,17 @@ interface ClaimDetailProps {
   healthServicesNumber: string | null;
   parentName: string;
   parentEmail: string;
+  onSaveBatchNumber: (claimId: string, value: string) => Promise<void>;
 }
 
 function ClaimDetail({
   group, onClose, onSubmit, submitting, justSubmitted,
   childName, healthServicesNumber, parentName, parentEmail,
+  onSaveBatchNumber,
 }: ClaimDetailProps) {
   const isSubmitted = !!group.claim || justSubmitted;
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [batchInput, setBatchInput] = useState(group.claim?.batch_number ?? '');
   const router = useRouter();
 
   async function handleGeneratePdf() {
@@ -439,16 +450,33 @@ function ClaimDetail({
         </View>
 
         {isSubmitted && (
-          <View style={s.successBanner}>
-            <Text style={s.successIcon}>✅</Text>
-            <Text style={s.successText}>
-              {justSubmitted
-                ? 'Claim submitted! A copy was sent to you and the Saskatchewan ASD-IF program.'
-                : `Submitted ${group.claim?.submitted_at
-                    ? format(parseISO(group.claim.submitted_at), 'MMMM d, yyyy')
-                    : ''}`}
-            </Text>
-          </View>
+          <>
+            <View style={s.successBanner}>
+              <Text style={s.successIcon}>✅</Text>
+              <Text style={s.successText}>
+                {justSubmitted
+                  ? 'Claim submitted! A copy was sent to you and the Saskatchewan ASD-IF program.'
+                  : `Submitted ${group.claim?.submitted_at
+                      ? format(parseISO(group.claim.submitted_at), 'MMMM d, yyyy')
+                      : ''}`}
+              </Text>
+            </View>
+            {group.claim && (
+              <View style={s.batchRow}>
+                <Text style={s.batchLabel}>Exp Batch #</Text>
+                <TextInput
+                  style={s.batchInput}
+                  value={batchInput}
+                  onChangeText={setBatchInput}
+                  onBlur={() => onSaveBatchNumber(group.claim!.id, batchInput)}
+                  placeholder="000___"
+                  placeholderTextColor="#aaa"
+                  autoCapitalize="none"
+                  returnKeyType="done"
+                />
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -604,6 +632,21 @@ const s = StyleSheet.create({
   successIcon: { fontSize: 22 },
   successText: { flex: 1, fontSize: 15, color: '#065F46', lineHeight: 22 },
 
+  batchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  batchLabel: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary, minWidth: 80 },
+  batchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary, paddingVertical: 0 },
+
   modalFooter: {
     padding: 20,
     paddingBottom: 32,
@@ -620,4 +663,13 @@ const s = StyleSheet.create({
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
   submitNote: { fontSize: 12, color: Colors.textMuted, textAlign: 'center', marginTop: 8 },
+  addExpenseBtn: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.purple,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  addExpenseBtnText: { fontSize: 15, color: Colors.purple, fontWeight: '600' },
 });

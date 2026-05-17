@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS monthly_claims (
   mileage_ids       UUID[]      NOT NULL DEFAULT '{}',
   expense_count     INT         NOT NULL DEFAULT 0,
   resend_message_id TEXT,
+  batch_number      TEXT,                                -- e.g. "Exp Batch #000123" from SK portal
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
 
   UNIQUE (child_id, month)
