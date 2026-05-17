@@ -15,18 +15,31 @@ export interface MileageCalculation {
 
 // ─── Geocoding (Nominatim — free, no API key) ─────────────────────────────────
 
-export async function geocodeAddress(address: string): Promise<Coords | null> {
+async function tryGeocode(address: string): Promise<Coords | null> {
   try {
     const query = encodeURIComponent(`${address}, Saskatchewan, Canada`);
     const url   = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=ca`;
-    const res   = await fetch(url, {
-      headers: { 'User-Agent': 'SemcoApp/1.0 (ca.semco.app)' },
-    });
-    const data = await res.json();
-    if (data[0]) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-    }
+    const res   = await fetch(url, { headers: { 'User-Agent': 'SemcoApp/1.0 (ca.semco.app)' } });
+    const data  = await res.json();
+    if (data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
   } catch {}
+  return null;
+}
+
+// Tries full address first, then drops the street and retries with city+postal,
+// then city-only. Handles small rural addresses Nominatim doesn't know by street.
+export async function geocodeAddress(address: string): Promise<Coords | null> {
+  const hit = await tryGeocode(address);
+  if (hit) return hit;
+
+  const parts = address.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length >= 3) {
+    const noStreet = await tryGeocode(parts.slice(1).join(', '));
+    if (noStreet) return noStreet;
+  }
+  if (parts.length >= 2) {
+    return tryGeocode(parts[parts.length - 1]);
+  }
   return null;
 }
 
