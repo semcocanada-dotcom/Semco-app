@@ -20,7 +20,7 @@ import { supabase, db } from '@lib/supabase';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import type { Expense, MileageLog, MonthlyClaim, FundingYear, Provider } from '@lib/types';
-import { generateAndShareMileagePdf } from '@lib/pdfForms';
+import { generateAndShareMileagePdf, generateAndShareExpensePdf } from '@lib/pdfForms';
 
 const CATEGORY_LABELS: Record<string, string> = {
   aba_ibi: 'ABA/IBI',
@@ -350,9 +350,39 @@ function ClaimDetail({
   onSaveBatchNumber,
 }: ClaimDetailProps) {
   const isSubmitted = !!group.claim || justSubmitted;
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingPdf,        setGeneratingPdf]        = useState(false);
+  const [generatingExpensePdf, setGeneratingExpensePdf] = useState(false);
   const [batchInput, setBatchInput] = useState(group.claim?.batch_number ?? '');
   const router = useRouter();
+
+  async function handleGenerateExpensePdf() {
+    if (group.expenses.length === 0) {
+      Alert.alert('No Expenses', 'This month has no expenses to include in the form.');
+      return;
+    }
+    setGeneratingExpensePdf(true);
+    try {
+      await generateAndShareExpensePdf({
+        childName,
+        healthServicesNumber,
+        parentName,
+        parentEmail,
+        monthLabel: group.monthLabel,
+        rows: group.expenses.map(e => ({
+          expense_date:   e.expense_date,
+          category_label: CATEGORY_LABELS[e.category] ?? e.category,
+          provider_name:  e.providers?.name ?? null,
+          description:    e.description ?? null,
+          amount:         Number(e.amount),
+        })),
+        total: group.expenses.reduce((sum, e) => sum + Number(e.amount), 0),
+      });
+    } catch {
+      Alert.alert('PDF Error', 'Could not generate the PDF. Please try again.');
+    } finally {
+      setGeneratingExpensePdf(false);
+    }
+  }
 
   async function handleGeneratePdf() {
     if (group.mileage.length === 0) {
@@ -389,7 +419,20 @@ function ClaimDetail({
       <ScrollView style={s.modalScroll} contentContainerStyle={s.modalScrollContent}>
         {group.expenses.length > 0 && (
           <>
-            <Text style={[s.sectionLabel, { marginTop: 20, marginBottom: 8 }]}>Expenses</Text>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionLabel}>Expenses</Text>
+              <TouchableOpacity
+                style={s.pdfBtn}
+                onPress={handleGenerateExpensePdf}
+                disabled={generatingExpensePdf}
+                activeOpacity={0.7}
+              >
+                {generatingExpensePdf
+                  ? <ActivityIndicator size="small" color={Colors.purple} />
+                  : <Text style={s.pdfBtnText}>📄 SK Form PDF</Text>
+                }
+              </TouchableOpacity>
+            </View>
             {group.expenses.map((e) => (
               <View key={e.id} style={s.lineItem}>
                 <View style={s.lineItemLeft}>

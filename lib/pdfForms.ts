@@ -3,7 +3,7 @@ import * as Sharing from 'expo-sharing';
 import { format, parseISO } from 'date-fns';
 
 export interface MileagePdfRow {
-  trip_date: string;       // YYYY-MM-DD from DB
+  trip_date: string;
   description: string | null;
   distance_km: number;
   rate_per_km: number;
@@ -15,10 +15,29 @@ export interface MileagePdfInput {
   healthServicesNumber: string | null;
   parentName: string;
   parentEmail: string;
-  monthLabel: string;      // 'May 2026'
+  monthLabel: string;
   rows: MileagePdfRow[];
   total: number;
-  submittedDate?: string;  // YYYY-MM-DD, defaults to today
+  submittedDate?: string;
+}
+
+export interface ExpensePdfRow {
+  expense_date: string;      // YYYY-MM-DD
+  category_label: string;   // human-readable category
+  provider_name: string | null;
+  description: string | null;
+  amount: number;
+}
+
+export interface ExpensePdfInput {
+  childName: string;
+  healthServicesNumber: string | null;
+  parentName: string;
+  parentEmail: string;
+  monthLabel: string;
+  rows: ExpensePdfRow[];
+  total: number;
+  submittedDate?: string;
 }
 
 export async function generateAndShareMileagePdf(data: MileagePdfInput): Promise<void> {
@@ -29,6 +48,19 @@ export async function generateAndShareMileagePdf(data: MileagePdfInput): Promise
     await Sharing.shareAsync(uri, {
       mimeType: 'application/pdf',
       dialogTitle: `Mileage Claim — ${data.monthLabel}`,
+      UTI: 'com.adobe.pdf',
+    });
+  }
+}
+
+export async function generateAndShareExpensePdf(data: ExpensePdfInput): Promise<void> {
+  const html = buildExpenseHtml(data);
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const available = await Sharing.isAvailableAsync();
+  if (available) {
+    await Sharing.shareAsync(uri, {
+      mimeType: 'application/pdf',
+      dialogTitle: `Expense Claim — ${data.monthLabel}`,
       UTI: 'com.adobe.pdf',
     });
   }
@@ -356,4 +388,103 @@ function buildMileageHtml(data: MileagePdfInput): string {
   </div>
 </body>
 </html>`;
+}
+
+function buildExpenseHtml(data: ExpensePdfInput): string {
+  const child  = splitName(data.childName);
+  const parent = splitName(data.parentName);
+  const today  = data.submittedDate ?? format(new Date(), 'yyyy-MM-dd');
+
+  const MIN_ROWS = 8;
+  const padded = [...data.rows];
+  while (padded.length < MIN_ROWS) padded.push(null as unknown as ExpensePdfRow);
+
+  const rows = padded.map(r => r ? `<tr>
+    <td class="tc">${fmtDate(r.expense_date)}</td>
+    <td>${r.category_label}</td>
+    <td>${r.provider_name ?? ''}</td>
+    <td>${r.description ?? ''}</td>
+    <td class="tr">$${Number(r.amount).toFixed(2)}</td>
+  </tr>` : `<tr><td class="tc">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td class="tr">&nbsp;</td></tr>`).join('');
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#000;padding:28px 32px;background:#fff}
+  .t1{font-size:20px;font-weight:400;color:#1a1a1a;margin-bottom:2px}
+  .t2{font-size:14px;font-weight:700;color:#215732;margin-bottom:4px}
+  .inst{font-size:11px;color:#333;margin-bottom:18px}
+  .sh{font-size:12px;font-weight:700;color:#215732;margin-bottom:4px;margin-top:14px}
+  .fr{display:flex;border-bottom:1px solid #000;margin-bottom:14px}
+  .fc{flex:1;padding-bottom:4px;padding-right:12px}
+  .fc2{flex:2}
+  .fl{font-size:9px;color:#555;margin-top:4px;display:block}
+  .fv{font-size:12px;min-height:16px}
+  hr{border:none;border-top:1px solid #ccc;margin:14px 0}
+  .mr{font-size:12px;font-weight:700;color:#215732;margin-bottom:10px}
+  .mv{font-weight:400;color:#000;border-bottom:1px solid #000;display:inline-block;min-width:120px;padding-left:4px}
+  table{width:100%;border-collapse:collapse;margin-bottom:0}
+  th{background:#215732;color:#fff;font-size:10px;font-weight:700;padding:6px;text-align:left;border:1px solid #215732}
+  td{border:1px solid #bbb;padding:5px 6px;font-size:11px;height:22px;vertical-align:middle}
+  .tc{text-align:center;width:68px}
+  .tr{text-align:right;width:78px}
+  .tot{display:flex;justify-content:flex-end;border:1px solid #bbb;border-top:none}
+  .tl{font-size:11px;font-weight:700;padding:6px 10px;text-align:right;flex:1}
+  .tv{font-size:11px;font-weight:700;padding:6px 10px;width:100px;border-left:1px solid #bbb;text-align:right}
+  .sr{display:flex;margin-top:16px;gap:32px}
+  .sc{flex:1}
+  .sl{border-bottom:1px solid #000;min-height:28px;margin-bottom:4px;font-size:12px;padding-bottom:2px}
+  .slb{font-size:9px;color:#555}
+  .ft{display:flex;justify-content:space-between;align-items:flex-end;margin-top:28px}
+  .fs{font-size:13px;font-weight:700;color:#215732;font-style:italic}
+  .fl2{font-size:18px;font-weight:700;color:#215732;font-style:italic}
+  .fl2 span{color:#F4C430;font-style:normal}
+  .an{font-size:10px;color:#333;margin-top:6px;margin-bottom:14px}
+</style></head><body>
+  <div class="t1">Autism Spectrum Disorder Individualized Funding (ASD-IF)</div>
+  <div class="t2">Monthly Expense Claim Form</div>
+  <p class="inst">Instructions: <a href="https://saskatchewan.ca/autism">saskatchewan.ca/autism</a></p>
+
+  <div class="sh">Child Information</div>
+  <div class="fr">
+    <div class="fc"><div class="fv">${child.first}</div><span class="fl">Child First Name</span></div>
+    <div class="fc"><div class="fv">${child.last}</div><span class="fl">Child Last Name</span></div>
+    <div class="fc"><div class="fv">${data.healthServicesNumber ?? ''}</div><span class="fl">Health Services Number</span></div>
+  </div>
+
+  <div class="sh">Parent/Guardian Information*</div>
+  <div class="fr">
+    <div class="fc"><div class="fv">${parent.first}</div><span class="fl">First Name</span></div>
+    <div class="fc"><div class="fv">${parent.last}</div><span class="fl">Last Name</span></div>
+    <div class="fc fc2"><div class="fv">${data.parentEmail}</div><span class="fl">Email Address</span></div>
+  </div>
+  <p class="an">*ASD-IF funding applicant. Questions? <a href="mailto:autismif@gov.sk.ca">autismif@gov.sk.ca</a></p>
+  <hr>
+
+  <div class="mr">Month: <span class="mv">${data.monthLabel}</span></div>
+  <table>
+    <thead><tr>
+      <th class="tc">Date<br><span style="font-weight:400;font-size:9px">(MM/DD/YY)</span></th>
+      <th>Service Type</th>
+      <th>Provider / Organization</th>
+      <th>Description</th>
+      <th class="tr">Amount ($)</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="tot">
+    <div class="tl">Total ($)</div>
+    <div class="tv">$${data.total.toFixed(2)}</div>
+  </div>
+
+  <div class="sr">
+    <div class="sc"><div class="sl">${data.parentName}</div><div class="slb">Printed Name (Parent/Guardian)</div></div>
+    <div class="sc"><div class="sl">${fmtDateLong(today)}</div><div class="slb">Date (MM/DD/YYYY)</div></div>
+  </div>
+
+  <div class="ft">
+    <div class="fs">saskatchewan.ca</div>
+    <div class="fl2">Saskatchewan<span>&#x2F;</span></div>
+  </div>
+</body></html>`;
 }
