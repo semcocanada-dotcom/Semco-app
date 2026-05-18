@@ -280,10 +280,9 @@ function QuickAddModal({
     setReceiptUri(uri);
     setReceiptMime(mime);
     setReceiptName(sanitizeReceiptFilename(name ?? `receipt.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`));
-    if (mime === 'application/pdf') return;
     setOcrLoading(true);
     try {
-      const analysis = await analyseReceipt(uri);
+      const analysis = await analyseReceipt(uri, mime);
       setOcrBizName(analysis.ocrResult.businessName ?? null);
       setProviderMatches(analysis.allMatches);
       const top = analysis.topMatch;

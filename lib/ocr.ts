@@ -9,13 +9,16 @@ export interface OcrResult {
 }
 
 /**
- * Reads a local image URI as base64 and sends it to Google Cloud Vision API
- * for DOCUMENT_TEXT_DETECTION. Returns structured receipt data.
+ * Reads a local file URI (image or PDF) as base64 and sends it to Google Cloud
+ * Vision API for DOCUMENT_TEXT_DETECTION. Returns structured receipt data.
+ *
+ * Images → images:annotate endpoint (synchronous)
+ * PDFs   → files:annotate endpoint (synchronous, first page only)
  *
  * Requires app.json extra.googleVisionApiKey to be set.
  * Fails gracefully (returns empty result) when no key is configured.
  */
-export async function extractReceiptData(imageUri: string): Promise<OcrResult> {
+export async function extractReceiptData(fileUri: string, mimeType = 'image/jpeg'): Promise<OcrResult> {
   const apiKey: string | undefined =
     (Constants.expoConfig?.extra as any)?.googleVisionApiKey;
 
@@ -23,28 +26,51 @@ export async function extractReceiptData(imageUri: string): Promise<OcrResult> {
   if (!apiKey) return empty;
 
   try {
-    const base64 = await FileSystem.readAsStringAsync(imageUri, {
+    const base64 = await FileSystem.readAsStringAsync(fileUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
 
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [{
-            image: { content: base64 },
-            features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }],
-          }],
-        }),
-      },
-    );
+    const isPdf = mimeType === 'application/pdf';
+    let rawText = '';
 
-    if (!response.ok) return empty;
-    const data = await response.json();
-    const rawText: string =
-      data.responses?.[0]?.fullTextAnnotation?.text ?? '';
+    if (isPdf) {
+      // files:annotate supports base64 PDFs — reads first page only
+      const response = await fetch(
+        `https://vision.googleapis.com/v1/files:annotate?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requests: [{
+              inputConfig: { content: base64, mimeType: 'application/pdf' },
+              features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
+              pages: [1],
+            }],
+          }),
+        },
+      );
+      if (!response.ok) return empty;
+      const data = await response.json();
+      // files:annotate has a nested responses structure: responses[0].responses[0]
+      rawText = data.responses?.[0]?.responses?.[0]?.fullTextAnnotation?.text ?? '';
+    } else {
+      const response = await fetch(
+        `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requests: [{
+              image: { content: base64 },
+              features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }],
+            }],
+          }),
+        },
+      );
+      if (!response.ok) return empty;
+      const data = await response.json();
+      rawText = data.responses?.[0]?.fullTextAnnotation?.text ?? '';
+    }
 
     return { ...parseReceiptText(rawText), rawText };
   } catch {
@@ -109,10 +135,9 @@ function extractAmount(lines: string[]): number | null {
     const match = line.match(/\$?\s*(\d{1,4}(?:[.,]\d{2}))/);
     if (match) {
       const val = parseFloat(match[1].replace(',', '.'));
-      if (isTotalLine) return val;   // take first "total" line found (from bottom)
+      if (isTotalLine) return val;
       candidates.push(val);
     }
   }
-  // Fall back to largest amount found
   return candidates.length ? Math.max(...candidates) : null;
 }

@@ -29,11 +29,11 @@ export interface MileageProposal {
 // ─── Step 1 — Analyse a receipt image ────────────────────────────────────────
 
 /**
- * Runs OCR on the image URI, then fuzzy-matches the extracted business name
- * against the providers table. Only works for image URIs (not PDFs).
+ * Runs OCR on the file URI (image or PDF), then fuzzy-matches the extracted
+ * business name against the providers table.
  */
-export async function analyseReceipt(imageUri: string): Promise<ReceiptAnalysis> {
-  const ocrResult = await extractReceiptData(imageUri);
+export async function analyseReceipt(fileUri: string, mimeType = 'image/jpeg'): Promise<ReceiptAnalysis> {
+  const ocrResult = await extractReceiptData(fileUri, mimeType);
 
   let topMatch: ProviderMatch | null = null;
   let allMatches: ProviderMatch[]    = [];
