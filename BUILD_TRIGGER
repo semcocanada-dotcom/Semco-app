@@ -2,4 +2,5 @@
 2026-05-18T07:00:00Z — rebuild with all features: Claims tab, mileage log, expense PDF, OCR address mileage
 2026-05-18T10:30:00Z — add expo-location for proximity sorting and mileage auto-fill
 2026-05-18T16:45:00Z — retrigger: standalone commit to ensure build job fires
+2026-05-18T17:20:00Z — fix workflow to use paths: filter; retrigger native build
 
