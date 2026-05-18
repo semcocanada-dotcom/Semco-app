@@ -28,13 +28,16 @@ export async function scheduleAppointmentReminder(
   appointmentId: string,
   title: string,
   scheduledAt: Date,
+  offsetMinutes = 1440,
 ): Promise<string | null> {
-  const secondsUntil = Math.floor((scheduledAt.getTime() - 24 * 60 * 60 * 1000 - Date.now()) / 1000);
+  const fireAt = scheduledAt.getTime() - offsetMinutes * 60 * 1000;
+  const secondsUntil = Math.floor((fireAt - Date.now()) / 1000);
   if (secondsUntil <= 0) return null;
+  const label = offsetMinutes >= 1440 ? 'Tomorrow' : offsetMinutes >= 120 ? 'In 2 hours' : 'In 1 hour';
   try {
     return await Notifications.scheduleNotificationAsync({
       content: {
-        title: '📅 Appointment Tomorrow',
+        title: `📅 Appointment ${label}`,
         body: title,
         data: { appointmentId },
       },

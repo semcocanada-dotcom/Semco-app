@@ -116,6 +116,7 @@ function AddAppointmentModal({
   const [providerResults, setProviderResults] = useState<Provider[]>([]);
   const [selectedProvider,setSelectedProvider]= useState<Provider | null>(null);
   const [syncCalendar,    setSyncCalendar]    = useState(true);
+  const [reminderOffset,  setReminderOffset]  = useState(1440);
   const [addMileage,      setAddMileage]      = useState(false);
   const [mileageLoading,  setMileageLoading]  = useState(false);
   const [mileageKm,       setMileageKm]       = useState<number | null>(null);
@@ -130,7 +131,7 @@ function AddAppointmentModal({
       setTitle(initialProvider?.name ?? '');
       setDate(format(new Date(), 'yyyy-MM-dd')); setTime('09:00');
       setNotes(''); setProviderQuery(''); setSelectedProvider(initialProvider ?? null);
-      setProviderResults([]); setSyncCalendar(true); setAddMileage(false);
+      setProviderResults([]); setSyncCalendar(true); setReminderOffset(1440); setAddMileage(false);
       setMileageKm(null); setMileageRate(null); setSaving(false); setIsRoundTrip(true);
     }
   }, [visible, initialProvider]);
@@ -187,7 +188,7 @@ function AddAppointmentModal({
               startDate: scheduledAt,
               endDate: end,
               notes: notes.trim() || undefined,
-              alarms: [{ relativeOffset: -1440 }], // 24h before
+              alarms: [{ relativeOffset: -reminderOffset }],
             });
           } catch {}
         }
@@ -209,7 +210,7 @@ function AddAppointmentModal({
 
       // Schedule push reminder
       await requestNotificationPermission();
-      await scheduleAppointmentReminder(row.id, title.trim(), scheduledAt);
+      await scheduleAppointmentReminder(row.id, title.trim(), scheduledAt, reminderOffset);
 
       // Log mileage if requested and a funding year exists
       if (addMileage && mileageKm && mileageRate && fundingYearId) {
@@ -354,6 +355,27 @@ function AddAppointmentModal({
                 <View style={[s.toggleThumb, syncCalendar && s.toggleThumbOn]} />
               </View>
             </TouchableOpacity>
+
+            {/* Reminder timing */}
+            <Text style={[s.fieldLabel, { marginTop: 18 }]}>Remind me</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {([
+                { label: '1 hr before', value: 60 },
+                { label: '2 hrs before', value: 120 },
+                { label: 'Day before', value: 1440 },
+              ] as const).map(opt => (
+                <TouchableOpacity
+                  key={opt.value}
+                  style={[s.reminderChip, reminderOffset === opt.value && s.reminderChipActive]}
+                  onPress={() => setReminderOffset(opt.value)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.reminderChipText, reminderOffset === opt.value && s.reminderChipTextActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
             {/* Mileage section */}
             {mileageLoading && (
@@ -655,6 +677,11 @@ const s = StyleSheet.create({
 
   homePrompt:     { marginTop: 10, backgroundColor: '#FFFBEB', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#FDE68A' },
   homePromptText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
+
+  reminderChip:         { flex: 1, paddingVertical: 9, borderRadius: 10, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border, alignItems: 'center' },
+  reminderChipActive:   { backgroundColor: Colors.purple, borderColor: Colors.purple },
+  reminderChipText:     { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  reminderChipTextActive:{ color: '#fff' },
 
   saveBtn:    { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   saveBtnText:{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
