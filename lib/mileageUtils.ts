@@ -58,11 +58,14 @@ export async function analyseReceipt(imageUri: string): Promise<ReceiptAnalysis>
 export async function buildMileageProposal(
   homeAddress: string,
   provider:    Provider,
+  ocrAddress?: string | null,
 ): Promise<MileageProposal | null> {
-  // Build the destination string — prefer full address, fall back to city
-  const destination = provider.address
-    ? `${provider.address}, ${provider.city}, SK`
-    : `${provider.city}, SK, Canada`;
+  // Priority: OCR-extracted receipt address > DB provider address > city fallback
+  const destination = ocrAddress
+    ? ocrAddress
+    : provider.address
+      ? `${provider.address}, ${provider.city}, SK`
+      : `${provider.city}, SK, Canada`;
 
   const calc: MileageCalculation | null = await calculateMileage(homeAddress, destination);
   if (!calc) return null;

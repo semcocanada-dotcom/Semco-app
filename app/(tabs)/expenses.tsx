@@ -255,13 +255,13 @@ function QuickAddModal({
     }, 250);
   }, []);
 
-  async function tryMileage(provider: Provider) {
+  async function tryMileage(provider: Provider, ocrAddress?: string | null) {
     const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
     const addr  = parts.length > 0 ? parts.join(', ') : null;
     if (!addr) return;
     setMileageLoading(true);
     try {
-      const proposal = await buildMileageProposal(addr, provider);
+      const proposal = await buildMileageProposal(addr, provider, ocrAddress);
       if (proposal) {
         // Always save as round trip — SK ASD-IF mileage is claimed both ways
         setMileageProposal({
@@ -290,7 +290,7 @@ function QuickAddModal({
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);
         setCategory(top.provider.category);
-        await tryMileage(top.provider);
+        await tryMileage(top.provider, analysis.ocrResult.address);
       }
     } catch { /* OCR failed silently */ } finally {
       setOcrLoading(false);

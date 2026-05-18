@@ -121,7 +121,7 @@ supabase/
 **Fix pattern:** In `app/_layout.tsx`, the `SplashScreen.hideAsync()` call inside the `useEffect` should be wrapped in try/catch and also called in a `finally` block so it fires even if routing throws. Additionally add a timeout fallback — if `loading` stays true for more than 5 seconds, force hide the splash and redirect to login.
 
 **After fixing:** Run `npx tsc --noEmit` → zero errors → commit → push → wait for user to confirm app loads.
-**Status:** ⚠️ NOT FIXED — START HERE
+**Status:** ✅ DONE — `context/AuthContext.tsx` has `.catch(() => {}).finally(() => setLoading(false))` and `app/_layout.tsx` has 5s timeout fallback + try/catch around SplashScreen.hideAsync()
 
 ---
 
@@ -137,7 +137,7 @@ supabase/
 **Why:** SK government portal rejects receipt files with numbers in the filename.
 **Where:** `app/(tabs)/expenses.tsx` — find the upload function, sanitize filename before `storage.upload()`
 **Rule:** Filename sanitize = replace any digit `[0-9]` with empty string, collapse double dashes/underscores.
-**Status:** ⬜ NOT STARTED
+**Status:** ✅ DONE — `sanitizeReceiptFilename()` in expenses.tsx strips all digits, collapses separators, fallback to 'receipt'
 
 ---
 
@@ -145,7 +145,7 @@ supabase/
 **What:** Generate a filled PDF for therapy/equipment expenses (not mileage).
 **Why:** User needs a paper trail for non-mileage expenses too.
 **Where:** Add a new export to `lib/pdfForms.ts` + wire a PDF button into the Claims detail modal expenses section (mirror the mileage PDF button already there).
-**Status:** ⬜ NOT STARTED
+**Status:** ✅ DONE — `generateAndShareExpensePdf()` in lib/pdfForms.ts + "📄 SK Form PDF" button in claims.tsx expenses section
 
 ---
 
@@ -154,7 +154,15 @@ supabase/
 **Where:** 
 1. `supabase/monthly_claims.sql` — add `batch_number TEXT` column (new SQL file)
 2. `app/(tabs)/claims.tsx` — on submitted claim cards, show a text input to enter/display the batch number
-**Status:** ⬜ NOT STARTED
+**Status:** ✅ DONE — batch_number column in SQL + editable text input in claims detail modal (saves on blur)
+
+---
+
+### TASK 4b — Provider Addresses CSV Import (waiting on spreadsheet)
+**What:** 447/457 providers in the DB have `address = null`. ChatGPT agent is scraping SK government website to produce a spreadsheet.
+**When ready:** User uploads spreadsheet → write SQL UPDATE script to populate `providers.address`
+**Current workaround:** OCR reads address from receipt → used as mileage destination (DONE — `buildMileageProposal` accepts `ocrAddress` param)
+**Status:** ⏳ WAITING ON SPREADSHEET
 
 ---
 
