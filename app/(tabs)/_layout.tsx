@@ -52,10 +52,16 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="mileage"
+        options={{
+          title: 'Mileage',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🚗" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="claims"
         options={{
-          title: 'Claims',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📤" focused={focused} />,
+          href: null,
         }}
       />
       <Tabs.Screen

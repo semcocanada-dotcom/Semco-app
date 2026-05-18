@@ -28,6 +28,7 @@ import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import { router } from 'expo-router';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1152,13 +1153,7 @@ export default function ExpensesScreen() {
       <View style={s.fabStack}>
         <TouchableOpacity
           style={s.fabMileageWrap}
-          onPress={() => {
-            if (!summary.fundingYear) {
-              Alert.alert('No Active Funding Year', 'Set up a funding year for this child in the Profile tab before logging mileage.');
-              return;
-            }
-            setShowMileageLog(true);
-          }}
+          onPress={() => router.push('/(tabs)/mileage')}
           activeOpacity={0.85}
         >
           <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.fabSmall}>
