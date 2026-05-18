@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Install EAS CLI
-        run: npm install -g eas-cli@latest
+        run: npm install -g eas-cli@18.13.0
 
       - name: Build iOS preview
         env:
@@ -51,9 +51,15 @@ jobs:
         run: npm ci
 
       - name: Install EAS CLI
-        run: npm install -g eas-cli@latest
+        run: npm install -g eas-cli@18.13.0
+
+      - name: Show EAS version
+        run: eas --version
 
       - name: Push OTA update
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas update --branch preview --message "${{ github.event.head_commit.message }}" --non-interactive
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          FIRST_LINE=$(printf '%s' "$COMMIT_MSG" | head -1)
+          eas update --branch preview --message "$FIRST_LINE" --non-interactive
