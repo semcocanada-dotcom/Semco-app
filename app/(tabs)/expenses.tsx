@@ -519,7 +519,7 @@ function QuickAddModal({
               </View>
             )}
 
-            {!profile?.home_address && !mileageProposal && selectedProvider && !mileageLoading && (
+            {!profile?.home_city && !mileageProposal && selectedProvider && !mileageLoading && (
               <View style={s.homePrompt}>
                 <Text style={s.homePromptText}>📍 Add your home address to auto-calculate mileage</Text>
                 <AddressAutocomplete

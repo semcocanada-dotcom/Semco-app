@@ -382,6 +382,10 @@ export default function ProfileScreen() {
 
   async function saveProfile() {
     if (!session) return;
+    if (!editCity.trim()) {
+      Alert.alert('City required', 'Enter your home city — it is needed to auto-calculate mileage.');
+      return;
+    }
     setSavingProfile(true);
     await supabase.from('profiles').update({
       full_name:         editName.trim() || null,
@@ -432,7 +436,7 @@ export default function ProfileScreen() {
             returnKeyType="next"
           />
 
-          <Text style={[s.fieldLabel, { marginTop: 14 }]}>Home Address</Text>
+          <Text style={[s.fieldLabel, { marginTop: 14 }]}>Home Address <Text style={{ color: Colors.textMuted, fontWeight: '400', fontSize: 12 }}>(used to auto-calculate mileage)</Text></Text>
           <AddressAutocomplete
             value={editAddress}
             onChangeText={v => { setEditAddress(v); setProfileDirty(true); }}
@@ -444,11 +448,11 @@ export default function ProfileScreen() {
             }}
             placeholder="123 Main St"
           />
-          <Text style={s.fieldHint}>Type your address and pick from the suggestions</Text>
+          <Text style={s.fieldHint}>Type your address and pick from the suggestions. City and postal code are the minimum needed for mileage.</Text>
 
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
             <View style={{ flex: 2 }}>
-              <Text style={s.fieldLabel}>Home City</Text>
+              <Text style={s.fieldLabel}>Home City <Text style={{ color: '#ef4444' }}>*</Text></Text>
               <TextInput
                 style={s.textField}
                 value={editCity}
