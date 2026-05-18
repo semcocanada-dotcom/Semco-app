@@ -19,30 +19,132 @@ import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { Provider, ProviderCategory } from '@lib/types';
 
-// ─── Category config ─────────────────────────────────────────────────────────
+// ─── Category config ──────────────────────────────────────────────────────────
 
-const CATEGORIES: { value: ProviderCategory | 'all'; label: string; emoji: string }[] = [
-  { value: 'all',                  label: 'All',                    emoji: '🔍' },
-  { value: 'aba_ibi',              label: 'ABA / IBI',              emoji: '🧩' },
-  { value: 'speech_language',      label: 'Speech & Language',      emoji: '🗣️' },
-  { value: 'occupational_therapy', label: 'Occupational Therapy',   emoji: '✋' },
-  { value: 'physical_therapy',     label: 'Physical Therapy',       emoji: '🏃' },
-  { value: 'psychology',           label: 'Psychology',             emoji: '🧠' },
-  { value: 'respite',              label: 'Respite',                emoji: '🏠' },
-  { value: 'swimming',             label: 'Swimming',               emoji: '🏊' },
-  { value: 'social_skills',        label: 'Social Skills',          emoji: '👫' },
-  { value: 'music_therapy',        label: 'Music Therapy',          emoji: '🎵' },
-  { value: 'art_therapy',          label: 'Art Therapy',            emoji: '🎨' },
-  { value: 'assistive_technology', label: 'Assistive Technology',   emoji: '📱' },
-  { value: 'other',                label: 'Other',                  emoji: '📋' },
+interface CatMeta {
+  label:  string;
+  emoji:  string;
+  color:  string;  // icon / text color
+  bg:     string;  // circle background
+}
+
+const CAT_META: Record<string, CatMeta> = {
+  speech_language:      { label: 'Speech Therapy',       emoji: '💬', color: '#7C3AED', bg: '#EDE9FE' },
+  occupational_therapy: { label: 'Occupational Therapy', emoji: '✋', color: '#059669', bg: '#D1FAE5' },
+  aba_ibi:              { label: 'ABA / IBI',             emoji: '🧩', color: '#1D4ED8', bg: '#DBEAFE' },
+  psychology:           { label: 'Behaviour / Psychology',emoji: '🧠', color: '#DB2777', bg: '#FCE7F3' },
+  physical_therapy:     { label: 'Physical Therapy',      emoji: '🏃', color: '#D97706', bg: '#FEF3C7' },
+  respite:              { label: 'Respite Care',          emoji: '🏠', color: '#DC2626', bg: '#FEE2E2' },
+  swimming:             { label: 'Swimming',              emoji: '🏊', color: '#0891B2', bg: '#CFFAFE' },
+  social_skills:        { label: 'Social Skills',         emoji: '👫', color: '#7C3AED', bg: '#F3E8FF' },
+  music_therapy:        { label: 'Music Therapy',         emoji: '🎵', color: '#16A34A', bg: '#F0FDF4' },
+  art_therapy:          { label: 'Art Therapy',           emoji: '🎨', color: '#EA580C', bg: '#FFF7ED' },
+  assistive_technology: { label: 'Assistive Tech',        emoji: '📱', color: '#0284C7', bg: '#F0F9FF' },
+  other:                { label: 'Other',                 emoji: '📋', color: '#6B7280', bg: '#F9FAFB' },
+};
+
+function catMeta(cat: ProviderCategory): CatMeta {
+  return CAT_META[cat] ?? { label: cat, emoji: '📋', color: '#6B7280', bg: '#F9FAFB' };
+}
+
+// Top visible category pills — rest shown when "More" is expanded
+const TOP_CATS: (ProviderCategory | 'all')[] = [
+  'all', 'speech_language', 'occupational_therapy', 'aba_ibi',
+];
+const ALL_CATS: (ProviderCategory | 'all')[] = [
+  'all', 'speech_language', 'occupational_therapy', 'aba_ibi',
+  'psychology', 'physical_therapy', 'respite', 'swimming',
+  'social_skills', 'music_therapy', 'art_therapy', 'assistive_technology', 'other',
 ];
 
-const CATEGORY_GRADIENT: Record<string, readonly [string, string]> = {
-  aba_ibi:              Colors.gradients.purple,
-  speech_language:      Colors.gradients.blue,
+function catLabel(cat: ProviderCategory | 'all'): string {
+  if (cat === 'all') return 'All';
+  return CAT_META[cat]?.label ?? cat;
+}
+function catEmoji(cat: ProviderCategory | 'all'): string {
+  if (cat === 'all') return '';
+  return CAT_META[cat]?.emoji ?? '📋';
+}
+
+// ─── Maps helper ──────────────────────────────────────────────────────────────
+
+function openInMaps(address: string) {
+  const q = encodeURIComponent(address);
+  const url = Platform.OS === 'ios' ? `maps://0,0?q=${q}` : `geo:0,0?q=${q}`;
+  Linking.openURL(url).catch(() => Linking.openURL(`https://maps.google.com/maps?q=${q}`));
+}
+
+// ─── ProviderCard ─────────────────────────────────────────────────────────────
+
+function ActionButton({
+  icon, label, onPress,
+}: { icon: string; label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity
+      style={s.actionBtn}
+      onPress={e => { e.stopPropagation?.(); onPress(); }}
+      activeOpacity={0.7}
+    >
+      <Text style={s.actionBtnIcon}>{icon}</Text>
+      <Text style={s.actionBtnLabel}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () => void }) {
+  const meta = catMeta(provider.category);
+  return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={s.card}>
+      {/* Top row: icon circle + info + chevron */}
+      <View style={s.cardTop}>
+        <View style={[s.iconCircle, { backgroundColor: meta.bg }]}>
+          <Text style={s.iconEmoji}>{meta.emoji}</Text>
+        </View>
+
+        <View style={s.cardInfo}>
+          <Text style={s.cardName} numberOfLines={2}>{provider.name}</Text>
+          <Text style={[s.cardCategory, { color: meta.color }]}>{meta.label}</Text>
+          {!!provider.city && (
+            <Text style={s.cardCity}>📍 {provider.city}, SK</Text>
+          )}
+          {provider.is_approved_sk && (
+            <View style={s.approvedPill}>
+              <Text style={s.approvedPillText}>✅ Approved Provider</Text>
+            </View>
+          )}
+        </View>
+
+        <Text style={s.chevron}>›</Text>
+      </View>
+
+      {/* Action buttons */}
+      <View style={s.actionRow}>
+        {!!provider.phone && (
+          <ActionButton icon="📞" label="Call" onPress={() => Linking.openURL(`tel:${provider.phone}`)} />
+        )}
+        {!!provider.email && (
+          <ActionButton icon="✉️" label="Email" onPress={() => Linking.openURL(`mailto:${provider.email}`)} />
+        )}
+        <ActionButton
+          icon="📅"
+          label="Book"
+          onPress={() => {
+            onPress();
+          }}
+        />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── ProviderDetailModal ──────────────────────────────────────────────────────
+
+const DETAIL_GRADIENT: Record<string, readonly [string, string]> = {
+  speech_language:      Colors.gradients.purple,
   occupational_therapy: Colors.gradients.teal,
-  physical_therapy:     Colors.gradients.green,
+  aba_ibi:              Colors.gradients.blue,
   psychology:           Colors.gradients.coral,
+  physical_therapy:     Colors.gradients.green,
   respite:              Colors.gradients.amber,
   swimming:             Colors.gradients.blue,
   social_skills:        Colors.gradients.purple,
@@ -52,101 +154,10 @@ const CATEGORY_GRADIENT: Record<string, readonly [string, string]> = {
   other:                ['#9CA3AF', '#6B7280'] as const,
 };
 
-function categoryLabel(cat: ProviderCategory) {
-  return CATEGORIES.find(c => c.value === cat)?.label ?? cat;
-}
-function categoryEmoji(cat: ProviderCategory) {
-  return CATEGORIES.find(c => c.value === cat)?.emoji ?? '📋';
-}
-
-// ─── ProviderCard ─────────────────────────────────────────────────────────────
-
-function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () => void }) {
-  const gradient = CATEGORY_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
-  return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.card}>
-      <View style={styles.cardInner}>
-        <LinearGradient
-          colors={gradient as unknown as string[]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.badge}
-        >
-          <Text style={styles.badgeText}>
-            {categoryEmoji(provider.category)}  {categoryLabel(provider.category)}
-          </Text>
-        </LinearGradient>
-
-        <Text style={styles.providerName} numberOfLines={2}>{provider.name}</Text>
-
-        {!!provider.organization && (
-          <Text style={styles.providerOrg} numberOfLines={1}>{provider.organization}</Text>
-        )}
-
-        {!!provider.city && (
-          <Text style={styles.providerCity}>
-            📍 {provider.city}{provider.postal_code ? `, ${provider.postal_code}` : ''}, SK
-          </Text>
-        )}
-
-        {!!provider.notes && (
-          <Text style={styles.notesPreview} numberOfLines={2}>{provider.notes}</Text>
-        )}
-
-        <View style={styles.contactRow}>
-          {!!provider.phone && (
-            <TouchableOpacity
-              style={styles.contactChip}
-              onPress={e => { e.stopPropagation?.(); Linking.openURL(`tel:${provider.phone}`); }}
-            >
-              <Text style={styles.contactChipText}>📞 Call</Text>
-            </TouchableOpacity>
-          )}
-          {!!provider.email && (
-            <TouchableOpacity
-              style={styles.contactChip}
-              onPress={e => { e.stopPropagation?.(); Linking.openURL(`mailto:${provider.email}`); }}
-            >
-              <Text style={styles.contactChipText}>✉️ Email</Text>
-            </TouchableOpacity>
-          )}
-          {!!provider.website && (
-            <TouchableOpacity
-              style={styles.contactChip}
-              onPress={e => { e.stopPropagation?.(); Linking.openURL(provider.website!); }}
-            >
-              <Text style={styles.contactChipText}>🌐 Website</Text>
-            </TouchableOpacity>
-          )}
-          {(!!provider.address || !!provider.city) && (
-            <TouchableOpacity
-              style={styles.contactChip}
-              onPress={e => {
-                e.stopPropagation?.();
-                const addr = [provider.address, provider.city, 'SK', provider.postal_code].filter(Boolean).join(', ');
-                openInMaps(addr);
-              }}
-            >
-              <Text style={styles.contactChipText}>🗺️ Directions</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// ─── ProviderDetail modal ─────────────────────────────────────────────────────
-
-function openInMaps(address: string) {
-  const q = encodeURIComponent(address);
-  const url = Platform.OS === 'ios' ? `maps://0,0?q=${q}` : `geo:0,0?q=${q}`;
-  Linking.openURL(url).catch(() => Linking.openURL(`https://maps.google.com/maps?q=${q}`));
-}
-
 function ProviderDetailModal({ provider, onClose }: { provider: Provider | null; onClose: () => void }) {
   if (!provider) return null;
-  const gradient = CATEGORY_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
+  const meta = catMeta(provider.category);
+  const gradient = DETAIL_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
   const fullAddress = [
     provider.address,
     [provider.city, provider.province, provider.postal_code].filter(Boolean).join(' '),
@@ -159,29 +170,29 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
           colors={gradient as unknown as string[]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.modalHeader}
+          style={s.modalHeader}
         >
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeBtnText}>✕</Text>
+          <TouchableOpacity onPress={onClose} style={s.closeBtn}>
+            <Text style={s.closeBtnText}>✕</Text>
           </TouchableOpacity>
-          <Text style={styles.modalEmoji}>{categoryEmoji(provider.category)}</Text>
-          <Text style={styles.modalCategory}>{categoryLabel(provider.category)}</Text>
-          <Text style={styles.modalName}>{provider.name}</Text>
+          <Text style={s.modalEmoji}>{meta.emoji}</Text>
+          <Text style={s.modalCategory}>{meta.label}</Text>
+          <Text style={s.modalName}>{provider.name}</Text>
           {!!provider.organization && (
-            <Text style={styles.modalOrg}>{provider.organization}</Text>
+            <Text style={s.modalOrg}>{provider.organization}</Text>
           )}
           {!!provider.city && (
-            <Text style={styles.modalCity}>
+            <Text style={s.modalCity}>
               📍 {provider.city}{provider.postal_code ? ` ${provider.postal_code}` : ''}, SK
             </Text>
           )}
         </LinearGradient>
 
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.modalBody}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={s.modalBody}>
           {!!provider.notes && (
             <>
-              <Text style={styles.sectionLabel}>About</Text>
-              <View style={[styles.detailCard, { padding: 14 }]}>
+              <Text style={s.sectionLabel}>About</Text>
+              <View style={[s.detailCard, { padding: 14 }]}>
                 <Text style={{ fontSize: 14, color: Colors.textPrimary, lineHeight: 20 }}>
                   {provider.notes}
                 </Text>
@@ -189,60 +200,60 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
             </>
           )}
 
-          <Text style={styles.sectionLabel}>Contact</Text>
-          <View style={styles.detailCard}>
+          <Text style={s.sectionLabel}>Contact</Text>
+          <View style={s.detailCard}>
             {provider.phone ? (
-              <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(`tel:${provider.phone}`)}>
-                <Text style={styles.detailIcon}>📞</Text>
+              <TouchableOpacity style={s.detailRow} onPress={() => Linking.openURL(`tel:${provider.phone}`)}>
+                <Text style={s.detailIcon}>📞</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailLabel}>Phone</Text>
-                  <Text style={[styles.detailValue, styles.link]}>{provider.phone}</Text>
+                  <Text style={s.detailLabel}>Phone</Text>
+                  <Text style={[s.detailValue, s.link]}>{provider.phone}</Text>
                 </View>
-                <Text style={styles.chevron}>›</Text>
+                <Text style={s.chevron}>›</Text>
               </TouchableOpacity>
             ) : (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailIcon}>📞</Text>
+              <View style={s.detailRow}>
+                <Text style={s.detailIcon}>📞</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailLabel}>Phone</Text>
-                  <Text style={styles.detailMuted}>Not listed</Text>
+                  <Text style={s.detailLabel}>Phone</Text>
+                  <Text style={s.detailMuted}>Not listed</Text>
                 </View>
               </View>
             )}
 
-            <View style={styles.divider} />
+            <View style={s.divider} />
 
             {provider.email ? (
-              <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(`mailto:${provider.email}`)}>
-                <Text style={styles.detailIcon}>✉️</Text>
+              <TouchableOpacity style={s.detailRow} onPress={() => Linking.openURL(`mailto:${provider.email}`)}>
+                <Text style={s.detailIcon}>✉️</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailLabel}>Email</Text>
-                  <Text style={[styles.detailValue, styles.link]} numberOfLines={1}>{provider.email}</Text>
+                  <Text style={s.detailLabel}>Email</Text>
+                  <Text style={[s.detailValue, s.link]} numberOfLines={1}>{provider.email}</Text>
                 </View>
-                <Text style={styles.chevron}>›</Text>
+                <Text style={s.chevron}>›</Text>
               </TouchableOpacity>
             ) : (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailIcon}>✉️</Text>
+              <View style={s.detailRow}>
+                <Text style={s.detailIcon}>✉️</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.detailLabel}>Email</Text>
-                  <Text style={styles.detailMuted}>Not listed</Text>
+                  <Text style={s.detailLabel}>Email</Text>
+                  <Text style={s.detailMuted}>Not listed</Text>
                 </View>
               </View>
             )}
 
             {!!provider.website && (
               <>
-                <View style={styles.divider} />
-                <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(provider.website!)}>
-                  <Text style={styles.detailIcon}>🌐</Text>
+                <View style={s.divider} />
+                <TouchableOpacity style={s.detailRow} onPress={() => Linking.openURL(provider.website!)}>
+                  <Text style={s.detailIcon}>🌐</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.detailLabel}>Website</Text>
-                    <Text style={[styles.detailValue, styles.link]} numberOfLines={1}>
+                    <Text style={s.detailLabel}>Website</Text>
+                    <Text style={[s.detailValue, s.link]} numberOfLines={1}>
                       {provider.website?.replace(/^https?:\/\/(www\.)?/, '')}
                     </Text>
                   </View>
-                  <Text style={styles.chevron}>›</Text>
+                  <Text style={s.chevron}>›</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -250,19 +261,19 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
 
           {(!!provider.address || !!provider.city) && (
             <>
-              <Text style={styles.sectionLabel}>Location</Text>
+              <Text style={s.sectionLabel}>Location</Text>
               <TouchableOpacity
-                style={styles.detailCard}
+                style={s.detailCard}
                 activeOpacity={0.75}
                 onPress={() => openInMaps(fullAddress)}
               >
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailIcon}>📍</Text>
+                <View style={s.detailRow}>
+                  <Text style={s.detailIcon}>📍</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.detailLabel}>Address — tap to open Maps</Text>
-                    <Text style={[styles.detailValue, styles.link]}>{fullAddress}</Text>
+                    <Text style={s.detailLabel}>Address — tap to open Maps</Text>
+                    <Text style={[s.detailValue, s.link]}>{fullAddress}</Text>
                   </View>
-                  <Text style={styles.chevron}>›</Text>
+                  <Text style={s.chevron}>›</Text>
                 </View>
               </TouchableOpacity>
             </>
@@ -279,15 +290,15 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
               colors={Colors.gradients.purple as unknown as string[]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.bookBtn}
+              style={s.bookBtn}
             >
-              <Text style={styles.bookBtnText}>📅  Book Appointment</Text>
+              <Text style={s.bookBtnText}>📅  Book Appointment</Text>
             </LinearGradient>
           </TouchableOpacity>
 
           {provider.is_approved_sk && (
-            <View style={styles.approvedBadge}>
-              <Text style={styles.approvedText}>✓ Saskatchewan IAF Approved Provider</Text>
+            <View style={s.approvedBanner}>
+              <Text style={s.approvedBannerText}>✓ Saskatchewan IAF Approved Provider</Text>
             </View>
           )}
         </ScrollView>
@@ -305,6 +316,7 @@ export default function ProvidersScreen() {
   const [search,         setSearch]         = useState('');
   const [activeCategory, setActiveCategory] = useState<ProviderCategory | 'all'>('all');
   const [activeCity,     setActiveCity]     = useState<string>('');
+  const [showMoreCats,   setShowMoreCats]   = useState(false);
   const [selected,       setSelected]       = useState<Provider | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -360,10 +372,15 @@ export default function ProvidersScreen() {
     applyFilter(search, cat, activeCity, providers);
   };
 
-  const handleCity = (city: string) => {
-    setActiveCity(city);
-    applyFilter(search, activeCategory, city, providers);
+  const cycleCity = () => {
+    if (cities.length === 0) return;
+    const idx = cities.indexOf(activeCity);
+    const next = idx >= cities.length - 1 ? '' : cities[idx + 1] ?? '';
+    setActiveCity(next);
+    applyFilter(search, activeCategory, next, providers);
   };
+
+  const visibleCats = showMoreCats ? ALL_CATS : TOP_CATS;
 
   const renderItem = useCallback(
     ({ item }: { item: Provider }) => (
@@ -372,24 +389,26 @@ export default function ProvidersScreen() {
     []
   );
 
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+  const locationLabel = activeCity ? `Near ${activeCity}, SK` : 'All of Saskatchewan';
 
-      {/* Static header — outside FlatList so the TextInput never re-mounts */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>SK Providers</Text>
-        <Text style={styles.headerSub}>
-          {loading ? 'Loading…' : `${filtered.length} of ${providers.length} providers`}
-        </Text>
+  const ListHeader = (
+    <>
+      {/* Hero header */}
+      <View style={s.hero}>
+        <View style={{ flex: 1 }}>
+          <Text style={s.heroTitle}>Providers</Text>
+          <Text style={s.heroSub}>Find approved services and{'\n'}supports near you. 💙</Text>
+        </View>
+        <Text style={s.heroIllustration}>🏥</Text>
       </View>
 
       {/* Search */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Text style={styles.searchIcon}>🔍</Text>
+      <View style={s.searchWrap}>
+        <View style={s.searchBox}>
+          <Text style={s.searchIcon}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
-            placeholder="Search by name, organization, city…"
+            style={s.searchInput}
+            placeholder="Search provider, service or city…"
             placeholderTextColor={Colors.textMuted}
             value={search}
             onChangeText={handleSearch}
@@ -400,82 +419,66 @@ export default function ProvidersScreen() {
         </View>
       </View>
 
-      {/* City filter */}
-      {cities.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cityScroll}
-          keyboardShouldPersistTaps="always"
-        >
-          <TouchableOpacity
-            style={[styles.cityChip, !activeCity && styles.cityChipActive]}
-            onPress={() => handleCity('')}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.cityChipText, !activeCity && styles.cityChipTextActive]}>
-              All Cities
-            </Text>
-          </TouchableOpacity>
-          {cities.map(city => (
+      {/* Category pills */}
+      <View style={s.catRow}>
+        {visibleCats.map(cat => {
+          const active = activeCategory === cat;
+          const emoji  = catEmoji(cat);
+          return (
             <TouchableOpacity
-              key={city}
-              style={[styles.cityChip, activeCity === city && styles.cityChipActive]}
-              onPress={() => handleCity(city)}
-              activeOpacity={0.7}
+              key={cat}
+              style={[s.catPill, active && s.catPillActive]}
+              onPress={() => handleCategory(cat)}
+              activeOpacity={0.75}
             >
-              <Text style={[styles.cityChipText, activeCity === city && styles.cityChipTextActive]}>
-                📍 {city}
+              {emoji ? <Text style={s.catPillEmoji}>{emoji}</Text> : null}
+              <Text style={[s.catPillText, active && s.catPillTextActive]}>
+                {catLabel(cat)}
               </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
-
-      {/* Category chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.catScroll}
-        keyboardShouldPersistTaps="always"
-      >
-        {CATEGORIES.map(cat => {
-          const active = activeCategory === cat.value;
-          const gradient = cat.value === 'all'
-            ? Colors.gradients.purple
-            : (CATEGORY_GRADIENT[cat.value] ?? Colors.gradients.purple);
-          return active ? (
-            <TouchableOpacity
-              key={cat.value}
-              onPress={() => handleCategory(cat.value)}
-              activeOpacity={0.9}
-              style={styles.catChipActiveWrapper}
-            >
-              <LinearGradient
-                colors={gradient as unknown as string[]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-              <Text style={styles.catChipTextActive}>{cat.emoji} {cat.label}</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              key={cat.value}
-              style={styles.catChip}
-              onPress={() => handleCategory(cat.value)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.catChipText}>{cat.emoji} {cat.label}</Text>
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+        <TouchableOpacity
+          style={s.catPill}
+          onPress={() => setShowMoreCats(v => !v)}
+          activeOpacity={0.75}
+        >
+          <Text style={s.catPillText}>{showMoreCats ? 'Less ∧' : 'More ∨'}</Text>
+        </TouchableOpacity>
+      </View>
 
+      {/* Section header */}
+      <View style={s.sectionHeader}>
+        <Text style={s.sectionIcon}>📍</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.sectionTitle}>Nearby Approved Providers</Text>
+          <Text style={s.sectionSub}>{locationLabel}</Text>
+        </View>
+        {cities.length > 0 && (
+          <TouchableOpacity onPress={cycleCity}>
+            <Text style={s.changeLink}>Change</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </>
+  );
+
+  const ListFooter = (
+    <TouchableOpacity style={s.footerBanner} activeOpacity={0.8}>
+      <Text style={s.footerShield}>🛡️</Text>
+      <Text style={s.footerText}>
+        All providers are approved by the Autism Funding Program.
+      </Text>
+      <Text style={s.footerChevron}>›</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
       {loading && (
-        <View style={styles.centered}>
+        <View style={s.loadingOverlay}>
           <ActivityIndicator size="large" color={Colors.purple} />
-          <Text style={styles.loadingText}>Loading providers…</Text>
+          <Text style={s.loadingText}>Loading providers…</Text>
         </View>
       )}
 
@@ -483,18 +486,20 @@ export default function ProvidersScreen() {
         data={loading ? [] : filtered}
         keyExtractor={item => item.id}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={ListHeader}
+        ListFooterComponent={ListFooter}
+        contentContainerStyle={s.listContent}
         keyboardShouldPersistTaps="handled"
-        initialNumToRender={12}
-        maxToRenderPerBatch={20}
-        windowSize={10}
+        initialNumToRender={10}
+        maxToRenderPerBatch={16}
+        windowSize={8}
         removeClippedSubviews
         ListEmptyComponent={
           !loading ? (
-            <View style={styles.centered}>
+            <View style={s.empty}>
               <Text style={{ fontSize: 40, marginBottom: 12 }}>🔎</Text>
-              <Text style={styles.emptyTitle}>No providers found</Text>
-              <Text style={styles.emptySubtitle}>Try a different search, city, or category</Text>
+              <Text style={s.emptyTitle}>No providers found</Text>
+              <Text style={s.emptySubtitle}>Try a different search or category</Text>
             </View>
           ) : null
         }
@@ -507,15 +512,18 @@ export default function ProvidersScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4,
-    flexDirection: 'row', alignItems: 'baseline', gap: 8,
+const s = StyleSheet.create({
+  // Hero
+  hero: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
   },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
-  headerSub:   { fontSize: 13, color: Colors.textMuted },
+  heroTitle: { fontSize: 32, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
+  heroSub:   { fontSize: 14, color: Colors.textSecondary, marginTop: 5, lineHeight: 20 },
+  heroIllustration: { fontSize: 70, marginTop: -8, marginRight: -4 },
 
-  searchContainer: { paddingHorizontal: 16, paddingVertical: 8 },
+  // Search
+  searchWrap: { paddingHorizontal: 16, paddingBottom: 10 },
   searchBox: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: Colors.surface, borderRadius: 14,
@@ -525,36 +533,87 @@ const styles = StyleSheet.create({
   searchIcon:  { fontSize: 16 },
   searchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary },
 
-  cityScroll:         { paddingHorizontal: 16, paddingBottom: 4, gap: 8, flexDirection: 'row' },
-  cityChip:           { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
-  cityChipActive:     { backgroundColor: Colors.purple, borderColor: Colors.purple },
-  cityChipText:       { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  cityChipTextActive: { color: '#FFFFFF', fontWeight: '600' },
+  // Category pills
+  catRow: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    paddingHorizontal: 16, paddingBottom: 8, gap: 8,
+  },
+  catPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 20, backgroundColor: Colors.surfaceAlt,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  catPillActive: { backgroundColor: Colors.purple, borderColor: Colors.purple },
+  catPillEmoji:  { fontSize: 13 },
+  catPillText:   { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
+  catPillTextActive: { color: '#FFFFFF', fontWeight: '600' },
 
-  catScroll:           { paddingHorizontal: 16, paddingVertical: 6, gap: 8, flexDirection: 'row' },
-  catChip:             { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
-  catChipText:         { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  catChipActiveWrapper:{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, overflow: 'hidden' },
-  catChipTextActive:   { fontSize: 13, color: '#FFFFFF', fontWeight: '600' },
+  // Section header
+  sectionHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16, paddingVertical: 10,
+  },
+  sectionIcon:  { fontSize: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  sectionSub:   { fontSize: 13, color: Colors.textMuted, marginTop: 1 },
+  changeLink:   { fontSize: 13, fontWeight: '600', color: Colors.purple },
 
-  listContent:  { paddingBottom: 32, gap: 10, paddingTop: 6 },
-  card:         { marginHorizontal: 16, backgroundColor: Colors.surface, borderRadius: 16, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden', shadowColor: Colors.purple, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
-  cardInner:    { padding: 14, gap: 6 },
-  badge:        { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
-  badgeText:    { fontSize: 11, fontWeight: '600', color: '#FFFFFF' },
-  providerName: { fontSize: 16, fontWeight: '600', color: Colors.textPrimary, marginTop: 2 },
-  providerOrg:  { fontSize: 13, color: Colors.purple, fontWeight: '500' },
-  providerCity: { fontSize: 13, color: Colors.textSecondary },
-  notesPreview: { fontSize: 12, color: Colors.textMuted, lineHeight: 17 },
-  contactRow:   { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
-  contactChip:  { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
-  contactChipText: { fontSize: 12, color: Colors.purple, fontWeight: '500' },
+  // Cards
+  listContent: { paddingBottom: 32 },
+  card: {
+    marginHorizontal: 16, marginBottom: 10,
+    backgroundColor: Colors.surface,
+    borderRadius: 18, borderWidth: 1, borderColor: Colors.border,
+    padding: 16,
+    shadowColor: Colors.purple, shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+  },
+  cardTop:     { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  iconCircle:  { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  iconEmoji:   { fontSize: 24 },
+  cardInfo:    { flex: 1, gap: 2 },
+  cardName:    { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  cardCategory:{ fontSize: 13, fontWeight: '600' },
+  cardCity:    { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
+  chevron:     { fontSize: 22, color: Colors.textMuted, marginTop: 2 },
 
-  centered:     { alignItems: 'center', justifyContent: 'center', padding: 32, paddingTop: 48 },
-  loadingText:  { marginTop: 12, color: Colors.textSecondary, fontSize: 14 },
-  emptyTitle:   { fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
-  emptySubtitle:{ fontSize: 14, color: Colors.textMuted, marginTop: 6, textAlign: 'center' },
+  approvedPill: {
+    alignSelf: 'flex-start', marginTop: 5,
+    backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7',
+    borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3,
+  },
+  approvedPillText: { fontSize: 11, fontWeight: '600', color: '#059669' },
 
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  actionBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+    paddingVertical: 9, borderRadius: 12,
+    backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border,
+  },
+  actionBtnIcon:  { fontSize: 14 },
+  actionBtnLabel: { fontSize: 13, fontWeight: '600', color: Colors.purple },
+
+  // Footer banner
+  footerBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginHorizontal: 16, marginTop: 6, marginBottom: 24,
+    backgroundColor: '#EFF6FF', borderRadius: 14,
+    borderWidth: 1, borderColor: '#BFDBFE',
+    paddingHorizontal: 14, paddingVertical: 13,
+  },
+  footerShield:  { fontSize: 20 },
+  footerText:    { flex: 1, fontSize: 13, color: '#1D4ED8', fontWeight: '500', lineHeight: 18 },
+  footerChevron: { fontSize: 18, color: '#93C5FD' },
+
+  // Loading / empty
+  loadingOverlay: { alignItems: 'center', paddingTop: 120 },
+  loadingText:    { marginTop: 12, color: Colors.textSecondary, fontSize: 14 },
+  empty:          { alignItems: 'center', padding: 32, paddingTop: 24 },
+  emptyTitle:     { fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
+  emptySubtitle:  { fontSize: 14, color: Colors.textMuted, marginTop: 6, textAlign: 'center' },
+
+  // Modal
   modalHeader:  { padding: 24, paddingTop: 16, alignItems: 'center', gap: 4 },
   closeBtn:     { alignSelf: 'flex-end', padding: 8 },
   closeBtnText: { fontSize: 18, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
@@ -572,10 +631,9 @@ const styles = StyleSheet.create({
   detailValue:  { fontSize: 15, color: Colors.textPrimary, fontWeight: '500' },
   detailMuted:  { fontSize: 14, color: Colors.textMuted },
   link:         { color: Colors.purple },
-  chevron:      { fontSize: 22, color: Colors.textMuted },
   divider:      { height: 1, backgroundColor: Colors.border, marginHorizontal: 14 },
   bookBtn:      { marginTop: 20, borderRadius: 16, paddingVertical: 15, alignItems: 'center' },
   bookBtnText:  { fontSize: 16, fontWeight: '700', color: '#FFFFFF', letterSpacing: 0.2 },
-  approvedBadge:{ marginTop: 12, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
-  approvedText: { fontSize: 13, fontWeight: '600', color: '#059669' },
+  approvedBanner: { marginTop: 12, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
+  approvedBannerText: { fontSize: 13, fontWeight: '600', color: '#059669' },
 });
