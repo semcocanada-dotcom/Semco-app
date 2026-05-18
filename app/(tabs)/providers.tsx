@@ -118,6 +118,18 @@ function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () =
               <Text style={styles.contactChipText}>🌐 Website</Text>
             </TouchableOpacity>
           )}
+          {(!!provider.address || !!provider.city) && (
+            <TouchableOpacity
+              style={styles.contactChip}
+              onPress={e => {
+                e.stopPropagation?.();
+                const addr = [provider.address, provider.city, 'SK', provider.postal_code].filter(Boolean).join(', ');
+                openInMaps(addr);
+              }}
+            >
+              <Text style={styles.contactChipText}>🗺️ Directions</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -126,13 +138,19 @@ function ProviderCard({ provider, onPress }: { provider: Provider; onPress: () =
 
 // ─── ProviderDetail modal ─────────────────────────────────────────────────────
 
+function openInMaps(address: string) {
+  const q = encodeURIComponent(address);
+  const url = Platform.OS === 'ios' ? `maps://0,0?q=${q}` : `geo:0,0?q=${q}`;
+  Linking.openURL(url).catch(() => Linking.openURL(`https://maps.google.com/maps?q=${q}`));
+}
+
 function ProviderDetailModal({ provider, onClose }: { provider: Provider | null; onClose: () => void }) {
   if (!provider) return null;
   const gradient = CATEGORY_GRADIENT[provider.category] ?? (['#9CA3AF', '#6B7280'] as const);
   const fullAddress = [
     provider.address,
     [provider.city, provider.province, provider.postal_code].filter(Boolean).join(' '),
-  ].filter(Boolean).join('\n');
+  ].filter(Boolean).join(', ');
 
   return (
     <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -233,14 +251,20 @@ function ProviderDetailModal({ provider, onClose }: { provider: Provider | null;
           {(!!provider.address || !!provider.city) && (
             <>
               <Text style={styles.sectionLabel}>Location</Text>
-              <View style={styles.detailCard}>
+              <TouchableOpacity
+                style={styles.detailCard}
+                activeOpacity={0.75}
+                onPress={() => openInMaps(fullAddress)}
+              >
                 <View style={styles.detailRow}>
                   <Text style={styles.detailIcon}>📍</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.detailValue}>{fullAddress}</Text>
+                    <Text style={styles.detailLabel}>Address — tap to open Maps</Text>
+                    <Text style={[styles.detailValue, styles.link]}>{fullAddress}</Text>
                   </View>
+                  <Text style={styles.chevron}>›</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             </>
           )}
 
