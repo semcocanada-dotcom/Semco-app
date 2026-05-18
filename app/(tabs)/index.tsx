@@ -1,13 +1,17 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   RefreshControl,
   Pressable,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { Colors } from '@constants/colors';
 import { useAuth } from '@context/AuthContext';
 import { useChild } from '@context/ChildContext';
@@ -20,6 +24,67 @@ import { AlertBanner } from '@components/AlertBanner';
 import { FAB } from '@components/FAB';
 import { ExpenseListItem } from '@components/ExpenseListItem';
 
+// ─── Location permission prompt (shown once on first launch) ─────────────────
+
+function LocationPermissionModal({ onDone }: { onDone: () => void }) {
+  const handleAllow = async () => {
+    onDone();
+    await Location.requestForegroundPermissionsAsync();
+  };
+  return (
+    <Modal transparent animationType="fade" visible>
+      <View style={ls.overlay}>
+        <View style={ls.sheet}>
+          <Text style={ls.icon}>📍</Text>
+          <Text style={ls.title}>Allow Location Access</Text>
+          <Text style={ls.body}>
+            Autism Fund Tracker uses your location for two things:
+          </Text>
+          <View style={ls.reasonRow}>
+            <Text style={ls.reasonIcon}>🚗</Text>
+            <Text style={ls.reasonText}>
+              <Text style={{ fontWeight: '700' }}>Mileage forms</Text>
+              {' — automatically calculate the distance to your child\'s appointments for reimbursement claims.'}
+            </Text>
+          </View>
+          <View style={ls.reasonRow}>
+            <Text style={ls.reasonIcon}>🏥</Text>
+            <Text style={ls.reasonText}>
+              <Text style={{ fontWeight: '700' }}>Nearby providers</Text>
+              {' — show approved therapy providers sorted by how close they are to you.'}
+            </Text>
+          </View>
+          <Text style={ls.note}>Your location is never stored or shared.</Text>
+          <TouchableOpacity style={ls.allowBtn} onPress={handleAllow} activeOpacity={0.85}>
+            <Text style={ls.allowBtnText}>Allow Location Access</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={ls.skipBtn} onPress={onDone} activeOpacity={0.7}>
+            <Text style={ls.skipBtnText}>Not Now</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const ls = StyleSheet.create({
+  overlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  sheet:        { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 28, paddingBottom: 40, gap: 12 },
+  icon:         { fontSize: 44, textAlign: 'center' },
+  title:        { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
+  body:         { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
+  reasonRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: Colors.surfaceAlt, borderRadius: 14, padding: 14 },
+  reasonIcon:   { fontSize: 22 },
+  reasonText:   { flex: 1, fontSize: 14, color: Colors.textPrimary, lineHeight: 20 },
+  note:         { fontSize: 12, color: Colors.textMuted, textAlign: 'center' },
+  allowBtn:     { backgroundColor: Colors.purple, borderRadius: 16, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
+  allowBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  skipBtn:      { alignItems: 'center', paddingVertical: 10 },
+  skipBtnText:  { fontSize: 14, color: Colors.textMuted, fontWeight: '500' },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function greeting(name: string) {
   const h = new Date().getHours();
   const time = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -31,6 +96,13 @@ export default function DashboardScreen() {
   const { children, activeChild, setActiveChild, refetch: refetchChildren } = useChild();
   const { summary, loading: budgetLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
   const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useRecentExpenses(activeChild?.id ?? null);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+
+  useEffect(() => {
+    Location.getForegroundPermissionsAsync().then(({ status }) => {
+      if (status === 'undetermined') setShowLocationPrompt(true);
+    });
+  }, []);
 
   const isRefreshing = budgetLoading || expensesLoading;
   const onRefresh = useCallback(async () => {
@@ -193,6 +265,10 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <FAB onPress={() => router.push('/(tabs)/expenses')} />
+
+      {showLocationPrompt && (
+        <LocationPermissionModal onDone={() => setShowLocationPrompt(false)} />
+      )}
     </SafeAreaView>
   );
 }
