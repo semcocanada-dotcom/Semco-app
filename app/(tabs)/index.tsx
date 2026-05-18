@@ -166,14 +166,12 @@ export default function DashboardScreen() {
               subLabel={`of ${formatCAD(summary.totalBudget)}`}
               gradient={summary.remaining < 500 ? 'coral' : 'green'}
             />
-            {summary.totalMileage > 0 && (
-              <StatCard
-                label="Mileage"
-                value={formatCAD(summary.totalMileage)}
-                subLabel="Reimbursement"
-                gradient="teal"
-              />
-            )}
+            <StatCard
+              label="Mileage"
+              value={formatCAD(summary.totalMileage)}
+              subLabel="Reimbursement"
+              gradient="teal"
+            />
           </View>
         )}
 

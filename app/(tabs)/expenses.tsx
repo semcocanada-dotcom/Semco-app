@@ -21,7 +21,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
-import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear } from '@lib/types';
+import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear, MileageLog } from '@lib/types';
 import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
@@ -776,6 +776,94 @@ function ExpenseDetailModal({
   );
 }
 
+// ─── MileageLogModal ──────────────────────────────────────────────────────────
+
+function MileageLogModal({
+  visible, onClose, onAddNew, childId, fundingYearId, onSaved,
+}: {
+  visible: boolean; onClose: () => void; onAddNew: () => void;
+  childId: string; fundingYearId: string; onSaved: () => void;
+}) {
+  const [logs, setLogs]     = useState<MileageLog[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    setLoading(true);
+    supabase.from('mileage_logs')
+      .select('*')
+      .eq('child_id', childId)
+      .eq('funding_year_id', fundingYearId)
+      .order('trip_date', { ascending: false })
+      .then(({ data }) => { setLogs((data ?? []) as MileageLog[]); setLoading(false); });
+  }, [visible, childId, fundingYearId]);
+
+  const total = logs.reduce((s, l) => s + Number(l.reimbursement_amount), 0);
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: Colors.bg }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: Colors.border, backgroundColor: Colors.surface }}>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: Colors.textPrimary }}>Mileage Log</Text>
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={{ fontSize: 18, color: Colors.textSecondary }}>✕</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 40 }} color={Colors.purple} />
+        ) : logs.length === 0 ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+            <Text style={{ fontSize: 36, marginBottom: 12 }}>🚗</Text>
+            <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary, marginBottom: 6 }}>No mileage logged yet</Text>
+            <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: 'center' }}>Mileage is auto-added when you log an expense, or tap the button below.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={logs}
+            keyExtractor={l => l.id}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 100 }}
+            ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: Colors.border }} />}
+            ListHeaderComponent={() => (
+              <View style={{ backgroundColor: Colors.surface, borderRadius: 14, padding: 14, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 13, color: Colors.textSecondary }}>{logs.length} trip{logs.length !== 1 ? 's' : ''}</Text>
+                <Text style={{ fontSize: 17, fontWeight: '700', color: '#15803D' }}>Total: {CAD(total)}</Text>
+              </View>
+            )}
+            renderItem={({ item: l }) => (
+              <View style={{ paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: Colors.textSecondary, marginBottom: 2 }}>
+                    {format(parseISO(l.trip_date), 'MMM d, yyyy')}
+                  </Text>
+                  <Text style={{ fontSize: 15, fontWeight: '600', color: Colors.textPrimary }}>
+                    {l.description ?? 'Mileage trip'}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: Colors.textSecondary, marginTop: 2 }}>
+                    {l.distance_km} km × ${Number(l.rate_per_km).toFixed(4)}/km
+                    {l.is_round_trip ? ' · round trip' : ''}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: '#15803D' }}>
+                  {CAD(Number(l.reimbursement_amount))}
+                </Text>
+              </View>
+            )}
+          />
+        )}
+
+        <View style={{ padding: 20, paddingBottom: 32, borderTopWidth: 1, borderTopColor: Colors.border, backgroundColor: Colors.surface }}>
+          <TouchableOpacity onPress={onAddNew} activeOpacity={0.85}>
+            <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ borderRadius: 14, paddingVertical: 16, alignItems: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>+ Log New Trip</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 // ─── MileageOnlyModal ─────────────────────────────────────────────────────────
 
 function MileageOnlyModal({
@@ -969,9 +1057,10 @@ export default function ExpensesScreen() {
   const { summary, loading: bLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
   const [expenses,     setExpenses]             = useState<Expense[]>([]);
   const [loadingExp,   setLoadingExp]           = useState(true);
-  const [filter,       setFilter]               = useState<FilterType>('all');
+  const [filter]                                 = useState<FilterType>('all');
   const [showAdd,      setShowAdd]              = useState(false);
-  const [showMileage,  setShowMileage]          = useState(false);
+  const [showMileage,    setShowMileage]         = useState(false);
+  const [showMileageLog, setShowMileageLog]      = useState(false);
   const [detailExpense,setDetailExpense]        = useState<Expense | null>(null);
 
   const fetchExpenses = useCallback(async () => {
@@ -1038,37 +1127,9 @@ export default function ExpensesScreen() {
               <PaceAlert remaining={summary.remaining} daysRemaining={summary.daysRemaining} totalBudget={summary.totalBudget} />
             )}
 
-            {/* Filter chips */}
-            <ScrollView
-              horizontal showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
-              keyboardShouldPersistTaps="always"
-            >
-              {FILTERS.map(f => {
-                const active = filter === f.value;
-                return active ? (
-                  <LinearGradient
-                    key={f.value}
-                    colors={Colors.gradients.purple as unknown as string[]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={s.filterActive}
-                  >
-                    <TouchableOpacity onPress={() => setFilter(f.value)} activeOpacity={0.9}>
-                      <Text style={s.filterActiveText}>{f.label}</Text>
-                    </TouchableOpacity>
-                  </LinearGradient>
-                ) : (
-                  <TouchableOpacity key={f.value} style={s.filter} onPress={() => setFilter(f.value)} activeOpacity={0.7}>
-                    <Text style={s.filterText}>{f.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-
             {!loadingExp && (
               <Text style={s.countText}>
                 {filtered.length} expense{filtered.length !== 1 ? 's' : ''}
-                {filter !== 'all' ? ` · ${filter}` : ''}
               </Text>
             )}
           </View>
@@ -1097,7 +1158,7 @@ export default function ExpensesScreen() {
               Alert.alert('No Active Funding Year', 'Set up a funding year for this child in the Profile tab before logging mileage.');
               return;
             }
-            setShowMileage(true);
+            setShowMileageLog(true);
           }}
           activeOpacity={0.85}
         >
@@ -1135,6 +1196,14 @@ export default function ExpensesScreen() {
           <MileageOnlyModal
             visible={showMileage}
             onClose={() => setShowMileage(false)}
+            childId={activeChild?.id ?? ''}
+            fundingYearId={summary.fundingYear.id}
+            onSaved={handleSaved}
+          />
+          <MileageLogModal
+            visible={showMileageLog}
+            onClose={() => setShowMileageLog(false)}
+            onAddNew={() => { setShowMileageLog(false); setShowMileage(true); }}
             childId={activeChild?.id ?? ''}
             fundingYearId={summary.fundingYear.id}
             onSaved={handleSaved}
