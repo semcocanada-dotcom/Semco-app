@@ -2,6 +2,11 @@
 -- Semco App — Supabase Schema
 -- Saskatchewan Individualized Autism Funding Grant Tracker
 -- Child-centric model: each child has their own $8,000/yr grant
+--
+-- This file is the single source of truth. Running it provisions a
+-- complete database. The supabase/add_*.sql and monthly_claims.sql
+-- files are the historical incremental migrations (already applied
+-- to the live project) and are kept for reference only.
 -- ============================================================
 
 -- Enable UUID extension
@@ -38,11 +43,14 @@ CREATE TYPE expense_status AS ENUM (
 -- ============================================================
 
 CREATE TABLE profiles (
-  id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name   TEXT NOT NULL DEFAULT '',
-  avatar_url  TEXT,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id                UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name         TEXT NOT NULL DEFAULT '',
+  avatar_url        TEXT,
+  home_address      TEXT,
+  home_city         TEXT,
+  home_postal_code  TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -122,6 +130,7 @@ CREATE POLICY "funding_years: own children" ON funding_years
 CREATE TABLE providers (
   id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name           TEXT NOT NULL,
+  organization   TEXT,
   category       provider_category NOT NULL,
   phone          TEXT,
   email          TEXT,
@@ -129,6 +138,8 @@ CREATE TABLE providers (
   address        TEXT,
   city           TEXT NOT NULL DEFAULT '',
   province       TEXT NOT NULL DEFAULT 'SK',
+  postal_code    TEXT,
+  notes          TEXT,
   is_approved_sk BOOLEAN NOT NULL DEFAULT true,
   parent_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,  -- NULL = global seed
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -231,6 +242,41 @@ CREATE POLICY "appointments: own children" ON appointments
   FOR ALL USING (
     child_id IN (SELECT id FROM children WHERE parent_id = auth.uid())
   );
+
+-- ============================================================
+-- MONTHLY CLAIMS
+-- One persisted row per month after submission to the SK portal.
+-- "Ready" claims are computed dynamically from expenses; only
+-- submitted ones are stored here.
+-- ============================================================
+
+CREATE TABLE monthly_claims (
+  id                UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  child_id          UUID        NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+  funding_year_id   UUID        NOT NULL REFERENCES funding_years(id) ON DELETE CASCADE,
+  month             TEXT        NOT NULL,                         -- 'YYYY-MM'
+  status            TEXT        NOT NULL DEFAULT 'submitted'
+                                CHECK (status = 'submitted'),
+  submitted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  total_amount      NUMERIC(10,2) NOT NULL DEFAULT 0,
+  expense_ids       UUID[]      NOT NULL DEFAULT '{}',
+  mileage_ids       UUID[]      NOT NULL DEFAULT '{}',
+  expense_count     INT         NOT NULL DEFAULT 0,
+  resend_message_id TEXT,
+  batch_number      TEXT,                                -- e.g. "Exp Batch #000123" from SK portal
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (child_id, month)
+);
+
+CREATE INDEX idx_monthly_claims_child ON monthly_claims(child_id, month DESC);
+
+ALTER TABLE monthly_claims ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "monthly_claims: own children" ON monthly_claims
+  FOR ALL
+  USING  (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()))
+  WITH CHECK (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
 
 -- ============================================================
 -- STORAGE BUCKET (run via Supabase dashboard or CLI)

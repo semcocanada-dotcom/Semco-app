@@ -9,13 +9,18 @@ export function useAppointments(childId: string | null) {
   const refetch = useCallback(async () => {
     if (!childId) { setAppointments([]); setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase
-      .from('appointments')
-      .select('*, providers(name, category)')
-      .eq('child_id', childId)
-      .order('scheduled_at', { ascending: true });
-    setAppointments((data ?? []) as Appointment[]);
-    setLoading(false);
+    try {
+      const { data } = await supabase
+        .from('appointments')
+        .select('*, providers(name, category)')
+        .eq('child_id', childId)
+        .order('scheduled_at', { ascending: true });
+      setAppointments((data ?? []) as Appointment[]);
+    } catch {
+      setAppointments([]);
+    } finally {
+      setLoading(false);
+    }
   }, [childId]);
 
   useEffect(() => { refetch(); }, [refetch]);

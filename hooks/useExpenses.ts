@@ -13,13 +13,18 @@ export function useRecentExpenses(childId: string | null, limit = 5) {
       return;
     }
     setLoading(true);
-    const { data } = await db.expenses()
-      .select('*, providers(name, category)')
-      .eq('child_id', childId)
-      .order('expense_date', { ascending: false })
-      .limit(limit);
-    setExpenses((data ?? []) as Expense[]);
-    setLoading(false);
+    try {
+      const { data } = await db.expenses()
+        .select('*, providers(name, category)')
+        .eq('child_id', childId)
+        .order('expense_date', { ascending: false })
+        .limit(limit);
+      setExpenses((data ?? []) as Expense[]);
+    } catch {
+      setExpenses([]);
+    } finally {
+      setLoading(false);
+    }
   }, [childId, limit]);
 
   useEffect(() => {

@@ -400,7 +400,7 @@ function ClaimDetail({
         rows: group.mileage,
         total: group.mileage.reduce((sum, m) => sum + Number(m.reimbursement_amount), 0),
       });
-    } catch (err) {
+    } catch {
       Alert.alert('PDF Error', 'Could not generate the PDF. Please try again.');
     } finally {
       setGeneratingPdf(false);

@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Modal, ScrollView,
   StyleSheet, Alert, ActivityIndicator, TextInput, Platform,
-  KeyboardAvoidingView, SectionList,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,7 +17,7 @@ import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAppointments } from '@hooks/useAppointments';
 import { buildMileageProposal } from '@lib/mileageUtils';
-import { scheduleAppointmentReminder, cancelNotification, requestNotificationPermission } from '@lib/notifications';
+import { scheduleAppointmentReminder, requestNotificationPermission } from '@lib/notifications';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

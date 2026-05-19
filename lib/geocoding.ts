@@ -20,6 +20,7 @@ async function tryGeocode(address: string): Promise<Coords | null> {
     const query = encodeURIComponent(`${address}, Saskatchewan, Canada`);
     const url   = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=ca`;
     const res   = await fetch(url, { headers: { 'User-Agent': 'SemcoApp/1.0 (ca.semco.app)' } });
+    if (!res.ok) return null;
     const data  = await res.json();
     if (data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
   } catch {}
@@ -54,6 +55,7 @@ export async function getDrivingDistanceKm(
       `${origin.lng},${origin.lat};${destination.lng},${destination.lat}` +
       `?overview=false`;
     const res  = await fetch(url);
+    if (!res.ok) return null;
     const data = await res.json();
     const meters: number | undefined = data.routes?.[0]?.distance;
     if (meters != null) {

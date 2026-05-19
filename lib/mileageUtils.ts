@@ -7,7 +7,6 @@ import type { Provider } from '@lib/types';
 // ─── Exported rate constants (update here when government changes rates) ──────
 
 export { SOUTHERN_RATE_PER_KM, NORTHERN_RATE_PER_KM };
-export const PARALLEL_54 = 54.0;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -11,11 +11,16 @@ export function useChildren() {
   const refetch = useCallback(async () => {
     if (!session) return;
     setLoading(true);
-    const { data } = await db.children()
-      .select('*')
-      .order('created_at', { ascending: true });
-    setChildren((data ?? []) as Child[]);
-    setLoading(false);
+    try {
+      const { data } = await db.children()
+        .select('*')
+        .order('created_at', { ascending: true });
+      setChildren((data ?? []) as Child[]);
+    } catch {
+      setChildren([]);
+    } finally {
+      setLoading(false);
+    }
   }, [session]);
 
   useEffect(() => {

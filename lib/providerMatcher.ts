@@ -1,4 +1,5 @@
 import { supabase } from '@lib/supabase';
+import { normalize, similarity } from '@lib/textMatch';
 import type { Provider } from '@lib/types';
 
 export interface ProviderMatch {
@@ -35,24 +36,4 @@ export async function matchProviders(rawName: string): Promise<ProviderMatch[]> 
     .filter(m => m.score > 0.2)
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function normalize(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\b(inc|ltd|llc|corp|co|the|and|of|for|&)\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/** Jaccard similarity on word sets. */
-function similarity(a: string, b: string): number {
-  const setA = new Set(a.split(' ').filter(Boolean));
-  const setB = new Set(b.split(' ').filter(Boolean));
-  const intersection = [...setA].filter(w => setB.has(w)).length;
-  const union = new Set([...setA, ...setB]).size;
-  return union ? intersection / union : 0;
 }

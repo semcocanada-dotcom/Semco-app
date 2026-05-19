@@ -26,65 +26,69 @@ export function useBudget(childId: string | null) {
 
     setLoading(true);
 
-    const { data: yearData } = await db.fundingYears()
-      .select('*')
-      .eq('child_id', childId)
-      .eq('is_active', true)
-      .single();
+    try {
+      const { data: yearData } = await db.fundingYears()
+        .select('*')
+        .eq('child_id', childId)
+        .eq('is_active', true)
+        .single();
 
-    const fundingYear = yearData as FundingYear | null;
+      const fundingYear = yearData as FundingYear | null;
 
-    if (!fundingYear) {
-      setSummary({ ...EMPTY_SUMMARY, fundingYear: null });
+      if (!fundingYear) {
+        setSummary({ ...EMPTY_SUMMARY, fundingYear: null });
+        return;
+      }
+
+      const [expensesRes, mileageRes] = await Promise.all([
+        db.expenses()
+          .select('amount, status')
+          .eq('child_id', childId)
+          .eq('funding_year_id', fundingYear.id)
+          .neq('status', 'rejected'),
+        db.mileageLogs()
+          .select('reimbursement_amount')
+          .eq('child_id', childId)
+          .eq('funding_year_id', fundingYear.id),
+      ]);
+
+      const expenses = expensesRes.data ?? [];
+      const mileageLogs = mileageRes.data ?? [];
+
+      const totalSpent = expenses
+        .filter((e) => e.status === 'approved')
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+
+      const totalPending = expenses
+        .filter((e) => e.status === 'pending' || e.status === 'submitted')
+        .reduce((sum, e) => sum + Number(e.amount), 0);
+
+      const totalMileage = mileageLogs.reduce(
+        (sum, m) => sum + Number(m.reimbursement_amount),
+        0,
+      );
+
+      const totalBudget = Number(fundingYear.total_budget);
+      const remaining = totalBudget - totalSpent - totalPending - totalMileage;
+      const daysRemaining = Math.max(
+        0,
+        differenceInDays(parseISO(fundingYear.end_date), new Date()),
+      );
+
+      setSummary({
+        totalBudget,
+        totalSpent,
+        totalPending,
+        totalMileage,
+        remaining,
+        daysRemaining,
+        fundingYear,
+      });
+    } catch {
+      setSummary(EMPTY_SUMMARY);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const [expensesRes, mileageRes] = await Promise.all([
-      db.expenses()
-        .select('amount, status')
-        .eq('child_id', childId)
-        .eq('funding_year_id', fundingYear.id)
-        .neq('status', 'rejected'),
-      db.mileageLogs()
-        .select('reimbursement_amount')
-        .eq('child_id', childId)
-        .eq('funding_year_id', fundingYear.id),
-    ]);
-
-    const expenses = expensesRes.data ?? [];
-    const mileageLogs = mileageRes.data ?? [];
-
-    const totalSpent = expenses
-      .filter((e) => e.status === 'approved')
-      .reduce((sum, e) => sum + Number(e.amount), 0);
-
-    const totalPending = expenses
-      .filter((e) => e.status === 'pending' || e.status === 'submitted')
-      .reduce((sum, e) => sum + Number(e.amount), 0);
-
-    const totalMileage = mileageLogs.reduce(
-      (sum, m) => sum + Number(m.reimbursement_amount),
-      0,
-    );
-
-    const totalBudget = Number(fundingYear.total_budget);
-    const remaining = totalBudget - totalSpent - totalPending - totalMileage;
-    const daysRemaining = Math.max(
-      0,
-      differenceInDays(parseISO(fundingYear.end_date), new Date()),
-    );
-
-    setSummary({
-      totalBudget,
-      totalSpent,
-      totalPending,
-      totalMileage,
-      remaining,
-      daysRemaining,
-      fundingYear,
-    });
-    setLoading(false);
   }, [childId]);
 
   useEffect(() => {

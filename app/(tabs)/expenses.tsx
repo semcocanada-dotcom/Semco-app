@@ -1042,22 +1042,11 @@ function MileageOnlyModal({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-type FilterType = 'all' | ExpenseStatus;
-
-const FILTERS: { value: FilterType; label: string }[] = [
-  { value: 'all',       label: 'All'       },
-  { value: 'pending',   label: 'Pending'   },
-  { value: 'submitted', label: 'Submitted' },
-  { value: 'approved',  label: 'Approved'  },
-  { value: 'rejected',  label: 'Rejected'  },
-];
-
 export default function ExpensesScreen() {
   const { activeChild }                         = useChild();
   const { summary, loading: bLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
   const [expenses,     setExpenses]             = useState<Expense[]>([]);
   const [loadingExp,   setLoadingExp]           = useState(true);
-  const [filter]                                 = useState<FilterType>('all');
   const [showAdd,      setShowAdd]              = useState(false);
   const [showMileage,    setShowMileage]         = useState(false);
   const [showMileageLog, setShowMileageLog]      = useState(false);
@@ -1078,14 +1067,12 @@ export default function ExpensesScreen() {
 
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
 
-  const filtered = filter === 'all' ? expenses : expenses.filter(e => e.status === filter);
-
   const handleSaved = useCallback(() => { refetchBudget(); fetchExpenses(); }, [refetchBudget, fetchExpenses]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
       <FlatList
-        data={filtered}
+        data={expenses}
         keyExtractor={item => item.id}
         contentContainerStyle={s.listContent}
         keyboardShouldPersistTaps="handled"
@@ -1129,7 +1116,7 @@ export default function ExpensesScreen() {
 
             {!loadingExp && (
               <Text style={s.countText}>
-                {filtered.length} expense{filtered.length !== 1 ? 's' : ''}
+                {expenses.length} expense{expenses.length !== 1 ? 's' : ''}
               </Text>
             )}
           </View>
@@ -1243,7 +1230,6 @@ const s = StyleSheet.create({
   paceText: { fontSize: 13, fontWeight: '500' },
 
   // Filters
-  filter:          { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
   filterText:      { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
   filterActive:    { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   filterActiveText:{ fontSize: 13, color: '#fff', fontWeight: '600' },

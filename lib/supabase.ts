@@ -6,6 +6,13 @@ import Constants from 'expo-constants';
 const supabaseUrl: string = Constants.expoConfig?.extra?.supabaseUrl ?? '';
 const supabaseAnonKey: string = Constants.expoConfig?.extra?.supabaseAnonKey ?? '';
 
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn(
+    '[supabase] Missing supabaseUrl or supabaseAnonKey in expo config "extra". ' +
+    'Set them in app.json (or via env in app.config.ts) — all queries will fail until configured.',
+  );
+}
+
 // Untyped client — all query results are explicitly cast at call sites
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

@@ -69,7 +69,7 @@
         {
           "locationWhenInUsePermission": "Allow Autism Fund Tracker to find nearby approved providers."
         }
-      ],
+      ]
     ],
     "experiments": {
       "typedRoutes": true
