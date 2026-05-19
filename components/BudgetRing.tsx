@@ -13,24 +13,24 @@ import { Colors } from '@constants/colors';
 
 const W    = 300;
 const CX   = W / 2;
-const CY   = 152;   // arc baseline
-const BAND_W = 16;
+const CY   = 150;   // arc baseline (centre)
+const BAND_W = 14;
 
 const BANDS = [
-  { r: 140, color: '#FF3B30' }, // red
-  { r: 123, color: '#FF9500' }, // orange
-  { r: 106, color: '#FFCC02' }, // yellow
-  { r:  89, color: '#34C759' }, // green
-  { r:  72, color: '#007AFF' }, // blue
+  { r: 138, color: '#EF4444' }, // red    — outermost
+  { r: 124, color: '#F97316' }, // orange
+  { r: 110, color: '#EAB308' }, // yellow
+  { r:  96, color: '#22C55E' }, // green
+  { r:  82, color: '#3B82F6' }, // blue   — innermost
 ];
 
-const DOT_R    = 106; // yellow band — progress dot rides here
-const DOT_SIZE = 46;
-const SVG_H    = CY + 14;
+const DOT_R    = 110; // middle (yellow) band — progress badge rides here
+const DOT_SIZE = 28;
+const SVG_H    = 160;
 
 function arcPath(r: number) {
-  // counterclockwise sweep → upward arch (rainbow shape)
-  return `M ${CX - r},${CY} A ${r},${r} 0 0,0 ${CX + r},${CY}`;
+  // sweep-flag 1 → upward semicircular arch (rainbow shape)
+  return `M ${CX - r},${CY} A ${r},${r} 0 0,1 ${CX + r},${CY}`;
 }
 
 function dotXY(pct: number) {
@@ -121,15 +121,15 @@ export function BudgetRing({
         </Animated.View>
 
         {/* Cloud endpoints */}
-        <Text style={[s.cloud, { left: 0, top: CY - 13 }]}>☁️</Text>
-        <Text style={[s.cloud, { left: W - 26, top: CY - 13 }]}>☁️</Text>
+        <Cloud left={CX - 138 - 20} />
+        <Cloud left={CX + 138 - 20} />
       </View>
 
       {/* Center info */}
       <View style={s.centerInfo}>
         <Text style={s.ofTotal}>of {fmt(totalBudget)}</Text>
         <View style={s.statusRow}>
-          <Text style={{ fontSize: 14 }}>{onTrack ? '🛡️' : '⚠️'}</Text>
+          <Text style={{ fontSize: 14, color: onTrack ? '#15803D' : '#BE123C', fontWeight: '800' }}>{onTrack ? '✓' : '⚠️'}</Text>
           <Text style={[s.statusText, { color: onTrack ? '#15803D' : '#BE123C' }]}>
             {onTrack ? 'On track' : 'Over budget'}
           </Text>
@@ -159,6 +159,15 @@ function StatCol({
       <Text style={s.statLabel}>{label}</Text>
       <Text style={[s.statValue, { color }]}>{value}</Text>
       {!!sub && <Text style={s.statSub}>{sub}</Text>}
+    </View>
+  );
+}
+
+function Cloud({ left }: { left: number }) {
+  return (
+    <View style={[s.cloud, { left, top: CY - 14 }]}>
+      <View style={s.cloudPuff} />
+      <View style={s.cloudBase} />
     </View>
   );
 }
@@ -208,7 +217,13 @@ const s = StyleSheet.create({
   dotPct:  { fontSize: 11, fontWeight: '800', color: '#fff', lineHeight: 14 },
   dotUsed: { fontSize: 8,  fontWeight: '600', color: 'rgba(255,255,255,0.75)', lineHeight: 10 },
 
-  cloud:      { position: 'absolute', fontSize: 20 },
+  cloud:      { position: 'absolute', width: 40, height: 28, alignItems: 'center', justifyContent: 'flex-end' },
+  cloudPuff:  { position: 'absolute', top: 0, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
+  cloudBase:  {
+    width: 40, height: 18, borderRadius: 12, backgroundColor: '#FFFFFF',
+    shadowColor: '#1E1B4B', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10, shadowRadius: 4, elevation: 3,
+  },
 
   centerInfo: { alignItems: 'center', marginTop: 2, marginBottom: 16 },
   ofTotal:    { fontSize: 15, color: Colors.textSecondary, fontWeight: '500' },
