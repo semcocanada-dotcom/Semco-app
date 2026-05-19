@@ -1,14 +1,6 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@constants/colors';
-
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return (
-    <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.5 }}>
-      {emoji}
-    </Text>
-  );
-}
 
 export default function TabsLayout() {
   return (
@@ -41,21 +33,27 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size ?? 24} />
+          ),
         }}
       />
       <Tabs.Screen
         name="expenses"
         options={{
           title: 'Expenses',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🧾" focused={focused} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'receipt' : 'receipt-outline'} color={color} size={size ?? 24} />
+          ),
         }}
       />
       <Tabs.Screen
         name="mileage"
         options={{
           title: 'Mileage',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🚗" focused={focused} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <MaterialCommunityIcons name={focused ? 'car' : 'car-outline'} color={color} size={size ?? 24} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -68,21 +66,27 @@ export default function TabsLayout() {
         name="appointments"
         options={{
           title: 'Calendar',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'calendar' : 'calendar-outline'} color={color} size={size ?? 24} />
+          ),
         }}
       />
       <Tabs.Screen
         name="providers"
         options={{
           title: 'Providers',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📍" focused={focused} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} color={color} size={size ?? 24} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} />,
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size ?? 24} />
+          ),
         }}
       />
       {/* Reports is navigable from Profile but not in the tab bar */}
