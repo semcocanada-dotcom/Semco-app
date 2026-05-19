@@ -5,4 +5,5 @@
 2026-05-18T17:20:00Z — fix workflow to use paths: filter; retrigger native build
 2026-05-19T00:55:00Z — rebuild: all builds expired, fresh install needed for phone
 2026-05-19T01:10:00Z — retrigger: plan upgraded, build credits available
+2026-05-19T23:05:00Z — rebuild with visual redesign baked in (puzzle-heart, rainbow arc, vector icons) + expo-location native module
 
