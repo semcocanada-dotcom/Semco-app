@@ -1,57 +1,67 @@
 import React from 'react';
-import Svg, { Path, G, Defs, LinearGradient as SvgLinearGradient, Stop, Mask, Rect } from 'react-native-svg';
+import Svg, { Path, Circle, G, ClipPath, Defs, Rect } from 'react-native-svg';
 
 interface AppLogoProps {
   size?: number;
-  /**
-   * 'light' — white A for use on dark/gradient backgrounds (login screen)
-   * 'dark'  — deep indigo A for use on light backgrounds
-   */
+  /** Retained for call-site compatibility; the puzzle-heart palette is fixed. */
   variant?: 'light' | 'dark';
 }
 
-export function AppLogo({ size = 80, variant = 'dark' }: AppLogoProps) {
-  const aColor = variant === 'light' ? '#FFFFFF' : '#1E1B4B';
+// Classic heart outline (viewBox 0 0 100 100). Top notch at (50,34),
+// bottom point at (50,90), lobes near y≈22.
+const HEART =
+  'M50 90 C 10 60, 6 34, 26 22 C 39 14, 50 22, 50 34 ' +
+  'C 50 22, 61 14, 74 22 C 94 34, 90 60, 50 90 Z';
 
+const PIECES = {
+  topLeft:     '#2563EB', // blue
+  topRight:    '#EF4444', // red
+  bottomLeft:  '#F59E0B', // yellow
+  bottomRight: '#22C55E', // green
+};
+
+const SEAM_X = 50;
+const SEAM_Y = 56;
+
+export function AppLogo({ size = 40 }: AppLogoProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
       <Defs>
-        {/* Fade the rainbow from solid (left) to transparent (right side of A) */}
-        <SvgLinearGradient id="rfade" x1="0" y1="0" x2="100" y2="0" gradientUnits="userSpaceOnUse">
-          <Stop offset="0.3"  stopColor="white" stopOpacity="1" />
-          <Stop offset="0.78" stopColor="white" stopOpacity="1" />
-          <Stop offset="1"    stopColor="white" stopOpacity="0" />
-        </SvgLinearGradient>
-        <Mask id="rmask">
-          <Rect x="0" y="0" width="100" height="100" fill="url(#rfade)" />
-        </Mask>
+        <ClipPath id="heartClip">
+          <Path d={HEART} />
+        </ClipPath>
       </Defs>
 
-      {/* Letter A — left leg */}
-      <Path d="M50 8 L10 88" stroke={aColor} strokeWidth="7" strokeLinecap="round" fill="none" />
-      {/* Letter A — right leg */}
-      <Path d="M50 8 L90 88" stroke={aColor} strokeWidth="7" strokeLinecap="round" fill="none" />
+      <G clipPath="url(#heartClip)">
+        {/* 4 colour quadrants */}
+        <Rect x="0"  y="0"        width="50" height={SEAM_Y}        fill={PIECES.topLeft} />
+        <Rect x="50" y="0"        width="50" height={SEAM_Y}        fill={PIECES.topRight} />
+        <Rect x="0"  y={SEAM_Y}   width="50" height={100 - SEAM_Y}  fill={PIECES.bottomLeft} />
+        <Rect x="50" y={SEAM_Y}   width="50" height={100 - SEAM_Y}  fill={PIECES.bottomRight} />
 
-      {/*
-        Rainbow crossbar — replaces the traditional A crossbar.
-        Arches from the left leg (~x=27, y=54) to just past the right leg (~x=82),
-        curving upward to form a rainbow arch. Six bands, red (outermost) to violet
-        (innermost). Fades out on the right side via mask.
-      */}
-      <G mask="url(#rmask)">
-        {/* Red — outermost / highest arch */}
-        <Path d="M24 57 Q52 30 83 57" stroke="#FF3B30" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-        {/* Orange */}
-        <Path d="M25 54.5 Q52 33 81 54.5" stroke="#FF9500" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-        {/* Yellow */}
-        <Path d="M26 52 Q52 36 79 52" stroke="#FFCC00" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-        {/* Green */}
-        <Path d="M27 49.5 Q52 39 77 49.5" stroke="#34C759" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-        {/* Blue */}
-        <Path d="M27 47 Q52 42 75 47" stroke="#007AFF" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-        {/* Violet — innermost */}
-        <Path d="M27 44.5 Q52 45 73 44.5" stroke="#AF52DE" strokeWidth="3.2" fill="none" strokeLinecap="round" />
+        {/* White seams between pieces */}
+        <Path
+          d={`M ${SEAM_X} 16 L ${SEAM_X} 92`}
+          stroke="#FFFFFF"
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
+        <Path
+          d={`M 8 ${SEAM_Y} L 92 ${SEAM_Y}`}
+          stroke="#FFFFFF"
+          strokeWidth={3}
+          strokeLinecap="round"
+        />
+
+        {/* Interlocking jigsaw knobs straddling the seams */}
+        <Circle cx={SEAM_X} cy={44} r={7.5} fill={PIECES.topLeft}     stroke="#FFFFFF" strokeWidth={2.5} />
+        <Circle cx={SEAM_X} cy={72} r={7.5} fill={PIECES.bottomRight} stroke="#FFFFFF" strokeWidth={2.5} />
+        <Circle cx={31} cy={SEAM_Y} r={7.5} fill={PIECES.bottomLeft}  stroke="#FFFFFF" strokeWidth={2.5} />
+        <Circle cx={69} cy={SEAM_Y} r={7.5} fill={PIECES.topRight}    stroke="#FFFFFF" strokeWidth={2.5} />
       </G>
+
+      {/* Crisp outer heart edge */}
+      <Path d={HEART} fill="none" stroke="#FFFFFF" strokeWidth={2} />
     </Svg>
   );
 }
