@@ -18,7 +18,8 @@ import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useRecentExpenses } from '@hooks/useExpenses';
 import { BudgetRing } from '@components/BudgetRing';
-import { formatCAD } from '@components/StatCard';
+import { StatCard, formatCAD } from '@components/StatCard';
+import { AppLogo } from '@components/AppLogo';
 import { ChildSelector } from '@components/ChildSelector';
 import { AlertBanner } from '@components/AlertBanner';
 import { FAB } from '@components/FAB';
@@ -125,32 +126,58 @@ export default function DashboardScreen() {
         }
       >
         {/* Header */}
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
-          <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 18, overflow: 'visible' }}>
+          <View style={{ width: '56%' }}>
             <Text style={{ fontSize: 14, color: Colors.textMuted, fontWeight: '500' }}>
-              {greeting(firstName)}
+              {greeting(firstName).split(',')[0]},
             </Text>
-            <Text style={{ fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5, marginTop: 1 }}>
-              {firstName} 🧩
-            </Text>
-            <Text style={{ fontSize: 13, color: Colors.purple, fontWeight: '600', marginTop: 3 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 1 }}>
+              <Text style={{ fontSize: 30, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 }}>
+                {firstName}
+              </Text>
+              <AppLogo size={32} />
+            </View>
+            <Text style={{ fontSize: 13, color: Colors.purple, fontWeight: '600', marginTop: 4 }}>
               You're doing an amazing job! 💙
             </Text>
+            <Pressable
+              onPress={() => router.push('/(tabs)/reports')}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 10 }}
+              hitSlop={8}
+            >
+              <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>Reports</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>›</Text>
+            </Pressable>
           </View>
-          <Pressable
-            onPress={() => router.push('/(tabs)/reports')}
-            style={{
-              backgroundColor: Colors.surfaceAlt,
-              borderWidth: 1,
-              borderColor: Colors.border,
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              marginTop: 4,
-            }}
-          >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: Colors.purple }}>Reports</Text>
-          </Pressable>
+
+          {/* Floating puzzle-heart hero */}
+          <View style={{ flex: 1, height: 130, overflow: 'visible' }}>
+            <View style={{
+              position: 'absolute', right: -10, top: -10,
+              width: 150, height: 120, borderRadius: 999,
+              backgroundColor: '#E8EEFF', transform: [{ rotate: '-10deg' }],
+            }} />
+            <View style={{ position: 'absolute', right: 8, top: 0 }}>
+              <AppLogo size={130} />
+            </View>
+            {[
+              { x: 10,  y: 10,  size: 8, color: '#7C5CFC' },
+              { x: 140, y: 20,  size: 6, color: '#22C55E' },
+              { x: 155, y: 80,  size: 8, color: '#3B82F6' },
+              { x: 130, y: 130, size: 5, color: '#EF4444' },
+              { x: 5,   y: 100, size: 6, color: '#F59E0B' },
+              { x: 60,  y: -5,  size: 7, color: '#EC4899' },
+            ].map((d, i) => (
+              <View
+                key={i}
+                style={{
+                  position: 'absolute', left: d.x, top: d.y,
+                  width: d.size, height: d.size, borderRadius: 999,
+                  backgroundColor: d.color,
+                }}
+              />
+            ))}
+          </View>
         </View>
 
         {/* Child selector */}
@@ -201,23 +228,33 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Mileage pill */}
+        {/* Stat cards */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 18 }}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              backgroundColor: Colors.surface,
-              borderRadius: 14,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderWidth: 1,
-              borderColor: Colors.border,
-            }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: Colors.textSecondary }}>🚗  Mileage Reimbursement</Text>
-              <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.teal }}>{formatCAD(summary.totalMileage)}</Text>
-            </View>
+          <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 18 }}>
+            <StatCard
+              label="Total Spent"
+              value={formatCAD(summary.totalSpent)}
+              subLabel="Approved expenses"
+              accent="blue"
+              icon="wallet-outline"
+              onPress={() => router.push('/(tabs)/expenses')}
+            />
+            <StatCard
+              label="Pending"
+              value={formatCAD(summary.totalPending)}
+              subLabel="Awaiting approval"
+              accent="teal"
+              icon="time-outline"
+              onPress={() => router.push('/(tabs)/expenses')}
+            />
+            <StatCard
+              label="Remaining"
+              value={formatCAD(Math.max(summary.remaining, 0))}
+              subLabel={`of ${formatCAD(summary.totalBudget)}`}
+              accent="green"
+              icon="wallet"
+              onPress={() => router.push('/(tabs)/reports')}
+            />
           </View>
         )}
 
