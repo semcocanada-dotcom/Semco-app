@@ -14,8 +14,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path, Rect, Circle, Polygon, Line } from 'react-native-svg';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
+import { AppLogo } from '@components/AppLogo';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import { geocodeAddress } from '@lib/geocoding';
@@ -114,6 +117,57 @@ function catEmoji(cat: ProviderCategory | 'all'): string {
   return CAT_META[cat]?.emoji ?? '📋';
 }
 
+const CAT_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
+  speech_language:      'chatbubble-ellipses',
+  occupational_therapy: 'hand-left',
+  aba_ibi:              'extension-puzzle',
+  psychology:           'pulse',
+  physical_therapy:     'walk',
+  respite:              'home',
+  swimming:             'water',
+  social_skills:        'people',
+  music_therapy:        'musical-notes',
+  art_therapy:          'color-palette',
+  assistive_technology: 'phone-portrait',
+  other:                'ellipsis-horizontal',
+};
+function catIonicon(cat: ProviderCategory | 'all'): keyof typeof Ionicons.glyphMap {
+  if (cat === 'all') return 'apps';
+  return CAT_ICON[cat] ?? 'medkit';
+}
+
+// Clinic illustration — blue-roofed building with medical cross, trees,
+// faint cityscape silhouette behind.
+function ClinicArt() {
+  return (
+    <Svg width={120} height={100} viewBox="0 0 120 100">
+      {/* faint cityscape */}
+      <Rect x="4"  y="40" width="18" height="46" rx="2" fill="#DCE4F5" />
+      <Rect x="96" y="34" width="20" height="52" rx="2" fill="#DCE4F5" />
+      <Rect x="80" y="48" width="14" height="38" rx="2" fill="#E6ECFA" />
+      {/* trees */}
+      <Circle cx="16" cy="70" r="11" fill="#34D399" />
+      <Rect x="14" y="74" width="4" height="14" fill="#15803D" />
+      <Circle cx="104" cy="70" r="11" fill="#34D399" />
+      <Rect x="102" y="74" width="4" height="14" fill="#15803D" />
+      {/* building body */}
+      <Rect x="34" y="50" width="52" height="38" rx="3" fill="#FFFFFF" stroke="#C7D2E8" strokeWidth="1.5" />
+      {/* roof */}
+      <Polygon points="30,52 60,30 90,52" fill="#2563EB" />
+      {/* medical cross on roof */}
+      <Rect x="56" y="36" width="8" height="3" rx="1" fill="#FFFFFF" />
+      <Rect x="58.5" y="33.5" width="3" height="8" rx="1" fill="#FFFFFF" />
+      {/* door */}
+      <Rect x="54" y="64" width="12" height="24" rx="2" fill="#2563EB" />
+      {/* windows */}
+      <Rect x="38" y="58" width="11" height="11" rx="2" fill="#BFDBFE" />
+      <Rect x="71" y="58" width="11" height="11" rx="2" fill="#BFDBFE" />
+      {/* ground line */}
+      <Line x1="6" y1="88" x2="114" y2="88" stroke="#C7D2E8" strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 const DETAIL_GRADIENT: Record<string, readonly [string, string]> = {
   speech_language:      Colors.gradients.purple,
   occupational_therapy: Colors.gradients.teal,
@@ -143,14 +197,14 @@ type ProviderWithDist = Provider & { distanceKm: number | null };
 
 // ─── ProviderCard ─────────────────────────────────────────────────────────────
 
-function ActionButton({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function ActionButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void }) {
   return (
     <TouchableOpacity
       style={s.actionBtn}
       onPress={e => { e.stopPropagation?.(); onPress(); }}
       activeOpacity={0.7}
     >
-      <Text style={s.actionBtnIcon}>{icon}</Text>
+      <Ionicons name={icon} size={15} color={Colors.purple} />
       <Text style={s.actionBtnLabel}>{label}</Text>
     </TouchableOpacity>
   );
@@ -162,36 +216,40 @@ function ProviderCard({ provider, onPress }: { provider: ProviderWithDist; onPre
     <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={s.card}>
       <View style={s.cardTop}>
         <View style={[s.iconCircle, { backgroundColor: meta.bg }]}>
-          <Text style={s.iconEmoji}>{meta.emoji}</Text>
+          <Ionicons name={catIonicon(provider.category)} size={26} color={meta.color} />
         </View>
 
         <View style={s.cardInfo}>
           <Text style={s.cardName} numberOfLines={2}>{provider.name}</Text>
           <Text style={[s.cardCategory, { color: meta.color }]}>{meta.label}</Text>
-          <Text style={s.cardCity}>
-            📍 {provider.city}, SK
-            {provider.distanceKm !== null
-              ? `  •  ${fmtKm(provider.distanceKm)} away`
-              : ''}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}>
+            <Ionicons name="location-outline" size={12} color={Colors.textMuted} />
+            <Text style={s.cardCity}>
+              {provider.city}, SK
+              {provider.distanceKm !== null
+                ? `  •  ${fmtKm(provider.distanceKm)} away`
+                : ''}
+            </Text>
+          </View>
           {provider.is_approved_sk && (
             <View style={s.approvedPill}>
-              <Text style={s.approvedPillText}>✅ Approved Provider</Text>
+              <Ionicons name="checkmark-circle" size={13} color="#059669" />
+              <Text style={s.approvedPillText}>Approved Provider</Text>
             </View>
           )}
         </View>
 
-        <Text style={s.chevron}>›</Text>
+        <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} style={{ marginTop: 2 }} />
       </View>
 
       <View style={s.actionRow}>
         {!!provider.phone && (
-          <ActionButton icon="📞" label="Call" onPress={() => Linking.openURL(`tel:${provider.phone}`)} />
+          <ActionButton icon="call-outline" label="Call" onPress={() => Linking.openURL(`tel:${provider.phone}`)} />
         )}
         {!!provider.email && (
-          <ActionButton icon="✉️" label="Email" onPress={() => Linking.openURL(`mailto:${provider.email}`)} />
+          <ActionButton icon="mail-outline" label="Email" onPress={() => Linking.openURL(`mailto:${provider.email}`)} />
         )}
-        <ActionButton icon="📅" label="Book" onPress={onPress} />
+        <ActionButton icon="calendar-outline" label="Book" onPress={onPress} />
       </View>
     </TouchableOpacity>
   );
@@ -465,16 +523,21 @@ export default function ProvidersScreen() {
       {/* Hero */}
       <View style={s.hero}>
         <View style={{ flex: 1 }}>
-          <Text style={s.heroTitle}>Providers</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <AppLogo size={36} />
+            <Text style={s.heroTitle}>Providers</Text>
+          </View>
           <Text style={s.heroSub}>Find approved services and{'\n'}supports near you. 💙</Text>
         </View>
-        <Text style={s.heroIllustration}>🏥</Text>
+        <View style={s.heroIllustration}>
+          <ClinicArt />
+        </View>
       </View>
 
       {/* Search */}
       <View style={s.searchWrap}>
         <View style={s.searchBox}>
-          <Text style={s.searchIcon}>🔍</Text>
+          <Ionicons name="search" size={17} color={Colors.textMuted} style={{ marginRight: 2 }} />
           <TextInput
             style={s.searchInput}
             placeholder="Search provider, service or city…"
@@ -492,7 +555,6 @@ export default function ProvidersScreen() {
       <View style={s.catRow}>
         {visibleCats.map(cat => {
           const active = activeCategory === cat;
-          const emoji  = catEmoji(cat);
           return (
             <TouchableOpacity
               key={cat}
@@ -500,7 +562,11 @@ export default function ProvidersScreen() {
               onPress={() => setActiveCategory(cat)}
               activeOpacity={0.75}
             >
-              {emoji ? <Text style={s.catPillEmoji}>{emoji}</Text> : null}
+              <Ionicons
+                name={cat === 'all' ? 'apps' : catIonicon(cat)}
+                size={14}
+                color={active ? '#FFFFFF' : Colors.textSecondary}
+              />
               <Text style={[s.catPillText, active && s.catPillTextActive]}>
                 {catLabel(cat)}
               </Text>
@@ -512,13 +578,14 @@ export default function ProvidersScreen() {
           onPress={() => setShowMoreCats(v => !v)}
           activeOpacity={0.75}
         >
-          <Text style={s.catPillText}>{showMoreCats ? 'Less ∧' : 'More ∨'}</Text>
+          <Text style={s.catPillText}>{showMoreCats ? 'Less' : 'More'}</Text>
+          <Ionicons name={showMoreCats ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
       {/* Section header */}
       <View style={s.sectionHeader}>
-        <Text style={s.sectionIcon}>📍</Text>
+        <Ionicons name="location" size={20} color={Colors.purple} />
         <View style={{ flex: 1 }}>
           <Text style={s.sectionTitle}>Nearby Approved Providers</Text>
           <Text style={s.sectionSub}>
@@ -532,10 +599,11 @@ export default function ProvidersScreen() {
 
   const ListFooter = (
     <View style={s.footerBanner}>
-      <Text style={s.footerShield}>🛡️</Text>
+      <Ionicons name="shield-checkmark" size={20} color="#1D4ED8" />
       <Text style={s.footerText}>
         All providers are approved by the Autism Funding Program.
       </Text>
+      <Ionicons name="chevron-forward" size={18} color="#1D4ED8" />
     </View>
   );
 
@@ -583,7 +651,7 @@ const s = StyleSheet.create({
   },
   heroTitle:        { fontSize: 32, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   heroSub:          { fontSize: 14, color: Colors.textSecondary, marginTop: 5, lineHeight: 20 },
-  heroIllustration: { fontSize: 70, marginTop: -8, marginRight: -4 },
+  heroIllustration: { marginTop: -6, marginRight: -8 },
 
   searchWrap: { paddingHorizontal: 16, paddingBottom: 10 },
   searchBox: {
@@ -640,11 +708,12 @@ const s = StyleSheet.create({
   chevron:     { fontSize: 22, color: Colors.textMuted, marginTop: 2 },
 
   approvedPill: {
-    alignSelf: 'flex-start', marginTop: 5,
-    backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7',
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-start', marginTop: 6,
+    backgroundColor: '#DCFCE7', borderWidth: 1, borderColor: '#86EFAC',
     borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3,
   },
-  approvedPillText: { fontSize: 11, fontWeight: '600', color: '#059669' },
+  approvedPillText: { fontSize: 11, fontWeight: '700', color: '#16A34A' },
 
   actionRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
   actionBtn: {
