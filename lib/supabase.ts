@@ -1,7 +1,58 @@
 import 'react-native-url-polyfill/auto';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
+
+// Auth tokens hold a logged-in session to a child's health data, so they
+// are kept in the OS keychain/keystore (encrypted), not plaintext
+// AsyncStorage. SecureStore caps each value (~2KB on iOS); Supabase
+// sessions exceed that, so values are transparently chunked.
+const CHUNK_SIZE = 1800;
+const isChunked = /^__chunks__:(\d+)$/;
+
+const SecureStorageAdapter = {
+  async getItem(key: string): Promise<string | null> {
+    const head = await SecureStore.getItemAsync(key);
+    if (head == null) return null;
+    const m = isChunked.exec(head);
+    if (!m) return head;
+    const n = parseInt(m[1], 10);
+    let out = '';
+    for (let i = 0; i < n; i++) {
+      const part = await SecureStore.getItemAsync(`${key}.${i}`);
+      if (part == null) return null;
+      out += part;
+    }
+    return out;
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    // Drop any chunks written by a previous, larger value.
+    const prev = await SecureStore.getItemAsync(key);
+    const pm = prev ? isChunked.exec(prev) : null;
+    if (pm) {
+      const pn = parseInt(pm[1], 10);
+      for (let i = 0; i < pn; i++) await SecureStore.deleteItemAsync(`${key}.${i}`);
+    }
+    if (value.length <= CHUNK_SIZE) {
+      await SecureStore.setItemAsync(key, value);
+      return;
+    }
+    const n = Math.ceil(value.length / CHUNK_SIZE);
+    for (let i = 0; i < n; i++) {
+      await SecureStore.setItemAsync(`${key}.${i}`, value.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE));
+    }
+    await SecureStore.setItemAsync(key, `__chunks__:${n}`);
+  },
+  async removeItem(key: string): Promise<void> {
+    const head = await SecureStore.getItemAsync(key);
+    const m = head ? isChunked.exec(head) : null;
+    if (m) {
+      const n = parseInt(m[1], 10);
+      for (let i = 0; i < n; i++) await SecureStore.deleteItemAsync(`${key}.${i}`);
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
+};
 
 const supabaseUrl: string = Constants.expoConfig?.extra?.supabaseUrl ?? '';
 const supabaseAnonKey: string = Constants.expoConfig?.extra?.supabaseAnonKey ?? '';
@@ -16,7 +67,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Untyped client — all query results are explicitly cast at call sites
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    storage: SecureStorageAdapter,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

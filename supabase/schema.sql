@@ -58,7 +58,9 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "profiles: own row" ON profiles
   FOR ALL USING (id = auth.uid());
 
--- Auto-create profile on sign-up
+-- Auto-create profile on sign-up. SECURITY DEFINER so the trigger can
+-- insert into profiles, but EXECUTE is revoked from API roles so it can
+-- never be invoked directly via PostgREST RPC.
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
@@ -67,6 +69,8 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION handle_new_user() FROM PUBLIC, anon, authenticated;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -150,11 +154,21 @@ CREATE INDEX idx_providers_parent ON providers(parent_id);
 
 ALTER TABLE providers ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "providers: global or own" ON providers
-  FOR ALL USING (parent_id IS NULL OR parent_id = auth.uid());
+-- Global directory rows (parent_id IS NULL) are read-only to clients;
+-- only the service role may seed/modify them. Custom rows belong to the
+-- creating parent for all operations.
+CREATE POLICY "providers: read global or own" ON providers
+  FOR SELECT USING (parent_id IS NULL OR parent_id = auth.uid());
 
 CREATE POLICY "providers: insert own" ON providers
   FOR INSERT WITH CHECK (parent_id = auth.uid());
+
+CREATE POLICY "providers: update own" ON providers
+  FOR UPDATE USING (parent_id = auth.uid())
+             WITH CHECK (parent_id = auth.uid());
+
+CREATE POLICY "providers: delete own" ON providers
+  FOR DELETE USING (parent_id = auth.uid());
 
 -- ============================================================
 -- EXPENSES
@@ -279,17 +293,34 @@ CREATE POLICY "monthly_claims: own children" ON monthly_claims
   WITH CHECK (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
 
 -- ============================================================
--- STORAGE BUCKET (run via Supabase dashboard or CLI)
+-- STORAGE BUCKET — receipts (contains medical/PII documents)
 -- Receipt path: {auth.uid()}/{child_id}/{expense_id}/{filename}
+-- MUST stay private (public=false). Clients read via short-lived
+-- signed URLs only — never getPublicUrl.
 -- ============================================================
--- INSERT INTO storage.buckets (id, name, public) VALUES ('receipts', 'receipts', false);
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('receipts', 'receipts', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
+
+-- Each user may only touch objects under their own {auth.uid()}/ prefix.
+CREATE POLICY "receipts: own files" ON storage.objects
+  FOR ALL USING (
+    bucket_id = 'receipts'
+    AND (auth.uid())::text = (storage.foldername(name))[1]
+  )
+  WITH CHECK (
+    bucket_id = 'receipts'
+    AND (auth.uid())::text = (storage.foldername(name))[1]
+  );
 
 -- ============================================================
 -- UPDATED_AT TRIGGER HELPER
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION set_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER LANGUAGE plpgsql
+SET search_path = ''
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;

@@ -343,8 +343,9 @@ function QuickAddModal({
       const { data, error } = await supabase.storage
         .from('receipts').upload(path, blob, { contentType: receiptMime, upsert: true });
       if (error || !data) return null;
-      const { data: urlData } = supabase.storage.from('receipts').getPublicUrl(data.path);
-      return urlData.publicUrl ?? null;
+      // Store the private object path, not a public URL. The bucket is
+      // private; viewers must mint a short-lived signed URL on demand.
+      return data.path ?? path;
     } catch {
       return null;
     }
