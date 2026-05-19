@@ -240,6 +240,44 @@ Claims tab crashes without the `monthly_claims` table + `batch_number` column.
 
 ---
 
+## TASK 10 — Visual Redesign (match reference mockups)
+
+Full visual pass to make the app match the 3 client mockups (logo splash,
+dashboard, providers, mileage). Data logic, hooks, Supabase queries and
+navigation were left untouched — visual-only changes. `npx tsc --noEmit`
+stayed at 0 errors after every commit.
+
+Files changed:
+
+- `components/AppLogo.tsx` — replaced the "A" lettermark with a 4-piece
+  interlocking puzzle-heart (blue / red / yellow / green) with white seams
+  and jigsaw knobs. `variant` prop retained for call-site compatibility.
+- `components/BudgetRing.tsx` — fixed the rainbow arc: now a single smooth
+  upward 5-band semicircle (red→blue), 28px progress badge centred on the
+  arc, white cloud ovals at both ends, "of $X" + "✓ On track" below.
+- `components/StatCard.tsx` — redesigned to a white card with tinted icon
+  circle, uppercase accent label, big value, subtitle, chevron and a wavy
+  10%-accent bottom fill (`accent`/`icon`/`onPress` props).
+- `app/(tabs)/_layout.tsx` — tab bar now uses `@expo/vector-icons`
+  (Ionicons / MaterialCommunityIcons) instead of emoji; active `#7C5CFC`.
+- `app/(tabs)/index.tsx` — greeting hero with floating puzzle-heart on a
+  rotated blue blob + 6 decorative dots, inline logo by the name, compact
+  Reports link (navigation preserved), and a 3-card stat row
+  (Total Spent / Pending / Remaining).
+- `app/(tabs)/providers.tsx` — AppLogo + SVG clinic illustration in the
+  hero, vector search/category/section/footer icons, per-category tinted
+  icon circles on cards, green "Approved Provider" pill.
+- `app/(tabs)/mileage.tsx` — AppLogo + SVG car-on-road hero, vector stat
+  icons, solid navy Add Trip button with bordered "+" circle,
+  category-tinted trip-row icons, blue secure footer banner.
+
+Commits: `feat: puzzle-heart AppLogo`, `fix: rainbow arc smooth semicircle`,
+`fix: tab bar vector icons`, `feat: dashboard hero illustration and stat
+cards`, `feat: providers hero illustration, vector icons and card polish`,
+`feat: mileage hero illustration, vector icons and row polish`.
+
+---
+
 ## Session Checklist (run at start of every session)
 
 ```bash
