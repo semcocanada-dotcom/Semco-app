@@ -6,7 +6,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path, Rect, Circle, Polygon, Line, Ellipse } from 'react-native-svg';
 import { format, parseISO } from 'date-fns';
+import { AppLogo } from '@components/AppLogo';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { MileageLog, Provider } from '@lib/types';
@@ -206,18 +209,59 @@ function AddTripModal({
 
 // ─── TripRow ──────────────────────────────────────────────────────────────────
 
+function tripStyle(desc: string): { icon: keyof typeof Ionicons.glyphMap; color: string; bg: string } {
+  const d = desc.toLowerCase();
+  if (d.includes('speech') || d.includes('language'))
+    return { icon: 'chatbubble-ellipses', color: '#7C3AED', bg: '#EDE9FE' };
+  if (d.includes('occupational') || d.includes(' ot'))
+    return { icon: 'hand-left', color: '#2563EB', bg: '#DBEAFE' };
+  if (d.includes('behaviour') || d.includes('behavior') || d.includes('psych') || d.includes('aba'))
+    return { icon: 'pulse', color: '#DB2777', bg: '#FCE7F3' };
+  return { icon: 'person', color: '#16A34A', bg: '#DCFCE7' };
+}
+
 function TripRow({ log }: { log: MileageLog }) {
+  const desc = log.description ?? 'Mileage trip';
+  const t = tripStyle(desc);
   return (
     <View style={s.tripRow}>
-      <View style={s.tripIcon}>
-        <Text style={{ fontSize: 20 }}>🚗</Text>
+      <View style={[s.tripIcon, { backgroundColor: t.bg, borderColor: t.bg }]}>
+        <Ionicons name={t.icon} size={20} color={t.color} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={s.tripTitle} numberOfLines={1}>{log.description ?? 'Mileage trip'}</Text>
+        <Text style={s.tripTitle} numberOfLines={1}>{desc}</Text>
         <Text style={s.tripMeta}>{format(parseISO(log.trip_date), 'MMM d, yyyy')}  ·  {Number(log.distance_km).toFixed(1)} km</Text>
       </View>
       <Text style={s.tripAmount}>{CAD(Number(log.reimbursement_amount))}</Text>
+      <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} style={{ marginLeft: 6 }} />
     </View>
+  );
+}
+
+// Car-on-road illustration for the Mileage hero.
+function CarArt() {
+  return (
+    <Svg width={130} height={100} viewBox="0 0 130 100">
+      {/* faint cityscape */}
+      <Rect x="6"  y="30" width="16" height="40" rx="2" fill="#DCE4F5" />
+      <Rect x="108" y="26" width="16" height="44" rx="2" fill="#DCE4F5" />
+      {/* hills */}
+      <Ellipse cx="24" cy="78" rx="34" ry="20" fill="#34D399" />
+      <Ellipse cx="110" cy="80" rx="32" ry="20" fill="#34D399" />
+      {/* road */}
+      <Path d="M30 100 C 50 70, 80 70, 100 40 L120 44 C 96 78, 64 80, 50 100 Z" fill="#94A3B8" />
+      <Path d="M58 92 L70 72" stroke="#FFFFFF" strokeWidth="3" strokeDasharray="5 5" strokeLinecap="round" />
+      {/* car body */}
+      <Rect x="48" y="44" width="42" height="20" rx="7" fill="#2563EB" transform="rotate(-20 69 54)" />
+      <Rect x="56" y="40" width="22" height="13" rx="4" fill="#1E40AF" transform="rotate(-20 67 46)" />
+      {/* windows */}
+      <Rect x="59" y="42" width="15" height="9" rx="2" fill="#DBEAFE" transform="rotate(-20 66 46)" />
+      {/* headlight */}
+      <Circle cx="86" cy="50" r="3" fill="#FDE047" transform="rotate(-20 86 50)" />
+      {/* wheels */}
+      <Circle cx="56" cy="66" r="6" fill="#1E1B4B" />
+      <Circle cx="82" cy="56" r="6" fill="#1E1B4B" />
+    </Svg>
   );
 }
 
@@ -272,8 +316,14 @@ export default function MileageScreen() {
             {/* Header */}
             <View style={s.pageHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={s.pageTitle}>🚗  Mileage</Text>
-                <Text style={s.pageSubtitle}>Track your trips and get reimbursed. 💙</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <AppLogo size={36} />
+                  <Text style={s.pageTitle}>Mileage</Text>
+                </View>
+                <Text style={s.pageSubtitle}>Track your trips for appointments{'\n'}and get reimbursed. 💙</Text>
+              </View>
+              <View style={{ marginTop: -4, marginRight: -8 }}>
+                <CarArt />
               </View>
             </View>
 
@@ -285,7 +335,10 @@ export default function MileageScreen() {
                   <TouchableOpacity onPress={() => setMonthOffset(o => o - 1)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                     <Text style={s.monthArrow}>‹</Text>
                   </TouchableOpacity>
-                  <Text style={s.monthName}>📅  {monthLabel}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="calendar-outline" size={14} color={Colors.purple} />
+                    <Text style={s.monthName}>{monthLabel}</Text>
+                  </View>
                   <TouchableOpacity
                     onPress={() => setMonthOffset(o => Math.min(o + 1, 0))}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -299,8 +352,8 @@ export default function MileageScreen() {
               <View style={s.statsRow}>
                 {/* Total km */}
                 <View style={s.statBox}>
-                  <View style={[s.statIconCircle, { backgroundColor: '#EFF6FF' }]}>
-                    <Text style={{ fontSize: 22 }}>🏎️</Text>
+                  <View style={[s.statIconCircle, { backgroundColor: '#DBEAFE' }]}>
+                    <Ionicons name="speedometer" size={24} color="#2563EB" />
                   </View>
                   <Text style={s.statCaption}>Total Kilometres</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
@@ -313,8 +366,8 @@ export default function MileageScreen() {
 
                 {/* Reimbursement */}
                 <View style={s.statBox}>
-                  <View style={[s.statIconCircle, { backgroundColor: '#F0FDF4' }]}>
-                    <Text style={{ fontSize: 22 }}>💵</Text>
+                  <View style={[s.statIconCircle, { backgroundColor: '#DCFCE7' }]}>
+                    <Ionicons name="cash" size={24} color="#16A34A" />
                   </View>
                   <Text style={s.statCaption}>Estimated Reimbursement</Text>
                   <Text style={[s.statBig, { color: '#15803D' }]}>{CAD(totalAmt)}</Text>
@@ -328,15 +381,11 @@ export default function MileageScreen() {
             {/* Add Trip button */}
             {activeChild && fundingYearId && (
               <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
-                <TouchableOpacity onPress={() => setShowAdd(true)} activeOpacity={0.88}>
-                  <LinearGradient
-                    colors={['#1D4ED8', '#3B82F6']}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={s.addBtn}
-                  >
-                    <Text style={s.addBtnPlus}>+</Text>
-                    <Text style={s.addBtnText}>Add Trip</Text>
-                  </LinearGradient>
+                <TouchableOpacity onPress={() => setShowAdd(true)} activeOpacity={0.88} style={s.addBtn}>
+                  <View style={s.addBtnCircle}>
+                    <Ionicons name="add" size={20} color="#FFFFFF" />
+                  </View>
+                  <Text style={s.addBtnText}>Add Trip</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -361,7 +410,7 @@ export default function MileageScreen() {
             <ActivityIndicator color={Colors.purple} style={{ marginTop: 40 }} />
           ) : (
             <View style={{ alignItems: 'center', paddingTop: 32, gap: 10 }}>
-              <Text style={{ fontSize: 40 }}>🗺️</Text>
+              <Ionicons name="map-outline" size={40} color={Colors.textMuted} />
               <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary }}>No trips this month</Text>
               <Text style={{ fontSize: 14, color: Colors.textMuted }}>Tap Add Trip to log your first one</Text>
             </View>
@@ -369,7 +418,7 @@ export default function MileageScreen() {
         )}
         ListFooterComponent={() => logs.length > 0 ? (
           <View style={s.secureNote}>
-            <Text style={{ fontSize: 18 }}>🛡️</Text>
+            <Ionicons name="shield-checkmark" size={20} color="#1D4ED8" />
             <Text style={s.secureText}>All trips are secure and saved{'\n'}for easy reporting.</Text>
           </View>
         ) : null}
@@ -391,7 +440,7 @@ export default function MileageScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  pageHeader:   { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14 },
+  pageHeader:   { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14 },
   pageTitle:    { fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   pageSubtitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
 
@@ -412,8 +461,17 @@ const s = StyleSheet.create({
   rateBadge:      { backgroundColor: Colors.surfaceAlt, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 1, borderColor: Colors.border },
   rateBadgeText:  { fontSize: 11, color: Colors.textSecondary, fontWeight: '600' },
 
-  addBtn:     { borderRadius: 16, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  addBtnPlus: { fontSize: 22, color: '#fff', fontWeight: '300' },
+  addBtn:     {
+    backgroundColor: '#1E40AF', borderRadius: 16, height: 56,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    shadowColor: '#1E40AF', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 10, elevation: 4,
+  },
+  addBtnCircle: {
+    width: 28, height: 28, borderRadius: 14,
+    borderWidth: 2, borderColor: '#FFFFFF',
+    alignItems: 'center', justifyContent: 'center',
+  },
   addBtnText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
 
   sectionTitle: { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
@@ -424,8 +482,8 @@ const s = StyleSheet.create({
   tripMeta:   { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   tripAmount: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
 
-  secureNote: { flexDirection: 'row', alignItems: 'center', gap: 12, margin: 16, backgroundColor: Colors.surfaceAlt, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.border },
-  secureText: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
+  secureNote: { flexDirection: 'row', alignItems: 'center', gap: 12, margin: 16, backgroundColor: '#EFF6FF', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#BFDBFE' },
+  secureText: { fontSize: 13, color: '#1D4ED8', fontWeight: '500', lineHeight: 18 },
 
   // Modal
   mHeader:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderColor: Colors.border },
