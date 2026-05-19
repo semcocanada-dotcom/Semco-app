@@ -3,4 +3,5 @@
 2026-05-18T10:30:00Z — add expo-location for proximity sorting and mileage auto-fill
 2026-05-18T16:45:00Z — retrigger: standalone commit to ensure build job fires
 2026-05-18T17:20:00Z — fix workflow to use paths: filter; retrigger native build
+2026-05-19T00:55:00Z — rebuild: all builds expired, fresh install needed for phone
 
