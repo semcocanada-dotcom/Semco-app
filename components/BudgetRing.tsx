@@ -14,7 +14,7 @@ import { Colors } from '@constants/colors';
 const W    = 300;
 const CX   = W / 2;
 const CY   = 150;   // arc baseline (centre)
-const BAND_W = 14;
+const BAND_W = 8;
 
 const BANDS = [
   { r: 138, color: '#EF4444' }, // red    — outermost
@@ -85,7 +85,7 @@ export function BudgetRing({
         {yearLabel ? <Text style={s.year}>{yearLabel}</Text> : null}
         <View style={[s.totalSpentBadge, { backgroundColor: onTrack ? '#DCFCE7' : '#FEE2E2' }]}>
           <Text style={[s.totalSpentBadgeText, { color: onTrack ? '#15803D' : '#BE123C' }]}>
-            {pctStr(totalSpent, totalBudget)} totalSpent
+            {pctStr(totalSpent, totalBudget)} used
           </Text>
         </View>
       </View>
@@ -115,7 +115,7 @@ export function BudgetRing({
           ]}
         >
           <Text style={s.dotPct}>{pctStr(totalSpent, totalBudget)}</Text>
-          <Text style={s.dotUsed}>totalSpent</Text>
+          <Text style={s.dotUsed}>used</Text>
         </Animated.View>
 
         {/* Cloud endpoints */}

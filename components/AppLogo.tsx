@@ -1,67 +1,49 @@
 import React from 'react';
-import Svg, { Path, Circle, G, ClipPath, Defs, Rect } from 'react-native-svg';
+import Svg, { Path, Line } from 'react-native-svg';
 
 interface AppLogoProps {
   size?: number;
-  /** Retained for call-site compatibility; the puzzle-heart palette is fixed. */
   variant?: 'light' | 'dark';
 }
 
-// Classic heart outline (viewBox 0 0 100 100). Top notch at (50,34),
-// bottom point at (50,90), lobes near y≈22.
-const HEART =
-  'M50 90 C 10 60, 6 34, 26 22 C 39 14, 50 22, 50 34 ' +
-  'C 50 22, 61 14, 74 22 C 94 34, 90 60, 50 90 Z';
+// Navy "A" lettermark geometry (viewBox 0 0 100 100)
+const NAVY = '#1B2D5B';
 
-const PIECES = {
-  topLeft:     '#2563EB', // blue
-  topRight:    '#EF4444', // red
-  bottomLeft:  '#F59E0B', // yellow
-  bottomRight: '#22C55E', // green
-};
+// Rainbow arc: centre at (50, 90), outer radius 42, 6 bands spaced 5px
+const RAINBOW = [
+  { r: 42, color: '#EF4444' }, // red    — outermost
+  { r: 37, color: '#F97316' }, // orange
+  { r: 32, color: '#EAB308' }, // yellow
+  { r: 27, color: '#22C55E' }, // green
+  { r: 22, color: '#3B82F6' }, // blue
+  { r: 17, color: '#7C3AED' }, // violet — innermost
+];
 
-const SEAM_X = 50;
-const SEAM_Y = 56;
+const CY = 90; // arc baseline (matches bottom of A legs)
+
+function arc(r: number) {
+  return `M ${50 - r},${CY} A ${r},${r} 0 0,1 ${50 + r},${CY}`;
+}
 
 export function AppLogo({ size = 40 }: AppLogoProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
-      <Defs>
-        <ClipPath id="heartClip">
-          <Path d={HEART} />
-        </ClipPath>
-      </Defs>
+      {/* Navy A — left leg, right leg, crossbar */}
+      <Line x1="50" y1="6"  x2="10" y2="90" stroke={NAVY} strokeWidth="16" strokeLinecap="round" />
+      <Line x1="50" y1="6"  x2="90" y2="90" stroke={NAVY} strokeWidth="16" strokeLinecap="round" />
+      <Line x1="26" y1="57" x2="74" y2="57" stroke={NAVY} strokeWidth="12" strokeLinecap="round" />
 
-      <G clipPath="url(#heartClip)">
-        {/* 4 colour quadrants */}
-        <Rect x="0"  y="0"        width="50" height={SEAM_Y}        fill={PIECES.topLeft} />
-        <Rect x="50" y="0"        width="50" height={SEAM_Y}        fill={PIECES.topRight} />
-        <Rect x="0"  y={SEAM_Y}   width="50" height={100 - SEAM_Y}  fill={PIECES.bottomLeft} />
-        <Rect x="50" y={SEAM_Y}   width="50" height={100 - SEAM_Y}  fill={PIECES.bottomRight} />
-
-        {/* White seams between pieces */}
+      {/* Rainbow arc overlaid on lower half of A */}
+      {RAINBOW.map(b => (
         <Path
-          d={`M ${SEAM_X} 16 L ${SEAM_X} 92`}
-          stroke="#FFFFFF"
-          strokeWidth={3}
-          strokeLinecap="round"
+          key={b.r}
+          d={arc(b.r)}
+          stroke={b.color}
+          strokeWidth={4.5}
+          strokeLinecap="butt"
+          fill="none"
         />
-        <Path
-          d={`M 8 ${SEAM_Y} L 92 ${SEAM_Y}`}
-          stroke="#FFFFFF"
-          strokeWidth={3}
-          strokeLinecap="round"
-        />
-
-        {/* Interlocking jigsaw knobs straddling the seams */}
-        <Circle cx={SEAM_X} cy={44} r={7.5} fill={PIECES.topLeft}     stroke="#FFFFFF" strokeWidth={2.5} />
-        <Circle cx={SEAM_X} cy={72} r={7.5} fill={PIECES.bottomRight} stroke="#FFFFFF" strokeWidth={2.5} />
-        <Circle cx={31} cy={SEAM_Y} r={7.5} fill={PIECES.bottomLeft}  stroke="#FFFFFF" strokeWidth={2.5} />
-        <Circle cx={69} cy={SEAM_Y} r={7.5} fill={PIECES.topRight}    stroke="#FFFFFF" strokeWidth={2.5} />
-      </G>
-
-      {/* Crisp outer heart edge */}
-      <Path d={HEART} fill="none" stroke="#FFFFFF" strokeWidth={2} />
+      ))}
     </Svg>
   );
 }
