@@ -286,6 +286,9 @@ function QuickAddModal({
       const analysis = await analyseReceipt(uri, mime);
       setOcrBizName(analysis.ocrResult.businessName ?? null);
       setProviderMatches(analysis.allMatches);
+      if (analysis.ocrResult.amount !== null) {
+        setAmount(String(analysis.ocrResult.amount));
+      }
       const top = analysis.topMatch;
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);
@@ -573,8 +576,8 @@ function QuickAddModal({
               })}
             </ScrollView>
 
-            {/* ── Provider (optional) ── */}
-            <Text style={[s.fieldLabel, { marginTop: 20 }]}>Provider (optional)</Text>
+            {/* ── Provider ── */}
+            <Text style={[s.fieldLabel, { marginTop: 20 }]}>Provider</Text>
             {selectedProvider ? (
               <View style={s.selectedProv}>
                 <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
@@ -961,7 +964,7 @@ function MileageOnlyModal({
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={s.mBody} keyboardShouldPersistTaps="handled">
 
-            <Text style={s.fieldLabel}>Provider (optional)</Text>
+            <Text style={s.fieldLabel}>Provider</Text>
             {selectedProvider ? (
               <View style={s.selectedProv}>
                 <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
