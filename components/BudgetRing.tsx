@@ -18,13 +18,14 @@ const BAND_W = 8;
 
 const BANDS = [
   { r: 138, color: '#EF4444' }, // red    — outermost
-  { r: 124, color: '#F97316' }, // orange
-  { r: 110, color: '#EAB308' }, // yellow
-  { r:  96, color: '#22C55E' }, // green
-  { r:  82, color: '#3B82F6' }, // blue   — innermost
+  { r: 126, color: '#F97316' }, // orange
+  { r: 114, color: '#EAB308' }, // yellow
+  { r: 102, color: '#22C55E' }, // green
+  { r:  90, color: '#3B82F6' }, // blue
+  { r:  78, color: '#7C3AED' }, // violet — innermost
 ];
 
-const DOT_R    = 110; // middle (yellow) band — progress badge rides here
+const DOT_R    = 114; // yellow band — progress badge rides here
 const DOT_SIZE = 28;
 const SVG_H    = 160;
 

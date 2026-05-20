@@ -6,40 +6,40 @@ interface AppLogoProps {
   variant?: 'light' | 'dark';
 }
 
-// Navy "A" lettermark geometry (viewBox 0 0 100 100)
 const NAVY = '#1B2D5B';
 
-// Rainbow arc: centre at (50, 90), outer radius 42, 6 bands spaced 5px
+// 6-band rainbow, centre at (50, 86), bands spaced 6px, strokeWidth 5.5
+// Outermost arc: M10,86 A40,40 0 0,1 90,86 — peaks at (50, 46), above crossbar
 const RAINBOW = [
-  { r: 42, color: '#EF4444' }, // red    — outermost
-  { r: 37, color: '#F97316' }, // orange
-  { r: 32, color: '#EAB308' }, // yellow
-  { r: 27, color: '#22C55E' }, // green
-  { r: 22, color: '#3B82F6' }, // blue
-  { r: 17, color: '#7C3AED' }, // violet — innermost
+  { r: 40, color: '#EF4444' }, // red    — outermost
+  { r: 34, color: '#F97316' }, // orange
+  { r: 28, color: '#EAB308' }, // yellow
+  { r: 22, color: '#22C55E' }, // green
+  { r: 16, color: '#3B82F6' }, // blue
+  { r: 10, color: '#7C3AED' }, // violet — innermost
 ];
 
-const CY = 90; // arc baseline (matches bottom of A legs)
+const ARC_CY = 86;
 
 function arc(r: number) {
-  return `M ${50 - r},${CY} A ${r},${r} 0 0,1 ${50 + r},${CY}`;
+  return `M ${50 - r},${ARC_CY} A ${r},${r} 0 0,1 ${50 + r},${ARC_CY}`;
 }
 
 export function AppLogo({ size = 40 }: AppLogoProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
-      {/* Navy A — left leg, right leg, crossbar */}
-      <Line x1="50" y1="6"  x2="10" y2="90" stroke={NAVY} strokeWidth="16" strokeLinecap="round" />
-      <Line x1="50" y1="6"  x2="90" y2="90" stroke={NAVY} strokeWidth="16" strokeLinecap="round" />
-      <Line x1="26" y1="57" x2="74" y2="57" stroke={NAVY} strokeWidth="12" strokeLinecap="round" />
+      {/* Bold navy A — wide legs, prominent crossbar */}
+      <Line x1="50" y1="5"  x2="5"  y2="94" stroke={NAVY} strokeWidth="20" strokeLinecap="round" />
+      <Line x1="50" y1="5"  x2="95" y2="94" stroke={NAVY} strokeWidth="20" strokeLinecap="round" />
+      <Line x1="24" y1="60" x2="76" y2="60" stroke={NAVY} strokeWidth="15" strokeLinecap="round" />
 
-      {/* Rainbow arc overlaid on lower half of A */}
+      {/* 6-band rainbow arching through the lower half of the A */}
       {RAINBOW.map(b => (
         <Path
           key={b.r}
           d={arc(b.r)}
           stroke={b.color}
-          strokeWidth={4.5}
+          strokeWidth={5.5}
           strokeLinecap="butt"
           fill="none"
         />
