@@ -8,29 +8,43 @@ export interface ProviderMatch {
 }
 
 /**
- * Fuzzy-matches a business name string against the providers table.
+ * Fuzzy-matches one or more candidate strings against the providers table.
+ * When given an array (e.g. all lines from a receipt), makes a single DB call
+ * and returns the best score per provider across all candidates.
  * Returns up to 3 ranked matches (score descending).
  */
-export async function matchProviders(rawName: string): Promise<ProviderMatch[]> {
-  if (!rawName?.trim()) return [];
+export async function matchProviders(input: string | string[]): Promise<ProviderMatch[]> {
+  const candidates = (Array.isArray(input) ? input : [input])
+    .map(s => s?.trim())
+    .filter(Boolean);
+  if (!candidates.length) return [];
 
-  const normalized = normalize(rawName);
-  const words      = normalized.split(/\s+/).filter(w => w.length > 2);
-  if (!words.length) return [];
+  // Collect unique words across all candidates for the OR filter
+  const wordSet = new Set<string>();
+  for (const c of candidates) {
+    for (const w of normalize(c).split(/\s+/).filter(w => w.length > 2)) {
+      wordSet.add(w);
+    }
+  }
+  if (!wordSet.size) return [];
 
-  // Build OR query: any word appears in the provider name
+  // Cap OR filter to 15 words to avoid overwhelming PostgREST
+  const filterWords = [...wordSet].slice(0, 15);
+
   const { data } = await supabase
     .from('providers')
     .select('*')
-    .or(words.map(w => `name.ilike.%${w}%`).join(','))
-    .limit(20);
+    .or(filterWords.map(w => `name.ilike.%${w}%`).join(','))
+    .limit(30);
 
   if (!data?.length) return [];
 
-  const scored: ProviderMatch[] = (data as Provider[]).map(p => ({
-    provider: p,
-    score:    similarity(normalized, normalize(p.name)),
-  }));
+  // Score each provider against its best-matching candidate
+  const scored: ProviderMatch[] = (data as Provider[]).map(p => {
+    const pNorm = normalize(p.name);
+    const best  = Math.max(...candidates.map(c => similarity(normalize(c), pNorm)));
+    return { provider: p, score: best };
+  });
 
   return scored
     .filter(m => m.score > 0.2)

@@ -99,15 +99,40 @@ function extractBusinessName(lines: string[]): string | null {
   for (const line of lines.slice(0, 7)) {
     const c = line.trim();
     if (!c || c.length < 3 || c.length > 70) continue;
-    if (/^\d/.test(c)) continue;                                      // starts with number
-    if (/\d{3}[-.\s]\d{3}[-.\s]\d{4}/.test(c)) continue;             // phone number
-    if (/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c)) continue;      // date
-    if (/^\$/.test(c)) continue;                                       // dollar amount
-    if (/^[A-Z]\d[A-Z]\s?\d[A-Z]\d/.test(c)) continue;               // postal code
+    if (/^\d/.test(c)) continue;
+    if (/\d{3}[-.\s]\d{3}[-.\s]\d{4}/.test(c)) continue;
+    if (/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c)) continue;
+    if (/^\$/.test(c)) continue;
+    if (/^[A-Z]\d[A-Z]\s?\d[A-Z]\d/.test(c)) continue;
     if (SKIP_WORDS.has(c.toLowerCase())) continue;
     return c;
   }
   return null;
+}
+
+/**
+ * Returns all plausible business-name candidate strings from the full OCR text.
+ * Scans every line so clinic names at the bottom of receipts (e.g. Jane App
+ * style) are included alongside provider names in the body of the text.
+ */
+export function extractBusinessNameCandidates(rawText: string): string[] {
+  if (!rawText) return [];
+  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+  const results: string[] = [];
+  for (const line of lines) {
+    const c = line.trim();
+    if (!c || c.length < 3 || c.length > 60) continue;
+    if (/^\d/.test(c)) continue;
+    if (/\d{3}[-.\s]\d{3}[-.\s]\d{4}/.test(c)) continue;
+    if (/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(c)) continue;
+    if (/^\$/.test(c)) continue;
+    if (/^[A-Z]\d[A-Z]\s?\d[A-Z]\d/.test(c)) continue;
+    if (/^www\./i.test(c) || /https?:/i.test(c)) continue;
+    if (/thank/i.test(c) && /payment/i.test(c)) continue;
+    if (SKIP_WORDS.has(c.toLowerCase())) continue;
+    results.push(c);
+  }
+  return results.slice(0, 25);
 }
 
 function extractAddress(lines: string[]): string | null {

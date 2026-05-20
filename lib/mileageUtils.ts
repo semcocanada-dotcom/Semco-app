@@ -1,4 +1,4 @@
-import { extractReceiptData, type OcrResult } from '@lib/ocr';
+import { extractReceiptData, extractBusinessNameCandidates, type OcrResult } from '@lib/ocr';
 import { calculateMileage, type MileageCalculation } from '@lib/geocoding';
 import { matchProviders, type ProviderMatch } from '@lib/providerMatcher';
 import { SOUTHERN_RATE_PER_KM, NORTHERN_RATE_PER_KM } from '@constants/mileage';
@@ -37,8 +37,9 @@ export async function analyseReceipt(fileUri: string, mimeType = 'image/jpeg'): 
   let topMatch: ProviderMatch | null = null;
   let allMatches: ProviderMatch[]    = [];
 
-  if (ocrResult.businessName) {
-    allMatches = await matchProviders(ocrResult.businessName);
+  const candidates = extractBusinessNameCandidates(ocrResult.rawText);
+  if (candidates.length) {
+    allMatches = await matchProviders(candidates);
     topMatch   = allMatches[0] ?? null;
   }
 
