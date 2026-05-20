@@ -6,4 +6,5 @@
 2026-05-19T00:55:00Z — rebuild: all builds expired, fresh install needed for phone
 2026-05-19T01:10:00Z — retrigger: plan upgraded, build credits available
 2026-05-19T23:05:00Z — rebuild with visual redesign baked in (puzzle-heart, rainbow arc, vector icons) + expo-location native module
+2026-05-20T14:00:00Z — rebuild: OCR provider matching, remove pending status, expense tap-through, status badge cleanup
 
