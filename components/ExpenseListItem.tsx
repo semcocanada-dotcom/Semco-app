@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Colors } from '@constants/colors';
 import type { Expense, ExpenseStatus, ProviderCategory } from '@lib/types';
 import { format, parseISO } from 'date-fns';
@@ -51,16 +51,19 @@ function formatCAD(amount: number) {
 
 interface ExpenseListItemProps {
   expense: Expense;
+  onPress?: () => void;
 }
 
-export function ExpenseListItem({ expense }: ExpenseListItemProps) {
+export function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
   const status = STATUS_STYLES[expense.status];
   const icon = CATEGORY_ICONS[expense.category];
   const categoryLabel = CATEGORY_LABELS[expense.category];
   const providerName = expense.providers?.name;
 
   return (
-    <View
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -111,6 +114,6 @@ export function ExpenseListItem({ expense }: ExpenseListItemProps) {
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

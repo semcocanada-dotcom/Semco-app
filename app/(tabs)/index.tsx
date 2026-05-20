@@ -282,7 +282,10 @@ export default function DashboardScreen() {
               ) : (
                 expenses.map((expense, index) => (
                   <View key={expense.id}>
-                    <ExpenseListItem expense={expense} />
+                    <ExpenseListItem
+                      expense={expense}
+                      onPress={() => router.push(`/(tabs)/expenses?openExpenseId=${expense.id}`)}
+                    />
                     {index < expenses.length - 1 && <View style={{ height: 1, backgroundColor: Colors.border }} />}
                   </View>
                 ))

@@ -28,7 +28,7 @@ import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1004,6 +1004,7 @@ export default function ExpensesScreen() {
   const [showMileage,    setShowMileage]         = useState(false);
   const [showMileageLog, setShowMileageLog]      = useState(false);
   const [detailExpense,setDetailExpense]        = useState<Expense | null>(null);
+  const { openExpenseId } = useLocalSearchParams<{ openExpenseId?: string }>();
 
   const fetchExpenses = useCallback(async () => {
     if (!activeChild || !summary.fundingYear) { setExpenses([]); setLoadingExp(false); return; }
@@ -1019,6 +1020,16 @@ export default function ExpensesScreen() {
   }, [activeChild, summary.fundingYear]);
 
   useEffect(() => { fetchExpenses(); }, [fetchExpenses]);
+
+  useEffect(() => {
+    if (openExpenseId && expenses.length > 0) {
+      const target = expenses.find(e => e.id === openExpenseId);
+      if (target) {
+        setDetailExpense(target);
+        router.setParams({ openExpenseId: undefined });
+      }
+    }
+  }, [openExpenseId, expenses]);
 
   const handleSaved = useCallback(() => { refetchBudget(); fetchExpenses(); }, [refetchBudget, fetchExpenses]);
 
