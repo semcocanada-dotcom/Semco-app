@@ -221,7 +221,6 @@ export default function DashboardScreen() {
             <BudgetRing
               totalBudget={summary.totalBudget}
               totalSpent={summary.totalSpent}
-              totalPending={summary.totalPending}
               remaining={summary.remaining}
               yearLabel={summary.fundingYear?.label}
             />
@@ -234,17 +233,9 @@ export default function DashboardScreen() {
             <StatCard
               label="Total Spent"
               value={formatCAD(summary.totalSpent)}
-              subLabel="Approved expenses"
+              subLabel="Expenses logged"
               accent="blue"
               icon="wallet-outline"
-              onPress={() => router.push('/(tabs)/expenses')}
-            />
-            <StatCard
-              label="Pending"
-              value={formatCAD(summary.totalPending)}
-              subLabel="Awaiting approval"
-              accent="teal"
-              icon="time-outline"
               onPress={() => router.push('/(tabs)/expenses')}
             />
             <StatCard

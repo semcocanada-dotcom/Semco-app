@@ -372,7 +372,7 @@ function QuickAddModal({
           amount:          parsed,
           description:     description.trim() || null,
           expense_date:    date,
-          status:          'pending' as ExpenseStatus,
+          status:          'approved' as ExpenseStatus,
           receipt_urls:    [],
           logged_by:       session.user.id,
         })
@@ -672,21 +672,9 @@ function ExpenseDetailModal({
   expense: Expense | null; visible: boolean;
   onClose: () => void; onUpdated: () => void;
 }) {
-  const [refNum,   setRefNum]   = useState('');
-  const [saving,   setSaving]   = useState(false);
-
-  useEffect(() => { if (visible) setRefNum(''); }, [visible]);
+  const [saving, setSaving] = useState(false);
 
   if (!expense) return null;
-
-  async function updateStatus(status: ExpenseStatus) {
-    setSaving(true);
-    const update: any = { status };
-    if (status === 'submitted' && refNum.trim()) update.description = refNum.trim();
-    await supabase.from('expenses').update(update).eq('id', expense!.id);
-    setSaving(false);
-    onUpdated(); onClose();
-  }
 
   async function deleteExpense() {
     Alert.alert('Delete expense?', CAD(expense!.amount), [
@@ -730,45 +718,6 @@ function ExpenseDetailModal({
               <Text style={s.detailLabel}>Notes</Text>
               <Text style={s.detailValue}>{expense.description}</Text>
             </View>
-          )}
-
-          {/* Status actions */}
-          <Text style={[s.fieldLabel, { marginTop: 20 }]}>Update Status</Text>
-
-          {expense.status === 'pending' && (
-            <>
-              <TextInput
-                style={[s.textField, { marginBottom: 10 }]}
-                value={refNum}
-                onChangeText={setRefNum}
-                placeholder="Submission reference # (optional)"
-                placeholderTextColor={Colors.textMuted}
-              />
-              <TouchableOpacity onPress={() => updateStatus('submitted')} disabled={saving} activeOpacity={0.85}>
-                <LinearGradient colors={Colors.gradients.blue as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
-                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Mark as Submitted</Text>}
-                </LinearGradient>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {expense.status === 'submitted' && (
-            <View style={{ gap: 10 }}>
-              <TouchableOpacity onPress={() => updateStatus('approved')} disabled={saving} activeOpacity={0.85}>
-                <LinearGradient colors={['#34D399', '#10B981'] as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
-                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Mark as Approved ✓</Text>}
-                </LinearGradient>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => updateStatus('rejected')} disabled={saving} activeOpacity={0.85} style={[s.saveBtn, { backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECDD3' }]}>
-                <Text style={{ color: '#BE123C', fontWeight: '700', fontSize: 16 }}>Mark as Rejected</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {(expense.status === 'approved' || expense.status === 'rejected') && (
-            <TouchableOpacity onPress={() => updateStatus('pending')} disabled={saving} activeOpacity={0.85} style={[s.saveBtn, { backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border }]}>
-              <Text style={{ color: Colors.textSecondary, fontWeight: '600', fontSize: 15 }}>Reset to Pending</Text>
-            </TouchableOpacity>
           )}
 
           <TouchableOpacity style={s.deleteRowBtn} onPress={deleteExpense}>

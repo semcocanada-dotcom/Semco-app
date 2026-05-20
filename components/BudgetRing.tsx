@@ -55,19 +55,17 @@ function pctStr(n: number, total: number) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface BudgetRingProps {
-  totalBudget:  number;
-  totalSpent:   number;
-  totalPending: number;
-  remaining:    number;
-  yearLabel?:   string;
+  totalBudget: number;
+  totalSpent:  number;
+  remaining:   number;
+  yearLabel?:  string;
 }
 
 export function BudgetRing({
-  totalBudget, totalSpent, totalPending, remaining, yearLabel,
+  totalBudget, totalSpent, remaining, yearLabel,
 }: BudgetRingProps) {
-  const used    = totalSpent + totalPending;
-  const usedPct = totalBudget > 0 ? Math.min(used / totalBudget, 1) : 0;
-  const dot     = dotXY(usedPct);
+  const totalSpentPct = totalBudget > 0 ? Math.min(totalSpent / totalBudget, 1) : 0;
+  const dot     = dotXY(totalSpentPct);
   const onTrack = remaining >= 0;
 
   const scale = useSharedValue(0);
@@ -85,9 +83,9 @@ export function BudgetRing({
       <View style={s.header}>
         <Text style={s.title}>🌈  Annual Grant Progress</Text>
         {yearLabel ? <Text style={s.year}>{yearLabel}</Text> : null}
-        <View style={[s.usedBadge, { backgroundColor: onTrack ? '#DCFCE7' : '#FEE2E2' }]}>
-          <Text style={[s.usedBadgeText, { color: onTrack ? '#15803D' : '#BE123C' }]}>
-            {pctStr(used, totalBudget)} used
+        <View style={[s.totalSpentBadge, { backgroundColor: onTrack ? '#DCFCE7' : '#FEE2E2' }]}>
+          <Text style={[s.totalSpentBadgeText, { color: onTrack ? '#15803D' : '#BE123C' }]}>
+            {pctStr(totalSpent, totalBudget)} totalSpent
           </Text>
         </View>
       </View>
@@ -116,8 +114,8 @@ export function BudgetRing({
             dotAnim,
           ]}
         >
-          <Text style={s.dotPct}>{pctStr(used, totalBudget)}</Text>
-          <Text style={s.dotUsed}>used</Text>
+          <Text style={s.dotPct}>{pctStr(totalSpent, totalBudget)}</Text>
+          <Text style={s.dotUsed}>totalSpent</Text>
         </Animated.View>
 
         {/* Cloud endpoints */}
@@ -141,8 +139,6 @@ export function BudgetRing({
         <StatCol icon="⚪" label="Remaining" value={fmt(Math.max(remaining, 0))} sub={pctStr(Math.max(remaining, 0), totalBudget)} color={Colors.textSecondary} />
         <View style={s.vDivider} />
         <StatCol icon="🔵" label="Spent"     value={fmt(totalSpent)}            sub={pctStr(totalSpent, totalBudget)}            color={Colors.purple} />
-        <View style={s.vDivider} />
-        <StatCol icon="🟡" label="Pending"   value={fmt(totalPending)}          sub={pctStr(totalPending, totalBudget)}          color="#D97706" />
         <View style={s.vDivider} />
         <StatCol icon="🎁" label="Total"     value={fmt(totalBudget)}           sub=""                                           color={Colors.purple} />
       </View>
@@ -197,8 +193,8 @@ const s = StyleSheet.create({
   },
   title:        { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, flex: 1 },
   year:         { fontSize: 12, color: Colors.textMuted, width: '100%', marginTop: -4 },
-  usedBadge:    { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
-  usedBadgeText:{ fontSize: 12, fontWeight: '700' },
+  totalSpentBadge:    { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
+  totalSpentBadgeText:{ fontSize: 12, fontWeight: '700' },
 
   dot: {
     position: 'absolute',

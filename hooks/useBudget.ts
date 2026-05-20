@@ -56,12 +56,9 @@ export function useBudget(childId: string | null) {
       const mileageLogs = mileageRes.data ?? [];
 
       const totalSpent = expenses
-        .filter((e) => e.status === 'approved')
         .reduce((sum, e) => sum + Number(e.amount), 0);
 
-      const totalPending = expenses
-        .filter((e) => e.status === 'pending' || e.status === 'submitted')
-        .reduce((sum, e) => sum + Number(e.amount), 0);
+      const totalPending = 0;
 
       const totalMileage = mileageLogs.reduce(
         (sum, m) => sum + Number(m.reimbursement_amount),
@@ -69,7 +66,7 @@ export function useBudget(childId: string | null) {
       );
 
       const totalBudget = Number(fundingYear.total_budget);
-      const remaining = totalBudget - totalSpent - totalPending - totalMileage;
+      const remaining = totalBudget - totalSpent - totalMileage;
       const daysRemaining = Math.max(
         0,
         differenceInDays(parseISO(fundingYear.end_date), new Date()),
