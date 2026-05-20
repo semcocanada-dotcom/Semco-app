@@ -95,24 +95,26 @@ export function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
         </Text>
       </View>
 
-      {/* Amount + status */}
+      {/* Amount + rejected badge */}
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.textPrimary }}>
           {formatCAD(expense.amount)}
         </Text>
-        <View
-          style={{
-            marginTop: 3,
-            paddingHorizontal: 8,
-            paddingVertical: 2,
-            borderRadius: 8,
-            backgroundColor: status.bg,
-          }}
-        >
-          <Text style={{ fontSize: 10, fontWeight: '600', color: status.text }}>
-            {status.label}
-          </Text>
-        </View>
+        {expense.status === 'rejected' && (
+          <View
+            style={{
+              marginTop: 3,
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 8,
+              backgroundColor: status.bg,
+            }}
+          >
+            <Text style={{ fontSize: 10, fontWeight: '600', color: status.text }}>
+              {status.label}
+            </Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
