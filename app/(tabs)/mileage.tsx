@@ -17,6 +17,7 @@ import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
 import { buildMileageProposal } from '@lib/mileageUtils';
+import { fillAndShareOfficialMileagePdf } from '@lib/pdfForms';
 import { SOUTHERN_RATE_PER_KM } from '@constants/mileage';
 
 const CAD = (n: number) =>
@@ -269,11 +270,13 @@ function CarArt() {
 
 export default function MileageScreen() {
   const { activeChild }                     = useChild();
+  const { session, profile }                = useAuth();
   const { summary }                         = useBudget(activeChild?.id ?? null);
   const [logs,        setLogs]              = useState<MileageLog[]>([]);
   const [loading,     setLoading]           = useState(false);
   const [monthOffset, setMonthOffset]       = useState(0);
   const [showAdd,     setShowAdd]           = useState(false);
+  const [exporting,   setExporting]         = useState(false);
 
   const now = new Date();
   const selected  = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
@@ -301,6 +304,32 @@ export default function MileageScreen() {
   const totalKm   = logs.reduce((s, l) => s + Number(l.distance_km), 0);
   const totalAmt  = logs.reduce((s, l) => s + Number(l.reimbursement_amount), 0);
   const avgRate   = logs.length ? logs[0].rate_per_km : SOUTHERN_RATE_PER_KM;
+
+  async function handleExport() {
+    if (!activeChild || logs.length === 0) return;
+    setExporting(true);
+    try {
+      await fillAndShareOfficialMileagePdf({
+        childName:           activeChild.name,
+        healthServicesNumber: activeChild.health_card_number,
+        parentName:          profile?.full_name ?? '',
+        parentEmail:         session?.user.email ?? '',
+        monthLabel,
+        rows: [...logs].reverse().map(l => ({
+          trip_date:            l.trip_date,
+          description:          l.description,
+          distance_km:          Number(l.distance_km),
+          rate_per_km:          Number(l.rate_per_km),
+          reimbursement_amount: Number(l.reimbursement_amount),
+        })),
+        total: totalAmt,
+      });
+    } catch (e) {
+      Alert.alert('Export failed', 'Could not generate the invoice. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const fundingYearId = summary.fundingYear?.id ?? null;
 
@@ -378,15 +407,32 @@ export default function MileageScreen() {
               </View>
             </View>
 
-            {/* Add Trip button */}
+            {/* Add Trip + Export Invoice buttons */}
             {activeChild && fundingYearId && (
-              <View style={{ paddingHorizontal: 16, marginBottom: 20 }}>
+              <View style={{ paddingHorizontal: 16, marginBottom: 20, gap: 10 }}>
                 <TouchableOpacity onPress={() => setShowAdd(true)} activeOpacity={0.88} style={s.addBtn}>
                   <View style={s.addBtnCircle}>
                     <Ionicons name="add" size={20} color="#FFFFFF" />
                   </View>
                   <Text style={s.addBtnText}>Add Trip</Text>
                 </TouchableOpacity>
+                {logs.length > 0 && (
+                  <TouchableOpacity
+                    onPress={handleExport}
+                    disabled={exporting}
+                    activeOpacity={0.88}
+                    style={[s.addBtn, { backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#16A34A' }]}
+                  >
+                    {exporting ? (
+                      <ActivityIndicator size="small" color="#16A34A" />
+                    ) : (
+                      <View style={[s.addBtnCircle, { backgroundColor: '#16A34A' }]}>
+                        <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
+                      </View>
+                    )}
+                    <Text style={[s.addBtnText, { color: '#15803D' }]}>Export Invoice</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
 

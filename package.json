@@ -34,6 +34,7 @@
     "expo-updates": "~0.25.0",
     "expo-web-browser": "~13.0.0",
     "nativewind": "^4.0.1",
+    "pdf-lib": "^1.17.1",
     "react": "18.2.0",
     "react-native": "0.74.5",
     "react-native-reanimated": "~3.10.0",
@@ -45,7 +46,9 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "testMatch": ["**/__tests__/**/*.test.ts"],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
     "moduleNameMapper": {
       "^@components/(.*)$": "<rootDir>/components/$1",
       "^@lib/(.*)$": "<rootDir>/lib/$1",

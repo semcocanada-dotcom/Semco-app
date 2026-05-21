@@ -1,6 +1,9 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { format, parseISO } from 'date-fns';
+import { PDFDocument } from 'pdf-lib';
+import { MILEAGE_FORM_BASE64 } from '../assets/forms/mileageFormBase64';
 
 export interface MileagePdfRow {
   trip_date: string;
@@ -48,6 +51,57 @@ export async function generateAndShareMileagePdf(data: MileagePdfInput): Promise
     await Sharing.shareAsync(uri, {
       mimeType: 'application/pdf',
       dialogTitle: `Mileage Claim — ${data.monthLabel}`,
+      UTI: 'com.adobe.pdf',
+    });
+  }
+}
+
+// Fill and share the official SK government AcroForm PDF (up to 9 trips)
+export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Promise<void> {
+  const pdfDoc  = await PDFDocument.load(
+    Uint8Array.from(atob(MILEAGE_FORM_BASE64), c => c.charCodeAt(0))
+  );
+  const form    = pdfDoc.getForm();
+  const child   = splitName(data.childName);
+  const parent  = splitName(data.parentName);
+  const today   = data.submittedDate ?? format(new Date(), 'yyyy-MM-dd');
+
+  form.getTextField('Child First name').setText(child.first);
+  form.getTextField('Child Last Name').setText(child.last);
+  form.getTextField('Health Services Number').setText(data.healthServicesNumber ?? '');
+  form.getTextField('Parent/Guardian First Name').setText(parent.first);
+  form.getTextField('Parent/Guardian Last name').setText(parent.last);
+  form.getTextField('email address').setText(data.parentEmail);
+  form.getTextField('Month').setText(data.monthLabel);
+
+  const rows = data.rows.slice(0, 9);
+  rows.forEach((row, i) => {
+    const n = i + 1;
+    form.getTextField(`Date MMDDYYRow${n}`).setText(fmtDate(row.trip_date));
+    form.getTextField(`Purpose of Travel include eligible serviceappointment type and locationRow${n}`)
+      .setText(row.description ?? '');
+    form.getTextField(`Distance kmRow${n}`).setText(Number(row.distance_km).toFixed(1));
+    form.getTextField(`Mileage Rate Row${n}`).setText(`$${Number(row.rate_per_km).toFixed(4)}`);
+    form.getTextField(`Expense Amount  km x mileage rateRow${n}`)
+      .setText(`$${Number(row.reimbursement_amount).toFixed(2)}`);
+  });
+
+  form.getTextField('Total').setText(`$${data.total.toFixed(2)}`);
+  form.getTextField('Printed Name ParentGuardian').setText(data.parentName);
+  form.getTextField('Date MMDDYYYY').setText(fmtDateLong(today));
+
+  form.flatten();
+
+  const pdfBytes = await pdfDoc.save();
+  const b64 = btoa(String.fromCharCode(...pdfBytes));
+  const path = `${FileSystem.cacheDirectory}MileageInvoice_${data.monthLabel.replace(/\s/g, '_')}.pdf`;
+  await FileSystem.writeAsStringAsync(path, b64, { encoding: FileSystem.EncodingType.Base64 });
+
+  const available = await Sharing.isAvailableAsync();
+  if (available) {
+    await Sharing.shareAsync(path, {
+      mimeType: 'application/pdf',
+      dialogTitle: `Mileage Invoice — ${data.monthLabel}`,
       UTI: 'com.adobe.pdf',
     });
   }
