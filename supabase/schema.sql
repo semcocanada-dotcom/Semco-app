@@ -231,6 +231,34 @@ CREATE POLICY "mileage_logs: own children" ON mileage_logs
   );
 
 -- ============================================================
+-- RESPITE SESSIONS
+
+CREATE TABLE respite_sessions (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  child_id        UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+  funding_year_id UUID NOT NULL REFERENCES funding_years(id) ON DELETE CASCADE,
+  session_date    DATE NOT NULL DEFAULT CURRENT_DATE,
+  provider_name   TEXT NOT NULL,
+  provider_phone  TEXT,
+  hours           NUMERIC(5,2),
+  rate_per_hour   NUMERIC(10,2),
+  amount_paid     NUMERIC(10,2) NOT NULL CHECK (amount_paid >= 0),
+  notes           TEXT,
+  logged_by       UUID NOT NULL REFERENCES auth.users(id),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_respite_child_year ON respite_sessions(child_id, funding_year_id);
+CREATE INDEX idx_respite_child_date ON respite_sessions(child_id, session_date DESC);
+
+ALTER TABLE respite_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "respite: own children" ON respite_sessions
+  FOR ALL USING (
+    child_id IN (SELECT id FROM children WHERE parent_id = auth.uid())
+  );
+
+-- ============================================================
 -- APPOINTMENTS
 -- calendar_event_id stores the device calendar event ID
 -- for expo-calendar update/delete sync

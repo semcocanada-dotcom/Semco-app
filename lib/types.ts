@@ -107,6 +107,21 @@ export interface MileageLog {
   created_at: string;
 }
 
+export interface RespiteSession {
+  id: string;
+  child_id: string;
+  funding_year_id: string;
+  session_date: string;
+  provider_name: string;
+  provider_phone: string | null;
+  hours: number | null;
+  rate_per_hour: number | null;
+  amount_paid: number;
+  notes: string | null;
+  logged_by: string;
+  created_at: string;
+}
+
 export interface Appointment {
   id: string;
   child_id: string;

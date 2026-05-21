@@ -4,6 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import { format, parseISO } from 'date-fns';
 import { PDFDocument } from 'pdf-lib';
 import { MILEAGE_FORM_BASE64 } from '../assets/forms/mileageFormBase64';
+import { RESPITE_FORM_BASE64 } from '../assets/forms/respiteFormBase64';
 
 export interface MileagePdfRow {
   trip_date: string;
@@ -102,6 +103,71 @@ export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Pro
     await Sharing.shareAsync(path, {
       mimeType: 'application/pdf',
       dialogTitle: `Mileage Invoice — ${data.monthLabel}`,
+      UTI: 'com.adobe.pdf',
+    });
+  }
+}
+
+export interface RespitePdfRow {
+  session_date:  string;        // YYYY-MM-DD
+  provider_name: string;
+  provider_phone: string | null;
+  amount_paid:   number;
+}
+
+export interface RespitePdfInput {
+  childName:            string;
+  healthServicesNumber: string | null;
+  parentName:           string;
+  parentEmail:          string;
+  monthLabel:           string;
+  rows:                 RespitePdfRow[];
+  total:                number;
+  submittedDate?:       string;
+}
+
+export async function fillAndShareOfficialRespitePdf(data: RespitePdfInput): Promise<void> {
+  const pdfDoc = await PDFDocument.load(
+    Uint8Array.from(atob(RESPITE_FORM_BASE64), c => c.charCodeAt(0))
+  );
+  const form   = pdfDoc.getForm();
+  const child  = splitName(data.childName);
+  const parent = splitName(data.parentName);
+  const today  = data.submittedDate ?? format(new Date(), 'yyyy-MM-dd');
+
+  form.getTextField('Child First Name').setText(child.first);
+  form.getTextField('Child Last Name').setText(child.last);
+  form.getTextField('Health Services Number').setText(data.healthServicesNumber ?? '');
+  form.getTextField('Parent/Guardian First name').setText(parent.first);
+  form.getTextField('Parent/Guardian Last Name').setText(parent.last);
+  form.getTextField('Email Address').setText(data.parentEmail);
+  form.getTextField('Month').setText(data.monthLabel);
+
+  const rows = data.rows.slice(0, 11);
+  rows.forEach((row, i) => {
+    const n = i + 1;
+    form.getTextField(`Date MMDDYYRow${n}`).setText(fmtDate(row.session_date));
+    form.getTextField(`Service Provider nameRow${n}`).setText(row.provider_name);
+    form.getTextField(`Phone NumberRow${n}`).setText(row.provider_phone ?? '');
+    form.getTextField(`Amount Paid Row${n}`).setText(`$${Number(row.amount_paid).toFixed(2)}`);
+  });
+
+  form.getTextField('Total').setText(`$${data.total.toFixed(2)}`);
+  form.getTextField('Printed Name ParentGuardian').setText(data.parentName);
+  form.getTextField('Date MMDDYYYY').setText(fmtDateLong(today));
+
+  form.flatten();
+
+  const pdfBytes = await pdfDoc.save();
+  const b64 = btoa(String.fromCharCode(...pdfBytes));
+  const path = `${FileSystem.cacheDirectory}RespiteInvoice_${data.monthLabel.replace(/\s/g, '_')}.pdf`;
+  await FileSystem.writeAsStringAsync(path, b64, { encoding: FileSystem.EncodingType.Base64 });
+
+  const available = await Sharing.isAvailableAsync();
+  if (available) {
+    await Sharing.shareAsync(path, {
+      mimeType: 'application/pdf',
+      dialogTitle: `Respite Invoice — ${data.monthLabel}`,
       UTI: 'com.adobe.pdf',
     });
   }

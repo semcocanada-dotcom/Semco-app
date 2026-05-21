@@ -57,6 +57,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="respite"
+        options={{
+          title: 'Respite',
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size ?? 24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="claims"
         options={{
           href: null,
