@@ -105,16 +105,17 @@ function ManageWorkersModal({
                     autoCapitalize="words" autoFocus />
                 </View>
                 <View>
+                  <Text style={m.label}>Hourly Rate ($ / hr)</Text>
+                  <TextInput style={[m.input, m.inputHighlight]} value={rate} onChangeText={setRate}
+                    placeholder="e.g. 15.00" placeholderTextColor={Colors.textMuted}
+                    keyboardType="decimal-pad" />
+                  <Text style={m.inputHint}>Auto-fills when logging a session</Text>
+                </View>
+                <View>
                   <Text style={m.label}>Phone (optional)</Text>
                   <TextInput style={m.input} value={phone} onChangeText={setPhone}
                     placeholder="306-555-0100" placeholderTextColor={Colors.textMuted}
                     keyboardType="phone-pad" />
-                </View>
-                <View>
-                  <Text style={m.label}>Default Rate / hr (optional)</Text>
-                  <TextInput style={m.input} value={rate} onChangeText={setRate}
-                    placeholder="15.00" placeholderTextColor={Colors.textMuted}
-                    keyboardType="decimal-pad" />
                 </View>
                 <View>
                   <Text style={m.label}>Notes (optional)</Text>
@@ -145,10 +146,14 @@ function ManageWorkersModal({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={m.workerName}>{w.name}</Text>
-                {w.phone && <Text style={m.workerDetail}>{w.phone}</Text>}
-                {w.default_rate_per_hour && (
-                  <Text style={m.workerDetail}>${Number(w.default_rate_per_hour).toFixed(2)} / hr</Text>
+                {w.default_rate_per_hour ? (
+                  <Text style={[m.workerDetail, { color: Colors.purple, fontWeight: '600' }]}>
+                    ${Number(w.default_rate_per_hour).toFixed(2)} / hr
+                  </Text>
+                ) : (
+                  <Text style={[m.workerDetail, { color: '#F97316' }]}>No rate set</Text>
                 )}
+                {w.phone && <Text style={m.workerDetail}>{w.phone}</Text>}
                 {w.notes && <Text style={[m.workerDetail, { fontStyle: 'italic' }]}>{w.notes}</Text>}
               </View>
               <TouchableOpacity onPress={() => handleDelete(w.id, w.name)}
@@ -696,6 +701,9 @@ const m = StyleSheet.create({
                      shadowRadius: 4, elevation: 2 },
   toggleTxt:       { fontSize: 14, fontWeight: '600', color: Colors.textMuted },
   toggleTxtActive: { color: Colors.textPrimary },
+
+  inputHighlight: { borderColor: Colors.purple, borderWidth: 2 },
+  inputHint:      { fontSize: 11, color: Colors.purple, marginTop: 4, fontWeight: '500' },
 
   totalPreview:      { backgroundColor: '#F0FDF4', borderRadius: 12, padding: 14,
                        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
