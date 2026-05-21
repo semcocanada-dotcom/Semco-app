@@ -231,6 +231,26 @@ CREATE POLICY "mileage_logs: own children" ON mileage_logs
   );
 
 -- ============================================================
+-- RESPITE WORKERS (parent-level, reusable across months/children)
+
+CREATE TABLE respite_workers (
+  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  parent_id             UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name                  TEXT NOT NULL,
+  phone                 TEXT,
+  default_rate_per_hour NUMERIC(10,2),
+  notes                 TEXT,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_respite_workers_parent ON respite_workers(parent_id);
+
+ALTER TABLE respite_workers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "respite_workers: own" ON respite_workers
+  FOR ALL USING (parent_id = auth.uid());
+
+-- ============================================================
 -- RESPITE SESSIONS
 
 CREATE TABLE respite_sessions (
@@ -244,6 +264,7 @@ CREATE TABLE respite_sessions (
   rate_per_hour   NUMERIC(10,2),
   amount_paid     NUMERIC(10,2) NOT NULL CHECK (amount_paid >= 0),
   notes           TEXT,
+  worker_id       UUID REFERENCES respite_workers(id) ON DELETE SET NULL,
   logged_by       UUID NOT NULL REFERENCES auth.users(id),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

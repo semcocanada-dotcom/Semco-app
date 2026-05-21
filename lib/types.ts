@@ -107,6 +107,16 @@ export interface MileageLog {
   created_at: string;
 }
 
+export interface RespiteWorker {
+  id: string;
+  parent_id: string;
+  name: string;
+  phone: string | null;
+  default_rate_per_hour: number | null;
+  notes: string | null;
+  created_at: string;
+}
+
 export interface RespiteSession {
   id: string;
   child_id: string;
@@ -118,6 +128,7 @@ export interface RespiteSession {
   rate_per_hour: number | null;
   amount_paid: number;
   notes: string | null;
+  worker_id: string | null;
   logged_by: string;
   created_at: string;
 }
