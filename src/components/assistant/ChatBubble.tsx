@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
@@ -14,9 +15,47 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
       <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAssistant]}>
-        <Text style={[styles.text, isUser ? styles.textUser : styles.textAssistant]}>
-          {message.content}
-        </Text>
+        {isUser ? (
+          <Text style={[styles.text, styles.textUser]}>
+            {message.content}
+          </Text>
+        ) : (
+          <MarkdownDisplay
+            style={{
+              body: styles.text,
+              text: [styles.text, styles.textAssistant],
+              strong: { fontWeight: Typography.weight.bold },
+              em: { fontStyle: 'italic' },
+              link: { color: Colors.primary },
+              code_inline: { 
+                backgroundColor: Colors.surface,
+                color: Colors.primary,
+                paddingHorizontal: 4,
+                borderRadius: 2,
+                fontFamily: 'monospace',
+              },
+              code_block: {
+                backgroundColor: Colors.surface,
+                paddingHorizontal: Spacing.sm,
+                paddingVertical: Spacing.xs,
+                borderRadius: Radius.sm,
+                marginVertical: Spacing.xs,
+              },
+              hr: { backgroundColor: Colors.border, height: 1 },
+              bullet_list: { marginLeft: Spacing.md },
+              ordered_list: { marginLeft: Spacing.md },
+              list_item: { marginVertical: Spacing.xs },
+              blockquote: { 
+                borderLeftColor: Colors.primary,
+                borderLeftWidth: 3,
+                paddingLeft: Spacing.sm,
+                opacity: 0.8,
+              },
+            }}
+          >
+            {message.content}
+          </MarkdownDisplay>
+        )}
         {!isUser && isOffline && (
           <Text style={styles.sourceTag}>From product library</Text>
         )}

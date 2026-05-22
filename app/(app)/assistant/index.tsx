@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAssistant } from '@/hooks/useAssistant';
@@ -26,7 +27,7 @@ const PLACEHOLDER_SUGGESTIONS = [
 ];
 
 export default function AssistantScreen() {
-  const { messages, isLoading, error, send, isOnline } = useAssistant();
+  const { messages, isLoading, error, send, clearHistory, isOnline } = useAssistant();
   const [inputText, setInputText] = React.useState('');
   const listRef = useRef<FlatList<ConversationMessage>>(null);
 
@@ -39,13 +40,41 @@ export default function AssistantScreen() {
 
   const handleSuggestion = (text: string) => send(text);
 
+  const handleClearHistory = () => {
+    Alert.alert(
+      'Clear conversation?',
+      'This will delete all messages from this chat session. This cannot be undone.',
+      [
+        { text: 'Cancel', onPress: () => {} },
+        {
+          text: 'Clear',
+          onPress: async () => {
+            await clearHistory();
+          },
+          style: 'destructive',
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       {!isOnline && <OfflineBanner />}
 
       <View style={styles.header}>
-        <Text style={styles.title}>Semco Assistant</Text>
-        <Text style={styles.subtitle}>{isOnline ? 'AI-powered' : 'Product library search'}</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Semco Assistant</Text>
+          <Text style={styles.subtitle}>{isOnline ? 'AI-powered' : 'Product library search'}</Text>
+        </View>
+        {messages.length > 0 && (
+          <TouchableOpacity
+            onPress={handleClearHistory}
+            style={styles.clearBtn}
+            accessibilityLabel="Clear conversation history"
+          >
+            <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {messages.length === 0 ? (
@@ -114,9 +143,24 @@ export default function AssistantScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  header: { paddingHorizontal: Spacing.base, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
+  header: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.base, 
+    paddingTop: Spacing.md, 
+    paddingBottom: Spacing.sm 
+  },
+  headerContent: { flex: 1 },
   title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
   subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+  clearBtn: { 
+    width: TAP_TARGET_MIN,
+    height: TAP_TARGET_MIN,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.sm,
+  },
   messageList: { paddingVertical: Spacing.sm },
   emptyState: {
     flex: 1,

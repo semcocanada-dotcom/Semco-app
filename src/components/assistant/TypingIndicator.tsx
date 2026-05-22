@@ -1,37 +1,68 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 import { Colors, Spacing, Radius } from '@/constants/theme';
 
 export function TypingIndicator() {
-  const dot1 = useRef(new Animated.Value(0)).current;
-  const dot2 = useRef(new Animated.Value(0)).current;
-  const dot3 = useRef(new Animated.Value(0)).current;
+  const opacity1 = useSharedValue(0.4);
+  const opacity2 = useSharedValue(0.4);
+  const opacity3 = useSharedValue(0.4);
 
   useEffect(() => {
-    const animateDot = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, { toValue: -6, duration: 300, useNativeDriver: true }),
-          Animated.timing(dot, { toValue: 0, duration: 300, useNativeDriver: true }),
-          Animated.delay(600),
-        ]),
-      ).start();
+    const animateDot = (opacity: Animated.Shared<number>, delay: number) => {
+      opacity.value = withRepeat(
+        withSequence(
+          withTiming(delay, {
+            duration: 0,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          withTiming(1, {
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          withTiming(0.4, {
+            duration: 300,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          withTiming(0.4, {
+            duration: 600,
+            easing: Easing.inOut(Easing.ease),
+          }),
+        ),
+        -1,
+      );
+    };
 
-    animateDot(dot1, 0);
-    animateDot(dot2, 150);
-    animateDot(dot3, 300);
-  }, [dot1, dot2, dot3]);
+    animateDot(opacity1, 0);
+    animateDot(opacity2, 150);
+    animateDot(opacity3, 300);
+  }, [opacity1, opacity2, opacity3]);
+
+  const dot1Style = useAnimatedStyle(() => ({
+    opacity: opacity1.value,
+  }));
+
+  const dot2Style = useAnimatedStyle(() => ({
+    opacity: opacity2.value,
+  }));
+
+  const dot3Style = useAnimatedStyle(() => ({
+    opacity: opacity3.value,
+  }));
 
   return (
     <View style={styles.wrapper}>
       <View style={styles.bubble}>
-        {[dot1, dot2, dot3].map((anim, i) => (
-          <Animated.View
-            key={i}
-            style={[styles.dot, { transform: [{ translateY: anim }] }]}
-          />
-        ))}
+        <Animated.View style={[styles.dot, dot1Style]} />
+        <Animated.View style={[styles.dot, dot2Style]} />
+        <Animated.View style={[styles.dot, dot3Style]} />
       </View>
     </View>
   );
