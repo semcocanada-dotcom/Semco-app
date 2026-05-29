@@ -1,0 +1,38 @@
+name: EAS — OTA Update
+
+on:
+  push:
+    branches:
+      - semco-pro-preview
+    paths-ignore:
+      - 'BUILD_TRIGGER'
+      - '**.md'
+      - '.github/**'
+
+jobs:
+  update:
+    name: Push OTA Update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@18.13.0
+
+      - name: Push OTA update
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          FIRST_LINE=$(printf '%s' "$COMMIT_MSG" | head -1)
+          eas update --branch preview --message "$FIRST_LINE" --non-interactive
