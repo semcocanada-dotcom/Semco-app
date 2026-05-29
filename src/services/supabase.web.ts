@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function requireSupabaseUrl() {
   const value = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -20,18 +19,10 @@ function requireSupabaseAnonKey() {
 const SUPABASE_URL = requireSupabaseUrl();
 const SUPABASE_ANON_KEY = requireSupabaseAnonKey();
 
-if (process.env.NODE_ENV !== 'production') {
-  console.log('[supabase] Configuring client', {
-    url: SUPABASE_URL,
-    hasKey: Boolean(SUPABASE_ANON_KEY),
-  });
-}
-
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
   },
 });
