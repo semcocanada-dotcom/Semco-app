@@ -17,16 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@18.13.0
 
       - name: Preflight Expo auth
         env:
@@ -36,9 +39,10 @@ jobs:
             echo "EXPO_TOKEN secret is missing or empty. Add it in GitHub repo settings before running this workflow."
             exit 1
           fi
-          echo "EXPO_TOKEN is set; continuing."
+          echo "EXPO_TOKEN is set; checking Expo auth..."
+          eas whoami
 
       - name: Build iOS preview
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: npx -y eas-cli@latest build --platform ios --profile preview --non-interactive --clear-cache
+        run: eas build --platform ios --profile preview --non-interactive --clear-cache
