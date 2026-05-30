@@ -20,6 +20,12 @@ process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||= easEnv.EXPO_PUBLIC_SUPABASE_ANON_K
 
 module.exports = {
   ...expo,
+  updates: {
+    url: 'https://u.expo.dev/cc9001d8-b1f9-44b2-b59c-c7b35d8c6129',
+  },
+  runtimeVersion: {
+    policy: 'appVersion',
+  },
   extra: {
     ...(expo.extra ?? {}),
     // Keep these available in JS during local web preview too.
