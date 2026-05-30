@@ -64,7 +64,7 @@ export async function uploadPhoto(
     if (!fileInfo.exists) return null;
 
     const base64 = await FileSystem.readAsStringAsync(localUri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: 'base64',
     });
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 

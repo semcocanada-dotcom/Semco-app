@@ -9,7 +9,7 @@ export interface UserProgressEntry {
 }
 
 // Keyword map: installer message keywords → topic slug
-const TOPIC_KEYWORDS: Array<{ topic: string; keywords: string[] }> = [
+const TOPIC_KEYWORDS: { topic: string; keywords: string[] }[] = [
   { topic: 'primer_application', keywords: ['primer', 'prime', 'priming', '2k', 'adhesion primer'] },
   { topic: 'base_coat', keywords: ['base coat', 'basecoat', 'first coat', 'second coat'] },
   { topic: 'finish_coat', keywords: ['finish coat', 'finishcoat', 'top coat', 'topcoat', 'texture'] },

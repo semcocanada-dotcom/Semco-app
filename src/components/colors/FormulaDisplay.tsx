@@ -13,7 +13,6 @@ interface FormulaDisplayProps {
 export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
   const [batchSize, setBatchSize] = useState<BatchSize>('quart');
   const formula = getFormulaForBatch(pigments, batchSize);
-  const selected = BATCH_SIZES.find((b) => b.key === batchSize)!;
 
   return (
     <Card>

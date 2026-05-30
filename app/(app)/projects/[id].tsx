@@ -12,7 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
-import { projects, projects_photos, PHOTO_STAGES } from '@/database/schema/projects';
+import { projects, projects_photos } from '@/database/schema/projects';
 import { batchLogs } from '@/database/schema/batches';
 import type { Project, ProjectPhoto, PhotoStage } from '@/database/schema/projects';
 import type { BatchLog } from '@/database/schema/batches';

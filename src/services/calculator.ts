@@ -31,7 +31,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
   }
 
   const productMap = Object.fromEntries(
-    (productsData as Array<{
+    (productsData as {
       id: string;
       sku: string;
       name: string;
@@ -39,7 +39,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
       coverageMinSqmPerKg: number | null;
       coverageMaxSqmPerKg: number | null;
       packSizeKg: number;
-    }>).map((p) => [p.sku, p]),
+    }[]).map((p) => [p.sku, p]),
   );
 
   const layers: MaterialLayer[] = [];
