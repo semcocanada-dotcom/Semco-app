@@ -73,11 +73,6 @@ Travel" field comes from the trip description the user typed when logging.
 ## Open follow-ups (priority order)
 6. claims.tsx is dead code — build it out or delete it
 
-## Respite form
-User will provide the official SK ASD-IF Respite AcroForm PDF to verify/replace
-the bundled version in assets/forms/respiteFormBase64.ts. When received, decode
-as base64, replace RESPITE_FORM_BASE64, and smoke-test the field names in pdfForms.ts.
-
 ### Done
 1. ✅ Mileage trip description now auto-composes from the selected provider as
    "Speech & Language — Pathways Clinic, Saskatoon" (category — name, city). It pre-fills the
@@ -85,9 +80,11 @@ as base64, replace RESPITE_FORM_BASE64, and smoke-test the field names in pdfFor
 2. ✅ Respite worker in-place editing — pencil icon on each worker card expands an inline
    edit form pre-filled with current values; Save issues a Supabase UPDATE.
 3. ✅ ChildSelector added to the Respite tab header (shown for multi-child families).
-4. ✅ pdfForms.ts now routes every AcroForm field through a guarded setField() helper that
-   try/catches and console.warns the field name, so device-time name mismatches are debuggable
-   instead of aborting the whole export.
+4. ✅ All AcroForm field names in pdfForms.ts verified against the real SK government PDFs
+   (extracted live from the AcroForm with pdf-lib). Every field on both the mileage form
+   (9 rows, 55 fields) and respite form (11 rows, 54 fields) matches exactly — including
+   case-sensitive quirks like "email address" (all-lower) and the double-space in
+   "Expense Amount  km x mileage rateRow${n}". setField() guards remain in place.
 5. ✅ Verified — 'respite' is already in expenses.tsx CATEGORY_CONFIG and the picker.
 
 ## Security invariants — never break
