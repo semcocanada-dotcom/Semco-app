@@ -71,13 +71,19 @@ SK ASD-IF Mileage AcroForm PDF. Trips auto-populate from logged data. The "Purpo
 Travel" field comes from the trip description the user typed when logging.
 
 ## Open follow-ups (priority order)
-2. Respite worker edit — workers can be added/deleted but not edited in-place
 6. claims.tsx is dead code — build it out or delete it
+
+## Respite form
+User will provide the official SK ASD-IF Respite AcroForm PDF to verify/replace
+the bundled version in assets/forms/respiteFormBase64.ts. When received, decode
+as base64, replace RESPITE_FORM_BASE64, and smoke-test the field names in pdfForms.ts.
 
 ### Done
 1. ✅ Mileage trip description now auto-composes from the selected provider as
    "Speech & Language — Pathways Clinic, Saskatoon" (category — name, city). It pre-fills the
    editable "Purpose of Travel" field on provider select and is the save-time fallback.
+2. ✅ Respite worker in-place editing — pencil icon on each worker card expands an inline
+   edit form pre-filled with current values; Save issues a Supabase UPDATE.
 3. ✅ ChildSelector added to the Respite tab header (shown for multi-child families).
 4. ✅ pdfForms.ts now routes every AcroForm field through a guarded setField() helper that
    try/catches and console.warns the field name, so device-time name mismatches are debuggable
