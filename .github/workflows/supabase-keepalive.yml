@@ -1,0 +1,25 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs every day at 12:00 UTC — prevents free-tier auto-pause (pauses after ~1 week idle)
+    - cron: '0 12 * * *'
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  ping:
+    name: Ping Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping REST API
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://wowlxyxaltgxbbsbcxao.supabase.co/rest/v1/" \
+            -H "apikey: sb_publishable_X9eDFGcf0Vn27-yct5E0dQ_4u-HgtN9" \
+            -H "Authorization: Bearer sb_publishable_X9eDFGcf0Vn27-yct5E0dQ_4u-HgtN9")
+          echo "Supabase response: $STATUS"
+          if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 500 ]; then
+            echo "Unexpected status $STATUS — project may be paused or unreachable"
+            exit 1
+          fi
+          echo "Project is active."
