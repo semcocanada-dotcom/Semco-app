@@ -1,7 +1,70 @@
 const fs = require('fs');
 const path = require('path');
 
-const { expo } = require('./app.json');
+const baseExpo = {
+  name: 'Semco Pro',
+  slug: 'semco-pro',
+  version: '1.0.0',
+  orientation: 'portrait',
+  icon: './assets/images/icon.png',
+  scheme: 'semco',
+  userInterfaceStyle: 'dark',
+  splash: {
+    image: './assets/images/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#0D0D0D',
+  },
+  assetBundlePatterns: ['**/*'],
+  ios: {
+    supportsTablet: false,
+    bundleIdentifier: 'com.semcocanada.semcopro',
+    infoPlist: {
+      NSCameraUsageDescription:
+        'Used to capture color samples for custom formulas and project progress photos.',
+      NSPhotoLibraryUsageDescription:
+        'Used to save and access project and color photos.',
+    },
+  },
+  android: {
+    adaptiveIcon: {
+      foregroundImage: './assets/images/adaptive-icon.png',
+      backgroundColor: '#0D0D0D',
+    },
+    package: 'com.semcocanada.semcopro',
+    permissions: ['android.permission.CAMERA'],
+  },
+  web: {
+    bundler: 'metro',
+    output: 'static',
+  },
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    'expo-font',
+    [
+      'expo-camera',
+      {
+        cameraPermission:
+          'Allow Semco Pro to access your camera to capture color samples and project progress photos.',
+      },
+    ],
+    [
+      'expo-sqlite',
+      {
+        enableFTS: true,
+      },
+    ],
+  ],
+  experiments: {
+    typedRoutes: true,
+  },
+  extra: {
+    eas: {
+      projectId: 'cc9001d8-b1f9-44b2-b59c-c7b35d8c6129',
+    },
+  },
+  owner: 'kitzul88',
+};
 
 function loadEasEnv() {
   try {
@@ -19,7 +82,7 @@ process.env.EXPO_PUBLIC_SUPABASE_URL ||= easEnv.EXPO_PUBLIC_SUPABASE_URL;
 process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||= easEnv.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 module.exports = {
-  ...expo,
+  ...baseExpo,
   updates: {
     url: 'https://u.expo.dev/cc9001d8-b1f9-44b2-b59c-c7b35d8c6129',
   },
@@ -27,7 +90,7 @@ module.exports = {
     policy: 'appVersion',
   },
   extra: {
-    ...(expo.extra ?? {}),
+    ...(baseExpo.extra ?? {}),
     // Keep these available in JS during local web preview too.
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
