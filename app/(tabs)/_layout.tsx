@@ -60,8 +60,8 @@ export default function TabsLayout() {
         name="respite"
         options={{
           title: 'Respite',
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} color={color} size={size ?? 24} />
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home-heart" color={color} size={size ?? 24} />
           ),
         }}
       />
