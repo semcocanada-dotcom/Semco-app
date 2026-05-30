@@ -22,6 +22,60 @@ const CAD = (n: number) =>
 
 // ─── Manage Workers Modal ──────────────────────────────────────────────────────
 
+function WorkerForm({
+  initial, submitLabel, onSubmit, onCancel, saving,
+}: {
+  initial: { name: string; phone: string; rate: string; notes: string };
+  submitLabel: string;
+  onSubmit: (v: { name: string; phone: string; rate: string; notes: string }) => void;
+  onCancel: () => void;
+  saving: boolean;
+}) {
+  const [name,  setName]  = useState(initial.name);
+  const [phone, setPhone] = useState(initial.phone);
+  const [rate,  setRate]  = useState(initial.rate);
+  const [notes, setNotes] = useState(initial.notes);
+  return (
+    <View style={{ gap: 12 }}>
+      <View>
+        <Text style={m.label}>Name *</Text>
+        <TextInput style={m.input} value={name} onChangeText={setName}
+          placeholder="e.g. Grandma Sharon" placeholderTextColor={Colors.textMuted}
+          autoCapitalize="words" autoFocus />
+      </View>
+      <View>
+        <Text style={m.label}>Hourly Rate ($ / hr)</Text>
+        <TextInput style={[m.input, m.inputHighlight]} value={rate} onChangeText={setRate}
+          placeholder="e.g. 15.00" placeholderTextColor={Colors.textMuted}
+          keyboardType="decimal-pad" />
+        <Text style={m.inputHint}>Auto-fills when logging a session</Text>
+      </View>
+      <View>
+        <Text style={m.label}>Phone (optional)</Text>
+        <TextInput style={m.input} value={phone} onChangeText={setPhone}
+          placeholder="306-555-0100" placeholderTextColor={Colors.textMuted}
+          keyboardType="phone-pad" />
+      </View>
+      <View>
+        <Text style={m.label}>Notes (optional)</Text>
+        <TextInput style={m.input} value={notes} onChangeText={setNotes}
+          placeholder="Relationship, availability..." placeholderTextColor={Colors.textMuted} />
+      </View>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <TouchableOpacity style={[m.btn, m.btnSecondary, { flex: 1 }]} onPress={onCancel}>
+          <Text style={m.btnSecondaryTxt}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[m.btn, m.btnPrimary, { flex: 1 }]}
+          onPress={() => onSubmit({ name, phone, rate, notes })} disabled={saving}>
+          {saving
+            ? <ActivityIndicator color="#fff" size="small" />
+            : <Text style={m.btnPrimaryTxt}>{submitLabel}</Text>}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 function ManageWorkersModal({
   visible, onClose, workers, onChanged,
 }: {
@@ -31,29 +85,38 @@ function ManageWorkersModal({
   onChanged: () => void;
 }) {
   const { session } = useAuth();
-  const [adding,   setAdding]   = useState(false);
-  const [name,     setName]     = useState('');
-  const [phone,    setPhone]    = useState('');
-  const [rate,     setRate]     = useState('');
-  const [notes,    setNotes]    = useState('');
-  const [saving,   setSaving]   = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [adding,    setAdding]    = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving,    setSaving]    = useState(false);
+  const [deleting,  setDeleting]  = useState<string | null>(null);
 
-  function resetForm() { setName(''); setPhone(''); setRate(''); setNotes(''); }
-
-  async function handleAdd() {
-    if (!name.trim()) { Alert.alert('Name required', 'Please enter the worker\'s name.'); return; }
+  async function handleAdd(v: { name: string; phone: string; rate: string; notes: string }) {
+    if (!v.name.trim()) { Alert.alert('Name required', 'Please enter the worker\'s name.'); return; }
     setSaving(true);
     const { error } = await supabase.from('respite_workers').insert({
       parent_id:             session!.user.id,
-      name:                  name.trim(),
-      phone:                 phone.trim() || null,
-      default_rate_per_hour: parseFloat(rate) || null,
-      notes:                 notes.trim() || null,
+      name:                  v.name.trim(),
+      phone:                 v.phone.trim() || null,
+      default_rate_per_hour: parseFloat(v.rate) || null,
+      notes:                 v.notes.trim() || null,
     });
     setSaving(false);
     if (error) { Alert.alert('Error', error.message); return; }
-    resetForm(); setAdding(false); onChanged();
+    setAdding(false); onChanged();
+  }
+
+  async function handleEdit(id: string, v: { name: string; phone: string; rate: string; notes: string }) {
+    if (!v.name.trim()) { Alert.alert('Name required', 'Please enter the worker\'s name.'); return; }
+    setSaving(true);
+    const { error } = await supabase.from('respite_workers').update({
+      name:                  v.name.trim(),
+      phone:                 v.phone.trim() || null,
+      default_rate_per_hour: parseFloat(v.rate) || null,
+      notes:                 v.notes.trim() || null,
+    }).eq('id', id);
+    setSaving(false);
+    if (error) { Alert.alert('Error', error.message); return; }
+    setEditingId(null); onChanged();
   }
 
   async function handleDelete(id: string, workerName: string) {
@@ -77,13 +140,14 @@ function ManageWorkersModal({
             <Ionicons name="close" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
           <Text style={m.modalTitle}>Respite Workers</Text>
-          <TouchableOpacity onPress={() => { resetForm(); setAdding(true); }}
+          <TouchableOpacity
+            onPress={() => { setEditingId(null); setAdding(true); }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="add" size={26} color={Colors.purple} />
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }} keyboardShouldPersistTaps="handled">
           {workers.length === 0 && !adding && (
             <View style={{ alignItems: 'center', paddingTop: 32, gap: 10 }}>
               <Ionicons name="people-outline" size={40} color={Colors.textMuted} />
@@ -98,71 +162,67 @@ function ManageWorkersModal({
           {adding && (
             <View style={m.addCard}>
               <Text style={m.addCardTitle}>New Worker</Text>
-              <View style={{ gap: 12 }}>
-                <View>
-                  <Text style={m.label}>Name *</Text>
-                  <TextInput style={m.input} value={name} onChangeText={setName}
-                    placeholder="e.g. Grandma Sharon" placeholderTextColor={Colors.textMuted}
-                    autoCapitalize="words" autoFocus />
-                </View>
-                <View>
-                  <Text style={m.label}>Hourly Rate ($ / hr)</Text>
-                  <TextInput style={[m.input, m.inputHighlight]} value={rate} onChangeText={setRate}
-                    placeholder="e.g. 15.00" placeholderTextColor={Colors.textMuted}
-                    keyboardType="decimal-pad" />
-                  <Text style={m.inputHint}>Auto-fills when logging a session</Text>
-                </View>
-                <View>
-                  <Text style={m.label}>Phone (optional)</Text>
-                  <TextInput style={m.input} value={phone} onChangeText={setPhone}
-                    placeholder="306-555-0100" placeholderTextColor={Colors.textMuted}
-                    keyboardType="phone-pad" />
-                </View>
-                <View>
-                  <Text style={m.label}>Notes (optional)</Text>
-                  <TextInput style={m.input} value={notes} onChangeText={setNotes}
-                    placeholder="Relationship, availability..." placeholderTextColor={Colors.textMuted} />
-                </View>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <TouchableOpacity style={[m.btn, m.btnSecondary, { flex: 1 }]}
-                    onPress={() => { resetForm(); setAdding(false); }}>
-                    <Text style={m.btnSecondaryTxt}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[m.btn, m.btnPrimary, { flex: 1 }]}
-                    onPress={handleAdd} disabled={saving}>
-                    {saving
-                      ? <ActivityIndicator color="#fff" size="small" />
-                      : <Text style={m.btnPrimaryTxt}>Add Worker</Text>}
-                  </TouchableOpacity>
-                </View>
-              </View>
+              <WorkerForm
+                initial={{ name: '', phone: '', rate: '', notes: '' }}
+                submitLabel="Add Worker"
+                saving={saving}
+                onSubmit={handleAdd}
+                onCancel={() => setAdding(false)}
+              />
             </View>
           )}
 
           {/* Worker cards */}
           {workers.map(w => (
-            <View key={w.id} style={m.workerCard}>
-              <View style={m.workerIcon}>
-                <Ionicons name="person" size={20} color={Colors.purple} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={m.workerName}>{w.name}</Text>
-                {w.default_rate_per_hour ? (
-                  <Text style={[m.workerDetail, { color: Colors.purple, fontWeight: '600' }]}>
-                    ${Number(w.default_rate_per_hour).toFixed(2)} / hr
-                  </Text>
-                ) : (
-                  <Text style={[m.workerDetail, { color: '#F97316' }]}>No rate set</Text>
-                )}
-                {w.phone && <Text style={m.workerDetail}>{w.phone}</Text>}
-                {w.notes && <Text style={[m.workerDetail, { fontStyle: 'italic' }]}>{w.notes}</Text>}
-              </View>
-              <TouchableOpacity onPress={() => handleDelete(w.id, w.name)}
-                disabled={deleting === w.id} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                {deleting === w.id
-                  ? <ActivityIndicator size="small" color={Colors.textMuted} />
-                  : <Ionicons name="trash-outline" size={18} color="#DC2626" />}
-              </TouchableOpacity>
+            <View key={w.id} style={[m.workerCard, editingId === w.id && { borderColor: Colors.purple, borderWidth: 1.5 }]}>
+              {editingId === w.id ? (
+                <View style={{ flex: 1 }}>
+                  <Text style={[m.addCardTitle, { marginBottom: 12 }]}>Edit {w.name}</Text>
+                  <WorkerForm
+                    initial={{
+                      name:  w.name,
+                      phone: w.phone ?? '',
+                      rate:  w.default_rate_per_hour ? String(w.default_rate_per_hour) : '',
+                      notes: w.notes ?? '',
+                    }}
+                    submitLabel="Save Changes"
+                    saving={saving}
+                    onSubmit={v => handleEdit(w.id, v)}
+                    onCancel={() => setEditingId(null)}
+                  />
+                </View>
+              ) : (
+                <>
+                  <View style={m.workerIcon}>
+                    <Ionicons name="person" size={20} color={Colors.purple} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={m.workerName}>{w.name}</Text>
+                    {w.default_rate_per_hour ? (
+                      <Text style={[m.workerDetail, { color: Colors.purple, fontWeight: '600' }]}>
+                        ${Number(w.default_rate_per_hour).toFixed(2)} / hr
+                      </Text>
+                    ) : (
+                      <Text style={[m.workerDetail, { color: '#F97316' }]}>No rate set</Text>
+                    )}
+                    {w.phone && <Text style={m.workerDetail}>{w.phone}</Text>}
+                    {w.notes && <Text style={[m.workerDetail, { fontStyle: 'italic' }]}>{w.notes}</Text>}
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+                    <TouchableOpacity
+                      onPress={() => { setAdding(false); setEditingId(w.id); }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Ionicons name="pencil-outline" size={18} color={Colors.purple} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDelete(w.id, w.name)}
+                      disabled={deleting === w.id} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      {deleting === w.id
+                        ? <ActivityIndicator size="small" color={Colors.textMuted} />
+                        : <Ionicons name="trash-outline" size={18} color="#DC2626" />}
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </View>
           ))}
         </ScrollView>
