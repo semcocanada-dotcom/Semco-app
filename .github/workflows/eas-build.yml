@@ -15,12 +15,14 @@ jobs:
   build-preview:
     name: Build iOS Preview (Native)
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -39,8 +41,7 @@ jobs:
             echo "EXPO_TOKEN secret is missing or empty. Add it in GitHub repo settings before running this workflow."
             exit 1
           fi
-          echo "EXPO_TOKEN is set; checking Expo auth..."
-          eas whoami
+          echo "EXPO_TOKEN is set; continuing."
 
       - name: Build iOS preview
         env:
