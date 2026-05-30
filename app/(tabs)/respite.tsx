@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { AppLogo } from '@components/AppLogo';
+import { ChildSelector } from '@components/ChildSelector';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { RespiteSession, RespiteWorker } from '@lib/types';
@@ -412,7 +413,7 @@ function SessionRow({ session }: { session: RespiteSession }) {
 // ─── Main Screen ───────────────────────────────────────────────────────────────
 
 export default function RespiteScreen() {
-  const { activeChild }          = useChild();
+  const { children, activeChild, setActiveChild } = useChild();
   const { session, profile }     = useAuth();
   const { summary }              = useBudget(activeChild?.id ?? null);
   const [sessions,  setSessions] = useState<RespiteSession[]>([]);
@@ -511,6 +512,13 @@ export default function RespiteScreen() {
                 )}
               </TouchableOpacity>
             </View>
+
+            {/* Child selector (multi-child families) */}
+            {children.length > 1 && (
+              <View style={{ marginBottom: 14 }}>
+                <ChildSelector children={children} activeChild={activeChild} onSelect={setActiveChild} />
+              </View>
+            )}
 
             {/* Month stat card */}
             <View style={[s.card, { marginHorizontal: 16, marginBottom: 14 }]}>

@@ -12,7 +12,7 @@ import { format, parseISO } from 'date-fns';
 import { AppLogo } from '@components/AppLogo';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
-import type { MileageLog, Provider } from '@lib/types';
+import type { MileageLog, Provider, ProviderCategory } from '@lib/types';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
@@ -22,6 +22,27 @@ import { SOUTHERN_RATE_PER_KM } from '@constants/mileage';
 
 const CAD = (n: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
+
+const CATEGORY_LABELS: Record<ProviderCategory, string> = {
+  aba_ibi: 'ABA / IBI',
+  speech_language: 'Speech & Language',
+  occupational_therapy: 'Occupational Therapy',
+  physical_therapy: 'Physical Therapy',
+  psychology: 'Psychology',
+  respite: 'Respite',
+  swimming: 'Swimming',
+  social_skills: 'Social Skills',
+  music_therapy: 'Music Therapy',
+  art_therapy: 'Art Therapy',
+  assistive_technology: 'Assistive Tech',
+  other: 'Other',
+};
+
+// "Speech & Language — Pathways Clinic, Saskatoon" for the PDF "Purpose of Travel" column.
+function composeTripPurpose(p: Provider): string {
+  const label = CATEGORY_LABELS[p.category] ?? 'Appointment';
+  return p.city ? `${label} — ${p.name}, ${p.city}` : `${label} — ${p.name}`;
+}
 
 // ─── AddTripModal ─────────────────────────────────────────────────────────────
 
@@ -66,6 +87,7 @@ function AddTripModal({
 
   async function onProviderSelect(p: Provider) {
     setSelectedProvider(p); setProviderQuery(''); setProviderResults([]);
+    setNotes(prev => (prev.trim() ? prev : composeTripPurpose(p)));
     const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
     if (!parts.length) return;
     setCalcLoading(true);
@@ -87,7 +109,7 @@ function AddTripModal({
       await supabase.from('mileage_logs').insert({
         child_id:        childId,
         funding_year_id: fundingYearId,
-        description:     notes.trim() || (selectedProvider ? `Trip to ${selectedProvider.name}` : 'Mileage trip'),
+        description:     notes.trim() || (selectedProvider ? composeTripPurpose(selectedProvider) : 'Mileage trip'),
         distance_km:     finalKm,
         rate_per_km:     parseFloat(ratePerKm),
         trip_date:       date,
@@ -124,7 +146,10 @@ function AddTripModal({
             {selectedProvider ? (
               <View style={s.selectedProv}>
                 <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
-                <TouchableOpacity onPress={() => { setSelectedProvider(null); setDistanceKm(''); }}>
+                <TouchableOpacity onPress={() => {
+                  setNotes(prev => (selectedProvider && prev === composeTripPurpose(selectedProvider) ? '' : prev));
+                  setSelectedProvider(null); setDistanceKm('');
+                }}>
                   <Text style={{ color: Colors.textMuted, fontSize: 18 }}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -178,10 +203,10 @@ function AddTripModal({
               </View>
             </TouchableOpacity>
 
-            <Text style={[s.label, { marginTop: 18 }]}>Notes (optional)</Text>
+            <Text style={[s.label, { marginTop: 18 }]}>Purpose of Travel</Text>
             <TextInput
               style={s.field} value={notes} onChangeText={setNotes}
-              placeholder="e.g. Angela Kretschmer OT" placeholderTextColor={Colors.textMuted}
+              placeholder="e.g. Speech & Language — Pathways Clinic, Saskatoon" placeholderTextColor={Colors.textMuted}
             />
 
             {displayKm > 0 && rate > 0 && (

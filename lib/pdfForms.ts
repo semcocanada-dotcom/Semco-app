@@ -2,7 +2,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { format, parseISO } from 'date-fns';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, type PDFForm } from 'pdf-lib';
 import { MILEAGE_FORM_BASE64 } from '../assets/forms/mileageFormBase64';
 import { RESPITE_FORM_BASE64 } from '../assets/forms/respiteFormBase64';
 
@@ -44,6 +44,17 @@ export interface ExpensePdfInput {
   submittedDate?: string;
 }
 
+// Set an AcroForm text field, tolerating field-name mismatches so a single bad
+// name doesn't abort the whole export. The field names are not yet device-tested
+// against the real SK government PDFs, so warn (with the name) instead of throwing.
+function setField(form: PDFForm, name: string, value: string): void {
+  try {
+    form.getTextField(name).setText(value);
+  } catch {
+    console.warn(`[pdfForms] Could not fill AcroForm field "${name}"`);
+  }
+}
+
 export async function generateAndShareMileagePdf(data: MileagePdfInput): Promise<void> {
   const html = buildMileageHtml(data);
   const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -67,29 +78,27 @@ export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Pro
   const parent  = splitName(data.parentName);
   const today   = data.submittedDate ?? format(new Date(), 'yyyy-MM-dd');
 
-  form.getTextField('Child First name').setText(child.first);
-  form.getTextField('Child Last Name').setText(child.last);
-  form.getTextField('Health Services Number').setText(data.healthServicesNumber ?? '');
-  form.getTextField('Parent/Guardian First Name').setText(parent.first);
-  form.getTextField('Parent/Guardian Last name').setText(parent.last);
-  form.getTextField('email address').setText(data.parentEmail);
-  form.getTextField('Month').setText(data.monthLabel);
+  setField(form, 'Child First name', child.first);
+  setField(form, 'Child Last Name', child.last);
+  setField(form, 'Health Services Number', data.healthServicesNumber ?? '');
+  setField(form, 'Parent/Guardian First Name', parent.first);
+  setField(form, 'Parent/Guardian Last name', parent.last);
+  setField(form, 'email address', data.parentEmail);
+  setField(form, 'Month', data.monthLabel);
 
   const rows = data.rows.slice(0, 9);
   rows.forEach((row, i) => {
     const n = i + 1;
-    form.getTextField(`Date MMDDYYRow${n}`).setText(fmtDate(row.trip_date));
-    form.getTextField(`Purpose of Travel include eligible serviceappointment type and locationRow${n}`)
-      .setText(row.description ?? '');
-    form.getTextField(`Distance kmRow${n}`).setText(Number(row.distance_km).toFixed(1));
-    form.getTextField(`Mileage Rate Row${n}`).setText(`$${Number(row.rate_per_km).toFixed(4)}`);
-    form.getTextField(`Expense Amount  km x mileage rateRow${n}`)
-      .setText(`$${Number(row.reimbursement_amount).toFixed(2)}`);
+    setField(form, `Date MMDDYYRow${n}`, fmtDate(row.trip_date));
+    setField(form, `Purpose of Travel include eligible serviceappointment type and locationRow${n}`, row.description ?? '');
+    setField(form, `Distance kmRow${n}`, Number(row.distance_km).toFixed(1));
+    setField(form, `Mileage Rate Row${n}`, `$${Number(row.rate_per_km).toFixed(4)}`);
+    setField(form, `Expense Amount  km x mileage rateRow${n}`, `$${Number(row.reimbursement_amount).toFixed(2)}`);
   });
 
-  form.getTextField('Total').setText(`$${data.total.toFixed(2)}`);
-  form.getTextField('Printed Name ParentGuardian').setText(data.parentName);
-  form.getTextField('Date MMDDYYYY').setText(fmtDateLong(today));
+  setField(form, 'Total', `$${data.total.toFixed(2)}`);
+  setField(form, 'Printed Name ParentGuardian', data.parentName);
+  setField(form, 'Date MMDDYYYY', fmtDateLong(today));
 
   form.flatten();
 
@@ -135,26 +144,26 @@ export async function fillAndShareOfficialRespitePdf(data: RespitePdfInput): Pro
   const parent = splitName(data.parentName);
   const today  = data.submittedDate ?? format(new Date(), 'yyyy-MM-dd');
 
-  form.getTextField('Child First Name').setText(child.first);
-  form.getTextField('Child Last Name').setText(child.last);
-  form.getTextField('Health Services Number').setText(data.healthServicesNumber ?? '');
-  form.getTextField('Parent/Guardian First name').setText(parent.first);
-  form.getTextField('Parent/Guardian Last Name').setText(parent.last);
-  form.getTextField('Email Address').setText(data.parentEmail);
-  form.getTextField('Month').setText(data.monthLabel);
+  setField(form, 'Child First Name', child.first);
+  setField(form, 'Child Last Name', child.last);
+  setField(form, 'Health Services Number', data.healthServicesNumber ?? '');
+  setField(form, 'Parent/Guardian First name', parent.first);
+  setField(form, 'Parent/Guardian Last Name', parent.last);
+  setField(form, 'Email Address', data.parentEmail);
+  setField(form, 'Month', data.monthLabel);
 
   const rows = data.rows.slice(0, 11);
   rows.forEach((row, i) => {
     const n = i + 1;
-    form.getTextField(`Date MMDDYYRow${n}`).setText(fmtDate(row.session_date));
-    form.getTextField(`Service Provider nameRow${n}`).setText(row.provider_name);
-    form.getTextField(`Phone NumberRow${n}`).setText(row.provider_phone ?? '');
-    form.getTextField(`Amount Paid Row${n}`).setText(`$${Number(row.amount_paid).toFixed(2)}`);
+    setField(form, `Date MMDDYYRow${n}`, fmtDate(row.session_date));
+    setField(form, `Service Provider nameRow${n}`, row.provider_name);
+    setField(form, `Phone NumberRow${n}`, row.provider_phone ?? '');
+    setField(form, `Amount Paid Row${n}`, `$${Number(row.amount_paid).toFixed(2)}`);
   });
 
-  form.getTextField('Total').setText(`$${data.total.toFixed(2)}`);
-  form.getTextField('Printed Name ParentGuardian').setText(data.parentName);
-  form.getTextField('Date MMDDYYYY').setText(fmtDateLong(today));
+  setField(form, 'Total', `$${data.total.toFixed(2)}`);
+  setField(form, 'Printed Name ParentGuardian', data.parentName);
+  setField(form, 'Date MMDDYYYY', fmtDateLong(today));
 
   form.flatten();
 

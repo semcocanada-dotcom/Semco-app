@@ -71,14 +71,18 @@ SK ASD-IF Mileage AcroForm PDF. Trips auto-populate from logged data. The "Purpo
 Travel" field comes from the trip description the user typed when logging.
 
 ## Open follow-ups (priority order)
-1. Mileage trip description — blank when user doesn't type one. Should auto-compose from
-   provider/appointment context: "Speech & Language — Pathways Clinic, Saskatoon"
 2. Respite worker edit — workers can be added/deleted but not edited in-place
-3. ChildSelector missing from Respite tab header (other tabs have it for multi-child families)
-4. AcroForm field names not yet device-tested — add try/catch guards around each
-   form.getTextField() call in pdfForms.ts so mismatches are debuggable
-5. Expense category picker in expenses.tsx may not show 'respite' — verify and add
 6. claims.tsx is dead code — build it out or delete it
+
+### Done
+1. ✅ Mileage trip description now auto-composes from the selected provider as
+   "Speech & Language — Pathways Clinic, Saskatoon" (category — name, city). It pre-fills the
+   editable "Purpose of Travel" field on provider select and is the save-time fallback.
+3. ✅ ChildSelector added to the Respite tab header (shown for multi-child families).
+4. ✅ pdfForms.ts now routes every AcroForm field through a guarded setField() helper that
+   try/catches and console.warns the field name, so device-time name mismatches are debuggable
+   instead of aborting the whole export.
+5. ✅ Verified — 'respite' is already in expenses.tsx CATEGORY_CONFIG and the picker.
 
 ## Security invariants — never break
 1. Never commit/use service_role key in app code (edge function only)
