@@ -1,11 +1,15 @@
 name: EAS — Native Build
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - semco-pro-preview
     paths:
       - 'BUILD_TRIGGER'
+
+permissions:
+  contents: read
 
 jobs:
   build-preview:
@@ -13,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -24,10 +28,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli@18.13.0
+      - name: Preflight Expo auth
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "EXPO_TOKEN secret is missing or empty. Add it in GitHub repo settings before running this workflow."
+            exit 1
+          fi
+          echo "EXPO_TOKEN is set; continuing."
 
       - name: Build iOS preview
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform ios --profile preview --non-interactive --clear-cache
+        run: npx -y eas-cli@latest build --platform ios --profile preview --non-interactive --clear-cache
