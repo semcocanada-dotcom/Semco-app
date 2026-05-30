@@ -7,6 +7,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "newArchEnabled": false,
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
@@ -22,6 +23,7 @@
     "preview": {
       "distribution": "internal",
       "developmentClient": false,
+      "newArchEnabled": false,
       "android": {
         "buildType": "apk"
       },
@@ -36,9 +38,10 @@
     },
     "production": {
       "autoIncrement": true,
+      "newArchEnabled": false,
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://hriocefqjedalnaebeiw.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyaW9jZWZxamVkYWxuYWViZWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjIyNjgsImV4cCI6MjA5MjA5ODI2OH0.FamynR1CMIPOvBvYOBgmuigAsHGcgXUE9UCMjhEJEQA"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbG...JEQA"
       }
     }
   },
