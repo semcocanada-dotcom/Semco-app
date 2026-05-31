@@ -4,6 +4,46 @@ import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
+const assistantMarkdownStyles = {
+  body: {
+    fontSize: Typography.size.base,
+    lineHeight: Typography.size.base * 1.5,
+    color: Colors.textPrimary,
+  },
+  text: {
+    fontSize: Typography.size.base,
+    lineHeight: Typography.size.base * 1.5,
+    color: Colors.textPrimary,
+  },
+  strong: { fontWeight: Typography.weight.bold },
+  em: { fontStyle: 'italic' as const },
+  link: { color: Colors.primary },
+  code_inline: {
+    backgroundColor: Colors.surface,
+    color: Colors.primary,
+    paddingHorizontal: 4,
+    borderRadius: 2,
+    fontFamily: 'monospace',
+  },
+  code_block: {
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.sm,
+    marginVertical: Spacing.xs,
+  },
+  hr: { backgroundColor: Colors.border, height: 1 },
+  bullet_list: { marginLeft: Spacing.md },
+  ordered_list: { marginLeft: Spacing.md },
+  list_item: { marginVertical: Spacing.xs },
+  blockquote: {
+    borderLeftColor: Colors.primary,
+    borderLeftWidth: 3,
+    paddingLeft: Spacing.sm,
+    opacity: 0.8,
+  },
+} as const;
+
 interface ChatBubbleProps {
   message: ConversationMessage;
 }
@@ -20,39 +60,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             {message.content}
           </Text>
         ) : (
-          <MarkdownDisplay
-            style={{
-              body: styles.text,
-              text: [styles.text, styles.textAssistant],
-              strong: { fontWeight: Typography.weight.bold },
-              em: { fontStyle: 'italic' },
-              link: { color: Colors.primary },
-              code_inline: { 
-                backgroundColor: Colors.surface,
-                color: Colors.primary,
-                paddingHorizontal: 4,
-                borderRadius: 2,
-                fontFamily: 'monospace',
-              },
-              code_block: {
-                backgroundColor: Colors.surface,
-                paddingHorizontal: Spacing.sm,
-                paddingVertical: Spacing.xs,
-                borderRadius: Radius.sm,
-                marginVertical: Spacing.xs,
-              },
-              hr: { backgroundColor: Colors.border, height: 1 },
-              bullet_list: { marginLeft: Spacing.md },
-              ordered_list: { marginLeft: Spacing.md },
-              list_item: { marginVertical: Spacing.xs },
-              blockquote: { 
-                borderLeftColor: Colors.primary,
-                borderLeftWidth: 3,
-                paddingLeft: Spacing.sm,
-                opacity: 0.8,
-              },
-            }}
-          >
+          <MarkdownDisplay style={assistantMarkdownStyles}>
             {message.content}
           </MarkdownDisplay>
         )}

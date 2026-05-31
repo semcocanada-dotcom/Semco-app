@@ -4,28 +4,15 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
-import { supabase } from '@/services/supabase';
-import { useAuthStore } from '@/store/auth';
 import { initDatabase } from '@/database/client';
 import { seedDatabase } from '@/database/seed';
 import { Colors } from '@/constants/theme';
 
 export default function RootLayout() {
-  const setSession = useAuthStore((s) => s.setSession);
-
   useEffect(() => {
-    // Initialize local SQLite and seed product data
+    // Initialize local SQLite and seed product data for preview mode.
     initDatabase().then(() => seedDatabase()).catch(console.error);
-
-    // Restore Supabase session
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, [setSession]);
+  }, []);
 
   return (
     <GestureHandlerRootView style={styles.root}>
