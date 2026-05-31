@@ -10,3 +10,4 @@
 
 2026-05-21T02:55:00Z — rebuild: add Respite tab, official PDF export for mileage + respite
 2026-05-31T00:00:00Z — rebuild: fix tab bar (6 tabs, Respite visible), OTA auto-apply on foreground
+2026-05-31T17:00:00Z — retrigger after EXPO_TOKEN refresh: verify build pipeline restored
