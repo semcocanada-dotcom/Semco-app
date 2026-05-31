@@ -6,6 +6,8 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  withDelay,
+  type SharedValue,
   Easing,
 } from 'react-native-reanimated';
 import { Colors, Spacing, Radius } from '@/constants/theme';
@@ -16,27 +18,23 @@ export function TypingIndicator() {
   const opacity3 = useSharedValue(0.4);
 
   useEffect(() => {
-    const animateDot = (opacity: Animated.Shared<number>, delay: number) => {
-      opacity.value = withRepeat(
-        withSequence(
-          withTiming(delay, {
-            duration: 0,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(1, {
-            duration: 300,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(0.4, {
-            duration: 300,
-            easing: Easing.inOut(Easing.ease),
-          }),
-          withTiming(0.4, {
-            duration: 600,
-            easing: Easing.inOut(Easing.ease),
-          }),
+    const animateDot = (opacity: SharedValue<number>, delayMs: number) => {
+      opacity.value = withDelay(
+        delayMs,
+        withRepeat(
+          withSequence(
+            withTiming(1, {
+              duration: 300,
+              easing: Easing.inOut(Easing.ease),
+            }),
+            withTiming(0.4, {
+              duration: 300,
+              easing: Easing.inOut(Easing.ease),
+            }),
+          ),
+          -1,
+          false,
         ),
-        -1,
       );
     };
 

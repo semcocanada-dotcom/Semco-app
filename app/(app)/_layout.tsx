@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '@/store/auth';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { Colors, Typography } from '@/constants/theme';
 
@@ -23,17 +21,8 @@ const TABS: TabConfig[] = [
 ];
 
 export default function AppLayout() {
-  const { session, isInitialized } = useAuthStore();
-  const router = useRouter();
-
-  // Kick to network status subscription
+  // Keep network status hooks active for the app, but do not block preview access on auth.
   useNetworkStatus();
-
-  useEffect(() => {
-    if (isInitialized && !session) {
-      router.replace('/(auth)/login');
-    }
-  }, [session, isInitialized, router]);
 
   return (
     <Tabs
