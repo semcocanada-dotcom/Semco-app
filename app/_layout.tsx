@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { Linking } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { AppState, AppStateStatus, Linking } from 'react-native';
 import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
 import { AuthProvider, useAuth } from '@context/AuthContext';
 import { ChildProvider } from '@context/ChildContext';
 import { supabase } from '@lib/supabase';
@@ -42,6 +43,29 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const appState = useRef<AppStateStatus>(AppState.currentState);
+
+  useEffect(() => {
+    if (__DEV__) return;
+    async function applyUpdateIfAvailable() {
+      try {
+        const check = await Updates.checkForUpdateAsync();
+        if (check.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch {}
+    }
+    applyUpdateIfAvailable();
+    const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && next === 'active') {
+        applyUpdateIfAvailable();
+      }
+      appState.current = next;
+    });
+    return () => sub.remove();
+  }, []);
+
   useEffect(() => {
     // Handle OAuth deep-link callback — extracts tokens from URL fragment
     async function handleUrl({ url }: { url: string }) {

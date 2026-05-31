@@ -12,7 +12,9 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/6300fb3b-12f9-4b5c-9d1d-66dba1f328ee"
+      "url": "https://u.expo.dev/6300fb3b-12f9-4b5c-9d1d-66dba1f328ee",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "splash": {
       "image": "./assets/splash.png",

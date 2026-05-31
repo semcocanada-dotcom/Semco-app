@@ -554,23 +554,11 @@ export default function RespiteScreen() {
           <View>
             {/* Page header */}
             <View style={s.pageHeader}>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <AppLogo size={36} />
-                  <Text style={s.pageTitle}>Respite</Text>
-                </View>
-                <Text style={s.pageSubtitle}>Log sessions and pay your{'\n'}support workers. 🏡</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AppLogo size={36} />
+                <Text style={s.pageTitle}>Respite</Text>
               </View>
-              {/* Workers button */}
-              <TouchableOpacity onPress={() => setShowWorkers(true)} style={s.workersBtn}>
-                <Ionicons name="people" size={16} color={Colors.purple} />
-                <Text style={s.workersBtnTxt}>Workers</Text>
-                {workers.length > 0 && (
-                  <View style={s.workersBadge}>
-                    <Text style={s.workersBadgeTxt}>{workers.length}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
+              <Text style={s.pageSubtitle}>Log sessions and pay your support workers. 🏡</Text>
             </View>
 
             {/* Child selector (multi-child families) */}
@@ -624,6 +612,51 @@ export default function RespiteScreen() {
               </View>
             </View>
 
+            {/* Workers card */}
+            <View style={[s.card, { marginHorizontal: 16, marginBottom: 14 }]}>
+              <View style={s.workersCardHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <View style={s.workersIconCircle}>
+                    <Ionicons name="people" size={16} color={Colors.purple} />
+                  </View>
+                  <Text style={s.workersCardTitle}>Support Workers</Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowWorkers(true)} style={s.workersManageBtn}>
+                  <Ionicons name={workers.length === 0 ? 'add' : 'pencil-outline'} size={13} color={Colors.purple} />
+                  <Text style={s.workersManagebtnTxt}>{workers.length === 0 ? 'Add' : 'Manage'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              {workers.length === 0 ? (
+                <TouchableOpacity onPress={() => setShowWorkers(true)} style={s.workersEmptyCta}>
+                  <Ionicons name="add-circle-outline" size={22} color={Colors.purple} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.workersEmptyCtaTitle}>Add your first worker</Text>
+                    <Text style={s.workersEmptyCtaSub}>Family, neighbours, or support workers — anyone who provides care</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={Colors.purple} />
+                </TouchableOpacity>
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}>
+                  {workers.map(w => (
+                    <TouchableOpacity key={w.id} onPress={() => setShowWorkers(true)}
+                      style={s.workerPill}>
+                      <Ionicons name="person" size={13} color={Colors.purple} />
+                      <Text style={s.workerPillName}>{w.name}</Text>
+                      {w.default_rate_per_hour != null && (
+                        <Text style={s.workerPillRate}>${Number(w.default_rate_per_hour).toFixed(0)}/hr</Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity onPress={() => setShowWorkers(true)} style={s.workerAddPill}>
+                    <Ionicons name="add" size={14} color={Colors.purple} />
+                    <Text style={s.workerPillName}>Add</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              )}
+            </View>
+
             {/* Action buttons */}
             {activeChild && fundingYearId && (
               <View style={{ paddingHorizontal: 16, marginBottom: 20, gap: 10 }}>
@@ -672,17 +705,11 @@ export default function RespiteScreen() {
               <View style={{ alignItems: 'center', paddingTop: 32, gap: 10 }}>
                 <Ionicons name="home-outline" size={40} color={Colors.textMuted} />
                 <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary }}>No sessions this month</Text>
-                <Text style={{ fontSize: 14, color: Colors.textMuted }}>
+                <Text style={{ fontSize: 14, color: Colors.textMuted, textAlign: 'center', paddingHorizontal: 32 }}>
                   {workers.length === 0
-                    ? 'Add your workers first, then log a session.'
+                    ? 'Add a worker above, then tap Log Session.'
                     : 'Tap Log Session to record your first one.'}
                 </Text>
-                {workers.length === 0 && (
-                  <TouchableOpacity onPress={() => setShowWorkers(true)} style={[s.addBtn, { marginTop: 8, paddingHorizontal: 24 }]}>
-                    <Ionicons name="people-outline" size={18} color="#fff" />
-                    <Text style={s.addBtnText}>Add Workers</Text>
-                  </TouchableOpacity>
-                )}
               </View>
             )
         )}
@@ -705,17 +732,28 @@ export default function RespiteScreen() {
 // ─── Styles ────────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  pageHeader:    { padding: 20, paddingBottom: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  pageHeader:    { padding: 20, paddingBottom: 12 },
   pageTitle:     { fontSize: 26, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   pageSubtitle:  { fontSize: 14, color: Colors.textMuted, marginTop: 4, lineHeight: 20 },
 
-  workersBtn:    { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.surface,
-                   borderRadius: 20, paddingVertical: 8, paddingHorizontal: 12, marginTop: 6,
-                   borderWidth: 1, borderColor: Colors.border },
-  workersBtnTxt: { fontSize: 13, fontWeight: '600', color: Colors.purple },
-  workersBadge:  { backgroundColor: Colors.purple, borderRadius: 10, minWidth: 18, height: 18,
-                   alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  workersBadgeTxt: { fontSize: 11, fontWeight: '700', color: '#fff' },
+  workersCardHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  workersIconCircle:   { width: 30, height: 30, borderRadius: 15, backgroundColor: '#EDE9FE',
+                         alignItems: 'center', justifyContent: 'center' },
+  workersCardTitle:    { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  workersManageBtn:    { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#EDE9FE',
+                         paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  workersManagebtnTxt: { fontSize: 13, fontWeight: '600', color: Colors.purple },
+  workersEmptyCta:     { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#EDE9FE',
+                         borderRadius: 12, padding: 14 },
+  workersEmptyCtaTitle: { fontSize: 14, fontWeight: '700', color: Colors.purple },
+  workersEmptyCtaSub:   { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  workerPill:      { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#EDE9FE',
+                     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  workerPillName:  { fontSize: 13, fontWeight: '600', color: Colors.purple },
+  workerPillRate:  { fontSize: 11, color: Colors.textMuted },
+  workerAddPill:   { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12,
+                     paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.purple,
+                     backgroundColor: Colors.surface },
 
   card:       { backgroundColor: Colors.surface, borderRadius: 20, padding: 16,
                 shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 },
