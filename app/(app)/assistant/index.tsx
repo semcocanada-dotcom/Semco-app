@@ -20,10 +20,10 @@ import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 const PLACEHOLDER_SUGGESTIONS = [
-  'What primer for heated floors?',
-  'Curing time between base coats?',
-  'How to fix pinholing in finish coat?',
-  'Mix ratio for 5 kg of base coat?',
+  'Primer for heated floors',
+  'Curing time between coats',
+  'Fix pinholing in finish coat',
+  'Mix ratio for 5 kg base coat',
 ];
 
 export default function AssistantScreen() {
@@ -63,8 +63,15 @@ export default function AssistantScreen() {
 
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Assistant</Text>
-          <Text style={styles.subtitle}>{isOnline ? 'Answers for the current job' : 'Offline product library'}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>SIP Manual Assistant</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{isOnline ? 'SOURCE-BASED' : 'LOCAL'}</Text>
+            </View>
+          </View>
+          <Text style={styles.subtitle}>
+            Fast answers from the Semco knowledge base, with source labels when offline.
+          </Text>
         </View>
         {messages.length > 0 && (
           <TouchableOpacity
@@ -80,18 +87,23 @@ export default function AssistantScreen() {
       {messages.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.heroCard}>
-            <Ionicons name="chatbubbles-outline" size={40} color={Colors.primary} />
-            <Text style={styles.emptyTitle}>Ask a technical question</Text>
+            <Ionicons name="document-text-outline" size={34} color={Colors.primary} />
+            <Text style={styles.emptyTitle}>Ask about products, process, or troubleshooting</Text>
             <Text style={styles.emptyBody}>
-              Primers, coverage, curing, troubleshooting — keep it focused and get the shortest useful answer.
+              Built for quick lookup. Keep it short, and the assistant will search the manual first.
             </Text>
-            <View style={styles.suggestions}>
-              {PLACEHOLDER_SUGGESTIONS.slice(0, 3).map((s) => (
-                <TouchableOpacity key={s} onPress={() => handleSuggestion(s)} style={styles.suggestionChip}>
-                  <Text style={styles.suggestionText}>{s}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          </View>
+          <View style={styles.suggestions}>
+            {PLACEHOLDER_SUGGESTIONS.map((s) => (
+              <TouchableOpacity
+                key={s}
+                onPress={() => handleSuggestion(s)}
+                style={styles.suggestionChip}
+              >
+                <Text style={styles.suggestionText}>{s}</Text>
+                <Ionicons name="chevron-forward" size={16} color={Colors.textDisabled} />
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       ) : (
@@ -141,63 +153,85 @@ export default function AssistantScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  header: { 
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.base, 
-    paddingTop: Spacing.md, 
-    paddingBottom: Spacing.sm 
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
   headerContent: { flex: 1 },
-  title: { color: Colors.textPrimary, fontSize: Typography.size.lg, fontWeight: Typography.weight.bold },
-  subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  clearBtn: { 
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: 4,
+    flexWrap: 'wrap',
+  },
+  title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
+  subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.4 },
+  badge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  badgeText: {
+    color: Colors.primary,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.bold,
+    letterSpacing: 0.8,
+  },
+  clearBtn: {
     width: TAP_TARGET_MIN,
     height: TAP_TARGET_MIN,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: Spacing.sm,
   },
-  messageList: { paddingVertical: Spacing.xs },
+  messageList: { paddingVertical: Spacing.sm, paddingBottom: Spacing.md },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.lg,
+    padding: Spacing.base,
+    gap: Spacing.md,
   },
   heroCard: {
-    width: '100%',
-    backgroundColor: Colors.surfaceElevated,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: Radius.xl,
-    padding: Spacing.lg,
-    gap: Spacing.md,
-    alignItems: 'center',
+    padding: Spacing.xl,
+    gap: Spacing.sm,
   },
   emptyTitle: {
     color: Colors.textPrimary,
-    fontSize: Typography.size.md,
+    fontSize: Typography.size.lg,
     fontWeight: Typography.weight.semibold,
-    textAlign: 'center',
   },
   emptyBody: {
     color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-    lineHeight: Typography.size.sm * 1.5,
+    fontSize: Typography.size.base,
+    lineHeight: Typography.size.base * 1.5,
   },
-  suggestions: { gap: Spacing.xs, width: '100%' },
+  suggestions: { gap: Spacing.sm, width: '100%' },
   suggestionChip: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: Radius.lg,
     paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
   },
-  suggestionText: { color: Colors.textSecondary, fontSize: Typography.size.xs },
+  suggestionText: { color: Colors.textPrimary, fontSize: Typography.size.sm, flex: 1 },
   error: {
     color: Colors.danger,
     fontSize: Typography.size.sm,
@@ -217,7 +251,7 @@ const styles = StyleSheet.create({
     flex: 1,
     maxHeight: 120,
     backgroundColor: Colors.surfaceElevated,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     color: Colors.textPrimary,

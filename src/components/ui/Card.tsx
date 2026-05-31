@@ -27,10 +27,15 @@ export function Card({ children, style, elevated = false, noPadding = false }: C
 const styles = StyleSheet.create({
   base: {
     backgroundColor: Colors.surface,
-    borderRadius: Radius.lg,
+    borderRadius: Radius.xl,
     padding: Spacing.base,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
   },
   elevated: {
     backgroundColor: Colors.surfaceElevated,

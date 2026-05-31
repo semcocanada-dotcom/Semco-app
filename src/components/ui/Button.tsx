@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -41,7 +41,7 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.75}
+      activeOpacity={0.78}
       style={[
         styles.base,
         styles[variant],
@@ -56,7 +56,7 @@ export function Button({
       {isLoading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'ghost' ? Colors.primary : Colors.textPrimary}
+          color={variant === 'secondary' || variant === 'ghost' ? Colors.textPrimary : Colors.background}
         />
       ) : (
         <Text style={[styles.text, styles[`text_${variant}`], styles[`textSize_${size}`], textStyle]}>
@@ -76,9 +76,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   fullWidth: { width: '100%' },
-  disabled: { opacity: 0.4 },
+  disabled: { opacity: 0.45 },
 
   primary: { backgroundColor: Colors.primary },
+  accent: { backgroundColor: Colors.accent },
   secondary: { backgroundColor: Colors.surfaceElevated, borderWidth: 1, borderColor: Colors.border },
   danger: { backgroundColor: Colors.danger },
   ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.primary },
@@ -87,8 +88,9 @@ const styles = StyleSheet.create({
   size_md: { minHeight: TAP_TARGET_MIN, paddingHorizontal: Spacing.lg },
   size_lg: { minHeight: 56, paddingHorizontal: Spacing.xl, borderRadius: Radius.lg },
 
-  text: { fontWeight: Typography.weight.semibold },
+  text: { fontWeight: Typography.weight.semibold, textAlign: 'center' },
   text_primary: { color: Colors.background },
+  text_accent: { color: Colors.background },
   text_secondary: { color: Colors.textPrimary },
   text_danger: { color: Colors.textPrimary },
   text_ghost: { color: Colors.primary },
