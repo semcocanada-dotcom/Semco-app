@@ -8,5 +8,5 @@ jobs:
     name: Build iOS + Android preview
     type: build
     params:
-      platform: all
+      platform: ios
       profile: preview
