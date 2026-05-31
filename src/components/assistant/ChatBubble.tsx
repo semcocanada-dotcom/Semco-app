@@ -48,25 +48,30 @@ interface ChatBubbleProps {
   message: ConversationMessage;
 }
 
+const SOURCE_LABELS: Record<string, string> = {
+  claude: 'Claude',
+  offline_fts: 'SIP manual',
+  product_library: 'SIP manual',
+};
+
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === 'user';
-  const isOffline = message.source === 'offline_fts' || message.source === 'product_library';
+  const sourceLabel = SOURCE_LABELS[message.source];
+  const showSource = !isUser && sourceLabel;
 
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
       <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAssistant]}>
         {isUser ? (
-          <Text style={[styles.text, styles.textUser]}>
-            {message.content}
-          </Text>
+          <Text style={[styles.text, styles.textUser]}>{message.content}</Text>
         ) : (
-          <MarkdownDisplay style={assistantMarkdownStyles}>
-            {message.content}
-          </MarkdownDisplay>
+          <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
         )}
-        {!isUser && isOffline && (
-          <Text style={styles.sourceTag}>From product library</Text>
-        )}
+        {showSource ? (
+          <View style={styles.sourceRow}>
+            <Text style={styles.sourceTag}>{sourceLabel}</Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -94,10 +99,21 @@ const styles = StyleSheet.create({
   text: { fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },
   textUser: { color: Colors.background },
   textAssistant: { color: Colors.textPrimary },
+  sourceRow: {
+    marginTop: Spacing.sm,
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
   sourceTag: {
-    marginTop: Spacing.xs,
     color: Colors.offlineAmber,
     fontSize: Typography.size.xs,
     fontWeight: Typography.weight.medium,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
 });
