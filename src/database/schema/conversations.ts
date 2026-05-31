@@ -1,7 +1,7 @@
 import { sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 
 export type MessageRole = 'user' | 'assistant';
-export type MessageSource = 'claude' | 'offline_fts' | 'product_library';
+export type MessageSource = 'claude' | 'offline_fts' | 'product_library' | 'sip_manual';
 
 export interface ConversationMessage {
   id: string;

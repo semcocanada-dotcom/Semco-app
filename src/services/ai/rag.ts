@@ -35,6 +35,12 @@ export function buildContextBlock(chunks: RagChunk[]): string {
   if (chunks.length === 0) return '';
 
   return chunks
-    .map((c, i) => `[Source ${i + 1}]\n${c.chunkText}`)
+    .map((c, i) => {
+      const sourceLabel = c.metadata?.sourceDocument ? `${c.metadata.sourceDocument}` : `Source ${i + 1}`;
+      const pageLabel = c.metadata?.pageNumber ? `p. ${c.metadata.pageNumber}` : null;
+      const sectionLabel = c.metadata?.section ? c.metadata.section : null;
+      const headerParts = [sourceLabel, pageLabel, sectionLabel].filter(Boolean).join(' • ');
+      return `[${headerParts}]\n${c.chunkText}`;
+    })
     .join('\n\n---\n\n');
 }

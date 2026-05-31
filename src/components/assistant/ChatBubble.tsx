@@ -50,6 +50,7 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === 'user';
+  const isManual = message.source === 'sip_manual';
   const isOffline = message.source === 'offline_fts' || message.source === 'product_library';
 
   return (
@@ -63,6 +64,9 @@ export function ChatBubble({ message }: ChatBubbleProps) {
           <MarkdownDisplay style={assistantMarkdownStyles}>
             {message.content}
           </MarkdownDisplay>
+        )}
+        {!isUser && isManual && (
+          <Text style={styles.sourceTag}>From SIP manual</Text>
         )}
         {!isUser && isOffline && (
           <Text style={styles.sourceTag}>From product library</Text>

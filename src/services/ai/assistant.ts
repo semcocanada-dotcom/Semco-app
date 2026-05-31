@@ -1,6 +1,7 @@
 import { retrieveRelevantChunks, buildContextBlock } from './rag';
 import { askClaude } from './claude';
 import { searchProductsOffline, formatOfflineResponse } from './offline-search';
+import { searchSipManual, buildSipManualContext, formatSipManualResponse } from './manual-knowledge';
 import {
   extractTopicFromMessage,
   fetchUserProgress,
@@ -45,13 +46,16 @@ async function handleOnline(
 ): Promise<AssistantResponse> {
   const topic = extractTopicFromMessage(userMessage);
 
-  // Fetch adaptive context and RAG chunks in parallel
-  const [chunks, progress] = await Promise.all([
+  // Fetch adaptive context and knowledge-manual context in parallel
+  const [manualHits, chunks, progress] = await Promise.all([
+    Promise.resolve(searchSipManual(userMessage)),
     retrieveRelevantChunks(userMessage),
     installerId ? fetchUserProgress(installerId) : Promise.resolve([]),
   ]);
 
-  const contextBlock = buildContextBlock(chunks);
+  const manualContext = buildSipManualContext(manualHits);
+  const ragContext = buildContextBlock(chunks);
+  const contextBlock = [manualContext, ragContext].filter(Boolean).join('\n\n---\n\n');
   const progressContext = buildProgressContext(progress);
 
   const response = await askClaude(userMessage, contextBlock, history, progressContext || undefined);
@@ -69,6 +73,15 @@ async function handleOnline(
 }
 
 async function handleOffline(userMessage: string): Promise<AssistantResponse> {
+  const manualHits = searchSipManual(userMessage);
+  if (manualHits.length > 0) {
+    return {
+      content: formatSipManualResponse(manualHits),
+      source: 'sip_manual',
+      isOffline: true,
+    };
+  }
+
   const results = await searchProductsOffline(userMessage);
   const content = formatOfflineResponse(results);
 

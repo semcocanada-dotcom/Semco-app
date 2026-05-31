@@ -8,7 +8,7 @@ export function OfflineBanner() {
     <View style={styles.container}>
       <Ionicons name="cloud-offline-outline" size={16} color={Colors.offlineAmber} />
       <Text style={styles.text}>
-        Offline Mode — answers from local product library
+        Offline Mode — answers from the SIP manual
       </Text>
     </View>
   );
