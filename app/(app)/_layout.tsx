@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { Colors, Typography } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -30,15 +30,17 @@ export default function AppLayout() {
         const tab = TABS.find((t) => t.name === route.name);
         return {
           headerShown: false,
+          tabBarShowLabel: false,
           tabBarStyle: {
             backgroundColor: Colors.surface,
             borderTopColor: Colors.border,
-            borderTopWidth: 1,
-            height: 60,
+            borderTopWidth: 0.5,
+            height: 54,
+            paddingTop: 6,
+            paddingBottom: 4,
           },
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: Colors.textDisabled,
-          tabBarLabelStyle: { fontSize: Typography.size.xs, fontWeight: Typography.weight.medium },
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons
               name={focused ? (tab?.iconFocused ?? tab?.icon ?? 'ellipse') : (tab?.icon ?? 'ellipse')}

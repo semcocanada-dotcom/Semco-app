@@ -63,8 +63,8 @@ export default function AssistantScreen() {
 
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.title}>Semco Assistant</Text>
-          <Text style={styles.subtitle}>{isOnline ? 'AI-powered' : 'Product library search'}</Text>
+          <Text style={styles.title}>Assistant</Text>
+          <Text style={styles.subtitle}>{isOnline ? 'Answers for the current job' : 'Offline product library'}</Text>
         </View>
         {messages.length > 0 && (
           <TouchableOpacity
@@ -79,21 +79,19 @@ export default function AssistantScreen() {
 
       {messages.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="chatbubbles-outline" size={48} color={Colors.textDisabled} />
-          <Text style={styles.emptyTitle}>Ask anything technical</Text>
-          <Text style={styles.emptyBody}>
-            Primers, coverage, curing times, troubleshooting — get instant answers from the full Semco product library.
-          </Text>
-          <View style={styles.suggestions}>
-            {PLACEHOLDER_SUGGESTIONS.map((s) => (
-              <TouchableOpacity
-                key={s}
-                onPress={() => handleSuggestion(s)}
-                style={styles.suggestionChip}
-              >
-                <Text style={styles.suggestionText}>{s}</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.heroCard}>
+            <Ionicons name="chatbubbles-outline" size={40} color={Colors.primary} />
+            <Text style={styles.emptyTitle}>Ask a technical question</Text>
+            <Text style={styles.emptyBody}>
+              Primers, coverage, curing, troubleshooting — keep it focused and get the shortest useful answer.
+            </Text>
+            <View style={styles.suggestions}>
+              {PLACEHOLDER_SUGGESTIONS.slice(0, 3).map((s) => (
+                <TouchableOpacity key={s} onPress={() => handleSuggestion(s)} style={styles.suggestionChip}>
+                  <Text style={styles.suggestionText}>{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
       ) : (
@@ -152,7 +150,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm 
   },
   headerContent: { flex: 1 },
-  title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
+  title: { color: Colors.textPrimary, fontSize: Typography.size.lg, fontWeight: Typography.weight.bold },
   subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm },
   clearBtn: { 
     width: TAP_TARGET_MIN,
@@ -161,35 +159,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: Spacing.sm,
   },
-  messageList: { paddingVertical: Spacing.sm },
+  messageList: { paddingVertical: Spacing.xs },
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.xl,
+    padding: Spacing.lg,
+  },
+  heroCard: {
+    width: '100%',
+    backgroundColor: Colors.surfaceElevated,
+    borderColor: Colors.border,
+    borderWidth: 1,
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
     gap: Spacing.md,
+    alignItems: 'center',
   },
   emptyTitle: {
     color: Colors.textPrimary,
-    fontSize: Typography.size.lg,
+    fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
     textAlign: 'center',
   },
   emptyBody: {
     color: Colors.textSecondary,
-    fontSize: Typography.size.base,
+    fontSize: Typography.size.sm,
     textAlign: 'center',
-    lineHeight: Typography.size.base * 1.5,
+    lineHeight: Typography.size.sm * 1.5,
   },
-  suggestions: { gap: Spacing.sm, width: '100%' },
+  suggestions: { gap: Spacing.xs, width: '100%' },
   suggestionChip: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.md,
-    padding: Spacing.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  suggestionText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+  suggestionText: { color: Colors.textSecondary, fontSize: Typography.size.xs },
   error: {
     color: Colors.danger,
     fontSize: Typography.size.sm,

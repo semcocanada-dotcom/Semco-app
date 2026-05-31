@@ -74,14 +74,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceElevated,
     borderRadius: Radius.lg,
     borderBottomLeftRadius: Radius.sm,
-    padding: Spacing.md,
+    padding: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: Colors.textSecondary,
   },
 });

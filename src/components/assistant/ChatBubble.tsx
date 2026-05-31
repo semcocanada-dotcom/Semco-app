@@ -77,9 +77,9 @@ const styles = StyleSheet.create({
   wrapperUser: { alignItems: 'flex-end' },
   wrapperAssistant: { alignItems: 'flex-start' },
   bubble: {
-    maxWidth: '85%',
+    maxWidth: '78%',
     borderRadius: Radius.lg,
-    padding: Spacing.md,
+    padding: Spacing.sm,
   },
   bubbleUser: {
     backgroundColor: Colors.primary,
