@@ -1,20 +1,22 @@
 export const Colors = {
-  background: '#0D0D0D',
-  surface: '#1A1A1A',
-  surfaceElevated: '#242424',
-  border: '#2E2E2E',
-  primary: '#C8A96E',        // Semco warm gold — confirm exact brand hex before production
-  primaryMuted: '#8A7048',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#A0A0A0',
-  textDisabled: '#555555',
-  danger: '#E53E3E',
-  dangerMuted: '#7A1515',
-  success: '#38A169',
-  successMuted: '#1A5C36',
-  offlineAmber: '#F6AD55',
-  offlineAmberMuted: '#7A4A10',
-  overlay: 'rgba(0,0,0,0.6)',
+  background: '#06090B',
+  surface: '#0F1518',
+  surfaceElevated: '#162024',
+  border: '#233036',
+  primary: '#2ED0C6',
+  primaryMuted: '#12383A',
+  accent: '#FF8A2B',
+  accentMuted: '#4A240C',
+  textPrimary: '#F7FBFC',
+  textSecondary: '#9AA8AF',
+  textDisabled: '#60737C',
+  danger: '#F15B5B',
+  dangerMuted: '#5E1A1A',
+  success: '#50C98A',
+  successMuted: '#173B2A',
+  offlineAmber: '#F0A64F',
+  offlineAmberMuted: '#4B2C08',
+  overlay: 'rgba(0,0,0,0.68)',
 } as const;
 
 export const Typography = {
@@ -59,5 +61,4 @@ export const Radius = {
   full: 9999,
 } as const;
 
-// Minimum tap target: 48×48 dp per WCAG AA
 export const TAP_TARGET_MIN = 48;

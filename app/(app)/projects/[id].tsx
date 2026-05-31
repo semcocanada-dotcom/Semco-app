@@ -20,7 +20,7 @@ import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
 import { Card, Badge } from '@/components/ui';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
 import { useAuthStore } from '@/store/auth';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 
 const STATUS_BADGE: Record<string, 'success' | 'warning' | 'neutral'> = {
   active: 'success',
@@ -116,6 +116,17 @@ export default function ProjectDetailScreen() {
         <Text style={styles.clientName}>{project.clientName ?? 'Unnamed Project'}</Text>
         {project.siteAddress ? <Text style={styles.address}>{project.siteAddress}</Text> : null}
 
+        <View style={styles.actionRow}>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/takeoff', params: { projectId: project.id } } as any)} style={styles.actionPill}>
+            <Ionicons name="layers-outline" size={16} color={Colors.primary} />
+            <Text style={styles.actionPillText}>Takeoff</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push({ pathname: '/orders', params: { projectId: project.id } } as any)} style={styles.actionPill}>
+            <Ionicons name="cart-outline" size={16} color={Colors.accent} />
+            <Text style={styles.actionPillText}>Order review</Text>
+          </TouchableOpacity>
+        </View>
+
         <Card>
           <Text style={styles.sectionLabel}>Application Spec</Text>
           {project.substrateType ? (
@@ -178,6 +189,19 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   clientName: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
   address: { color: Colors.textSecondary, fontSize: Typography.size.base, marginTop: 2 },
+  actionRow: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm, flexWrap: 'wrap' },
+  actionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  actionPillText: { color: Colors.textPrimary, fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold },
   sectionLabel: {
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,

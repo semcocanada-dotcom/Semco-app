@@ -128,6 +128,18 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS calculations_project_idx ON calculations(project_id);
     CREATE INDEX IF NOT EXISTS calculations_installer_idx ON calculations(installer_id);
 
+    CREATE TABLE IF NOT EXISTS order_requests (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      calculation_id TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS order_requests_project_idx ON order_requests(project_id);
+    CREATE INDEX IF NOT EXISTS order_requests_status_idx ON order_requests(status);
+
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
       installer_id TEXT,
