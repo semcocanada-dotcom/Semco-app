@@ -5,7 +5,8 @@
 A focused audit to bring the app to a clean, stable, production-ready state.
 No UX redesign or folder restructure — bug fixes, reliability, dead-code
 removal, tooling, and SQL consolidation only.
-
+## 2026-05-31
+- OTA: Respite tab + 6-tab layout + auto-update on foreground
 ### Fixed
 - **`app.json` invalid JSON**: removed a trailing comma in the `plugins`
   array that broke strict JSON parsing (surfaced once `app.config.ts` was
