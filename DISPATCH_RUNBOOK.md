@@ -1,5 +1,11 @@
 # Dispatch Runbook — Get the app update onto the phone
 
+> **RESOLVED 2026-05-31:** OTA pipeline is working again. Root causes were three,
+> fixed in order: (1) expired `EXPO_TOKEN` — regenerated; (2) `package-lock.json`
+> out of sync — resynced so `npm ci` passes; (3) the new token is a **robot token**,
+> which requires `"owner": "kitzul88"` in `app.json` (added). Every push now
+> auto-deploys OTA to the `preview` channel. Kept below for reference.
+
 **Goal:** Ship the latest JavaScript (Respite tab + 6-tab layout + auto-update) to the
 installed app, and restore the CI pipeline so future pushes deploy automatically.
 
