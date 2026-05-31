@@ -92,10 +92,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} color={color} size={size ?? 24} />
-          ),
+          href: null,
         }}
       />
       {/* Reports is navigable from Profile but not in the tab bar */}

@@ -140,14 +140,24 @@ export default function DashboardScreen() {
             <Text style={{ fontSize: 13, color: Colors.purple, fontWeight: '600', marginTop: 4 }}>
               You're doing an amazing job! 💙
             </Text>
-            <Pressable
-              onPress={() => router.push('/(tabs)/reports')}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 10 }}
-              hitSlop={8}
-            >
-              <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>Reports</Text>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>›</Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 10 }}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/reports')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                hitSlop={8}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>Reports</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>›</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/(tabs)/profile')}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                hitSlop={8}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>Profile</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: Colors.purple }}>›</Text>
+              </Pressable>
+            </View>
           </View>
 
           {/* Floating puzzle-heart hero */}
