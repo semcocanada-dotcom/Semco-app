@@ -72,8 +72,11 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Distance is measured to the town centre (providers rarely have a street
+// address), so present it as approximate — "~12 km" — to avoid implying
+// per-provider precision that the data can't support.
 function fmtKm(km: number): string {
-  return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
+  return km < 10 ? `~${km.toFixed(1)} km` : `~${Math.round(km)} km`;
 }
 
 // ─── Category config ──────────────────────────────────────────────────────────
@@ -227,7 +230,7 @@ function ProviderCard({ provider, onPress }: { provider: ProviderWithDist; onPre
             <Text style={s.cardCity}>
               {provider.city}, SK
               {provider.distanceKm !== null
-                ? `  •  ${fmtKm(provider.distanceKm)} away`
+                ? `  •  ${fmtKm(provider.distanceKm)} to town`
                 : ''}
             </Text>
           </View>
