@@ -19,7 +19,7 @@ export default function AppLayout() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Tabs
         screenOptions={{
           headerShown: false,

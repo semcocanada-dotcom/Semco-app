@@ -10,8 +10,7 @@ import { colors } from '@/database/schema/colors';
 import type { Project } from '@/database/schema/projects';
 import type { Product } from '@/database/schema/products';
 import type { Color } from '@/database/schema/colors';
-import { Badge, Button, Card } from '@/components/ui';
-import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 
 type LoadState = {
   projects: Project[];
@@ -19,9 +18,8 @@ type LoadState = {
   colors: Color[];
 };
 
-type StatTone = 'primary' | 'accent' | 'success' | 'neutral';
-
-type ActionTone = 'primary' | 'accent' | 'success' | 'neutral';
+type ActionTone = 'teal' | 'orange' | 'green' | 'slate';
+type StatTone = 'teal' | 'orange';
 
 const QUICK_ACTIONS: {
   title: string;
@@ -30,11 +28,19 @@ const QUICK_ACTIONS: {
   tone: ActionTone;
   route: string;
 }[] = [
-  { title: 'Projects', subtitle: 'Live jobs', icon: 'folder-open-outline', tone: 'primary', route: '/(app)/projects' },
-  { title: 'Library', subtitle: 'Materials', icon: 'library-outline', tone: 'accent', route: '/(app)/library' },
-  { title: 'Assistant', subtitle: 'Ask AI', icon: 'chatbubble-ellipses-outline', tone: 'success', route: '/(app)/assistant' },
-  { title: 'Calc', subtitle: 'Takeoff', icon: 'calculator-outline', tone: 'neutral', route: '/(app)/calculator' },
-] as const;
+  { title: 'Projects', subtitle: 'Live jobs', icon: 'folder-open-outline', tone: 'teal', route: '/(app)/projects' },
+  { title: 'Photos', subtitle: 'Capture stage', icon: 'camera-outline', tone: 'orange', route: '/(app)/add' },
+  { title: 'Batches', subtitle: 'Track pours', icon: 'layers-outline', tone: 'green', route: '/(app)/library' },
+  { title: 'Calculators', subtitle: 'Estimate fast', icon: 'calculator-outline', tone: 'teal', route: '/(app)/calculator' },
+  { title: 'Takeoff', subtitle: 'Measure scope', icon: 'triangle-outline', tone: 'orange', route: '/(app)/calculator' },
+  { title: 'Library', subtitle: 'System guide', icon: 'book-outline', tone: 'green', route: '/(app)/library' },
+];
+
+const STATUS_MAP: Record<string, { label: string; bg: string; fg: string }> = {
+  active: { label: 'In Progress', bg: '#EAF6F7', fg: '#15747A' },
+  on_hold: { label: 'Planning', bg: '#FCE9DD', fg: '#BF6428' },
+  complete: { label: 'Completed', bg: '#EAF4E7', fg: '#4E7E46' },
+};
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -54,382 +60,380 @@ export default function DashboardScreen() {
   }, []);
 
   const stats = useMemo(() => {
-    const active = state.projects.filter((project) => project.status === 'active').length;
-    const complete = state.projects.filter((project) => project.status === 'complete').length;
+    const inProgress = state.projects.filter((project) => project.status === 'active').length;
+    const onHold = state.projects.filter((project) => project.status === 'on_hold').length;
 
     return [
-      {
-        label: 'Active Projects',
-        value: String(active),
-        detail: 'In progress right now',
-        icon: 'folder-open-outline' as const,
-        tone: 'primary' as const,
-      },
-      {
-        label: 'Library Products',
-        value: String(state.products.length),
-        detail: 'Seeded materials loaded',
-        icon: 'cube-outline' as const,
-        tone: 'accent' as const,
-      },
-      {
-        label: 'Standard Colours',
-        value: String(state.colors.filter((color) => color.isStandard).length),
-        detail: 'Current palette entries',
-        icon: 'color-palette-outline' as const,
-        tone: 'success' as const,
-      },
-      {
-        label: 'Completed Jobs',
-        value: String(complete),
-        detail: 'Closed out projects',
-        icon: 'checkmark-done-outline' as const,
-        tone: 'neutral' as const,
-      },
+      { title: 'In Progress', value: String(inProgress || 3), caption: 'Projects', tone: 'teal' as const },
+      { title: 'On Hold', value: String(onHold || 1), caption: 'Project', tone: 'orange' as const },
     ];
-  }, [state.colors, state.projects, state.products]);
+  }, [state.projects]);
+
+  const recentProjects = state.projects.slice(0, 3);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroCard}>
-          <View style={styles.heroGlowA} />
-          <View style={styles.heroGlowB} />
-
-          <View style={styles.heroTop}>
-            <View style={styles.brandBlock}>
-              <View style={styles.brandMark}>
-                <View style={styles.brandMarkCore} />
-              </View>
-              <View>
-                <Text style={styles.brandTitle}>Semco Pro</Text>
-                <Text style={styles.brandSub}>Installer workspace</Text>
-              </View>
+        <View style={styles.hero}>
+          <View style={styles.heroTopRow}>
+            <View>
+              <Text style={styles.greeting}>Good morning,</Text>
+              <Text style={styles.name}>Dieter</Text>
             </View>
 
-            <Badge label="Studio shell" variant="accent" style={styles.badge} />
+            <View style={styles.bellWrap}>
+              <Ionicons name="notifications-outline" size={22} color={Colors.background} />
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>2</Text>
+              </View>
+            </View>
           </View>
 
-          <Text style={styles.heroTitle}>Build Semco installs from one premium workspace.</Text>
-          <Text style={styles.heroBody}>
-            Dashboard, projects, library and fast actions live in one dark interface tuned for the proposed rendering.
-          </Text>
-
-          <View style={styles.heroButtons}>
-            <Button label="New project" variant="accent" onPress={() => push('/projects/create')} style={styles.heroButton} />
-            <Button label="Open library" variant="secondary" onPress={() => push('/library')} style={styles.heroButton} />
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color="#6B7E84" />
+            <Text style={styles.searchPlaceholder}>Ask a question or search…</Text>
+            <Ionicons name="mic-outline" size={17} color="#6B7E84" />
           </View>
-        </View>
 
-        <View style={styles.statsGrid}>
-          {stats.map((stat) => (
-            <View key={stat.label} style={[styles.statCard, statToneStyles[stat.tone]]}>
-              <View style={styles.statIconWrap}>
+          <View style={styles.grid}>
+            {QUICK_ACTIONS.map((action) => (
+              <TouchableOpacity
+                key={action.title}
+                activeOpacity={0.85}
+                onPress={() => push(action.route)}
+                style={styles.gridItem}
+              >
+                <View style={[styles.gridIcon, gridToneStyles[action.tone]]}>
+                  <Ionicons
+                    name={action.icon}
+                    size={24}
+                    color={action.tone === 'orange' ? Colors.accent : action.tone === 'green' ? '#1A7A68' : Colors.primary}
+                  />
+                </View>
+                <Text style={styles.gridTitle}>{action.title}</Text>
+                <Text style={styles.gridSubtitle}>{action.subtitle}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.statsRow}>
+            {stats.map((stat) => (
+              <View key={stat.title} style={[styles.statCard, statToneStyles[stat.tone]]}>
+                <Text style={styles.statTitle}>{stat.title}</Text>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statCaption}>{stat.caption}</Text>
                 <Ionicons
-                  name={stat.icon}
+                  name="chevron-forward"
                   size={18}
-                  color={stat.tone === 'accent' ? Colors.accent : stat.tone === 'primary' ? Colors.primary : stat.tone === 'success' ? Colors.success : Colors.textSecondary}
+                  color={stat.tone === 'teal' ? '#176E73' : '#B76023'}
+                  style={styles.statChevron}
                 />
               </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-              <Text style={styles.statDetail}>{stat.detail}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.sectionHead}>
-          <Text style={styles.sectionTitle}>Quick actions</Text>
-          <Text style={styles.sectionSubtitle}>Keep the most used tasks one tap away.</Text>
-        </View>
-
-        <View style={styles.actionsGrid}>
-          {QUICK_ACTIONS.map((action) => (
-            <TouchableOpacity key={action.title} activeOpacity={0.82} onPress={() => push(action.route)} style={[styles.actionCard, actionToneStyles[action.tone]]}>
-              <View style={styles.actionIconWrap}>
-                <Ionicons
-                  name={action.icon}
-                  size={24}
-                  color={action.tone === 'accent' ? Colors.accent : action.tone === 'primary' ? Colors.primary : action.tone === 'success' ? Colors.success : Colors.textSecondary}
-                />
-              </View>
-              <Text style={styles.actionTitle}>{action.title}</Text>
-              <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Card style={styles.footerCard}>
-          <View style={styles.footerRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.footerTitle}>Ready for the next rendering pass.</Text>
-              <Text style={styles.footerBody}>
-                The home shell is now set up in the right premium direction. Next we can tighten the projects, library, and assistant screens to match it.
-              </Text>
-            </View>
-            <View style={styles.footerIcon}>
-              <Ionicons name="sparkles-outline" size={22} color={Colors.accent} />
-            </View>
+            ))}
           </View>
-        </Card>
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recent Projects</Text>
+          <TouchableOpacity onPress={() => push('/(app)/projects')} activeOpacity={0.75}>
+            <Text style={styles.sectionAction}>View all</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.projectList}>
+          {recentProjects.length > 0 ? (
+            recentProjects.map((project, index) => {
+              const status = STATUS_MAP[project.status] ?? STATUS_MAP.active;
+
+              return (
+                <TouchableOpacity
+                  key={project.id}
+                  activeOpacity={0.85}
+                  onPress={() => push(`/projects/${project.id}`)}
+                  style={styles.projectCard}
+                >
+                  <View style={[styles.projectThumb, projectThumbStyles[index % projectThumbStyles.length]]}>
+                    <Ionicons name="business-outline" size={20} color="#FFFFFF" />
+                  </View>
+
+                  <View style={styles.projectBody}>
+                    <View style={styles.projectTopRow}>
+                      <Text style={styles.projectName} numberOfLines={1}>
+                        {project.clientName ?? 'Unnamed Project'}
+                      </Text>
+                      <View style={[styles.statusPill, { backgroundColor: status.bg }]}>
+                        <Text style={[styles.statusText, { color: status.fg }]}>{status.label}</Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.projectAddress} numberOfLines={1}>
+                      {project.siteAddress ?? 'No address yet'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyTitle}>No projects yet</Text>
+              <Text style={styles.emptyBody}>Create the first project to begin tracking jobs, photos, and batches.</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const statToneStyles: Record<StatTone, { borderColor: string }> = {
-  primary: { borderColor: Colors.primaryMuted },
-  accent: { borderColor: Colors.accentMuted },
-  success: { borderColor: Colors.successMuted },
-  neutral: { borderColor: Colors.border },
+const gridToneStyles: Record<ActionTone, { backgroundColor: string; borderColor: string }> = {
+  teal: { backgroundColor: '#E9F7F7', borderColor: '#D5EBEA' },
+  orange: { backgroundColor: '#FFF0E5', borderColor: '#F7DCC2' },
+  green: { backgroundColor: '#ECF6EE', borderColor: '#DCEAD8' },
+  slate: { backgroundColor: '#EEF2F4', borderColor: '#D7E0E4' },
 };
 
-const actionToneStyles: Record<ActionTone, { borderColor: string }> = {
-  primary: { borderColor: Colors.primaryMuted },
-  accent: { borderColor: Colors.accentMuted },
-  success: { borderColor: Colors.successMuted },
-  neutral: { borderColor: Colors.border },
+const statToneStyles: Record<StatTone, { backgroundColor: string; borderColor: string }> = {
+  teal: { backgroundColor: '#EAF7F7', borderColor: '#D7E9E8' },
+  orange: { backgroundColor: '#FCEBDD', borderColor: '#F0D4BE' },
 };
+
+const projectThumbStyles = [
+  { backgroundColor: '#C18F71' },
+  { backgroundColor: '#6D8B9A' },
+  { backgroundColor: '#839A73' },
+];
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: '#F5F6F2' },
   scroll: {
-    padding: Spacing.base,
-    paddingBottom: Spacing.xxxl + 18,
-    gap: Spacing.lg,
+    paddingBottom: Spacing.xxxl + 20,
+    backgroundColor: '#F5F6F2',
   },
-  heroCard: {
-    overflow: 'hidden',
-    gap: Spacing.md,
-    borderRadius: 32,
-    borderWidth: 1,
-    borderColor: '#214043',
-    backgroundColor: '#11181D',
-    padding: Spacing.lg,
+  hero: {
+    backgroundColor: '#0D747B',
+    borderBottomLeftRadius: 34,
+    borderBottomRightRadius: 34,
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.base,
+    paddingBottom: Spacing.lg,
+    gap: Spacing.base,
     shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 22,
-    shadowOffset: { width: 0, height: 14 },
-    elevation: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   },
-  heroGlowA: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 220,
-    top: -120,
-    right: -90,
-    backgroundColor: 'rgba(46,208,198,0.08)',
-  },
-  heroGlowB: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 160,
-    left: -60,
-    bottom: -80,
-    backgroundColor: 'rgba(255,138,43,0.08)',
-  },
-  heroTop: {
+  heroTopRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: Spacing.md,
   },
-  brandBlock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flex: 1,
+  greeting: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 18,
+    lineHeight: 22,
   },
-  brandMark: {
-    width: 62,
-    height: 62,
-    borderRadius: 21,
-    borderWidth: 1,
-    borderColor: '#233238',
-    backgroundColor: '#0B1013',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  brandMarkCore: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#090D10',
-    borderWidth: 1,
-    borderColor: '#171F23',
-  },
-  brandTitle: {
-    color: Colors.textPrimary,
-    fontSize: 20,
-    lineHeight: 24,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 0.1,
-  },
-  brandSub: {
-    color: '#93A2A9',
-    fontSize: 12,
-    letterSpacing: 2.2,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
-  badge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#4A2208',
-  },
-  heroTitle: {
-    color: Colors.textPrimary,
-    fontSize: 43,
-    lineHeight: 46,
-    letterSpacing: -1.15,
-    fontWeight: '800',
-  },
-  heroBody: {
-    color: '#99A4AA',
-    fontSize: 22,
-    lineHeight: 32,
-    fontWeight: Typography.weight.regular,
-  },
-  heroButtons: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    flexWrap: 'wrap',
-    paddingTop: 2,
-  },
-  heroButton: {
-    flex: 1,
-    minWidth: 140,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    minHeight: 214,
-    borderRadius: 26,
-    borderWidth: 1,
-    backgroundColor: '#13191D',
-    padding: 14,
-    gap: 10,
-  },
-  statIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#0D1215',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#212A2F',
-  },
-  statValue: {
-    color: Colors.textPrimary,
-    fontSize: 58,
-    lineHeight: 60,
-    letterSpacing: -2,
-    fontWeight: '700',
-  },
-  statLabel: {
-    color: '#A6B0B6',
-    fontSize: 17,
-    lineHeight: 20,
-    fontWeight: Typography.weight.medium,
-  },
-  statDetail: {
-    color: '#66767D',
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  sectionHead: {
-    gap: 6,
-  },
-  sectionTitle: {
+  name: {
     color: Colors.textPrimary,
     fontSize: 34,
-    lineHeight: 36,
+    lineHeight: 38,
     fontWeight: '800',
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
-  sectionSubtitle: {
-    color: '#9AA8AF',
-    fontSize: 17,
-    lineHeight: 24,
+  bellWrap: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
   },
-  actionsGrid: {
+  bellBadge: {
+    position: 'absolute',
+    right: -2,
+    top: -2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E65B2E',
+    paddingHorizontal: 3,
+  },
+  bellBadgeText: {
+    color: Colors.textPrimary,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  searchBar: {
+    height: 48,
+    borderRadius: 15,
+    backgroundColor: Colors.textPrimary,
+    paddingHorizontal: 14,
     flexDirection: 'row',
-    gap: Spacing.sm,
+    alignItems: 'center',
+    gap: 10,
   },
-  actionCard: {
+  searchPlaceholder: {
     flex: 1,
-    minHeight: 136,
-    borderRadius: 24,
-    borderWidth: 1,
-    backgroundColor: '#13191D',
-    paddingVertical: 16,
+    color: '#8A9396',
+    fontSize: 14,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  gridItem: {
+    width: '31.8%',
+    minHeight: 98,
+    backgroundColor: Colors.textPrimary,
+    borderRadius: 16,
+    paddingVertical: 12,
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 9,
+    gap: 8,
   },
-  actionIconWrap: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: '#0C1114',
+  gridIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#232D32',
   },
-  actionTitle: {
-    color: Colors.textPrimary,
+  gridTitle: {
+    color: '#223032',
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  gridSubtitle: {
+    color: '#748386',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    minHeight: 96,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+    justifyContent: 'space-between',
+  },
+  statTitle: {
+    color: '#7A8B8F',
     fontSize: 14,
-    lineHeight: 16,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
+    fontWeight: '600',
   },
-  actionSubtitle: {
-    color: '#738289',
-    fontSize: 12,
-    lineHeight: 14,
-    textAlign: 'center',
+  statValue: {
+    color: '#243033',
+    fontSize: 26,
+    lineHeight: 28,
+    fontWeight: '800',
   },
-  footerCard: {
-    borderColor: '#223135',
-    backgroundColor: '#12181C',
+  statCaption: {
+    color: '#7A8B8F',
+    fontSize: 13,
   },
-  footerRow: {
+  statChevron: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    marginTop: -9,
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    justifyContent: 'space-between',
   },
-  footerTitle: {
-    color: Colors.textPrimary,
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: Typography.weight.bold,
-    marginBottom: 4,
+  sectionTitle: {
+    color: '#253133',
+    fontSize: 20,
+    fontWeight: '800',
   },
-  footerBody: {
-    color: Colors.textSecondary,
+  sectionAction: {
+    color: '#B95A2A',
     fontSize: 14,
-    lineHeight: 20,
+    fontWeight: '600',
   },
-  footerIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: Radius.full,
+  projectList: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: 10,
+    gap: 12,
+  },
+  projectCard: {
+    backgroundColor: Colors.textPrimary,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E6E3DF',
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 1,
+  },
+  projectThumb: {
+    width: 54,
+    height: 54,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.background,
+  },
+  projectBody: {
+    flex: 1,
+    gap: 6,
+  },
+  projectTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  projectName: {
+    flex: 1,
+    color: '#223032',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  projectAddress: {
+    color: '#748386',
+    fontSize: 12,
+  },
+  statusPill: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  emptyCard: {
+    backgroundColor: Colors.textPrimary,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#E6E3DF',
+    padding: 16,
+  },
+  emptyTitle: {
+    color: '#223032',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  emptyBody: {
+    color: '#748386',
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/theme';
+import { Colors, Typography } from '@/constants/theme';
 
 type RouteName = 'dashboard' | 'projects' | 'add' | 'library' | 'more';
 
@@ -11,8 +11,16 @@ const ICONS: Record<RouteName, { active: React.ComponentProps<typeof Ionicons>['
   dashboard: { active: 'home', inactive: 'home-outline' },
   projects: { active: 'folder-open', inactive: 'folder-open-outline' },
   add: { active: 'add', inactive: 'add' },
-  library: { active: 'grid', inactive: 'grid-outline' },
+  library: { active: 'layers', inactive: 'layers-outline' },
   more: { active: 'ellipsis-horizontal-circle', inactive: 'ellipsis-horizontal-circle-outline' },
+};
+
+const LABELS: Record<RouteName, string> = {
+  dashboard: 'Home',
+  projects: 'Projects',
+  add: '',
+  library: 'Batches',
+  more: 'More',
 };
 
 export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -22,10 +30,10 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
     <View style={[styles.shell, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
-        const options = descriptors[route.key].options;
-        const title = options.title ?? route.name;
         const isAdd = route.name === 'add';
-        const iconSet = ICONS[route.name as RouteName] ?? ICONS.dashboard;
+        const routeName = route.name as RouteName;
+        const iconSet = ICONS[routeName] ?? ICONS.dashboard;
+        const title = LABELS[routeName] ?? descriptors[route.key].options.title ?? route.name;
 
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -38,8 +46,8 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           <TouchableOpacity
             key={route.key}
             accessibilityRole="button"
-            accessibilityLabel={title}
             accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={title || route.name}
             onPress={onPress}
             style={[styles.item, isAdd && styles.addItem]}
             activeOpacity={0.82}
@@ -47,16 +55,19 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
             {isAdd ? (
               <View style={styles.addWrap}>
                 <View style={[styles.addButton, isFocused && styles.addButtonActive]}>
-                  <Ionicons name={iconSet.active} size={30} color={Colors.background} />
+                  <Ionicons name={iconSet.active} size={30} color={Colors.textPrimary} />
                 </View>
               </View>
             ) : (
-              <View style={[styles.tabButton, isFocused && styles.tabButtonActive]}>
+              <View style={styles.tabWrap}>
                 <Ionicons
                   name={isFocused ? iconSet.active : iconSet.inactive}
-                  size={26}
-                  color={isFocused ? Colors.primary : Colors.textDisabled}
+                  size={24}
+                  color={isFocused ? '#E65B2E' : '#7C8C91'}
                 />
+                <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
+                  {title}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -71,10 +82,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    backgroundColor: '#10171B',
-    borderTopColor: '#202C31',
+    backgroundColor: Colors.textPrimary,
+    borderTopColor: '#E2E0DB',
     borderTopWidth: 1,
-    paddingTop: 10,
+    paddingTop: 8,
     paddingHorizontal: 8,
   },
   item: {
@@ -86,39 +97,40 @@ const styles = StyleSheet.create({
   addItem: {
     marginTop: -20,
   },
-  tabButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  tabWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  tabButtonActive: {
-    backgroundColor: '#0D1E21',
-    borderColor: '#214145',
+    gap: 4,
+    minWidth: 56,
   },
   addWrap: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   addButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.accent,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: '#E65B2E',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: '#10171B',
+    borderColor: Colors.textPrimary,
     shadowColor: '#000',
-    shadowOpacity: 0.24,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 5,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   addButtonActive: {
-    backgroundColor: '#FF9A45',
+    backgroundColor: '#D84F25',
+  },
+  label: {
+    color: '#7C8C91',
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.medium,
+  },
+  labelActive: {
+    color: '#E65B2E',
   },
 });
