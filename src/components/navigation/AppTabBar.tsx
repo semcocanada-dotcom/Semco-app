@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 
 type RouteName = 'dashboard' | 'projects' | 'add' | 'library' | 'more';
 
@@ -55,19 +55,19 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
             {isAdd ? (
               <View style={styles.addWrap}>
                 <View style={[styles.addButton, isFocused && styles.addButtonActive]}>
-                  <Ionicons name={iconSet.active} size={30} color={Colors.textPrimary} />
+                  <Ionicons name={iconSet.active} size={31} color={Colors.textPrimary} />
                 </View>
               </View>
             ) : (
               <View style={styles.tabWrap}>
-                <Ionicons
-                  name={isFocused ? iconSet.active : iconSet.inactive}
-                  size={24}
-                  color={isFocused ? '#E65B2E' : '#7C8C91'}
-                />
-                <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
-                  {title}
-                </Text>
+                <View style={[styles.iconShell, isFocused && styles.iconShellActive]}>
+                  <Ionicons
+                    name={isFocused ? iconSet.active : iconSet.inactive}
+                    size={24}
+                    color={isFocused ? '#E65B2E' : '#7C8C91'}
+                  />
+                </View>
+                <View style={[styles.activeDot, isFocused ? styles.activeDotVisible : styles.activeDotHidden]} />
               </View>
             )}
           </TouchableOpacity>
@@ -82,55 +82,75 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    backgroundColor: Colors.textPrimary,
-    borderTopColor: '#E2E0DB',
-    borderTopWidth: 1,
-    paddingTop: 8,
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(13, 18, 20, 0.98)',
+    borderTopWidth: 0,
+    paddingTop: 12,
+    paddingHorizontal: 14,
+    gap: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.24,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 18,
   },
   item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 58,
+    minHeight: 62,
   },
   addItem: {
-    marginTop: -20,
+    marginTop: -24,
   },
   tabWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    minWidth: 56,
+    minWidth: 54,
+    paddingTop: 3,
+  },
+  iconShell: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconShellActive: {
+    backgroundColor: 'rgba(230, 91, 46, 0.1)',
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 4,
+    backgroundColor: '#E65B2E',
+  },
+  activeDotVisible: {
+    opacity: 1,
+  },
+  activeDotHidden: {
+    opacity: 0,
   },
   addWrap: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   addButton: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
     backgroundColor: '#E65B2E',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: Colors.textPrimary,
+    borderWidth: 5,
+    borderColor: 'rgba(13, 18, 20, 0.98)',
     shadowColor: '#000',
-    shadowOpacity: 0.22,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 8,
   },
   addButtonActive: {
     backgroundColor: '#D84F25',
-  },
-  label: {
-    color: '#7C8C91',
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.medium,
-  },
-  labelActive: {
-    color: '#E65B2E',
   },
 });
