@@ -60,14 +60,15 @@ export default function DashboardScreen() {
   }, []);
 
   const stats = useMemo(() => {
-    const inProgress = state.projects.filter((project) => project.status === 'active').length;
-    const onHold = state.projects.filter((project) => project.status === 'on_hold').length;
+    const active = state.projects.filter((project) => project.status === 'active').length;
 
     return [
-      { title: 'In Progress', value: String(inProgress || 3), caption: 'Projects', tone: 'teal' as const },
-      { title: 'On Hold', value: String(onHold || 1), caption: 'Project', tone: 'orange' as const },
+      { title: 'Projects', value: String(state.projects.length || 0), caption: 'Total', tone: 'teal' as const },
+      { title: 'Active', value: String(active || 0), caption: 'Live jobs', tone: 'orange' as const },
+      { title: 'Products', value: String(state.products.length || 0), caption: 'Catalog', tone: 'teal' as const },
+      { title: 'Colors', value: String(state.colors.length || 0), caption: 'Matched', tone: 'orange' as const },
     ];
-  }, [state.projects]);
+  }, [state.projects, state.products, state.colors]);
 
   const recentProjects = state.projects.slice(0, 3);
 
@@ -116,7 +117,7 @@ export default function DashboardScreen() {
             ))}
           </View>
 
-          <View style={styles.statsRow}>
+          <View style={styles.statsGrid}>
             {stats.map((stat) => (
               <View key={stat.title} style={[styles.statCard, statToneStyles[stat.tone]]}>
                 <Text style={styles.statTitle}>{stat.title}</Text>
@@ -313,14 +314,15 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center',
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
   },
   statCard: {
-    flex: 1,
-    minHeight: 96,
-    borderRadius: 16,
+    width: '48.6%',
+    minHeight: 104,
+    borderRadius: 18,
     borderWidth: 1,
     padding: 14,
     justifyContent: 'space-between',

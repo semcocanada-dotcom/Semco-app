@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +27,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.shell, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.shell, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const isAdd = route.name === 'add';
@@ -60,14 +60,15 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
               </View>
             ) : (
               <View style={styles.tabWrap}>
-                <View style={[styles.iconShell, isFocused && styles.iconShellActive]}>
-                  <Ionicons
-                    name={isFocused ? iconSet.active : iconSet.inactive}
-                    size={24}
-                    color={isFocused ? '#E65B2E' : '#7C8C91'}
-                  />
-                </View>
-                <View style={[styles.activeDot, isFocused ? styles.activeDotVisible : styles.activeDotHidden]} />
+                <Ionicons
+                  name={isFocused ? iconSet.active : iconSet.inactive}
+                  size={23}
+                  color={isFocused ? '#E65B2E' : '#7E8D92'}
+                />
+                <View style={{ height: 4 }} />
+                <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
+                  {title}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -82,16 +83,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(13, 18, 20, 0.98)',
-    borderTopWidth: 0,
-    paddingTop: 12,
-    paddingHorizontal: 14,
-    gap: 2,
+    backgroundColor: Colors.textPrimary,
+    borderTopColor: '#E4E1DB',
+    borderTopWidth: 1,
+    paddingTop: 8,
+    paddingHorizontal: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.24,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 18,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 10,
   },
   item: {
     flex: 1,
@@ -100,57 +101,42 @@ const styles = StyleSheet.create({
     minHeight: 62,
   },
   addItem: {
-    marginTop: -24,
+    marginTop: -18,
   },
   tabWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 54,
-    paddingTop: 3,
-  },
-  iconShell: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconShellActive: {
-    backgroundColor: 'rgba(230, 91, 46, 0.1)',
-  },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 4,
-    backgroundColor: '#E65B2E',
-  },
-  activeDotVisible: {
-    opacity: 1,
-  },
-  activeDotHidden: {
-    opacity: 0,
+    minWidth: 52,
   },
   addWrap: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   addButton: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#E65B2E',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 5,
-    borderColor: 'rgba(13, 18, 20, 0.98)',
+    borderWidth: 4,
+    borderColor: Colors.textPrimary,
     shadowColor: '#000',
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 7 },
-    elevation: 8,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 7,
   },
   addButtonActive: {
     backgroundColor: '#D84F25',
+  },
+  label: {
+    color: '#7E8D92',
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 13,
+  },
+  labelActive: {
+    color: '#E65B2E',
   },
 });
