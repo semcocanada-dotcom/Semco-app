@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
 
 type RouteName = 'dashboard' | 'projects' | 'add' | 'library' | 'more';
 
@@ -38,6 +38,7 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           <TouchableOpacity
             key={route.key}
             accessibilityRole="button"
+            accessibilityLabel={title}
             accessibilityState={isFocused ? { selected: true } : {}}
             onPress={onPress}
             style={[styles.item, isAdd && styles.addItem]}
@@ -48,18 +49,14 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
                 <View style={[styles.addButton, isFocused && styles.addButtonActive]}>
                   <Ionicons name={iconSet.active} size={30} color={Colors.background} />
                 </View>
-                <Text style={[styles.label, isFocused && styles.labelActive]}>{title}</Text>
               </View>
             ) : (
-              <View style={styles.tabWrap}>
+              <View style={[styles.tabButton, isFocused && styles.tabButtonActive]}>
                 <Ionicons
                   name={isFocused ? iconSet.active : iconSet.inactive}
-                  size={22}
+                  size={26}
                   color={isFocused ? Colors.primary : Colors.textDisabled}
                 />
-                <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
-                  {title}
-                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -74,31 +71,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    borderTopColor: Colors.border,
+    backgroundColor: '#10171B',
+    borderTopColor: '#202C31',
     borderTopWidth: 1,
-    paddingTop: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
+    paddingTop: 10,
+    paddingHorizontal: 8,
   },
   item: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     minHeight: 58,
   },
   addItem: {
-    marginTop: -18,
+    marginTop: -20,
   },
-  tabWrap: {
+  tabButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    minWidth: 56,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  tabButtonActive: {
+    backgroundColor: '#0D1E21',
+    borderColor: '#214145',
   },
   addWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
   },
   addButton: {
     width: 60,
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: Colors.background,
+    borderColor: '#10171B',
     shadowColor: '#000',
     shadowOpacity: 0.24,
     shadowRadius: 16,
@@ -117,13 +120,5 @@ const styles = StyleSheet.create({
   },
   addButtonActive: {
     backgroundColor: '#FF9A45',
-  },
-  label: {
-    color: Colors.textDisabled,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.medium,
-  },
-  labelActive: {
-    color: Colors.primary,
   },
 });
