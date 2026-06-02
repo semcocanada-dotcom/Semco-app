@@ -84,7 +84,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.appBackground },
   scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl },
   back: { marginBottom: Spacing.sm },
   name: {

@@ -255,7 +255,7 @@ export default function TakeoffScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.appBackground },
   scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 16, gap: Spacing.lg },
   heroCard: { gap: Spacing.md, borderColor: Colors.primaryMuted, backgroundColor: Colors.surfaceElevated },
   title: { color: Colors.textPrimary, fontSize: Typography.size.xl, lineHeight: Typography.size.xl * 1.1, fontWeight: Typography.weight.bold },
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   section: { gap: Spacing.md },
   controlsCard: { gap: Spacing.md },
   metaRow: { flexDirection: 'row', gap: Spacing.sm },
-  metaItem: { flex: 1, gap: 2, padding: Spacing.md, borderRadius: 12, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.border },
+  metaItem: { flex: 1, gap: 2, padding: Spacing.md, borderRadius: 12, backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border },
   metaLabel: { color: Colors.textDisabled, fontSize: Typography.size.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
   metaValue: { color: Colors.textPrimary, fontSize: Typography.size.base, fontWeight: Typography.weight.bold },
   buttonRow: { flexDirection: 'row', gap: Spacing.sm },

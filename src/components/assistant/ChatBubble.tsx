@@ -1,25 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MarkdownDisplay from 'react-native-markdown-display';
-import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 const assistantMarkdownStyles = {
   body: {
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.5,
-    color: Colors.textPrimary,
+    color: Colors.navy,
+    fontFamily: Fonts.regular,
   },
   text: {
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.5,
-    color: Colors.textPrimary,
+    color: Colors.navy,
+    fontFamily: Fonts.regular,
   },
   strong: { fontWeight: Typography.weight.bold },
   em: { fontStyle: 'italic' as const },
   link: { color: Colors.primary },
   code_inline: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.primaryMuted,
     color: Colors.primary,
     paddingHorizontal: 4,
     borderRadius: 2,
@@ -87,31 +89,32 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   bubbleUser: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.semcoOrange,
     borderBottomRightRadius: Radius.sm,
   },
   bubbleAssistant: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderBottomLeftRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  text: { fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },
-  textUser: { color: Colors.background },
-  textAssistant: { color: Colors.textPrimary },
+  text: { fontSize: Typography.size.base, fontFamily: Fonts.regular, lineHeight: Typography.size.base * 1.5 },
+  textUser: { color: Colors.white },
+  textAssistant: { color: Colors.navy },
   sourceRow: {
     marginTop: Spacing.sm,
     alignSelf: 'flex-start',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: Radius.full,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.accentMuted,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   sourceTag: {
     color: Colors.offlineAmber,
     fontSize: Typography.size.xs,
+    fontFamily: Fonts.medium,
     fontWeight: Typography.weight.medium,
     letterSpacing: 0.3,
     textTransform: 'uppercase',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { Color } from '@/database/schema/colors';
 
 interface ColorSwatchProps {
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     minHeight: TAP_TARGET_MIN,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -55,10 +55,11 @@ const styles = StyleSheet.create({
   },
   info: { flex: 1, gap: 2 },
   name: {
-    color: Colors.textPrimary,
+    color: Colors.navy,
     fontSize: Typography.size.base,
+    fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.medium,
   },
-  code: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  customTag: { color: Colors.primary, fontSize: Typography.size.xs, fontWeight: Typography.weight.semibold },
+  code: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular },
+  customTag: { color: Colors.semcoOrange, fontSize: Typography.size.xs, fontFamily: Fonts.semibold, fontWeight: Typography.weight.semibold },
 });

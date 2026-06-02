@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { SUBSTRATES, SubstrateId } from '@/constants/substrates';
-import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
 interface SubstratePickerProps {
   selected: SubstrateId | null;
@@ -33,7 +33,7 @@ export function SubstratePicker({ selected, onSelect }: SubstratePickerProps) {
       </ScrollView>
       {selected && SUBSTRATES.find((s) => s.id === selected)?.notes ? (
         <Text style={styles.note}>
-          ⚠ {SUBSTRATES.find((s) => s.id === selected)!.notes}
+          Warning: {SUBSTRATES.find((s) => s.id === selected)!.notes}
         </Text>
       ) : null}
     </View>
@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
   label: {
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.medium,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -54,26 +55,28 @@ const styles = StyleSheet.create({
     minHeight: TAP_TARGET_MIN,
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   chipSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryMuted,
+    borderColor: Colors.semcoOrange,
+    backgroundColor: Colors.accentMuted,
   },
   chipText: {
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
+    fontFamily: Fonts.medium,
     fontWeight: Typography.weight.medium,
   },
-  chipTextSelected: { color: Colors.primary },
+  chipTextSelected: { color: Colors.semcoOrange },
   note: {
     marginTop: Spacing.sm,
     color: Colors.offlineAmber,
     fontSize: Typography.size.sm,
+    fontFamily: Fonts.medium,
     lineHeight: Typography.size.sm * 1.5,
   },
 });

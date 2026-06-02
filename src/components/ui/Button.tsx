@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'accent' | 'danger' | 'ghost';
 type Size = 'sm' | 'md' | 'lg';
@@ -56,7 +56,7 @@ export function Button({
       {isLoading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'secondary' || variant === 'ghost' ? Colors.textPrimary : Colors.background}
+          color={variant === 'secondary' || variant === 'ghost' ? Colors.textPrimary : Colors.white}
         />
       ) : (
         <Text style={[styles.text, styles[`text_${variant}`], styles[`textSize_${size}`], textStyle]}>
@@ -78,21 +78,21 @@ const styles = StyleSheet.create({
   fullWidth: { width: '100%' },
   disabled: { opacity: 0.45 },
 
-  primary: { backgroundColor: Colors.primary },
-  accent: { backgroundColor: Colors.accent },
-  secondary: { backgroundColor: Colors.surfaceElevated, borderWidth: 1, borderColor: Colors.border },
+  primary: { backgroundColor: Colors.semcoOrange },
+  accent: { backgroundColor: Colors.semcoOrange },
+  secondary: { backgroundColor: Colors.primaryMuted, borderWidth: 1, borderColor: Colors.lightTeal },
   danger: { backgroundColor: Colors.danger },
-  ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.primary },
+  ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.lightTeal },
 
   size_sm: { minHeight: 36, paddingHorizontal: Spacing.md, borderRadius: Radius.sm },
   size_md: { minHeight: TAP_TARGET_MIN, paddingHorizontal: Spacing.lg },
   size_lg: { minHeight: 56, paddingHorizontal: Spacing.xl, borderRadius: Radius.lg },
 
-  text: { fontWeight: Typography.weight.semibold, textAlign: 'center' },
-  text_primary: { color: Colors.background },
-  text_accent: { color: Colors.background },
+  text: { fontFamily: Fonts.semibold, fontWeight: Typography.weight.semibold, textAlign: 'center' },
+  text_primary: { color: Colors.white },
+  text_accent: { color: Colors.white },
   text_secondary: { color: Colors.textPrimary },
-  text_danger: { color: Colors.textPrimary },
+  text_danger: { color: Colors.white },
   text_ghost: { color: Colors.primary },
 
   textSize_sm: { fontSize: Typography.size.sm },

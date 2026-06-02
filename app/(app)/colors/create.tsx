@@ -144,7 +144,7 @@ export default function CreateColorScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.appBackground },
   scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.sm },
   title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },

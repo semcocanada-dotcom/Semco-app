@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 
 type BadgeVariant = 'primary' | 'accent' | 'success' | 'warning' | 'danger' | 'neutral';
 
@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: Typography.size.xs,
+    fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -37,10 +38,10 @@ const styles = StyleSheet.create({
   success: { backgroundColor: Colors.successMuted },
   warning: { backgroundColor: Colors.offlineAmberMuted },
   danger: { backgroundColor: Colors.dangerMuted },
-  neutral: { backgroundColor: Colors.surfaceElevated },
+  neutral: { backgroundColor: Colors.softGrey },
 
   text_primary: { color: Colors.primary },
-  text_accent: { color: Colors.accent },
+  text_accent: { color: Colors.semcoOrange },
   text_success: { color: Colors.success },
   text_warning: { color: Colors.offlineAmber },
   text_danger: { color: Colors.danger },

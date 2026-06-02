@@ -7,7 +7,7 @@ import {
   TextInputProps,
   ViewStyle,
 } from 'react-native';
-import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
   label: {
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.medium,
     letterSpacing: 0.4,
     textTransform: 'uppercase',
@@ -49,13 +50,14 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: TAP_TARGET_MIN,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: Spacing.md,
     color: Colors.textPrimary,
     fontSize: Typography.size.base,
+    fontFamily: Fonts.regular,
   },
   inputError: { borderColor: Colors.danger },
   inputWithSuffix: { borderTopRightRadius: 0, borderBottomRightRadius: 0 },
@@ -64,11 +66,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.border,
+    backgroundColor: Colors.primaryMuted,
     borderTopRightRadius: Radius.md,
     borderBottomRightRadius: Radius.md,
     color: Colors.textSecondary,
     fontSize: Typography.size.base,
+    fontFamily: Fonts.medium,
     lineHeight: TAP_TARGET_MIN,
   },
   error: { color: Colors.danger, fontSize: Typography.size.sm },

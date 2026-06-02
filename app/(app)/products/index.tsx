@@ -1,19 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/database/client';
 import { products } from '@/database/schema/products';
 import type { Product } from '@/database/schema/products';
-import { Input, Badge } from '@/components/ui';
-import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { AppHeader, Badge, EmptyState, SearchBar } from '@/components/ui';
+import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
 const CATEGORY_BADGE: Record<string, 'warning' | 'neutral' | 'primary' | 'success'> = {
   primer: 'warning',
@@ -51,16 +44,8 @@ export default function ProductsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.title}>Product Library</Text>
-      </View>
-
-      <View style={styles.searchBar}>
-        <Input
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search products or SKU…"
-          containerStyle={styles.searchInput}
-        />
+        <AppHeader title="Product Library" subtitle="Search products, SKUs, and system data." rightIcon="cube-outline" />
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search products or SKU..." showMic={false} />
       </View>
 
       <FlatList
@@ -86,7 +71,7 @@ export default function ProductsScreen() {
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={styles.empty}>No products found.</Text>
+          <EmptyState icon="cube-outline" title="No products found" body="Try another product name or SKU." />
         }
       />
     </SafeAreaView>
@@ -94,19 +79,16 @@ export default function ProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  header: { padding: Spacing.base, paddingBottom: 0 },
-  title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
-  searchBar: { padding: Spacing.base, paddingTop: Spacing.sm },
-  searchInput: { marginBottom: 0 },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xxxl },
+  safe: { flex: 1, backgroundColor: Colors.appBackground },
+  header: { padding: Spacing.base, gap: Spacing.md },
+  list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xxxl + 44 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: TAP_TARGET_MIN,
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.md,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
@@ -114,7 +96,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   rowLeft: { flex: 1, gap: Spacing.xs },
-  productName: { color: Colors.textPrimary, fontSize: Typography.size.base, fontWeight: Typography.weight.medium },
-  sku: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  empty: { color: Colors.textDisabled, textAlign: 'center', marginTop: Spacing.xl },
+  productName: {
+    color: Colors.navy,
+    fontSize: Typography.size.base,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  sku: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.medium },
 });

@@ -16,7 +16,7 @@ import { useAssistant } from '@/hooks/useAssistant';
 import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
-import { Colors, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 const PLACEHOLDER_SUGGESTIONS = [
@@ -64,7 +64,7 @@ export default function AssistantScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>SIP Manual Assistant</Text>
+            <Text style={styles.title}>Ask Semco</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{isOnline ? 'SOURCE-BASED' : 'LOCAL'}</Text>
             </View>
@@ -129,7 +129,7 @@ export default function AssistantScreen() {
             style={styles.input}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Ask a technical question…"
+            placeholder="Ask a technical question..."
             placeholderTextColor={Colors.textDisabled}
             selectionColor={Colors.primary}
             multiline
@@ -143,7 +143,7 @@ export default function AssistantScreen() {
             disabled={!inputText.trim() || isLoading}
             accessibilityLabel="Send message"
           >
-            <Ionicons name="arrow-up" size={20} color={Colors.background} />
+            <Ionicons name="arrow-up" size={20} color={Colors.white} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -152,7 +152,7 @@ export default function AssistantScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: Colors.appBackground },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -170,13 +170,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     flexWrap: 'wrap',
   },
-  title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
-  subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.4 },
+  title: { color: Colors.navy, fontSize: Typography.size.xl, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },
+  subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular, lineHeight: Typography.size.sm * 1.4 },
   badge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: Radius.full,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   heroCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.xl,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   emptyTitle: {
-    color: Colors.textPrimary,
+    color: Colors.navy,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.semibold,
   },
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   suggestions: { gap: Spacing.sm, width: '100%' },
   suggestionChip: {
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.sm,
   },
-  suggestionText: { color: Colors.textPrimary, fontSize: Typography.size.sm, flex: 1 },
+  suggestionText: { color: Colors.navy, fontSize: Typography.size.sm, fontFamily: Fonts.medium, flex: 1 },
   error: {
     color: Colors.danger,
     fontSize: Typography.size.sm,
@@ -245,17 +245,18 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.white,
   },
   input: {
     flex: 1,
     maxHeight: 120,
-    backgroundColor: Colors.surfaceElevated,
+    backgroundColor: Colors.white,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    color: Colors.textPrimary,
+    color: Colors.navy,
     fontSize: Typography.size.base,
+    fontFamily: Fonts.regular,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     width: TAP_TARGET_MIN,
     height: TAP_TARGET_MIN,
     borderRadius: TAP_TARGET_MIN / 2,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.semcoOrange,
     alignItems: 'center',
     justifyContent: 'center',
   },
