@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 import * as fs from 'fs';
 import * as path from 'path';
+import { createHash } from 'crypto';
 import { Command } from 'commander';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 
@@ -85,6 +86,10 @@ function shouldInclude(fileName: string): boolean {
   return !DEFAULT_EXCLUDED.some((name) => fileName.includes(name));
 }
 
+function fileHash(filePath: string): string {
+  return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
 async function extractPdf(pdfPath: string): Promise<{ doc: TechnicalDoc; pages: TechnicalDocPage[] }> {
   const sourceDocument = path.basename(pdfPath);
   const docId = `doc-${slug(path.basename(sourceDocument, '.pdf'))}`;
@@ -150,9 +155,17 @@ async function main() {
 
   const docs: TechnicalDoc[] = [];
   const pages: TechnicalDocPage[] = [];
+  const seenHashes = new Set<string>();
 
   for (const file of files) {
     const pdfPath = path.join(dirPath, file);
+    const hash = fileHash(pdfPath);
+    if (seenHashes.has(hash)) {
+      console.log(`Skipping duplicate ${file}`);
+      continue;
+    }
+    seenHashes.add(hash);
+
     process.stdout.write(`Extracting ${file}... `);
     const extracted = await extractPdf(pdfPath);
     docs.push(extracted.doc);

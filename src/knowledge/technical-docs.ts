@@ -19,16 +19,114 @@ export interface TechnicalDocPage {
 
 export const TECHNICAL_DOCS: TechnicalDoc[] = [
   {
+    "id": "doc-ada-mma-system-steps",
+    "title": "ADA MMA System Steps",
+    "sourceDocument": "ADA-MMA-System-Steps.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-basement-waterproofing-2",
+    "title": "Basement Waterproofing 2",
+    "sourceDocument": "Basement-Waterproofing-2.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-basement-waterproofing-x-bond",
+    "title": "Basement Waterproofing X Bond",
+    "sourceDocument": "Basement-Waterproofing-X-Bond.pdf",
+    "category": "X-Bond",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-basement-waterproofing",
+    "title": "Basement Waterproofing",
+    "sourceDocument": "Basement-Waterproofing.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-broadcast-system-steps",
+    "title": "Broadcast System Steps",
+    "sourceDocument": "Broadcast-System-Steps.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-ceiling-surface-steps",
+    "title": "Ceiling Surface Steps",
+    "sourceDocument": "Ceiling-Surface-Steps.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-color-bond-steps",
+    "title": "Color Bond Steps",
+    "sourceDocument": "Color-Bond-Steps.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-cove-base-detail-plywood",
+    "title": "Cove Base Detail Plywood",
+    "sourceDocument": "Cove-Base-Detail-Plywood.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-cove-base-detail",
+    "title": "Cove Base Detail",
+    "sourceDocument": "Cove-Base-Detail.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-cracks-joints-wider-14",
+    "title": "Cracks Joints wider 14",
+    "sourceDocument": "Cracks-Joints-wider-14.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-drain-detail",
+    "title": "Drain Detail",
+    "sourceDocument": "Drain-Detail.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
     "id": "doc-lm-data-sheet",
     "title": "LM Data Sheet",
-    "sourceDocument": "LM+Data+Sheet.pdf",
+    "sourceDocument": "LM-Data-Sheet.pdf",
     "category": "Liquid Membrane",
     "pageCount": 1
   },
   {
+    "id": "doc-lm-over-concrete",
+    "title": "LM over concrete",
+    "sourceDocument": "LM-over-concrete.pdf",
+    "category": "Liquid Membrane",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-lm-over-gyp-crete",
+    "title": "LM over Gyp crete",
+    "sourceDocument": "LM-over-Gyp-crete.pdf",
+    "category": "Liquid Membrane",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-lm-safety-data-sheet",
+    "title": "LM Safety Data Sheet",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "category": "Liquid Membrane",
+    "pageCount": 6
+  },
+  {
     "id": "doc-lm-tech-sheet",
     "title": "LM Tech Sheet",
-    "sourceDocument": "LM+Tech+Sheet.pdf",
+    "sourceDocument": "LM-Tech-Sheet.pdf",
     "category": "Liquid Membrane",
     "pageCount": 3
   },
@@ -40,11 +138,109 @@ export const TECHNICAL_DOCS: TechnicalDoc[] = [
     "pageCount": 28
   },
   {
+    "id": "doc-natural-grain-steps",
+    "title": "Natural Grain Steps",
+    "sourceDocument": "Natural-Grain-Steps.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-natural-shield-data-sheet",
+    "title": "Natural Shield Data Sheet",
+    "sourceDocument": "Natural-Shield-Data-Sheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-natural-shield-sds",
+    "title": "Natural Shield SDS",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "category": "Technical doc",
+    "pageCount": 9
+  },
+  {
+    "id": "doc-natural-shield-tech-sheet",
+    "title": "Natural Shield Tech Sheet",
+    "sourceDocument": "Natural-Shield-Tech-Sheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 3
+  },
+  {
+    "id": "doc-nulift-datasheet",
+    "title": "NuLift Datasheet",
+    "sourceDocument": "NuLift-Datasheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-nulift-sds",
+    "title": "NuLift SDS",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "category": "Technical doc",
+    "pageCount": 6
+  },
+  {
     "id": "doc-open-sip-manual-master-copy-v2019-3-2",
     "title": "Open SIP manual master copy  3 2",
     "sourceDocument": "Open SIP manual - master copy v2019-3 2.pdf",
     "category": "SIP manual",
     "pageCount": 49
+  },
+  {
+    "id": "doc-polished-bond-steps",
+    "title": "Polished Bond Steps",
+    "sourceDocument": "Polished-Bond-Steps.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-pool-deck-resurfacing-detail",
+    "title": "Pool Deck Resurfacing Detail",
+    "sourceDocument": "Pool-Deck-Resurfacing-Detail.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-pool-resurfacing-detail-interior-below-grade",
+    "title": "Pool Resurfacing Detail Interior Below Grade",
+    "sourceDocument": "Pool-Resurfacing-Detail-Interior-Below-Grade.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-power-cleaner-datasheet",
+    "title": "Power Cleaner Datasheet",
+    "sourceDocument": "Power-Cleaner-Datasheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-power-cleaner-sds",
+    "title": "Power Cleaner SDS",
+    "sourceDocument": "Power-Cleaner-SDS.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-prep-e",
+    "title": "PREP E",
+    "sourceDocument": "PREP-E.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-prestain-data-sheet",
+    "title": "prestain data sheet",
+    "sourceDocument": "prestain-data-sheet.pdf",
+    "category": "PreStain",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-prestain-sds",
+    "title": "PreStain SDS",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "category": "PreStain",
+    "pageCount": 9
   },
   {
     "id": "doc-prestain-tech-sheet",
@@ -61,11 +257,32 @@ export const TECHNICAL_DOCS: TechnicalDoc[] = [
     "pageCount": 46
   },
   {
+    "id": "doc-satin-stone-chemical-resistance",
+    "title": "Satin Stone chemical resistance",
+    "sourceDocument": "Satin-Stone-chemical-resistance.pdf",
+    "category": "Satin Stone",
+    "pageCount": 1
+  },
+  {
     "id": "doc-satin-stone-data-sheet",
     "title": "Satin Stone Data Sheet",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "category": "Satin Stone",
     "pageCount": 10
+  },
+  {
+    "id": "doc-satin-stone-sds",
+    "title": "Satin Stone SDS",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "category": "Satin Stone",
+    "pageCount": 7
+  },
+  {
+    "id": "doc-satin-stone-tech-data-sheet",
+    "title": "Satin Stone Tech Data Sheet",
+    "sourceDocument": "Satin-Stone-Tech-Data-Sheet.pdf",
+    "category": "Satin Stone",
+    "pageCount": 1
   },
   {
     "id": "doc-satin-stone-tech-sheet",
@@ -73,6 +290,13 @@ export const TECHNICAL_DOCS: TechnicalDoc[] = [
     "sourceDocument": "Satin+Stone+Tech+Sheet.pdf",
     "category": "Satin Stone",
     "pageCount": 3
+  },
+  {
+    "id": "doc-section-09670-fluid-applied-surfaces",
+    "title": "Section 09670 Fluid Applied Surfaces",
+    "sourceDocument": "Section-09670-Fluid-Applied-Surfaces.pdf",
+    "category": "Technical doc",
+    "pageCount": 5
   },
   {
     "id": "doc-semco-surfaces-brochure-digital-v2",
@@ -84,36 +308,373 @@ export const TECHNICAL_DOCS: TechnicalDoc[] = [
   {
     "id": "doc-shower-detail-concrete",
     "title": "Shower Detail Concrete",
-    "sourceDocument": "Shower+Detail+Concrete.pdf",
+    "sourceDocument": "Shower-Detail-Concrete.pdf",
     "category": "Shower detail",
     "pageCount": 1
   },
   {
+    "id": "doc-shower-detail-wood",
+    "title": "Shower Detail Wood",
+    "sourceDocument": "Shower-Detail-Wood.pdf",
+    "category": "Shower detail",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-shower-detail",
+    "title": "Shower Detail",
+    "sourceDocument": "Shower-Detail.pdf",
+    "category": "Shower detail",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-shower-drain-detail",
+    "title": "Shower Drain Detail",
+    "sourceDocument": "Shower-Drain-Detail.pdf",
+    "category": "Shower detail",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-stair-detail",
+    "title": "Stair Detail",
+    "sourceDocument": "Stair-Detail.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-stone-soap-datasheet",
+    "title": "Stone Soap Datasheet",
+    "sourceDocument": "Stone-Soap-Datasheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-stone-soap-sds",
+    "title": "Stone Soap SDS",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "category": "Technical doc",
+    "pageCount": 6
+  },
+  {
+    "id": "doc-tech-sheet-satin-stone-v5",
+    "title": "Tech Sheet Satin Stone",
+    "sourceDocument": "Tech_Sheet_Satin-Stone-v5.pdf",
+    "category": "Satin Stone",
+    "pageCount": 3
+  },
+  {
+    "id": "doc-tech-sheet-titanshield-v8",
+    "title": "Tech Sheet TitanShield",
+    "sourceDocument": "Tech_Sheet_TitanShield-v8.pdf",
+    "category": "Technical doc",
+    "pageCount": 3
+  },
+  {
     "id": "doc-tech-sheet-x-bond-2024-v3",
     "title": "Tech Sheet X Bond",
-    "sourceDocument": "Tech_Sheet_X-Bond+2024+v3.pdf",
+    "sourceDocument": "Tech_Sheet_X-Bond-2024-v3.pdf",
     "category": "X-Bond",
     "pageCount": 3
+  },
+  {
+    "id": "doc-titan-gloss-product-sheet",
+    "title": "Titan Gloss Product Sheet",
+    "sourceDocument": "Titan-Gloss-Product-Sheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-titan-gloss-tech-data-sheet",
+    "title": "Titan Gloss Tech Data Sheet",
+    "sourceDocument": "Titan-Gloss-Tech-Data-Sheet.pdf",
+    "category": "Technical doc",
+    "pageCount": 3
+  },
+  {
+    "id": "doc-titan-shield-sds",
+    "title": "Titan Shield SDS",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "category": "Technical doc",
+    "pageCount": 7
+  },
+  {
+    "id": "doc-wall-detail",
+    "title": "Wall Detail",
+    "sourceDocument": "Wall-Detail.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-waterproofing-metal",
+    "title": "Waterproofing Metal",
+    "sourceDocument": "Waterproofing-Metal.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-wood-detail",
+    "title": "Wood Detail",
+    "sourceDocument": "Wood-Detail.pdf",
+    "category": "Technical doc",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-x-bond-additive-sds",
+    "title": "X Bond Additive SDS",
+    "sourceDocument": "X-Bond-Additive-SDS.pdf",
+    "category": "X-Bond",
+    "pageCount": 3
+  },
+  {
+    "id": "doc-x-bond-liquid-sds",
+    "title": "X Bond Liquid SDS",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "category": "X-Bond",
+    "pageCount": 7
+  },
+  {
+    "id": "doc-x-bond-microbond-sds",
+    "title": "X Bond Microbond SDS",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "category": "X-Bond",
+    "pageCount": 9
+  },
+  {
+    "id": "doc-x-bond-over-tile-detail",
+    "title": "X Bond Over Tile Detail",
+    "sourceDocument": "X-Bond-Over-Tile-Detail.pdf",
+    "category": "X-Bond",
+    "pageCount": 1
+  },
+  {
+    "id": "doc-x-bond-stone-sds",
+    "title": "X Bond Stone SDS",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "category": "X-Bond",
+    "pageCount": 8
+  },
+  {
+    "id": "doc-x-bondmicrocementdatasheet2024",
+    "title": "X BondMicrocementDataSheet2024",
+    "sourceDocument": "X-BondMicrocementDataSheet2024.pdf",
+    "category": "X-Bond",
+    "pageCount": 2
+  },
+  {
+    "id": "doc-x-bondoverconcretefloordetail-2025",
+    "title": "X BondoverConcreteFloorDetail",
+    "sourceDocument": "X-BondoverConcreteFloorDetail-2025.pdf",
+    "category": "X-Bond",
+    "pageCount": 1
   }
 ];
 
 export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
   {
+    "id": "doc-ada-mma-system-steps-p1",
+    "docId": "doc-ada-mma-system-steps",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n20 22 .V01 TYPE A\nSEMCO Stone Soap\nX-BOND ADA MMA SYSTEM\nSTEP 2 - X-BOND SEAMLESS STONE\nEXISTING SUBSTRATE\nSTEP 3 - FINISHING\nSTEP 1 - PREPARATION OF EXISTING SUBSTRATE\nAPPLICATION IN 3 EASY STEPS FLAT\nSEMCO X-Crete 500\nSEMCO Natural Shield\nTYPE B\nSEMCO Power Cleaner\nStone Soap MATTE/GLOSS\nSEMCO X-Crete 400\nSEMCO Titan Shield HIGH GLOSS\nSEMCO Xtra Gloss\nCrystal Coat TYPE D\nSEMCO Nu-Lift Cleaner\nStone Soap\nDEEP GLOSS\nSEMCO Xtreme Gloss\nSCRATCH COAT\nFINISH\nXtreme Gloss sealer\n1/8”\nSEMCO LIQUID M EMBRANE™\nwith fabric reinforcement\n+ BROWN COAT\n(OPTIONAL)\nX-BOND SEAMLESS STONE\nX-BOND ADA MMA SYSTEM\n1/8” - 1/2” TYPE E SATIN\nSEMCO Satin Stone TYPE C\nSEMCO Industrial\nCleaner and Degreaser",
+    "sourceDocument": "ADA-MMA-System-Steps.pdf",
+    "title": "ADA MMA System Steps",
+    "category": "Technical doc",
+    "wordCount": 129
+  },
+  {
+    "id": "doc-basement-waterproofing-2-p1",
+    "docId": "doc-basement-waterproofing-2",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nconcrete\n1. Existing substrate - concrete\n2. SEMCO Liquid Membrane™ - 2 coats, each coat 15 mil. Total thickness - 30 mil (2 coats).\nLet each coat dry before applying next coat.\n3. Fabric reinforcement\n4. SEMCO Liquid Membrane™ - 2 coats, each coat 15 mil. Total thickness - 30 mil (2 coats).\nLet each coat dry before applying next coat.\nTotal system thickness - 60 mil (approx)\n4 coats of SEMCO Liquid Membrane™\n2 3 4\n2021 .V03 * Drawings are not to scale\nSEMCO LIQUID MEMBRANE™\n1st coat\nFABRIC REINFORCEMENT\n6” wide\nSEMCO LIQUID MEMBRANE™\n2nd coat\n1\nReduces RH up to 75% / vapor transmission rate up to 10 PSI SURFACE ENGINEERING COMPANY\nBASEMENT WATERPROOFING",
+    "sourceDocument": "Basement-Waterproofing-2.pdf",
+    "title": "Basement Waterproofing 2",
+    "category": "Technical doc",
+    "wordCount": 120
+  },
+  {
+    "id": "doc-basement-waterproofing-x-bond-p1",
+    "docId": "doc-basement-waterproofing-x-bond",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nconcrete\nSCRATCH COAT\nNATURAL SHIELD\nX-BOND SEAMLESS\nSTONE\n1. Existing substrate - concrete\n2. Natural Shield, 2 coats\n3. Scratch Coat\n4. SEMCO Liquid Membrane™ - 2 coats, each 15 mil. Total\nthickness - 30 mil. Let each coat dry before applying next coat.\n5. Fabric R einforcement\n6. SEMCO Liquid Membrane™ - 2 coats, each 15 mil. Total\nthickness - 30 mil. Let each coat dry before applying next coat.\n7. Scratch Coat\n8. X-Bond Seamless Stone - apply in different layers to a total\nthickness of 1/ 8 ” (about 3.175 mm).\nX-Bond layers do not need to be dry\nbefore applying next coat.\nTotal system thickness - 3/16\" (4 . 7 5 mm)\n1/ 8 “ X-Bond + 60 mil SEMCO Liquid Membrane™\n2 3 4 7 8 6 5\n1\n2022 . V01 * Drawings are not to scale\nSCRATCH COAT\nSEMCO LIQUID MEMBRANE™\nwith F abric R einforcement\nReduces RH up to 90%, vapor transmission up to 20 PSI SURFACE ENGINEERING COMPANY\nBASEMENT WATERPROOFING",
+    "sourceDocument": "Basement-Waterproofing-X-Bond.pdf",
+    "title": "Basement Waterproofing X Bond",
+    "category": "X-Bond",
+    "wordCount": 171
+  },
+  {
+    "id": "doc-basement-waterproofing-p1",
+    "docId": "doc-basement-waterproofing",
+    "pageNumber": 1,
+    "text": "PROBLEMS: With rain or from other sources such as irrigation or condensation, moisture\ncan creep into your basement through your foundation walls or concrete ground slab.\nSOLUTION: SEMCO LIQUID MEMBRANE™\n2021 .V03 * Drawings are not to scale\nSEMCO Liquid Membrane™ is a single component waterproofing and anti-fracture membrane. SEMCO\nLiquid Membrane™ is a self-contained elastomeric fluid suspended in a copolymer adhesive, this revolutionary\nblend enables easy application while providing excellent bridging, and waterproofing. When combined with\nSEMCO’s X-Bond Seamless Stone, two-stage waterproofing is achieved, enabling single source protection.\nEASY APPLICATION\nNo specialty tools required\nROLLER PAINT BRUSH\nWaterproofing failures can cause the\nfollowing problems:\n1. Mold, mildew, vegetative growth and odors\n2. Stains and rust\n3. Efflorescence and spalling of concrete or\nmasonry that might eventually lead to serious\nstructural concerns\n4. Deteriation of carpet and wood rot\n5. Delamination of existing wall and floor coverings\nSolution for Basement/Submerged Substrate\nWaterproofing Problems\nRainwater\nSaturated soil\nMoisture enters\nbasement by vapor\ndiffusion and cappilary\nsuction through the\nconcrete\nSoil becomes saturated beneath footing and slab\nGroundwater\nSEMCO Liquid Membrane™\nInternal moisture sources\nSURFACE ENGINEERING COMPANY\nBASEMENT WATERPROOFING",
+    "sourceDocument": "Basement-Waterproofing.pdf",
+    "title": "Basement Waterproofing",
+    "category": "Technical doc",
+    "wordCount": 187
+  },
+  {
+    "id": "doc-broadcast-system-steps-p1",
+    "docId": "doc-broadcast-system-steps",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n20 22 .V01 TYPE A\nSEMCO Stone Soap\nX-BOND ADA BROADCAST SYSTEM\nSTEP 2 - X-BOND SEAMLESS STONE\nEXISTING SUBSTRATE\nSTEP 3 - FINISHING\nSTEP 1 - PREPARATION OF EXISTING SUBSTRATE\nAPPLICATION IN 3 EASY STEPS FLAT\nSEMCO X-Crete 500\nSEMCO Natural Shield\nTYPE B\nSEMCO Power Cleaner\nStone Soap MATTE/GLOSS\nSEMCO X-Crete 400\nSEMCO Titan Shield HIGH GLOSS\nSEMCO Xtra Gloss\nCrystal Coat TYPE D\nSEMCO Nu-Lift Cleaner\nStone Soap\nDEEP GLOSS\nSEMCO Xtreme Gloss\nSCRATCH COAT\nFINISH\nXtreme Gloss sealer\n1/8”\nSEMCO LIQUID M EMBRANE™\nwith fabric reinforcement\n+ BROWN COAT\n(OPTIONAL)\nX-BOND SEAMLESS STONE\nX-BOND ADA BROADCAST SYSTEM\n3/16” - 2” TYPE E SATIN\nSEMCO Satin Stone TYPE C\nSEMCO Industrial\nCleaner and Degreaser",
+    "sourceDocument": "Broadcast-System-Steps.pdf",
+    "title": "Broadcast System Steps",
+    "category": "Technical doc",
+    "wordCount": 129
+  },
+  {
+    "id": "doc-ceiling-surface-steps-p1",
+    "docId": "doc-ceiling-surface-steps",
+    "pageNumber": 1,
+    "text": "MATTE\nSEMCO Satin Stone\n3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n2021.V01\nCEILING SURFACE\nSTEP 2 - X-BOND SEAMLESS STONE\nEXISTING\nCEILING\nSUBSTRATE\nJOINTS/SEAMS\nSTEP 3 - FINISHING\nSTEP 1 - PREPARATION OF EXISTING SUBSTRATE\nAPPLICATION IN 3 EASY STEPS\nWET ROOMS\nSEMCO Natural Shield\n& Xtre Gloss\nSCRATCH COAT\nSCRATCH COAT\nFINISH\nX-BOND SEAMLESS STONE\n(FOR SHOWERS AND WET ROOMS\nMINIMUM THICKNESS - 1/4”)\nGLOSS\nSEMCO Xtreme Gloss\nSEMCO LIQUID MEMBRANE™ +\nFABRIC REINFORCEMENT\n(OVER JOINTS AND SEAMS)\nTYPE A\nSEMCO Stone Soap\nTYPE E\nOver Wood",
+    "sourceDocument": "Ceiling-Surface-Steps.pdf",
+    "title": "Ceiling Surface Steps",
+    "category": "Technical doc",
+    "wordCount": 93
+  },
+  {
+    "id": "doc-color-bond-steps-p1",
+    "docId": "doc-color-bond-steps",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n20 22 .V01\nCOLOR BOND\nSTEP 2 - X-BOND SEAMLESS STONE\nEXISTING SUBSTRATE\nSTEP 3 - FINISHING\nSTEP 1 - PREPARATION OF EXISTING SUBSTRATE\nAPPLICATION IN 3 EASY STEPS\nFLAT\nSEMCO X-Crete 500\nSEMCO Natural Shield\nMATTE/GLOSS\nSEMCO X-Crete 400\nSEMCO Titan Shield\nHIGH GLOSS\nSEMCO Xtra Gloss\nCrystal Coat\nDEEP GLOSS\nSEMCO Xtreme Gloss\nCrystal Coat\nFINISH\nSCRATCH COAT\nSEMCO LIQUID MEMBRANE™\nwith fabric reinforcement\n+ BROWN COAT\n(OPTIONAL)\nX-BOND SEAMLESS STONE\nCOLOR BOND\nSATIN\nSEMCO Satin Stone\nTYPE A\nSEMCO All Purpose\nCleaner\nTYPE B\nSEMCO Commercial\nCleaner\nTYPE C\nSEMCO Industrial\nCleaner and Degreaser\nTYPE D\nSEMCO Mineral\nCleanser\nTYPE E\nOver Wood",
+    "sourceDocument": "Color-Bond-Steps.pdf",
+    "title": "Color Bond Steps",
+    "category": "Technical doc",
+    "wordCount": 118
+  },
+  {
+    "id": "doc-cove-base-detail-plywood-p1",
+    "docId": "doc-cove-base-detail-plywood",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nPLYWOOD\nPREPARATION - TYPE E\nSCRATCH COAT\n1. Existing substrate - plywood\n2. SEMCO Liquid Membrane™\n3. Fabric reinforcement\n4. SEMCO Liquid Membrane™\n5. X-Bond Scratch Coat\n6. X-Bond Mixture (up to 3/4” radius)\n7. X-Bond Seamless Stone - ADA Safety Floor\n8. Satin Stone\nDrawings are not to scale\n6 2 3 4 5 7 8\n1\nFINISH\nSatin Stone\nX-BOND MIXTURE\n1 part of X-Bond Liquid to 3 parts of X-Bond Stone\nup to 3/4” radius\nX-BOND SEAMLESS STONE\nADA Safety Floor\nSEMCO\nLIQUID MEMBRANE™\nwith fabric reinforcement\n2021 .V02 * Drawings are not to scale\nX-Bond Seamless Stone over plywood SURFACE ENGINEERING COMPANY\nCOVE BASE DETAIL",
+    "sourceDocument": "Cove-Base-Detail-Plywood.pdf",
+    "title": "Cove Base Detail Plywood",
+    "category": "Technical doc",
+    "wordCount": 111
+  },
+  {
+    "id": "doc-cove-base-detail-p1",
+    "docId": "doc-cove-base-detail",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nCONCRETE\nSCRATCH COAT\nPREPARATION - TYPE B\nSEMCO Commercial Cleaner\nFINISH\nSatin Stone\nSCRATCH COAT\nX-BOND MIXTURE\n1 part of X-Bond Liquid to 3 parts of X-Bond Stone\nup to 3/4” radius\nX-BOND SEAMLESS STONE\nADA Safety Floor\n1. Existing substrate\n2. X-Bond Scratch Coat\n3. SEMCO Liquid Membrane™\n4. Fabric reinforcement\n5. SEMCO Liquid Membrane™\n6. X-Bond Scratch Coat\n7. X-Bond Mixture (up to 3/4” radius)\n8. X-Bond Seamless Stone - ADA Safety Floor\n9. Satin Stone\nDrawings are not to scale\n5 2 3 4 6 7 8\n1\n2021 .V02 * Drawings are not to scale\nSEMCO\nLIQUID MEMBRANE™\nwith fabric reinforcement\nX-Bond Seamless Stone over concrete SURFACE ENGINEERING COMPANY\nCOVE BASE DETAIL",
+    "sourceDocument": "Cove-Base-Detail.pdf",
+    "title": "Cove Base Detail",
+    "category": "Technical doc",
+    "wordCount": 118
+  },
+  {
+    "id": "doc-cracks-joints-wider-14-p1",
+    "docId": "doc-cracks-joints-wider-14",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n2019.V02\nCracks wider than 1/4”\nCAUTION! Reopen exterior control joints - 1/4” wide and 1/4” deep.\n2 3 7 6\n4\n1\n5\n* Drawings are not to scale\n1. Existing substrate - concrete\n2. Scratch Coat\n3. Liquid Membrane, apply 2 coats (40 mils)\n4. Fill cracks with X-Bond Brown Coat:\n1 part of X-Bond Liquid to 1 part of X-Bond Additive to 2 1/2 parts of X-Bond Stone\n5. Liquid Membrane, 1st coat\n6. Fabric reinforcement, while Liquid Membrane is still wet, embed fabric reinforcement into it\n7. Liquid Membrane, apply 2nd coat over embedded fabric reinforcement immediately\nLiquid Membrane over cracks wider than 1/4” SURFACE ENGINEERING COMPANY\nCRACKS & CONTROL JOINTS",
+    "sourceDocument": "Cracks-Joints-wider-14.pdf",
+    "title": "Cracks Joints wider 14",
+    "category": "Technical doc",
+    "wordCount": 126
+  },
+  {
+    "id": "doc-drain-detail-p1",
+    "docId": "doc-drain-detail",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nCONCRETE\nSCRATCH COAT\nPREPARATION - TYPE B\nSEMCO Commercial Cleaner\nFINISH\nSatin Stone\nSCRATCH COAT\nBROWN COAT\nas needed\nX-BOND SEAMLESS STONE\nADA Safety Floor\n1. Existing substrate - concrete\n2. X-Bond Scratch Coat\n3. SEMCO Liquid Membrane™\n4. Fabric reinforcement\n5. SEMCO Liquid Membrane™\n6. X-Bond Scratch Coat\n7. X-Bond Brown Coat (as needed)\n8. X-Bond Seamless Stone - ADA Safety Floor\n9. Satin Stone\n2 3 4 5 6 7 8 9 Drain flange\n1\nSEMCO\nLIQUID MEMBRANE™\nwith fabric reinforcement\n2021 .V02 * Drawings are not to scale\nX-Bond Seamless Stone over concrete SURFACE ENGINEERING COMPANY\nDRAIN DETAIL",
+    "sourceDocument": "Drain-Detail.pdf",
+    "title": "Drain Detail",
+    "category": "Technical doc",
+    "wordCount": 103
+  },
+  {
     "id": "doc-lm-data-sheet-p1",
     "docId": "doc-lm-data-sheet",
     "pageNumber": 1,
     "text": "PRODUCT DESCRIPTION\nSEMCO’s Liquid Membrane™ is a single component waterproofing and anti-fracture membrane. The SEMCO\nLiquid Membrane™ is a self-contained elastomeric fluid suspended in a copolymer adhesive, this revolutionary blend\nenables easy application while providing excellent bridging, and waterproofing. When combined with SEMCO’s\nX-Bond Seamless Stone, two-stage waterproofing is achieved, enabling single source protection.\nANSI 118.10 – Breaking Strength (ASTM D751, Procedure B) Pass\nANSI 118.10 – Dimensional Stability (ASTM D1204) Pass\nANSI 118.10 – 7-Day Shear Strength (ASTM C482-9.8) 173 PSI\nANSI 118.10 – 7-Day Water Immersion Shear Strength 132 PSI\nANSI 118.10 – 4-Week Shear Strength 234 PSI\nASTM E96 – Water Vapor Transmission 1.52 (g/hr-m2)\nASTM E96 – Water Vapor Transmission: Permeability 0.135 (perm-in)\nISO 37 – Tensile Strength (ASTM D412): Maximum Stress 453 PSI\nISO 37 – Tensile Strength (ASTM D412): Ultimate Elongation 321%\nASTM D42370 – Tensile Strength: Maximum Stress 184 PSI\nASTM D42370 – Tensile Strength: Ultimate Elongation 1,300%\nSEMCO LIQUID MEMBRANE ™\nWaterproof Adhesive\nTechnical Product Information\nWARRANTY 5 year standard limited warranty, 10 year for non-traffic surfaces\nTEST RESULTS\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. When performing a flood test remove all excess water if test is performed prior to 100% curing. Not for use on humans or animals. Be sure to read container\nlabel and Safety Data Sheet for additional handling requirements before using this product.\nLIMITED WARRANTY NOTICE\nSEMCO Modern Seamless Surface warrants that its products will meet their specifications. There are no other warranties, expressed or implied of merchantability or fitness of use. The only obligation of the seller-manufacturer shall be\nto replace material found to be defective. SEMCO Modern Seamless Surface will not be liable for labor or consequential damage of any kind. The information contained herein is, to the best of our knowledge and belief, true and accurate.\nHowever, since the conditions of handling and use are beyond our control, we make no guarantee of results, and assume no liability for damages incurred by use of this material. It is the responsibility of the user to comply with all applicable\nfederal, state and local laws and regulations. All chemicals may present unknown health hazards and should be used with caution.\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2023.V01\nSURFACE ENGINEERING COMPANY\nSUBSTRATES\n• Concrete\n• Plywood\n• Stone\n• Exterior/Interior cladding\n• Residential, industrial, and\ncommercial\nFEATURES / BENEFITS\n• Waterproofing:\ninterior, exterior and below grade\n• Crack bridging\n• Stabilization\n• Anti-fracture\nOpen pore substrates 25-50\nClosed pore substrates 35-65\nX-Bond Scratch Coat 100-150\nApplication 1/2” nap roller, paint brush or airless sprayer with tip size21 at 2,500 PSI (2 coats minimum)\nApplication environment Apply at temperatures from 50°F to 90°F\nDrying time 25 to 30 minutes at 72°F\nCure time 50% in 72 hours, 100% in 7 days\nColor Orange (other colors available upon request)\nChemical type Latex - crossilink hybrid\nClean up SEMCO Stone Soap with water\nShelf life 2 years in controlled environment (60°F - 72°F)\nWater test In 35 minutes after application\nPackaging (base and color activator) 1 gal., 5 gal. and 55 gal.\nVOC content 14 g/L or 0.20%\nAPPLICATION AND SPECIFICATIONS\nCOVERAGE (sq. ft. per gallon of mixture)",
-    "sourceDocument": "LM+Data+Sheet.pdf",
+    "sourceDocument": "LM-Data-Sheet.pdf",
     "title": "LM Data Sheet",
     "category": "Liquid Membrane",
     "wordCount": 542
+  },
+  {
+    "id": "doc-lm-over-concrete-p1",
+    "docId": "doc-lm-over-concrete",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\n(CONCRETE)\n2 3 4\n1. Existing substrate - concrete\n2. SEMCO Liquid Membrane™ - 1 coat at 15 mil\n3. Fabric reinforcement - while wet, embed fabric reinforcement and apply 15 mil to the fabric applied\narea (for expansion joints that do not exceed 1/8” joints must be filled prior to bridging)\n4. SEMCO Liquid Membrane™ - 1 coat at 15 mil\nNOTE: system is based on an application of sound\nand non-delaminating concrete expanded system\nmay be needed depending on existing conditions,\ncontact info@semcosurfaces.com for more details\nSEMCO\nLIQUID MEMBRANE™\nSEMCO\nLIQUID MEMBRANE™\nFABRIC REINFORCEMENT\n2021 .V02 * Drawings are not to scale\n1\nSEMCO Liquid Membrane™ over concrete SURFACE ENGINEERING COMPANY\nSEMCO\nLIQUID MEMBRANE™ DETAIL",
+    "sourceDocument": "LM-over-concrete.pdf",
+    "title": "LM over concrete",
+    "category": "Liquid Membrane",
+    "wordCount": 119
+  },
+  {
+    "id": "doc-lm-over-gyp-crete-p1",
+    "docId": "doc-lm-over-gyp-crete",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\n(GYP-CRETE)\n2 3\n1. Existing substrate - Gyp-Crete\n2. SEMCO Liquid Membrane™ - 1st coat at 15 mil\n3. SEMCO Liquid Membrane™ - 2nd coat at 15 mil\n1st coat - SEMCO\nLIQUID MEMBRANE™\n2nd coat - SEMCO\nLIQUID MEMBRANE™\n2021 .V01 * Drawings are not to scale\n1\nSEMCO Liquid Membrane™ over Gyp-Crete SURFACE ENGINEERING COMPANY\nSEMCO\nLIQUID MEMBRANE™ DETAIL",
+    "sourceDocument": "LM-over-Gyp-crete.pdf",
+    "title": "LM over Gyp crete",
+    "category": "Liquid Membrane",
+    "wordCount": 63
+  },
+  {
+    "id": "doc-lm-safety-data-sheet-p1",
+    "docId": "doc-lm-safety-data-sheet",
+    "pageNumber": 1,
+    "text": "Page 1 / 6\nSAFETY DATA SHEET\nIssue Date 18 - Sept - 2017 Revision Date 18 - Sept - 2017 Version 1\nProduct identifier\nProduct Name SEMCO LIQUID MEMBRANE ™\nOther means of identification\nProduct Code XME 8 00 0 , XME 8 00 , XME801, XME 8 0 5\nSynonyms Liquid Membrane, SEMCO Membrane , SEMCO L iquid Membr ane\nRecommended use of the chemical and restrictions on use\nRecommended Use Water - based emulsion polymers for use in coatings and adhesives. See our product\nl iterature to determine which SEMCO Modern Seamless Surface product(s) would be\nappropriate for a particular application.\nUses advised against No information available\nDetails of the supplier of the safety data sheet\nManufacturer Address\nSEMCO Surfaces Inc\n3620 West Reno Ave Suite J\nLas Vegas, NV 89118\nEmergency telephone number\nCompany Phone Number 702 - 222 - 9495\n800 33 SEMCO\nEmergency Telephone Chemtrec 1 - 800 - 424 - 9300\nClassification\nOSHA Regulatory Status\nThis chemical is not considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200)\nNot a dangerous substance or mixture according to the Globally Harmonized System (GHS)\nLabel elements\nEmergency Overview\nHazards not otherwise classified (HNOC)\nOther Information\nUnknown Acute Toxicity 22 .71787 % of the mixture consists of ingredient(s) of unknown toxicity\nThe product contains no substances which at their given concentration, are considered to be hazardous to health\nAppearance Oran ge , Milky White Physical state Liquid Odor Slight\n1. IDENTIFICATION OF THE SUBSTANCE/PREPARATION AND OF THE COMPANY/UNDERTAKING\n2. HAZARDS IDENTIFICATION\n3. COMPOSITION/INFORMATION ON INGREDIENTS",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "title": "LM Safety Data Sheet",
+    "category": "Liquid Membrane",
+    "wordCount": 261
+  },
+  {
+    "id": "doc-lm-safety-data-sheet-p2",
+    "docId": "doc-lm-safety-data-sheet",
+    "pageNumber": 2,
+    "text": "Page 2 / 6\nSEMCO Liquid Membrane ™ Revision Date 18 - Sept - 2017\nSubstance\nChemical Name CAS No. Weight - % Trade Secret\nAmmonium hydroxide 1336 - 21 - 6 <0. 1 *\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\nFirst aid measures\nEye contact Rinse thoroughly with plenty of water for at least 15 minutes, lifting lower and upper eyelids.\nConsult a physician.\nSkin Contact Wash skin with soap and water. Wash contaminated clothing before reuse.\nInhalation Remove to fresh air.\nIngestion Clean mouth with water and drink afterwards plenty of water.\nMost important symptoms and effects, both acute and delayed\nSymptoms No information available.\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment. Dry chemical, CO2,\nalcohol - resistant foam or water spray.\nUnsuitable exti nguishing media CAUTION: Use of water spray when fighting fire may be inefficient.\nSpecific hazards arising from the chemical\nNo information available.\nExplosion data\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nAs in any fire, wear self - contained breathing apparatus pressure - demand, MSHA/NIOSH (approved or equivalent) and full\nprotective gear.\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Ensure adequate ventilation, especially in confined areas.\nEnvironmental precautions\nEnvironmental precautions See section 12 for additional ecological information.\nMetho ds and material for containment and cleaning up\nMethods for containment Prevent further leakage or spillage if safe to do so. Dike far ahead of spill; use dry sand to\ncontain the flow of material.\n5. FIRE - FIGHTING MEASURES\n4. FIRST AID MEASURES\n6. ACCIDENTAL RELEASE MEASURES",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "title": "LM Safety Data Sheet",
+    "category": "Liquid Membrane",
+    "wordCount": 294
+  },
+  {
+    "id": "doc-lm-safety-data-sheet-p3",
+    "docId": "doc-lm-safety-data-sheet",
+    "pageNumber": 3,
+    "text": "Page 3 / 6\nSEMCO Liquid Membrane ™ Revision Date 18 - Sept - 2017\nMethods for cleaning up Pick up and transfer to properly labeled containers.\nPrecautions for safe handling\nAdvice on safe handling Handle in accordance with good industrial hygiene and safety practice.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Keep containers tightly closed in a dry, cool and well - ventilated place.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines This product, as supplied, does not contain any hazardous materials with occupational\nexposure limits established by the region specific regulatory bodies.\nAppropriate engineering cont rols\nEngineering Controls Showers\nEyewash stations\nVentilation systems.\nIndividual protection measures, such as personal protective equipment\nEye/face protection No special technical protective measures are necessary.\nSkin and body protection No special technical protective measures are necessary.\nRespiratory protection If exposure limits are exceeded or irritation is experienced, NIOSH/MSHA approved\nrespiratory protection should be worn. Positive - pressure supplied air respirators may be\nrequired for high airborne contaminant concentrations. Respiratory protection must be\nprovided in accordance with current local regulations.\nGeneral Hygiene Considerations Handle in accordance with good industrial hygiene and safety practice.\nInformation on basic physical and chemical properties\nPhysical state\nAppearance\nOdor threshold\nProperty\nLiquid\nOrange\nNo information available\nValues\nOdor Slight\nRemarks • Method\npH\nMelting point/freezing point\nBoiling point / boiling range\nFlash point\nEvaporation rate\nFlammability (solid, gas)\n8 - 9\n32°F\n>200°F\n>200°F\nNo information available\nNo information available\nFlammability Limit in Air\nUpper flammability limit:\nLower flammability limit:\nVapor pressure\nVapor density\nRelative density\nWater solubility\nNo information available\nNo information available\nNo information available\nNo information available\nNo information available\nDispersible\n7. HANDLING AND STORAGE\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION\n9. PHYSICAL AND CHEMICAL PROPERTIES",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "title": "LM Safety Data Sheet",
+    "category": "Liquid Membrane",
+    "wordCount": 294
+  },
+  {
+    "id": "doc-lm-safety-data-sheet-p4",
+    "docId": "doc-lm-safety-data-sheet",
+    "pageNumber": 4,
+    "text": "Page 4 / 6\nSEMCO Liquid Membrane ™ Revision Date 18 - Sept - 2017\nSolubility in other solvents No information available\nPartition coefficient No information available\nAutoignition temperature No information available\nDecomposition temperature No information available\nDynamic viscosity 510 Centipoise\nReactivity\nNo data available\nChemical stability\nStable under recommended storage conditions.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nProtect from freezing - product stability may be affected.\nIncompatible materials\nNone known based on information supplied.\nHazardous Decomposition Products\nNone known based on information supplied.\nInformation on likely routes of exposure\nProduct I nformation No data available\nInhalation No data available.\nEye contact No data available.\nSkin Contact No data available.\nIngestion No data available.\nComponent Information\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\nAmmonium hydroxide\n1336 - 21 - 6\n= 12 0 mg/kg ( Rat ) - -\nInformation on toxicological effects\nSymptoms No information available.\nDelayed and immediate effects as well as chronic effects from short and long - term exposure\nSensitization No information available.\nGerm cell mutagenicity No information available.\nCarcinogenicity No information available.\nReproductive toxicity No information available.\nSTOT - single exposure No information available.\nSTOT - repeated exposure No information available.\nAspiration hazard No information available.\nNumerical measures of toxicity - Product Information\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "title": "LM Safety Data Sheet",
+    "category": "Liquid Membrane",
+    "wordCount": 221
+  },
+  {
+    "id": "doc-lm-safety-data-sheet-p5",
+    "docId": "doc-lm-safety-data-sheet",
+    "pageNumber": 5,
+    "text": "Page 5 / 6\nSEMCO Liquid Membrane ™ Revision Date 18 - Sept - 2017\nUnknown Acute Toxicity 2 2.71787 % of the mixture consists of ingredient(s) of unknown toxicity\nEcotoxicity\nToxic to aquatic life with long lasting effects\n22 .8668762 % of the mixture consists of component(s) of unknown hazards to the aquatic environment\nPersistence and degradabilit y\nNo information available.\nBioaccumulation\nNo information available.\nOther adverse effects No information available\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations.\nContaminated packaging Do not reuse container.\nChemical Name California Hazardous Waste Status\nAmmonium\nhydroxide 1336 - 21 - 6\nToxic\nCorrosive\nDOT Not regulated\nInternational Inventories\nTSCA On the inventory, or in compliance with the inventory.\nDSL/NDSL All components of this product are on the DSL.\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non - Domestic Substances List\nUS Federal Regulations\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product contains a chemical\nor chemical s which are subject to the reporting requirements of the Act and Title 40 of the Code of Federal Regulations, Part 372\n12. ECOLOGICAL INFORMATION\n13. DISPOSAL CONSIDERATIONS\n14. TRANSPORT INFORMATION\n15. REGULATORY INFORMATION",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "title": "LM Safety Data Sheet",
+    "category": "Liquid Membrane",
+    "wordCount": 221
+  },
+  {
+    "id": "doc-lm-safety-data-sheet-p6",
+    "docId": "doc-lm-safety-data-sheet",
+    "pageNumber": 6,
+    "text": "Page 6 / 6\nSEMCO Liquid Membrane ™ Revision Date 18 - Sept - 2017\nChemical Name SARA 313 - Threshold Values %\nAmmonium hydroxide - 1336 - 21 - 6 1.0\nSARA 311/312 Hazard Categories\nAcute health hazard No\nChronic Health Hazard No\nFire hazard No\nSudden release of pressure hazard No\nReactive Hazard No\nCWA (Clean Water Act)\nThis product contains the following substances which are regulated pollutants pursuant to the Clean Water Act (40 CFR 122.21\nand 40 CFR 122.42)\nChemical Name CWA - Reportable\nQuantities\nCWA - Toxic Pollutants CWA - Priority Pollutants CWA - Hazardous\nSubstances\nAmmonium hydroxide\n1336 - 21 - 6\n1000 lb - - X\nCERCLA\nThis material, as supplied, contains one or more substances regulated as a hazardous substance under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302)\nChemical Name Hazardous Substances RQs CERCLA/SARA RQ Reportable Quantity (RQ)\nAmmonium hydroxide\n1336 - 21 - 6\n1000 lb - RQ 1000 lb final RQ\nRQ 454 kg final RQ\nUS State Regulations\nCalifornia Proposition 65\nWARNING: This product contains chemicals known to the State of California to cause cancer and birth defects or other\nreproductive harm.\nU.S. State Right - to - Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\nAmmonium hydroxide\n1336 - 21 - 6\nX X X\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\nNFPA Health hazards 1 Flammability 0 Instability 0 Physical and Chemical\nProperties -\nHMIS Health hazards 1 Flammability 0 Physical hazards 0 Personal protection X\nPrepared By SAR\nIssue Date 18 - Sept - 2017\nRevision Date 18 - Sept - 2017\nRevision Note\nNo information available\nDisclaimer\nThe information provided in this Safety Data Sheet is correct to the best of our knowledge, information and belief at the\ndate of its publi cation. The information given is designed only as a guidance for safe handling, use, processing, storage,\ntransportation, disposal and release and is not to be considered a warranty or quality specification. The information\nrelates only to the specific mat erial designated and may not be valid for such material used in combination with any other\nmaterials or in any process, unless specified in the text.\nEnd of Safety Data Sheet\n16. OTHER INFORMATION",
+    "sourceDocument": "LM-Safety-Data-Sheet.pdf",
+    "title": "LM Safety Data Sheet",
+    "category": "Liquid Membrane",
+    "wordCount": 378
   },
   {
     "id": "doc-lm-tech-sheet-p1",
     "docId": "doc-lm-tech-sheet",
     "pageNumber": 1,
     "text": "Product Data SEMCO LIQUID MEMBRANE\nThe SEMCO Liquid Membrane is a single component waterproofing and anti fracture membrane.\nThe SEMCO Liquid Membrane is a self-contained elastomeric fluid suspended in a copolymer\nadhesive, this revolutionary blend enables easy application while providing excellent bridging, and\nwaterproofing. When combined with SEMCO’s X-Bond Seamless Stone, two-stage waterproofing is\nachieved, enabling single source protection.\nPRODUCT\nUSES\nCOVERAGE\nOpen pore substrates 100 - 200\nClosed pore substrates 140 - 250\nX-Bond Scratch Coat 200 - 300\nCOVERAGE sq ft. / gallon @2 coats\nSUBSTRATES\n• Concrete\n• Plywood\n• Stone\n• Exterior/Interior Cladding\n• Residential, Industrial and\nCommercial\nWater-\nproofing\nCrack\nBridging\nAdhesion\n\n\n\nOdorless/Low VOC\nwaterproofing that allows you to pro-\nceed with your finish within 2 hours\nof application enabling a speedier\nproject completion.\nRepair existing surface cracks and\nimperfections to ensure clean and\nsmooth finish\napplication.\nIntegrated chemical adhesion\nenables mechanical cross-linking to\napplied surfaces, creating a perfect\nbond for long lasting\nprotection\nAnti-\nfracture\n\nUp to 400% stretch and\nelongation providing future crack\nsuppression for years to come.\nScan to watch application",
-    "sourceDocument": "LM+Tech+Sheet.pdf",
+    "sourceDocument": "LM-Tech-Sheet.pdf",
     "title": "LM Tech Sheet",
     "category": "Liquid Membrane",
     "wordCount": 183
@@ -123,7 +684,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-lm-tech-sheet",
     "pageNumber": 2,
     "text": "TECHNICAL DATA\nApplication 1/2 “ nap roller ; Airless sprayer with tip size 21 at 2,500 PSI (minimum 2 coats\nApplication environment Apply at temperatures from 50°F to 90°F\nColor Orange ( other colors available on request)\nChemical type Latex - crosslink hybrid\nClean up SEMCO Stone Soap with water\nShelf life 2 year in controlled environment (ambient temperature of 60F - 72F)\nPackaging 1 gal. | 5 gal. | 55gal.\nVOC Content 14 g/L or 0.20%\nDRYING / RECOAT TIME\nTemperature in F\nTime\n72 F\n25 to 30\nminutes\n50 F\nDrying times are affected by temperature and\nrelative humidity. The chart represents guidline\nvalues but each project is to be treated individ -\nually.\nThe chart represents the time needed in be -\ntween coats at specified temperature.\nCure / humidity\nTime\n75%\n10 days 3 days\n50%\n12 hrs\nTime\n50 F 72 F 90 F\n5 days 7 days\n90 F 77 F 67 F\n1 h\n45 min\nCURE TIME\nCuring time is affected by temperature and\nhumidity.\nFor example at only 50F, a full cure would take\n10 days in comparison to at 95 F it would only\ntake 5 days to cure.\nASTM TEST RESULTS\nANSI 118.10 - Breaking Strength ( ASTM D751, Procedure B ) Pass\nANSI 118.10 - Dimensional Stability ( ASTM D1204 ) Pass\nANSI 118.10 - 7-Day Shear Strength ( ASTM C482-9.8) 173 PSI / Shear\nANSI 118.10 - 7-Day Water Immerseion Shear Strength 132 PSI\nANSI 118.10 - 4-Week Shear Strength 234 PSI\nASTM E96 - Water Vapor Transmission 1.52 (g/hr-m2)\nASTM E96 -Water Vapor Transmission : Permeability 0.135 (perm-in)\nISO 37 - Tensile Strength ( ASTM D412 ) : Maximum Stress 390 PSI\nISO 37 - Tensile Strength ( ASTM D412 ) : Ultimate Elongation 400 %",
-    "sourceDocument": "LM+Tech+Sheet.pdf",
+    "sourceDocument": "LM-Tech-Sheet.pdf",
     "title": "LM Tech Sheet",
     "category": "Liquid Membrane",
     "wordCount": 301
@@ -133,7 +694,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-lm-tech-sheet",
     "pageNumber": 3,
     "text": "PROCEDURE\n• Apply minium 2 coats of X-Bond Membrane with a 3/8” roller to achieve a thickness of at least 3 mil to retard future reoccur-\nrence of crack. Wait 30 minutes at 70F before applying next coat.\n• Apply X-Bond Liquid with brush as a primer coat into the crack. Do not allow to dry. Apply mixture of X-Bond 1 part X-Bond\nLiquid to 2 1/2 parts of X-Bond Stone to fill up the crack. Allow mixture to dry, ONCE DRY roll 2 coats of X-Bond Membrane to\nachieve a thickness of at least 3 mil to retard future reoccurrence of crack. 30 min at 70 F between coats.\nCRACKS BETWEEN 1/16 - 1/4 INCH\nFRACTURES UP TO 1/16 INCH CRACKS\nCRACKS OR OPENINGS EXCEEDING 1/4 INCH\n• Roll X-Bond Liquid as a primer coat. Do not Allow to dry. Apply mixture of X-Bond 1 part X-Bond Liquid to 2 1/2 parts of X-Bond\nStone into the crack. Allow mixture to dry, ONCE DRY roll 1 coat of SEMCO Liquid Membrane, while still wet embed Fabric\nMembrane 6” to surface, and immediately roll an additional 2 coats of SEMCO Liquid Membrane to fully encapsulate the Fabric\nMembrane\n• When applying the next line of Fabric Membrane overlap the new sheet over the existing sheet a minimum of 2”\n• Allow surface to dry and proceed to X-Bond Brown Coat in the SEMCO SIP Manual\nSEMCO LIQUID MEMBRANE PROCEDURE\n• Sweep debris off of surface\n• Use a 1/2 ” roller. Allow any pre-treated areas to dry to the touch. Apply a generous coat of SEMCO Liquid Membrane with\nbrush or roller over substrate including pre-treated areas. Apply another generous coat of SEMCO Liquid Membrane over\nthe first coat of SEMCO Liquid Membrane. Let topcoat dry to the touch, approximately 1–2 hours at 70°F (21°C) and 50% RH.\nWhen last coat has dried to the touch, inspect final surface for pinholes, voids, thin spots or other defects. SEMCO Liquid\nMembrane will dry to bright orange color when it’s dry to touch. Use additional X-Bond Membrane to seal the defects.\nRequired thickness is 3 mil\nSEMCO LIQUID MEMBRANE SPRAY APPLICATION\n• Sweep debris off of surface\n• The sprayer being used for the application of SEMCO Liquid Membrane should be capable of producing a minimum of 2,500\npsi (17.2), maximum of 3,300 psi (22.8 MPa) with a flow rate of 0.95 to 1.6 GPM (3.6 to 6.0 LPM) using a 0.521 or a 0.631 reversible\ntip. Keep the unit filled with SEMCO Liquid Membrane to ensure continuous application of liquid. The hose length should\nnot exceed 100’ (30 m) in length and 3/8” (9 mm) in diameter. Required thickness is 3 mil\nNOTES\n• Extended application procedures can be found in the SEMCO SIP Manual.\n• Procedures for cleaning of the flooring system during operations can be found in the SEMCO SIP Manual or upon request\n• Safety Data Sheets for SEMCO Liquid Membrane are available upon request.\nSURFACE ENGINEERING COMPANY\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners. Not for use on\nhumans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet before using this product.\nLIMITED WARRANTY NOTICE\nThe technical details, recommendations and other information contained in this data sheet are given in good faith and represent the best of our knowledge and experience at the time of printing. It\nis your responsibility to ensure that our products are used and handled correctly and in accordance to SEMCO Post Matrix procedure, recommendations and only for the uses they are intended. We\nalso reserve the right to update information without prior notice to you to reflect our ongoing research and development program. Federal, state and local specific recommendations, depending\non local standards, codes of practice, building regulations or industry guidelines, may effect specific installation recommendations. The supply of our products and services is also subject to certain\nterms, warranties and exclusions, which may have already been disclosed to you in prior dealings or are otherwise available to you on request.\n3620 W Reno Avenue | Las Vegas, NV 89118\nP 800.33.SEMCO | info@semcomfg.com\nProudly made in USA",
-    "sourceDocument": "LM+Tech+Sheet.pdf",
+    "sourceDocument": "LM-Tech-Sheet.pdf",
     "title": "LM Tech Sheet",
     "category": "Liquid Membrane",
     "wordCount": 727
@@ -417,6 +978,216 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "title": "Modern brochure",
     "category": "Brochure",
     "wordCount": 7
+  },
+  {
+    "id": "doc-natural-grain-steps-p1",
+    "docId": "doc-natural-grain-steps",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n20 22 .V01\nNATURAL GRAIN\nSTEP 2 - X-BOND SEAMLESS STONE\nEXISTING SUBSTRATE\nSTEP 3 - FINISHING\nSTEP 1 - PREPARATION OF EXISTING SUBSTRATE\nAPPLICATION IN 3 EASY STEPS\nFLAT\nSEMCO X-Crete 500\nSEMCO Natural Shield\nMATTE/GLOSS\nSEMCO X-Crete 400\nSEMCO Titan Shield\nHIGH GLOSS\nSEMCO Xtra Gloss\nCrystal Coat\nDEEP GLOSS\nSEMCO Xtreme Gloss\nCrystal Coat\nFINISH\nSCRATCH COAT\nSEMCO LIQUID MEMBRANE™\nwith fabric reinforcement\n+ BROWN COAT\n(OPTIONAL)\nX-BOND SEAMLESS STONE\nNATURAL GRAIN\nSATIN\nSEMCO Satin Stone\nTYPE A\nSEMCO All Purpose\nCleaner\nTYPE B\nSEMCO Commercial\nCleaner\nTYPE D\nSEMCO Mineral\nCleanser\nTYPE E\nOver Wood\nTYPE C\nSEMCO Industrial\nCleaner and Degreaser",
+    "sourceDocument": "Natural-Grain-Steps.pdf",
+    "title": "Natural Grain Steps",
+    "category": "Technical doc",
+    "wordCount": 118
+  },
+  {
+    "id": "doc-natural-shield-data-sheet-p1",
+    "docId": "doc-natural-shield-data-sheet",
+    "pageNumber": 1,
+    "text": "PRODUCT DESCRIPTION\nSEMCO’s Natural Shield is an exceptional waterproofing sealer that excels under the most demanding\ncircumstances. Natural Shield’s low molecular weight allows for excellent penetration. Natural Shield fills\ninto the pores of the substrate, in which chemical reaction follows, that creates a solid, but breathable\nmembrane. Natural Shield provides long lasting protection for a vast array of surfaces in which it leaves a\nnatural finish. It has durability and performance of a solvent-based system, but with the easy application\nand clean-up of water-based products. Natural Shield’s performance allows to be used in commercial\nareas to protect your surface and decrease maintenance efforts.\nUsed automobile oil Good\nTransmission fluid Good\nWater Excellent\nAlkali resistance Excellent\nHydrochloric acid (10%) Good\nPolished Concrete 150-250\nArtificial Stone 200-250\nStamped Concrete 300-350\nBelow Grade 150-200\nApplication procedure Apply wet on wet require 3 coats, do not allow each coat to dry\nDrying time 30 min at 72°F, 10 min between coats at 72°F\nCure time 4 days at 100°F, 7 days at 72°F\nColor Milky white\nChemical type Silane and Siloxane\nClean up SEMCO Stone Soap with water\nShelf life 3 years\nUseful life 3 years\nPackaging 1 Gal. pail, 5 gal. pail, 55 gal. drum\nNATURAL SHIELD\nIndustrial Flat Finish Sealer\nTechnical Product Information\nAPPLICATION AND SPECIFICATIONS\nCOVERAGE (sq. ft. per gallon, 3 coats)\nTEST RESULTS*\nFEATURES / BENEFITS\n• Excellent penetration\n• Can be applied on damp surfaces\n• Highly alkaline resistant\n• Effective against freeze-thaw damage\n• Unaffected by ultra-violet rays\n• Increases life of mortar, tiles, stucco, brick and natural stone\nAPPLICATION\nSUBSTRATES\n• Existing concrete\n• X-Bond System\n• Natural Stain\n• Stucco\n• Slump block\n• Block wall\n• Tilt-up wall\n• Porous natural stone\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2019.V01\nSURFACE ENGINEERING COMPANY\nAIRLESS SPRAYER\ntip size 15\n400 PSI\nROLLER\n3 coats minimum\nPUMP SPRAYER\n3 coats minimum",
+    "sourceDocument": "Natural-Shield-Data-Sheet.pdf",
+    "title": "Natural Shield Data Sheet",
+    "category": "Technical doc",
+    "wordCount": 319
+  },
+  {
+    "id": "doc-natural-shield-sds-p1",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 1,
+    "text": "Safety Data Sheet\nPage: 1 /9\n1. Product and company identification\n2. Hazards identification\n1.1 Identification of the substance or preparation:\nCommercial product name: NATURAL SHIELD\nUse of substance / preparation Industrial.\nModifying agent for: Building materials\n1.2 Company/undertaking identification:\nManufacturer/distributor: SEMCO Modern Seamless Surface Inc\n3620 West Reno Avenue\nLas Vegas, NV 8118\nUSA\nCustomer information: InfoLine:\nTel (702) 222 - 9495, info@semcosurfaces.com\nHours of operation:\nMonday - Friday,8 am to 5 pm (pacific standard time)\nCorporate website: www.semcosurfaces.com\nEmergency telephone no. (24h):\nTransportation emergency: (800) 424 - 9300 (CHEMTREC, USA)\n(703) 527 - 3887 (CHEMTREC, international)\nThis SDS was prepared by the Product Safety Department (RAPS) of SEMCO Modern Seamless Surface Inc.\n2.1 Classification of the substance or mixture\nClassification (GHS):\nClass Category Route of\nexposure\nHazardous to the aquatic environment acute, category 3\nSerious eye damage / eye irritation Category 2\nSkin corrosion/irritation Category 2\n2.2 Label elements\nLabelling (GHS):\nPictogram(s):\nSignal Word: Warning\nH - Code Hazard Statements\nH315+H320 Causes skin and eye irritation.\nH402 Harmful to aquatic life.\nP - Code Precautionary Statements\nP103 Read label before use.\nP273 Avoid release to the environment.\nP280 Wear protective gloves/protective clothing/eye protection/face protection.\nP303+P361+P353 IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water/shower.\nP305+P351+P338 IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to\ndo. Continue rinsing.\nP333+P313 If skin irritation or rash occurs: Get medical advice/attention.\nP403+P235 Store in a well - ventilated place. Keep cool.\nP404 Store in a closed container.\nP501 Dispose of contents/container to waste disposal.",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 267
+  },
+  {
+    "id": "doc-natural-shield-sds-p2",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 2,
+    "text": "Safety Data Sheet\nPage: 2 /9\n4. First - aid measures\n2.3 Other hazards\nNo data available.\n3.1 Chemical characterization (preparation)\n3.2 Information on ingredients:\nType CAS No. Substance Content [wt. %] Note\nLower Upper\nINHA 64 - 19 - 7 Acetic acid 0.0001 <=1.4088\nINHA 104780 - 78 - 1 Alkylalkoxy siloxane 0.3474 <=0.5198\nINHA 35435 - 21 - 3 Octyl triethoxy silane 0.9619 <=2.7226\nINHA 2867 - 47 - 2 Proprietary Monomer <=2.347\nType: HYD - by - product upon hydrolysis, INHA - ingredient, NEBE - by - product, MONO - residual monomer, VERU - impurity,\nVUL - by - product upon vulcanization. *** Note: C1 - IARC carcinogen, C2 - NTP carcinogen, C3 - OSHA carcinogen, NH - non -\nhazardous, R - repro ductive toxin.\nSubstances listed in the Subsections \"HAPS\" and \"California Proposition 65 Carcinogens / Reproductive Toxins\" that are not\nlisted in this section are only present at quantities below 0.1% for California Proposition 65 listed toxins or below 1% for non -\ncarcinogenic HAPS or they are inextricably bound in the product.\n4.1 General information:\nGet medical attention if irritation occurs or if breathing becomes difficult. Remove contaminated clothing and shoes.\n4.2 After inhalation\nIf inhaled remove to fresh air. If not breathing, give artificial respiration. If breathing is difficult give oxygen.\n4.3 Aft er contact with the skin\nFor skin contact, immediately wipe away excess material. Use a waterless hand cleaner to remove as much of the remaining\nmaterial as possible. Wash with soap and water.\n4.4 After contact with the eyes\nIf contact with eyes, immediately hold eyelids apart and flush with plenty of water for at least 15 min.\n4.5 After swallowing\nFor ingestion, if conscious, give several glasses of water but do not induce vomiting. If vomiting does occur, give additiona l fluids.\n4.6 Advice for the physician\nTreat sy mptomatically.\n5.1 Flammable properties:\nProperty:\nFlash point...............................................................:\nBoiling point / boiling range .....................................:\nLower explosion limit (LEL) .....................................:\nUpper explosion limit (UEL).....................................:\nIgnition temperature ................................................:\nNFPA Hazard Class (comb./flam.liquid) .............. ....:\n5.2 Fire and explosion hazards:\nValue:\n> 93 °C (> 199 °F)\nnot determined\nnot determined\nnot determined\nnot determined\nIIIB\nMethod:\n(ASTM D3278, DIN\n55680, ISO 3679)\nThis material does not present any unusual fire or explosion hazards.",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 381
+  },
+  {
+    "id": "doc-natural-shield-sds-p3",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 3,
+    "text": "Safety Data Sheet\nPage: 3 /9\n6. Accidental release measures\n5.3 Recommended extinguishing media:\ncarbon dioxide, dry sand, dry chemical or foam - type extinguishing media Water may be used to cool tanks and structures\nadjacent to the fire.\n5.4 Unsuitable extinguishing media:\nNone.\n5.5 Special exposure hazards arising from the substance or preparation itself, co mbustion products, resulting gases\nHazardous decomposition products: carbon monoxide , carbon dioxide , silicon dioxide , formaldehyde , Various hydrocarbon\nfragments .\n5.6 Fire fighting procedures:\nFull turn - out gear and Self Contained Breathing Apparatus (SCBA) should be worn when fighting large fires.\n6.1 Precautions:\nWear personal protection equipment (see section 8). Avoid contact with eyes and skin. Avoid inhaling mists and vapours. If\nmaterial is released indicate risk of slipping.\nHAZWOPER PPE Level: C\n6.2 Containment:\nPrevent material from entering sewers or surface waters. Contain any fluid that runs out using suitable material (e.g. earth) .\nRetain contaminated water/extinguishing water. Dispose of in prescribed marked containers.\nSpills of material which could reach s urface waters must be reported to the United States Coast Guard National Response\nCenter's toll free phone number (800) 424 - 8802.\n6.3 Methods for cleaning up\nTake up mechanically and dispose of according to local/state/federal regulations. For small amounts: Absorb with a liquid bin ding\nmaterial such as diatomaceous earth and dispose of according to local/state/federal regulations. Contain larger amounts and\npu mp up into suitable containers. Clean any slippery coating that remains using a detergent / soap solution or another\nbiodegradable cleaner.\n6.4 Further information:\nEliminate all sources of ignition.\n7.1 General information:\nAvoid expos ure by technical measures or personal protective equipment. Always stir well before use.\n7.2 Handling\nPrecautions for safe handling:\nKeep away from heat, sparks and flame. Avoid contact with eyes, skin and clothing. Ensure adequate ventilation. Avoid breathi ng\ndust/vapor/mist/gas/aerosol. Keep container closed when not in use. When transferring flammable liquids between metal\ncontainers, ground and bond the containers to drain off and equalize their static electric charges and reduce the potential f or static\nsp arks to occur.\nPrecautions against fire and explosion:\nDo not weld, cut, or grind on empty containers. Where feasible maintain the temperature of flammable or combustible liquids a t\nleast 30° F below their flash point. Flammable, combustible or explosive a ir - vapor mixtures may be present in partial or uncleaned\nempty containers.\n7.3 Storage\nConditions for storage rooms and vessels:\nDo not store flammable liquids in plastic IBCs (i.e. Intermediate Bulk Containers or plastic tote tanks). Protect against fro st.\nAdvice for storage of incompatible materials:\nnone known .\n7. Handling and storage",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 439
+  },
+  {
+    "id": "doc-natural-shield-sds-p4",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 4,
+    "text": "Safety Data Sheet\nPage: 4 /9\nFurther information for storage:\nProtect against sun. Keep container tightly closed and store in a cool, well ventilated place. Protect against frost.\nMinimum temperature allowed during storage and transportation: 0 °C (32 °F)\nDo not allow this material to freeze.\nMaximum temperature allowed during storage and transportation: 50 °C (122 °F)\n8.1 Engineering controls\nVentilation:\nUse with adequate ventilation.\nLocal exhaust:\nIf spraying or other aerosol generating operations are performed, local exhaust ventilation designed to capture mists and spr ays,\nsuch as a paint spray booth, is recommended.\n8.2 Associate substances with specific control parameters such as limit values\nMaximum airborne concentrations at the workplace:\nRe Ethanol (CAS no. 64 - 17 - 5): STEL is 1000 ppm; carcinogenicity: A3 (ACGIH).\nRe Acetic acid (CAS - no. 64 - 19 - 7): STEL is 15 ppm ( ACGIH).\nnone known\n8.3 Personal protection equipment (PPE)\nRespiratory protection:\nIf spraying or other operations which generate an aerosol mist are conducted, respiratory protection for exposed personnel is\nrecommended. A NIOSH approved air purifying respira tor equipped with universal multi - contaminant, multi - gas/vapor cartridges\nand at least P - 99 solid/aerosol particulate filters is recommended if overexposure to dusts, mists, or vapors could occur.\nHand protection:\nAny liquid - tight rubber or vinyl gloves.\nEye protection:\nSafety glasses with side shields or chemical safety goggles.\nOther protective clothing or equipment:\nAdditional skin protection, such as SARANEX coated Tyvek apron, over - sleeves, lab coat, coveralls, or protective suit should be\nworn if spl ashing could occur. Provide eye bath and safety shower.\n8.4 General hygiene and protection measures:\nFollow standard industrial hygiene practices when using this material. When handling do not eat, drink, smoke or apply cosmet ics.\nWash thoroughly after handlin g.\n9.1 Appearance\nPhysical state / form ................................................: liquid (23 °C (73 °F))\nColour .....................................................................: milky white\nOdour ........... ...........................................................: aromatic\n9.2 Safety parameters\nProperty: Value: Method:\nMelting point / melting range ...................................: not determined\nBoiling point / boiling range .....................................: not determined\nFlash point...............................................................: > 93 °C (> 199 °F) (ASTM D3278, DIN\n55680, ISO 3679)\nIgnition temperature ................................................: not determined\n9. Physical and chemical properties\nCAS No. Material Type mg/m 3 ppm Dust fract.\n64 - 17 - 5 Ethanol OSHA PEL 1,900.0 1,000.0\n64 - 19 - 7 Acetic acid OSHA PEL 25.0 10.0\n64 - 19 - 7 Acetic acid ACGIH TWA 10.0",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 404
+  },
+  {
+    "id": "doc-natural-shield-sds-p5",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 5,
+    "text": "Safety Data Sheet\nPage: 5 /9\nLower explosion limit (LEL) .....................................: not determined\nUpper explosion limit (UEL).....................................: not determined\nVapour pressure......................................................: not determined\nDensity ....................................................................: 1.05 g/cm³ at 23 °C (73 °F), at 1015 hPa\nWater solubility / miscibility.................. ....................: completely miscible\npH - Value .................................................................: 4.5 at 23 °C (73 °F) (1000 g/l H 2 O)\nViscosity (dynamic) .................................................: 55 mPa.s at 23 °C (73 °F)\n9.3 Furth er information\nCorrosive to Steel or Aluminum...............................: Not corrosive to steel or aluminum.\n10.1 General information:\nStable under normal conditions of use.\nIf stored and handled in accordance with standard industrial practices no hazardous reactions are known.\n10.2 Conditions to avoid\nAlthough this product is not expected to react with commonly used materials of construction and process equipment, it is advi sed\nth at any rubber or plastic items such as hoses and gaskets be tested prior to large scale processing to ensure there is no\ndegradation of performance or durability. Heat, open flames, and other sources of ignition. Protect against frost.\n10.3 Materials to avoid\nR eacts with: acids and alkalis . Reaction causes the formation of: ethanol , methanol .\n10.4 Hazardous decomposition products\nBy hydrolysis: ethanol , methanol . Measurements have shown the formation of small amounts of formaldehyde at temperatures\nabove about 1 50 °C (302 °F) through oxidation.\n10.5 Further information:\nHazardous polymerization cannot occur.\n11.1 Information on toxicological effects\n11.1.1 General information\nData derived for the product as a whole are of higher priority than data for single ingredients.\n11.1.2 Acute toxicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product. No data on acute inhalation toxicity is avai lable f or\nthis product. In case of aerosol formation: Avoid inhalative exposure!\nAcute toxicity estimate (ATE):\nATE mix (oral): > 2000 mg/kg\n11.1.3 Skin corrosion/irritation\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.4 Serious eye damage / eye irritation\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.5 Respiratory or skin sensitization\nAssessment :\nFor this endpoint no toxicological test data is available for the whole product.\n10. Stability and reactivity\n11. Toxicological information",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 367
+  },
+  {
+    "id": "doc-natural-shield-sds-p6",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 6,
+    "text": "Page: 6 /9\nSafety Data Sheet\nMaterial: 20071922 NATURAL SH IE LD\nVersion: 2.5 (US) Date of print: 02 / 20 /201 7 Date of last alteration: 04/11/2016\nData related to ingredients:\n5 - Chloro - 2 - methyl - 4 - isothiazoline - 3 - on and 2 - methyl - 4 - isothiazoline - 3 - on (mixture in a ratio of 3:1):\nBased on the proven low sen sitization induction threshold in human, mixtures containing ≥15 ppm are classified as skin\nsensitizing in Europe.\n11.1.6 Germ cell mutagenicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.7 Carcinogenicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.8 Reproductive toxicity\nAssessment:\nFor this endpoint no toxicolog ical test data is available for the whole product.\n11.1.9 Specific target organ toxicity (single exposure)\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.10 Specific target organ toxicity (repeated exposure)\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.11 Aspiration hazard\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.12 Further toxicological information\nNo component of this product p resent at levels greater than or equal to 0.1% is identified as a known or anticipated carcinogen by\nNTP. No component of this product present at levels greater than or equal to 0.1% is identified as probable, possible or conf irmed\nhuman carcinogen by IARC . No component of this product present at levels greater than or equal to 0.1% is identified as a\ncarcinogen or potential carcinogen by OSHA.\nData related to ingredients:\nProduct of hydrolysis (Methanol):\nMethanol (CAS 67 - 56 - 1) is readily and rapidly absor bed at all exposure routes and is toxic by all routes. Methanol may cause\nirritation of the mucosa, as well as nausea, vomiting, headaches, vertigo and visual disorders, including blindness (irrevers ible\ndamage to the optic nerve), acidosis, spasms, narcos is and coma. There may be a delay in the onset of these effects after\nexposure.\n12.1 Toxicity\nAssessment:\nFor the product as a whole, no test data is available.\n12.2 Persistence and degradability\nAssessment:\nFor the product as a whole, no test data is available.\nData related to ingredients:\n12. Ecological information",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 391
+  },
+  {
+    "id": "doc-natural-shield-sds-p7",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 7,
+    "text": "Page: 7 /9\nSafety Data Sheet\nMaterial: 20071922 NATURAL SH IE LD\nVersion: 2.5 (US) Date of print: 02 / 20 /201 7 Date of last alteration: 04/11/2016\nProduct of hydrolysis (Methanol):\nThe product of hydrolysis (methanol) is readily biodegradable.\n12.3 Bioaccumulative potential\nAssessment:\nNo data known.\n12.4 Mobility in soil\nAssessme nt:\nNo data known.\n12.5 Other adverse effects\nnone known\n13.1 Product disposal\nRecommendation:\nDispose of according to regulations by incineration in a special waste incinerator. Observe local/state/federal regulations.\n13.2 Packaging disposal\nRecommendation:\nCompletely discharge containers (no tear drops, no powder rest, scraped carefully). Containers may be recycled or re - used.\nObserve local/state/federal regulations. Uncleaned packaging should be treated with the same precautions as the material.\n14.1 US DOT & CANADA TDG SURFACE\nValuation ................................................: Not regulated for transport\nOther Information ...................................: Protect from freezing, when exposed to cold temperatures approaching 0 °C (32 °F) or\nbelow.\n14.2 Transport by sea IMDG - Code\nValuation ................................................: Not regulated for tran sport\n14.3 Air transport ICAO - TI/IATA - DGR\nValuation ................................................: Not regulated for transport\n15.1 U.S. Federal regulations\nTSCA inventory status and TSCA information:\nThis material or its components are listed on or are in compliance with the requirements of the TSCA Chemical Substance\nInventory. This material or its component(s) is in compliance with TSCA under a Low Volume Exemption.\nTSCA 12(b) Export Notification:\nTh is material does not contain reportable amounts of any TSCA 12(b) listed chemicals.\nCERCLA Regulated Chemicals:\nCAS No. Chemical RQ Upper limit wt. %\n64 - 19 - 7 Acetic acid 5,000 lbs <=1.4088\nSARA 302 EHS Chemicals:\nThis material does not contain any SARA extremely hazardous substances.\nSARA 311/312 Hazard Class:\nDelayed (chronic) health hazard.\nSARA 313 Chemicals:\nThis material does not contain any SARA 313 chemicals above de minimus levels.\n13. Disposal considerations\n14. Tran sport information",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 308
+  },
+  {
+    "id": "doc-natural-shield-sds-p8",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 8,
+    "text": "Page: 8 /9\nSafety Data Sheet\nMaterial: 20071922 NATURAL SH IE LD\nVersion: 2.5 (US) Date of print: 02 / 20 /201 7 Date of last alteration: 04/11/2016\nHAPS (Hazardous Air Pollutants):\nCAS No. Chemical Upper limit wt. %\n67 - 56 - 1 Methanol <=0.0005\n15.2 U.S. State regulations\nCalifornia Proposition 65 Carcinogens:\nThis material does not contain any chemicals known to the State of California to cause cancer.\nCalifornia Proposition 65 Reproductive Toxins:\n67 - 56 - 1 Methanol\nMassachusetts Substance List:\n64 - 19 - 7 Acetic acid\n2867 - 47 - 2 Proprietary Monomer\nNew Jersey Right - to - Know Hazardous Substance List:\n64 - 19 - 7 Acetic acid\n2867 - 47 - 2 Proprietary Monomer\nPennsylvania Right - to - Know Hazardous Substance List:\n64 - 19 - 7 Acetic acid\n57 - 55 - 6 Propylene glycol\n2867 - 47 - 2 Proprietary Monomer\n15.3 Canadian regulations\nThis product has been classified in accordance with the Hazard criteria of the CPR and the SDS contains all the information\nrequired by the CPR.\nWHMIS Hazard Classes:\nNone.\nDSL Status:\nThis material or one or more of its components is not listed on the Canadian Domestic Substances List.\nNon - DSL Chemicals:\nCAS No. Chemical Upper limit wt. %\nConfidential Vendor Trade Secret Polymer (Not Disclosed, Proprietary, Unknown) <= 9.388\n15.4 Details of international registration status\nRelevant information about individual substance inventories, where available, is given below.\nEuropean Economic Area (EEA)................. : REACH (Regulation (EC) No 1907/2006):\nGeneral note: the registration obligations for substances imported into the EEA or\nmanufactured within the EEA by the supplier mentioned in section 1 are fulfilled by\nthe said supplier. The registration obligations for substances imported into the EEA\nby customers or other downstream us ers must be fulfilled by the latter.\n16.1 Additional information:\nThis Safety Data Sheet (SDS) meets the requirements of the Federal OSHA Hazard Communication Standard (29 CFR\n1910.1200). This product has been classified according to the hazard criteria of the Controlled Products Regulations (CPR) an d\nthe SDS contains al l of the information required by the CPR. This information relates to the specific material designated and may\nnot be valid for such material used in combination with any other materials or in any process. Such information is to the bes t of\nour knowledge and belief accurate and reliable as of the date compiled. However, no representation, warranty or guarantee\nexpressed or implied, is made as to its accuracy, reliability or completeness. It is the user's responsibility to satisfy him self as to\nthe suitabil ity and completeness of such information for his own particular use. We do not accept liability for any loss or damage\nthat may occur from the use of this information. Nothing herein shall be construed as a recommendation for uses which infring e\nvalid pate nts or as extending a license under valid patents. This SDS provides selected regulatory information on this product,\nincluding its components. This is not intended to include all regulations. It is the responsibility of the user to know and c omply with\nal l applicable rules, regulations and laws relating to the product being used.\nVertical lines in the left - hand margin indicate changes compared with the previous version.\n16. Other information",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 551
+  },
+  {
+    "id": "doc-natural-shield-sds-p9",
+    "docId": "doc-natural-shield-sds",
+    "pageNumber": 9,
+    "text": "Page: 9 /9\nSafety Data Sheet\nMaterial: 20071922 NATURAL SH IE LD\nVersion: 2.5 (US) Date of print: 02 / 20 /201 7 Date of last alteration: 04/11/2016\nAll deliveries are subject to the SEMCO Health Care Policy.\n16.2 Glossary of Terms:\nACGIH - American Conference of Governmental Industrial\nHygienists\nDOT - Department of Transportation\nhPa - Hectopascals\nmPa*s - Milli Pascal - Seconds\nOSHA - Occupational Safety and Health Administration\nPEL - Permissible Exposure Limit\nppm - Parts per Million\nSARA - Superfund Amendments and Reauthorization Act\nSTEL - Short Term Exposure Limit\nTSCA - Toxic Substances Control Act\nTWA - Time Weighted Average\nWHMIS - Canadian Workplace Hazardous Materials\nIdentification System\nFlash point determination methods ................................ ........... Common name\nASTM D56 ................................ ................................ ...................... Tagliabue (Tag) closed cup\nASTM D92, DIN 51376, ISO 2592 ................................ ................. Cleveland open cup\nASTM D93, DIN 51758, ISO 2719 ................................ ................. Pensky - Martens closed cup\nASTM D3278, DIN 55680, ISO 3679 ................................ ............. Setaflash o r Rapid closed cup\nDIN 51755 ................................ ................................ ...................... Abel - Pensky closed cup\n16.3 Conversion table:\nPressure:....................: 1 hPa * 0.75 = 1 mm Hg = 1 torr; 1 bar = 1000 hPa\nViscosity: ....................: 1 mPa*s = 1 centipoise (cP)",
+    "sourceDocument": "Natural-Shield-SDS.pdf",
+    "title": "Natural Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 206
+  },
+  {
+    "id": "doc-natural-shield-tech-sheet-p1",
+    "docId": "doc-natural-shield-tech-sheet",
+    "pageNumber": 1,
+    "text": "Product Data\nNatural Shield\nSEMCO’s natural Shield is an exceptional waterproofing sealer that excels under\nthe most demanding circumstances. Natural Shield’s low molecular weight al -\nlows for excellent penetration. Natural Shield fills into the pores of the substrate,\nin which chemical reaction follows, that creates a solid, but breathable mem -\nbrane. Natural Shield provides long lasting protection for a vast array of surfaces\nin which it leaves a natural finish.\nPRODUCT\nUSES\nCOVERAGE\nArtifical stone 200 - 250\nPolished concrete 150 - 250\nStamped Concrete 300 - 350\nCOVERAGE sq ft. / 1 gal @ 3 coats\nBENEFITS\n• Excellent penetration\n• Can be applied on damp\nsurfaces\n• Highly alkaline resistant\n• Effective against freeze-thaw\ndamage\n• Unaffected by ultra-violet rays\n• New and existing stamped\n• Increase life of mortar, tiles,\nstucco, brick and natural\nstone\nInterior\nExterior\nWetrooms\nCommercial\nIndustrial\n\n\n\n\n\nSURFACE ENGINEERING COMPANY\nGet the durability and\nperformance of a solvent-based\nsystem, but with the easy\napplication and clean-up of\nwater-based products.\nUV-resistant and can be applied\nto multiple surfaces to give\nextra protection.\nWith its low water permeability,\nNatural Shield can be used in\nshowers.\nNatural Shield’s performance\nallows to be used in commercial\nareas to protect your surface and\ndecrease maintanance efforts\nExcellent chemical resistance and\nindustrial strength finish allow\nNatural Shield to be used in an\nindustrial environment.",
+    "sourceDocument": "Natural-Shield-Tech-Sheet.pdf",
+    "title": "Natural Shield Tech Sheet",
+    "category": "Technical doc",
+    "wordCount": 231
+  },
+  {
+    "id": "doc-natural-shield-tech-sheet-p2",
+    "docId": "doc-natural-shield-tech-sheet",
+    "pageNumber": 2,
+    "text": "PRODUCT DATA\nApplication Apply wet on wet require 3 coats, do not allow each coat to dry\nApplication environment Apply at temperatures from 50°F to 90°F\nColor Milky white\nChemical type Silane and Siloxane\nClean up SEMCO Stone Soap with water\nShelf life 3 years (ambient temperature of 60F - 72F)\nPackaging 1 pint, 1 gallon, 5 gallons\nVOC Content 15.4 g/L\nDRYING / RECOAT TIME\nT emperature in F\nTime\n72 F\n1 min\n45 F\nDrying times are affected by temperature\nand relative humidity. The chart represents\nguidline values but each project is to be\ntreated individually.\nThe chart represents the time needed in\nbetween coats at specified temperature.\nCure / humidity\nTime\n100%\n10 days 48 hrs\n50%\n0 hrs\nLight foot traffic\n45 F 72 F 100 F\n4 days 7 days\n100 F 80 F 60 F\n30 min\n10 min\nCURE TIME\nCuring time is affected by temperature and\nhumidity.\nFor example at only 45 F, a full cure would\ntake 10 days in comparison to at 100 F it\nwould only take 4 days to cure.",
+    "sourceDocument": "Natural-Shield-Tech-Sheet.pdf",
+    "title": "Natural Shield Tech Sheet",
+    "category": "Technical doc",
+    "wordCount": 183
+  },
+  {
+    "id": "doc-natural-shield-tech-sheet-p3",
+    "docId": "doc-natural-shield-tech-sheet",
+    "pageNumber": 3,
+    "text": "SURFACE ENGINEERING COMPANY\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners. Not for use on\nhumans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet before using this product.\nLIMITED WARRANTY NOTICE\nThe technical details, recommendations and other information contained in this data sheet are given in good faith and represent the best of our knowledge and experience at the time of printing. It\nis your responsibility to ensure that our products are used and handled correctly and in accordance to SEMCO Post Matrix procedure, recommendations and only for the uses they are intended. We\nalso reserve the right to update information without prior notice to you to reflect our ongoing research and development program. Federal, state and local specific recommendations, depending\non local standards, codes of practice, building regulations or industry guidelines, may effect specific installation recommendations. The supply of our products and services is also subject to certain\nterms, warranties and exclusions, which may have already been disclosed to you in prior dealings or are otherwise available to you on request.\n3620 W Reno Avenue | Las Vegas, NV 89118\nP 800.33.SEMCO | info@semcomfg.com\nNOTES\n• Extended application procedures can be found in the SEMCO SIP Manual.\n• Procedures for cleaning of the flooring system during operations can be found in the SEMCO SIP Manual or\nupon request\n• Safety Data Sheets for SEMCO Natural Shield are available upon request.\nProudly made in USA\nPROCEDURE\n• Execute appropriate preparation method to suit your needs before application. Reference to the SEMCO SIP\nManual under the Surface Preparation Section.\n• Sweep debris off surface\nSTEP 1\n• Apply the sealer with a 1/4” nap roller, HVLP sprayer, pump sprayer, or airless sprayer with tip size 17. Minimum of\n3 coats are required to ensure maximum performance\n• Apply the first coat and DO NOT ALLOW THE SEALER TO DRY BEFORE APPLYING SECOND AND THIRD COATS.\nDo not allow to puddle\n• Repeat the application to a minimum of 3 coats. Additional coats may be required depending on the porosity of\nthe surface (X-Bond requires, 3 coats only, other surfaces such as concrete or block may require additional coats)\nSTEP 2\nTOOLS NEEDED\n• Airless sprayer with tip size 17 @ 400 PSI\n• 1/4” nap roller\n• OPTIONAL : fine tip pump sprayer\nScan to watch application",
+    "sourceDocument": "Natural-Shield-Tech-Sheet.pdf",
+    "title": "Natural Shield Tech Sheet",
+    "category": "Technical doc",
+    "wordCount": 427
+  },
+  {
+    "id": "doc-nulift-datasheet-p1",
+    "docId": "doc-nulift-datasheet",
+    "pageNumber": 1,
+    "text": "Magnesium deposit Excellent\nAlkali resistance Excellent\nRust Good\nDrying time 2 hours\nCure time 72 hours\nColor Blue\nChemical type Mineral acid\nClean up Water\nShelf life 1 year\nUseful life 3 years\nPackaging (base and color activator) 1 quart, 1 gal. pail, 5 gal. pail\nNU-LIFT CLEANER\nMineral Cleanser\nTechnical Product Information\nSPECIFICATIONS\nTEST RESULTS*\n*Tests are based on Semco Modern Seamless Surface experience unless otherwise noted.\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners.\nNot for use on humans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet\nbefore using this product.\nLIMITED WARRANTY NOTICE\nSEMCO Modern Seamless Surface warrants that its products will meet their specifications. There are no other warranties, expressed or implied of merchantability or fitness\nof use. The only obligation of the seller-manufacturer shall be to replace material found to be defective. SEMCO Modern Seamless Surface will not be liable for labor or\nconsequential damage of any kind. The information contained herein is, to the best of our knowledge and belief, true and accurate. However, since the conditions of handling\nand use are beyond our control, we make no guarantee of results, and assume no liability for damages incurred by use of this material. It is the responsibility of the user to comply\nwith all applicable federal, state and local laws and regulations. All chemicals may present unknown health hazards and should be used with caution.\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2016.V02\nSURFACE ENGINEERING COMPANY\nPRODUCT DESCRIPTION\nNu-Lift Cleaner is a formulated with an environmentally-responsible mineral acid that is user friendly. Nu-Lift\nCleaner does exactly what its name implies: it lifts out and removes dirt, alkalinity, efflorescence, hard water\ndeposits, magnesium, and stains from surfaces like grout and natural stone without harming or discoloring.\nFEATURES / BENEFITS\n• Removes organic deposits\n• Balances low pH\n• Safely dissolves: efflorescence, magnesium,\nlime deposits, soap scum\n• 100% Biodegradable\n• Can be safely used in confined areas\nSUBSTRATES\n• Concrete surfaces\n• Masonry surfaces\n• Natural and cultured stone\n• Grout\n• Pool decks\n• Walkways\n• Driveways",
+    "sourceDocument": "NuLift-Datasheet.pdf",
+    "title": "NuLift Datasheet",
+    "category": "Technical doc",
+    "wordCount": 389
+  },
+  {
+    "id": "doc-nulift-sds-p1",
+    "docId": "doc-nulift-sds",
+    "pageNumber": 1,
+    "text": "Revised on 06/02/2017 Page 1 of 6\nSafety Data Sheet\n1. PRODUCT AND COMPANY IDENTIFICATION\nProduct Name: Nu Lift Cleaner\nProduct Number: NL100, NL101, NL105, NL155\nProduct Use: Industrial, Commercial, and Residential\nManufacturer: SEMCO Modern Seamless Surface Inc.\n3620 West Reno Ave.\nLas Vegas, NV 89118\nFor More Information Call: 702 - 222 - 9495 (Monday - Friday 9:00 - 4:00 PST)\nIn Case of Emergency Call: CHEMTREC - 800 - 424 - 9300 or 703 - 527 - 3887 (24 Hours/Day, 7 Days/Week)\n2. HAZARDS IDENTIFICATION\nOSHA Hazards: Corrosive\nTarget Organs: Liver, Blood, Bone marrow\nSignal Words: Danger\nPictograms:\nGHS Classification:\nCorrosive to metals Category 5\nSkin corrosion Category 4\nSerious eye damage Category 4\nAcute toxicity, Dermal Category 5\nAcute toxicity, Oral Category 4\nGHS Label Elements, including precautionary statements:\nHazard Statements:\nNu Lift Cleaner\nH290 May be corrosive to metals.\nH302 Harmful if swallowed.\nH313 May be harmful in contact with skin.\nH314 Causes severe skin burns and eye damage.",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "title": "NuLift SDS",
+    "category": "Technical doc",
+    "wordCount": 163
+  },
+  {
+    "id": "doc-nulift-sds-p2",
+    "docId": "doc-nulift-sds",
+    "pageNumber": 2,
+    "text": "Revised on 06/02/2017 Page 2 of 6\nPrecautionary Statements:\nP234 Keep only in original container.\nP260 Do not breathe dusts or mists.\nP264 Wash hands thoroughly after handling.\nP270 Do not eat, drink or smoke when using this product.\nP280 Wear protective gloves/protective clothing/eye protection/face protection.\nP301+P330+P331 IF SWALLOWED: Rinse mouth. Do not induce vomiting.\nP303+P361+P353\nIF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse\nskin with water/shower.\nP304+P340 IF INHALED: Remove person to fresh air and keep comfortable for breathing.\nP305+P351+P338\nIF IN EYES: Rinse cautiously with water for several minutes. Remove contact\nlenses, if present and easy to do. Continue rinsing.\nP310 Immediately call a POISON CENTER/doctor/physician.\nP363 Wash contaminated clothing before reuse.\nP390 Avoid spillage to prevent material damage.\nP405 Store locked up.\nP406 Store in corrosive resistant container with a resistant liner.\nP501 Dispose of contents/container in accordance with local regulations.\nPotential Health Effects\nEyes Causes eye irritation.\nInhalation May be harmful if inhaled. Causes respiratory tract irritation.\nSkin May be harmful if absorbed through skin. Causes skin irritation.\nIngestion May be harmful if swallowed.\nNFPA Ratings HMIS Ratings\n3. COMPOSITION/INFORMATION ON INGREDIENTS\nComponent Weight % CAS # EINECS# /\nELINCS# Formula Molecular\nWeight\nPhosphoric Acid 15 7664 - 38 - 2 231 - 633 - 2 H 3 PO 4 98.00 g/mol\n4. FIRST - AID MEASURES\nEyes Rinse with plenty of water for at least 15 minutes and seek medical attention immediately.\nInhalation Move casualty to fresh air and keep at rest. If breathing is difficult, give oxygen. If not\nbreathing, give artificial respiration. Get medical attention immediately.\nSkin Immediately flush with plenty of water for at least 15 minutes while removing contaminated\nclothing and wash using soap. Get medical attention immediately.\nIngestion Do Not Induce Vomiting! Never give anything by mouth to an unconscious person. If\nconscious, wash out mouth with water. Get medical attention immediately.\nHealth\nFlammability\nReactivity\nSpecific hazard N/A\nHealth\nFire\nReactivity\nPersonal",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "title": "NuLift SDS",
+    "category": "Technical doc",
+    "wordCount": 326
+  },
+  {
+    "id": "doc-nulift-sds-p3",
+    "docId": "doc-nulift-sds",
+    "pageNumber": 3,
+    "text": "Revised on 06/02/2017 Page 3 of 6\n5. FIRE - FIGHTING MEASURES\nSuitable (and unsuitable)\nextinguishing media\nProduct is not flammable. Use appropriate media for adjacent fire. Cool\ncontainers with water.\nSpecial protective equipment\nand precautions for firefighters\nWear self - contained, approved breathing apparatus and full protective\nclothing, including eye protection and boots.\nSpecific hazards arising from\nthe chemical\nEmits toxic fumes (phosphorus oxi des) under fire conditions. (See also\nStability and Reactivity section).\n6. ACCIDENTAL RELEASE MEASURES\nPersonal precautions,\nprotective equipment and\nemergency procedures\nSee section 8 for recommendations on the use of personal protective\nequipment.\nEnvironmental precautions Prevent spillage from entering drains. Any release to the environment\nmay be subject to federal/national or local reporting requirements.\nMethods and materials for\ncontainment and cleaning up\nNeutralize spill with sodium bicarbonate or lime. Absorb spill with\nnoncombustible absorbent material, then place in a suitable container for\ndisposal. Clean surfaces thoroughly with water to remove residual\ncontamination. Dispose of all waste and cleanup materials in accordance\nwith regulations.\n7. HANDLING AND STORAGE\nPrecautions for safe handling\nSee section 8 for recommendations on the use of personal protective equipment. Use with adequate\nventilation. Wash thoroughly after using. Keep container closed when not in use. Avoid formation of aerosols.\nConditions for safe storage, including any incompatibilities\nStore in cool, dry well ventilated area. Keep away from incompatible materials (see section 10 for\nincompatibilities).\n8. EXPOSURE CONTROLS / PERSONAL PROTECTION\nOccupatio nal exposure controls:\nComponent Exposure Limits Basis Entity\nPhosphoric Acid 1 mg/m 3 TLV ACGIH\n3 mg/m 3 STEL ACGIH\n1 mg/m 3 PEL OSHA\n1 mg/m 3 REL NIOSH\n3 mg/m 3 STEL NIOSH\n1000 mg/m 3 IDLH OSHA\nTWA: Time Weighted Average over 8 hours of work.\nTLV: Threshold Limit Value over 8 hours of work.\nREL: Recommended Exposure Limit\nPEL: Permissible Exposure Limit\nSTEL: Short Term Exposure Limit during x minutes.\nIDLH: Immediately Dangerous to Life or Health\nWEEL: Workplace Environmental Exposure Levels\nCEIL: Ceiling",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "title": "NuLift SDS",
+    "category": "Technical doc",
+    "wordCount": 326
+  },
+  {
+    "id": "doc-nulift-sds-p4",
+    "docId": "doc-nulift-sds",
+    "pageNumber": 4,
+    "text": "Revised on 06/02/2017 Page 4 of 6\nPersonal Protection\nEyes Wear chemical safety glasses or goggles, and face shield.\nInhalation Provide local exhaust, preferably mechanical. If exposure levels are excessive, use an\napproved respirator.\nSkin Wear nitrile or rubber gloves, and full body covering. The type of protective equipment\nmust be selected according to the concentration and amount of the dangerous substance\nat the specific workplace.\nOther Not Available\nOther Recommendations\nProvide eyewash stations, quick - drench showers and washing facilities accessible to areas of use and\nhandling.\n9. PHYSICAL AND CHEMICAL PROPERTIES\nAppearance (physical state, color, etc.) Syrupy, viscous, clear liquid.\nOdor Odorless.\nOdor threshold Not Available\npH Acidic.\nMelting point/freezing point 21°C (70°F)\nInitial boiling point and boiling range 158°C (316°F)\nFlash point Not Flammable\nEvaporation rate Not Available\nFlammability (solid, gas) Not Flammable\nUpper/lower flammability or explosive limit Not Explosive\nVapor pressure 0.3 kPa at 20°C\nVapor density 3.4 (air=1)\nDensity 1.5740\nSolubility (ies) Soluble in water.\nPartition coefficient: n - octanol/water Not Available\nAuto - ignition temperature Not Available\nDecomposition temperature Not Available\n10. STABILITY AND REACTIVITY\nChemical Stability Stable\nPossibility of Hazardous Reactions Will not occur.\nConditions to Avoid Not Available\nIncompatible Materials Strong bases, powdered metals.\nHazardous Decomposition Products Phosphorus oxides.\n11. TOXICOLOGICAL INFORMATION\nAcute Toxicity\nPhosphoric Acid\nSkin LD50 – Rabbit – 2,740 mg/kg\nEyes Not Available\nRespiratory Not Available\nIngestion LD50 – Rat – 1,530 mg/kg",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "title": "NuLift SDS",
+    "category": "Technical doc",
+    "wordCount": 234
+  },
+  {
+    "id": "doc-nulift-sds-p5",
+    "docId": "doc-nulift-sds",
+    "pageNumber": 5,
+    "text": "Revised on 06/02/2017 Page 5 of 6\nCarcinogenicity\nIARC No components of this product present at levels greater than or equal to 0.1% is identified\nas probable, possible or confirmed human carcinogen by IARC.\nACGIH No components of this product present at levels greater than or equal to 0.1% is identified\nas a carcinogen or potential carcinogen by ACGIH.\nNTP No components of this product present at levels greater than or equal to 0.1% is identified\nas a known or anticipated carcinogen by NTP.\nOSHA No components of this product present at levels greater than or equal to 0.1% is identified\nas a carcinogen or potential carcinogen by OSHA.\nSigns & Symptoms of Exposure\nSkin Burning, itching, redness, inflammation, swelling of exposed tissue.\nEyes Eye burns, watering eyes.\nRespiratory Burning, choking, coughing, wheezing, laryngitis, shortness of breath, headache or\nnausea.\nIngestion Burning, choking, nausea, vomiting, severe pain.\nChronic Toxicity Damage to organs.\nTeratogenicity Not Available\nMutagenicity Not Available\nEmbryotoxicity Not Available\nSpecific Target Organ Toxicity Blood, liver, skin, eyes, bone marrow.\nReproductive Toxicity Not Available\nRespiratory/Skin Sensitization Not Available\n12. ECOLOGICAL INFORMATION\nEcotoxicity\nPhosphoric Acid\nAquatic Vertebrate Not Available\nAquatic Invertebrate Not Available\nTerrestrial Not Available\nPersistence and Degradability Not Available\nBioaccumulative Potential Not Available\nMobility in Soil Not Available\nPBT and vPvB Assessment Not Available\nOther Adverse Effects Not Available\n13. DISPOSAL CONSIDERATIONS\nWaste Product or\nResidues\nUsers should review their operations in terms of the applicable federal/national or\nlocal regulations and consult with appropriate regulatory agencies if necessary before\ndisposing of waste product or residue.\nProduct\nContainers\nUsers should revi ew their operations in terms of the applicable federal/national or\nlocal regulations and consult with appropriate regulatory agencies if necessary\nbefore disposing of waste product container.\nThe information offered in section 13 is for the product as shi pped. Use and/or alterations to the product may\nsignificantly change the characteristics of the material and alter the waste classification and proper disposal\nmethods.",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "title": "NuLift SDS",
+    "category": "Technical doc",
+    "wordCount": 324
+  },
+  {
+    "id": "doc-nulift-sds-p6",
+    "docId": "doc-nulift-sds",
+    "pageNumber": 6,
+    "text": "Revised on 06/02/2017 Page 6 of 6\n14. TRANSPORTATION INFORMATION\nUS DOT Transportation Regulation: 49 CFR (USA): This material is not classified.\nTDG Transportation Regulation: 49 CFR (USA): This material is not classified.\nIMDG Transportation Regulation: 49 CFR (USA): This material is not classified.\nMarine Pollutant No\nIATA/ICAO Transportation Regulation: 49 CFR (USA): This material is not classified.\n15. REGULATORY INFORMATION\nTSCA Inventory Status All ingredients are listed on the TSCA inventory.\nDSCL (EEC) All ingredients are listed on the DSCL inventory.\nCalifornia Proposition 65 Not Listed\nSARA 302 Not Listed\nSARA 304 Not Listed\nSARA 311 Acute health hazard, Chronic health hazard.\nSARA 312 Acute health hazard, Chronic health hazard.\nSARA 313 Not Listed\nWHMIS Canada Class E: Corrosive liquid.\n16. OTHER INFORMATION\nRevision Date\nRevision 1 12/03/2014\nRevision 2 06/02/2017\nDisclaimer: SEMCO Modern Seamless Surface, Inc. (“SEMCO”) believes that the information herein is factual but is not intended to be all\ninclusive. The information relates only to the specific material designated and does not relate to its use in combination wit h other\nmaterials or its use as to any particular process. Because safety standards and regulations are subject to change and because SEMCO\nhas no continuing control over the material, those handling, storing or using the material should satisfy themselves that the y have current\ninformation regarding the particular way th e material is handled, stored or used and that the same is done in accordance with federal,\nstate and local law. SEMCO MAKES NO WARRANTY, EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES\nWITH RESPECT TO THE COMPLETENESS OR CONTINUING ACCURACY OF THE INFORMATION CONTAINED HEREIN OR WITH\nRESPECT TO FITNESS FOR ANY PARTICULAR USE.",
+    "sourceDocument": "NuLift-SDS.pdf",
+    "title": "NuLift SDS",
+    "category": "Technical doc",
+    "wordCount": 278
   },
   {
     "id": "doc-open-sip-manual-master-copy-v2019-3-2-p1",
@@ -909,6 +1680,166 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "wordCount": 218
   },
   {
+    "id": "doc-polished-bond-steps-p1",
+    "docId": "doc-polished-bond-steps",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n20 22 .V01\nPOLISHED BOND\nSTEP 2 - X-BOND SEAMLESS STONE\nEXISTING SUBSTRATE\nSTEP 3 - FINISHING\nSTEP 1 - PREPARATION OF EXISTING SUBSTRATE\nAPPLICATION IN 3 EASY STEPS\nFLAT\nSEMCO X-Crete 500\nSEMCO Natural Shield\nMATTE/GLOSS\nSEMCO X-Crete 400\nSEMCO Titan Shield\nHIGH GLOSS\nSEMCO Xtra Gloss\nCrystal Coat\nDEEP GLOSS\nSEMCO Xtreme Gloss\nCrystal Coat\nFINISH\nSCRATCH COAT\nSEMCO LIQUID MEMBRANE™\nwith fabric reinforcement\n+ BROWN COAT\n(OPTIONAL)\nX-BOND SEAMLESS STONE\nPOLISHED BOND\nSATIN\nSEMCO Satin Stone\nTYPE A\nSEMCO All Purpose\nCleaner\nTYPE B\nSEMCO Commercial\nCleaner\nTYPE D\nSEMCO Mineral\nCleanser\nTYPE E\nOver Wood\nTYPE C\nSEMCO Industrial\nCleaner and Degreaser",
+    "sourceDocument": "Polished-Bond-Steps.pdf",
+    "title": "Polished Bond Steps",
+    "category": "Technical doc",
+    "wordCount": 118
+  },
+  {
+    "id": "doc-pool-deck-resurfacing-detail-p1",
+    "docId": "doc-pool-deck-resurfacing-detail",
+    "pageNumber": 1,
+    "text": "1. Existing substrate\n2. Preparation Type C on substrate to balance pH level\n3. X-Bond Scratch Coat\n4. Liquid Membrane™ with fabric reinforcement\nover joints\n5. X-Bond Brown Coat (up o 3/4”)\n6. X-Bond Microcement - Solid, Vellum, ADA Safety\nSurface\n7. Sealers - Natural Shield, Satin Stone, Titan Shield\nGloss with Non-Skid (3 coats)\nTotal thickness 1/4” to 1”\n3 2 4 5\n1\n6 7\nSEMCO\nLIQUID MEMBRANE ™\nwith fabric reinforcement\nX-BOND\nMICROCEMENT\nSolid, Vellum, ADA Safety Surface\nFINISH\nNatural Shield, Satin Stone,\nTitan Shield Gloss with Non-Skid\nBROWN COAT\nup to 3/4”\nExterior application\nPOOL DECK\nRESURFACING DETAIL\n2025 .V6 * Drawings are not to scale\n3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\nFLOORS | WALLS | POOL DECKS | WATERPROOFING\nREDEFINING THE ART OF SURFACE CREATIVITY FOR OVER 25 YEARS USING GREEN MATERIALS\nPREPARATION - TYPE C\nSEMCO Commercial Cleaner\nSCRATCH COAT\nEXISTING\nSUBSTRATE",
+    "sourceDocument": "Pool-Deck-Resurfacing-Detail.pdf",
+    "title": "Pool Deck Resurfacing Detail",
+    "category": "Technical doc",
+    "wordCount": 154
+  },
+  {
+    "id": "doc-pool-resurfacing-detail-interior-below-grade-p1",
+    "docId": "doc-pool-resurfacing-detail-interior-below-grade",
+    "pageNumber": 1,
+    "text": "Interior below grade application\nPOOL RESURFACING DETAIL\n1. Existing substrate - concrete\n2. Preparation Type C on substrate to balance pH level\n3. Scratch Coat\n4. SEMCO Liquid Membrane™ - 4 coats, each coat 15\nmil. Total thickness - 60 mil (4 coats). Let each coat\ndry before applying next coat.\n5. Scratch Coat\n6. OPTIONAL : X-Bond Brown Coat\n7. X-Bond Microcement - apply in different layers to a\ntotal thickness of 1/4” (about 6 mm). X-Bond layers\ndo not need to be dry before applying next coat.\n8. Natural Shield - apply with sprayer or roller 4 even\nlayers. After application of the first coat apply the\nproceeding coats prior to full dry. Yield per 1 gallon\nis 175 sq ft for a 4-coat application. Allow the\nsurface to cure to a rH of greater than 75% and\nat least 7 days prior to filling with water.\nTotal system thickness - 7.5 mm (approx)\n1/4” X-Bond + 60 mil SEMCO Liquid Membrane™\nSEMCO\nLIQUID MEMBRANE ™\nX-BOND\nMICROCEMENT\nPREPARATION - TYPE C\nSEMCO Commercial Cleaner\nFINISH\nSEMCO Natural Shield\nSCRATCH COAT\nSCRATCH COAT\nFLOORS | WALLS | POOL DECKS | WATERPROOFING\nREDEFINING THE ART OF SURFACE CREATIVITY FOR OVER 25 YEARS USING GREEN MATERIALS\nEXISTING\nSUBSTRATE\nCONCRETE\n2025 .V6 * Drawings are not to scale\n3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n2 3 4 5 6 7\n1\n8",
+    "sourceDocument": "Pool-Resurfacing-Detail-Interior-Below-Grade.pdf",
+    "title": "Pool Resurfacing Detail Interior Below Grade",
+    "category": "Technical doc",
+    "wordCount": 237
+  },
+  {
+    "id": "doc-power-cleaner-datasheet-p1",
+    "docId": "doc-power-cleaner-datasheet",
+    "pageNumber": 1,
+    "text": "PRODUCT DESCRIPTION\nPower Cleaner is a highly concentrated commercial strength cleaner, degreaser, and wax remover for commercial\nand industrial use. Power Cleaner has been formulated with a distinct blend of water softening agents and\nnonionic surfactants that allow you to clean and dissolve the toughest grease/oil stains from almost any surface,\nincluding concrete. Power Cleaner works by penetrating, suspending, emulsifying, and dissolving surface\ncontaminants. This remarkable product is so versatile, it can be used to clean everything from degreasing the\ndirtiest substrate to removing oil stains and/or wax from commercial and industrial surfaces.\nUsed automobile oil Excellent\nTransmission fluid Good\nWater Excellent\nDilution ratios with water Stripper - 1:4, heavy duty cleaner and pH balance - 1:9\nDrying time N/A\nCure time N/A\nColor Pink\nChemical type Degreaser\nClean up Water\nShelf life 1year\nUseful life 3 years\nPackaging (base and color activator) 1 quart, 1 gal. pail, 55 gal. drum\nPOWER CLEANER\nIndustrial Cleaner & Biodegradable Degreaser\nTechnical Product Information\nAPPLICATION AND SPECIFICATIONS\nTEST RESULTS*\nFEATURES / BENEFITS\n• Proficient industrial wax remover\n• Removes most water based acrylic sealers\n• Effectively degreases commercial kitchens\n• Removes tar, tire marks, and gum from most surfaces\n• 100% Biodegradable\n• Can be safely used in confined areas\nSUBSTRATES\n• Concrete surfaces\n• Ceramic tile and grout\n• Natural and cultured stone\n• Commercial\n• Pool decks\n• Walkways\n• Driveways\n*Tests are based on Semco Modern Seamless Surface experience unless otherwise noted.\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners.\nNot for use on humans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet\nbefore using this product.\nLIMITED WARRANTY NOTICE\nSEMCO Modern Seamless Surface warrants that its products will meet their specifications. There are no other warranties, expressed or implied of merchantability or fitness\nof use. The only obligation of the seller-manufacturer shall be to replace material found to be defective. SEMCO Modern Seamless Surface will not be liable for labor or\nconsequential damage of any kind. The information contained herein is, to the best of our knowledge and belief, true and accurate. However, since the conditions of handling\nand use are beyond our control, we make no guarantee of results, and assume no liability for damages incurred by use of this material. It is the responsibility of the user to comply\nwith all applicable federal, state and local laws and regulations. All chemicals may present unknown health hazards and should be used with caution.\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2016.V02\nSURFACE ENGINEERING COMPANY",
+    "sourceDocument": "Power-Cleaner-Datasheet.pdf",
+    "title": "Power Cleaner Datasheet",
+    "category": "Technical doc",
+    "wordCount": 462
+  },
+  {
+    "id": "doc-power-cleaner-sds-p1",
+    "docId": "doc-power-cleaner-sds",
+    "pageNumber": 1,
+    "text": "MATERIAL SAFETY DATA SHEET\nHazard Rating:\n4- Extreme\n3- High\n2- Moderate\n1- Slight\n0- Insignificant\nSECTION I- PRODUCT INFORMATION\nFire 0\nHealth 2\nReactivity 0\nSpecial Hazard 0\nPOWER CLEANER\nMANUFACTURER: SEMCO, INC. ADDRESS: 4180 W. Desert Inn Road #A1, Las Vegas, NV 89102\nPRODUCT NAME: Power Cleaner PREPARED BY: Samel Sem\nCHEMICAL FAMILY: Degreaser DATE PREPARED: 12/13/01\nCHEMICAL NAME: Industrial Strength Degreaser EMERGENCY PHONE NO. 1-800-424-9300\nSECTION II-- CHEMICAL IDENTITY INFORMATION\nProprietary mixture containing:\nSodium Hydroxide <1% CAS#1310-73-2 OSHA PEL TWA=2mg/m 3 ACGIH TLV ceiling=2mg/m 3\nEthylene Glycol Monobutyl Ether <7.5% CAS#111-76-2 OSHA PEL TWA=50 ppm ACGIH TLV ceiling=25 ppm.\nSECTION III-- PHYSICAL & CHEMICAL CHARACTERISTICS (Fire & Explosion)\nAppearance: Red Liquid Specific Gravity: 1.054\nSolubility in water: Soluble Odor: Mild\nFlash Point: >210 ° F pH (1% solution): 13\nVapor Pressure: Unknown Boiling Point: 210 ° F\nFlammability: Non-Flammable (PMCC) Unusual Fire or Explosion Hazard: None Known\nExtinguishing Media: N/A\nSECTION IV -- SPECIAL PROTECTION INFORMATION\nProtective Gloves: Rubber or neoprene gloves.\nEye Protection: Goggles.\nRespiratory Protection: Not needed.\nLocal Exhaust: N/A.\nOther Equipment: Optional apron. Water showers, Eye flush stations.\nSECTION V--SPECIAL SPILL OR LEAK PROCEDURES\nClean up spill immediately with absorbing material such as sawdust. Flush area with water. Avoid getting into sewerage. Place the remainder in non-leak container.\nFloor will be slippery, use caution. Dispose of in accordance with city-state, and federal regulations.\nSECTION VI--EMERGENCY AND FIRST AID PROCEDURES\nEye Contact: Flush eye socket with fresh, cool, running water for at least 15 minutes. If irritation persists, seek medical assistance at once.\nSkin Contact: Remove contaminated clothing immediately. Wash affected skin areas thoroughly with soap and water. See a physician.\nIngestion: If swallowed, drink large volumes of weak vinegar or lemon juice. DO NOT induce vomiting. IMMEDIATELY see a physician.\nSECTION VII-- REACTIVITY DATA\nIncompatible Materials: None known.\nStability: Stable.\nHazardous Polymerization: Product will not undergo polymerization.\nHazardous Decomposition: None known.\nSECTION VIII-- SPECIAL INFORMATION\nStore in dry well ventilated place away from excessive heat. Avoid temperatures below -10 ° C. Avoid contact with skin or eyes. Do not take internally. Use with\nadequate ventilation. Avoid getting into sewerage.\nKeep out of reach of children. Keep container closed when not in use.\nThe information contained herein is, to the best of our knowledge and belief, accurate. However, since the conditions of handling and use are beyond our control, we\nmake no guarantee of results, and assume no liability for damages incurred by use of this material. It is the responsibility of the user to comply with all applicable\nfederal, state, and local laws and regulations. All chemicals may present unknown hazards and should be used with caution. Although certain hazards are described\nherein, we cannot guarantee that these are the only hazards, which exist. Users of any chemical should satisfy themselves that the conditions and methods of use assure\nthat the chemical is used safely.",
+    "sourceDocument": "Power-Cleaner-SDS.pdf",
+    "title": "Power Cleaner SDS",
+    "category": "Technical doc",
+    "wordCount": 481
+  },
+  {
+    "id": "doc-prep-e-p1",
+    "docId": "doc-prep-e",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\n(WOOD)\nTotal thickness 1/2” to 1”\n2 3 4 5 6\n1. Existing substrate - wood\n2. SEMCO Liquid Membrane™\n3. Fabric reinforcement\n4. SEMCO Liquid Membrane™\n5. X-Bond Scratch Coat\n6. X-Bond Brown Coat (1/4” minimum)\n1\nSEMCO\nLIQUID MEMBRANE™\nSEMCO\nLIQUID MEMBRANE™\nPREPARATION - TYPE E\nLiquid Membrane over wood\nFABRIC REINFORCEMENT\nX-BOND SCRATCH COAT\nBROWN COAT\n1/4” minimum\n2021 .V02 * Drawings are not to scale\nSEMCO Liquid Membrane™ over wood SURFACE ENGINEERING COMPANY\nPREPARATION TYPE E",
+    "sourceDocument": "PREP-E.pdf",
+    "title": "PREP E",
+    "category": "Technical doc",
+    "wordCount": 82
+  },
+  {
+    "id": "doc-prestain-data-sheet-p1",
+    "docId": "doc-prestain-data-sheet",
+    "pageNumber": 1,
+    "text": "UV resistance Excellent\nSurface penetration (4000 psi concrete, broom finish) Up to 0.75 cm\nUsed automobile oil Excellent\nTransmission fluid Good\nWater Excellent\nAlkali resistance Good\nHydrochloric acid (10%) Good\nGreen Concrete 250-300\nPolished Concrete 300-350\nArtificial Stone 250-300\nStamped Concrete 250-350\nBelow Grade 200-250\nDrying time 30 minutes (depending on temperature)\nCure time 48 hours\nColor White/milky liquid\nChemical type Water based reactive latex\nClean up Water\nShelf life 1 year\nUseful life 5 years\nPackaging (base and color activator) 1 gal. pail, 5 gal. pail, 55 gal. drum",
+    "sourceDocument": "prestain-data-sheet.pdf",
+    "title": "prestain data sheet",
+    "category": "PreStain",
+    "wordCount": 90
+  },
+  {
+    "id": "doc-prestain-sds-p1",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 1,
+    "text": "Safety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nPage: 1 /9\n1. Product and company identification\n1.1 Identification of the substance or preparation:\nCommercial product name: PRE STAIN BASE\nUse of substance / preparation Industrial.\nModifying agent for: Building materials\n1.2 Company/undertaking identification:\nManufacturer/distributor: SEMCO Modern Seamless Surface Inc\n3620 West Reno Avenue\nLas Vegas, NV 8118\nUSA\nCustomer information: InfoLine:\nTel (702) 222 - 9495, info@semcosurfaces.com\nHours of operation:\nMonday - Friday,8 am to 5 pm (pacific standard time)\nCorporate website: www.semcosurfaces.com\nEmergency telephone no. (24h):\nTransportation emergency: (800) 424 - 9300 (CHEMTREC, USA)\n(703) 527 - 3887 (CHEMTREC, international)\nThis SDS was prepared by the Product Safety Department (RAPS) of SEMCO Modern Seamless Surface Inc.\n2. Hazards identification\n2.1 Classification of the substance or mixture\nClassification (GHS):\nClass Category Route of\nexposure\nSerious eye damage / eye irritation Category 2\n2.2 Label elements\nLabelling (GHS):\nPictogram(s):\nSignal Word: Warning\nH - Code Hazard Statements\nH315+H320 Causes skin and eye irritation.\nP - Code Precautionary Statements\nP103 Read label before use.\nP273 Avoid release to the environment.\nP280 Wear protective gloves/protective clothing/eye protection/face protection.\nP303+P361+P353 IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water/shower.\nP305+P351+P338 IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses, if present and easy to\ndo. Continue rinsing.\nP333+P313 If skin irritation or rash occurs: Get medical advice/attention.\nP403+P235 Store in a well - ventilated place. Keep cool.\nP404 Store in a closed container.\nP501 Dispose of contents/container to waste disposal.",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 268
+  },
+  {
+    "id": "doc-prestain-sds-p2",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 2,
+    "text": "Safety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nPage: 2 /9\n2.3 Other hazards\nNo data available.\n3.1 Chemical characterization (preparation)\n3.2 Information on ingredients:\nType CAS No. Substance Content [wt. %] Note\nLower Upper\nINHA 2867 - 47 - 2 Proprietary Monomer <=2.347\nType: HYD - by - product upon hydrolysis, INHA - ingredient, NEBE - by - product, MONO - residual monomer, VERU - impurity,\nVUL - by - product upon vulcanization. *** Note: C1 - IARC carcinogen, C2 - NTP carcinogen, C3 - OSHA carcinogen, NH - non -\nhazardous, R - repro ductive toxin.\nSubstances listed in the Subsections \"HAPS\" and \"California Proposition 65 Carcinogens / Reproductive Toxins\" that are not\nlisted in this section are only present at quantities below 0.1% for California Proposition 65 listed toxins or below 1% for non -\ncarcinogenic HAPS or they are inextricably bound in the product.\n4. First - aid measures\n4.1 General information:\nGet medical attention if irritation occurs or if breathing becomes difficult. Remove contaminated clothing and shoes.\n4.2 After inhalation\nIf inhaled remove to fresh air. If not breathing, give artificial respiration. If breathing is difficult give oxygen.\n4.3 After contact with the skin\nFor skin contact, immediately wipe away excess material. Use a waterless hand cleaner to remove as much of the remaining\nmaterial as possible. Wash with soap and water.\n4.4 After contact with the eyes\nIf contact with eyes, immediately hold eyelids apart and flush with plenty of water for at least 15 min.\n4.5 After swallowing\nFor ingestion, if conscious, give several glasses of water but do not induce vomiting. If vomiting does occur, give additiona l fluids.\n4.6 Advice for the physician\nTreat symptomatically.\n5. Fire - fighting measures\n5.1 Flammable properties:\nProperty:\nFlash point...............................................................:\nBoiling point / boiling range .....................................:\nLower explosion limit (LEL) .....................................:\nUpper explosion limit (UEL).....................................:\nIgnition temperature ................................................:\nNFPA Hazard Class (comb./flam.liquid) ..................:\nValue:\n> 93 °C (> 199 °F)\nnot determined\nnot determined\nnot determined\nnot determined\nIIIB\nMethod:\n(ASTM D3278, DIN\n55680, ISO 3679)\n5.2 Fire and explosion hazards:\nThis material does not present any unusual fire or explosion hazards.\nChemical characteristics\nPolysiloxane with functional groups + Fluoropolymer + organosilane (dispersion in water)\n3. Composition/information on ingredients",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 386
+  },
+  {
+    "id": "doc-prestain-sds-p3",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 3,
+    "text": "Safety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nPage: 3 /9\n5.3 Recommended extinguishing media:\ncarbon dioxide, dry sand, dry chemical or foam - type extinguishing media Water may be used to cool tanks and structures\nadjacent to the fire.\n5.4 Unsuitable extinguishing media:\nNone.\n5.5 Special exposure hazards arising from the substance or preparation itself, combustion products, resulting gases\nHazardous decomposition products: carbon monoxide , carbon dioxide , silicon dioxide , formaldehyde , Various hydrocarbon\nfragments .\n5.6 Fire fighting procedures:\nFull turn - out gear and Self Contained Breathing Apparatus (SCBA) should be worn when fighting large fires.\n6. Accidental release measures\n6.1 Precautions:\nWear personal protection equipment (see section 8). Avoid contact with eyes and skin. Avoid inhaling mists and vapours. If\nmaterial is released indicate risk of slipping.\nHAZWOPER PPE Level: C\n6.2 Containment:\nPrevent material from entering sewers or surface waters. Contain any fluid that runs out using suitable material (e.g. earth).\nRetain contaminated water/extinguishing water. Dispose of in prescribed marked containers.\nSpills of material which could reach surface waters must be reporte d to the United States Coast Guard National Response\nCenter's toll free phone number (800) 424 - 8802.\n6.3 Methods for cleaning up\nTake up mechanically and dispose of according to local/state/federal regulations. For small amounts: Absorb with a liquid binding\nmaterial such as diatomaceous earth and dispose of according to local/state/federal regulations. Contain larger amounts and\npump up into suitable containers. Clean any slippery coating that remains using a detergent / soap solution or anothe r\nbiodegradable cleaner.\n6.4 Further information:\nEliminate all sources of ignition.\n7. Handling and storage\n7.1 General information:\nAvoid exposure by technical measures or personal protective equipment. Always stir well before use.\n7.2 Handling\nPrecautions for safe handling:\nKeep away from heat, sparks and flame. Avoid contact with eyes, skin and clothing. Ensure adequate ventilation. Avoid breathi ng\ndust/vapor/mist/gas/aerosol. Keep container closed when not in use. When transferring flammable liquids between metal\ncontainers, ground and bond the containers to drain off and equalize their static electric charges and reduce the potential f or static\nsparks to occur.\nPrecautions against fire and explosion:\nDo not weld, cut, or grind on empty containers. Where feasible maintain the temperature of flammable or combustible liquids at\nleast 30° F below their flash point. Flammable, combustible or explosive air - vapor mixtures may be present in partial or uncleaned\nempty containers.\n7.3 Storage\nConditions for storage rooms and vessels:\nDo not store flammable liquids in plastic IBCs (i.e. Intermediate Bulk Containers or plastic tote tanks). Protect against fro st.\nAdvice for storage of incompatible materials:\nnone known .",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 449
+  },
+  {
+    "id": "doc-prestain-sds-p4",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 4,
+    "text": "Safety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nPage: 4 /9\nFurther information for storage:\nProtect against sun. Keep container tightly closed and store in a cool, well ventilated place. Protect against frost.\nMinimum temperature allowed during storage and transportation: 0 °C (32 °F)\nDo not allow this material to freeze.\nMaximum temperature allowed during storage and transportation: 50 °C (122 °F)\n8.1 Engineering controls\nVentilation:\nUse with adequate ventilation.\nLocal exhaust:\nIf spraying or other aerosol generating operations are performed, local exhaust ventilation designed to capture mists and spr ays,\nsuch as a paint spray booth, is recommended.\n8.2 Associate substances with specific control parameters such as limit values\nMaximum airborne concentrations at the workplace:\nRe Acetic acid (CAS - no. 64 - 19 - 7): STEL is 15 ppm (ACGIH).\nnone known\n8.3 Personal protection equipment (PPE)\nRespiratory protection:\nIf spraying or other operations which generate an aerosol mist are conducted, respiratory protection for exposed personnel is\nrecommended. A NIOSH approved air purifying respirator equipped with universal multi - contaminant, multi - gas/vapor cartridges\nand at least P - 99 solid/aerosol particulate filters is recommended if overexposure to dusts, mists, or vapors could occur.\nHand protection:\nAny liquid - tight rubber or vinyl gloves.\nEye protection:\nSafety glasses with side shields or chemical safety goggles.\nOther protective clothing or equipment:\nAdditional skin protection, such as SARAN EX coated Tyvek apron, over - sleeves, lab coat, coveralls, or protective suit should be\nworn if splashing could occur. Provide eye bath and safety shower.\n8.4 General hygiene and protection measures:\nFollow standard industrial hygiene practices when using this material. When handling do not eat, drink, smoke or apply cosmetics.\nWash thoroughly after handling.\n9. Physical and chemical properties\n9.1 Appearance\nPhysical state / form ................................................: liquid (23 °C (73 °F))\nColour .....................................................................: milky white\nOdour ......................................................................: aromatic\n9.2 Safety parameters\nProperty: Value: Method:\nMelting point / melting range ...................................: not determined\nBoiling point / boiling range .....................................: not determined\nFlash point...............................................................: > 93 °C (> 199 °F) (ASTM D3278, DIN\n55680, ISO 3679)\nIgnition temperature ................................................: not determined\n8. Exposure controls and personal protection\nCAS No. Material Type mg/m 3 ppm Dust fract.\n64 - 19 - 7 Acetic acid OSHA PEL 25.0 10.0\n64 - 19 - 7 Acetic acid ACGIH TWA 10.0",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 396
+  },
+  {
+    "id": "doc-prestain-sds-p5",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 5,
+    "text": "Safety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nPage: 5 /9\nLower explosion limit (LEL) .....................................: not determined\nUpper explosion limit (UEL).....................................: not determined\nVapour pressure......................................................: not determined\nDensity ....................................................................: 1.05 g/cm³ at 23 °C (73 °F), at 1015 hPa\nWater solubility / miscibility......................................: completely miscible\npH - Value .................................................................: 4.5 at 23 °C (73 °F) (1000 g/l H 2 O)\nViscosity (dynamic) .................................................: 55 mPa.s at 23 °C (73 °F)\n9.3 Further information\nCorrosive to Steel or Aluminum...............................: Not corrosive to steel or aluminum.\n10. Stability and reactivity\n10.1 General information:\nStable under normal conditions of use.\nIf stored and handled in accordance with standard industrial practices no hazardous reactions are known.\n10.2 Conditions to avoid\nAlthough this product is not expected to react with commonly used materials of construction and process equipment, it is advi sed\nthat any rubber or plastic items such as hoses and gaskets be tested prior to large scale processing to ensure there is no\ndegradation of performance or durability. Heat, open flames, and other sources of ignition. Protect against frost.\n10.3 Materials to avoid\nReacts with: acids and alkalis . Reaction causes the formation of: ethanol , methanol .\n10.4 Hazardous decomposition products\nBy hydrolysis: ethanol , methanol . Measurements have shown the formation of small amounts of formaldehyde at temperatures\nabove about 150 °C (302 °F) through oxidation.\n10.5 Further information:\nHazardous polymerization cannot occur.\n11. Toxicological information\n11.1 Information on toxicological effects\n11.1.1 General information\nData derived for the product as a whole are of higher priority than data for single ingredients.\n11.1.2 Acute toxicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product. No data on acute inhalation toxicity is avai lable for\nthis product. In case of aerosol formation: Avoid inhalative exposure!\nAcute toxicity estimate (ATE):\nATE mix (oral): > 2000 mg/kg\n11.1.3 Skin corrosion/irritation\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.4 Serious eye damage / eye irritation\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.5 Respiratory or skin sensitization\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 377
+  },
+  {
+    "id": "doc-prestain-sds-p6",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 6,
+    "text": "Page: 6 /9\nSafety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nData related to ingredients:\n5 - Chloro - 2 - methyl - 4 - isothiazoline - 3 - on and 2 - methyl - 4 - isothiazoline - 3 - on (mixture in a ratio of 3:1):\nBased on the proven low sensitization induction threshold in human, mixtures containing ≥15 ppm are classified as skin\nsensitizing in Europe.\n11.1.6 Germ cell mutagenicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.7 Carcinogenicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.8 Reproductive toxicity\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.9 Specific target organ toxicity (single exposure)\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.10 Specific target organ toxicity (repeated exposure)\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.11 Aspiration hazard\nAssessment:\nFor this endpoint no toxicological test data is available for the whole product.\n11.1.12 Further toxicological information\nNo component of this product present at levels greater than or equal to 0.1% is identified as a known or anticipated carcinogen by\nNTP. No component of this product present at levels greater than or equal to 0.1% is identified as probable, possible or conf irmed\nhuman carcinogen by IARC. No component of this product present at levels greater than or equal to 0 .1% is identified as a\ncarcinogen or potential carcinogen by OSHA.\nData related to ingredients:\nProduct of hydrolysis (Methanol):\nMethanol (CAS 67 - 56 - 1) is readily and rapidly absorbed at all exposure routes and is toxic by all routes. Methanol may cause\nirritation of the mucosa, as well as nausea, vomiting, headaches, vertigo and visual disorders, including blindness (irrevers ible\ndamage to the optic nerve), acidosis, spasms, narcosis and coma. There may be a delay in the onset of these effects afte r\nexposure.\n12. Ecological information\n12.1 Toxicity\nAssessment:\nFor the product as a whole, no test data is available.\n12.2 Persistence and degradability\nAssessment:\nFor the product as a whole, no test data is available.\nData related to ingredients:",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 382
+  },
+  {
+    "id": "doc-prestain-sds-p7",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 7,
+    "text": "Page: 7 /9\nSafety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nProduct of hydrolysis (Methanol):\nThe product of hydrolysis (methanol) is readily biodegradable.\n12.3 Bioaccumulative potential\nAssessment:\nNo data known.\n12.4 Mobility in soil\nAssessment:\nNo data known.\n12.5 Other adverse effects\nnone known\n13. Disposal considerations\n13.1 Product disposal\nRecommendation:\nDispose of according to regulations by incineration in a special waste incinerator. Observe local/state/federal regulations.\n13.2 Packaging disposal\nRecommendation:\nCompletely discharge containers (no tear drops, no powder rest, scraped carefully). Containers may be recycled or re - used.\nObserve local/state/federal regulations. Uncleaned packaging should be treated with the same precautions as the material.\n14. Transport information\n14.1 US DOT & CANADA TDG SURFACE\nValuation ................................................: Not regulated for transport\nOther Information ...................................: Protect from freezing, when exposed to cold temperatures approaching 0 °C (32 °F) or\nbelow.\n14.2 Transport by sea IMDG - Code\nValuation ................................................: Not regulated for transport\n14.3 Air transport ICAO - TI/IATA - DGR\nValuation ................................................: Not regulated for transport\n15.1 U.S. Federal regulations\nTSCA inventory status and TSCA information:\nThis material or its components are listed on or are in compliance with the requirements of the TSCA Chemical Substance\nInventory. This material or its component(s) is in compliance with TSCA under a Low Volume Exemption.\nTSCA 12(b) Export Notification:\nThis material does not contain reportable amounts of any T SCA 12(b) listed chemicals.\nCERCLA Regulated Chemicals:\nCAS No. Chemical RQ Upper limit wt. %\n64 - 19 - 7 Acetic acid 5,000 lbs <=1.4088\nSARA 302 EHS Chemicals:\nThis material does not contain any SARA extremely hazardous substances.\nSARA 311/312 Hazard Class:\nDelayed (chronic) health hazard.\nSARA 313 Chemicals:\nThis material does not contain any SARA 313 chemicals above de minimus levels.\n15. Regulatory information",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 303
+  },
+  {
+    "id": "doc-prestain-sds-p8",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 8,
+    "text": "Page: 8 /9\nSafety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nHAPS (Hazardous Air Pollutants):\nThis material does not contain any HAPS substances\n15.2 U.S. State regulations\nCalifornia Proposition 65 Carcinogens:\nThis material does not contain any chemicals known to the State of California to cause cancer.\nCalifornia Proposition 65 Reproductive Toxins:\n67 - 56 - 1 Methanol\nMassachusetts Substance List:\n64 - 19 - 7 Acetic acid\n2867 - 47 - 2 Proprietary Monomer\nNew Jersey Right - to - Know Hazardous Substance List:\n64 - 19 - 7 Acetic acid\n2867 - 47 - 2 Proprietary Monomer\nPennsylvania Right - to - Know Hazardous Substance List:\n64 - 19 - 7 Acetic acid\n57 - 55 - 6 Propylene glycol\n2867 - 47 - 2 Proprietary Monomer\n15.3 Canadian regulations\nThis product has been classified in accordance with the Hazard criteria of the CPR and the SDS contains all the information\nrequired by the CPR.\nWHMIS Hazard Classes:\nNone.\nDSL Status:\nThis material or one or more of its components is not listed on the Canadian Domestic Substances List.\nNon - DSL Chemicals:\nCAS No. Chemical Upper limit wt. %\nConfidential Vendor Trade Secret Polymer (Not Disclosed, Proprietary, Unknown) <= 9.388\n15.4 Details of international registration status\nRelevant information about individual substance inventories, where available, is given below.\nEuropean Economic Area (EEA)................. : REACH (Regulation (EC) No 1907/2006):\nGeneral note: the registration obligations for substances imported into the EEA or\nmanufactured within the EEA by the supplier mentioned in section 1 are fulfilled by\nthe said supplier. The registration obligations for substances imported into the EEA\nby customers or other downstream users must be fulfilled by the latter.\n16. Other information\n16.1 Additional information:\nThis Safety Data Sheet (SDS) meets the requirements of the Federal OSHA Hazard Communication Standard (29 CFR\n1910.1200). This product has been classified according to the hazard criteria of the Controlled Products Regulations (CPR) and\nthe SDS contains all of the information required by the CPR. This information relates to the specific material designated and may\nnot be valid for such material us ed in combination with any other materials or in any process. Such information is to the best of\nour knowledge and belief accurate and reliable as of the date compiled. However, no representation, warranty or guarantee\nexpressed or implied, is made as to i ts accuracy, reliability or completeness. It is the user's responsibility to satisfy himself as to\nthe suitability and completeness of such information for his own particular use. We do not accept liability for any loss or d amage\nthat may occur from the us e of this information. Nothing herein shall be construed as a recommendation for uses which infringe\nvalid patents or as extending a license under valid patents. This SDS provides selected regulatory information on this produc t,\nincluding its components. T his is not intended to include all regulations. It is the responsibility of the user to know and comply with\nall applicable rules, regulations and laws relating to the product being used.\nVertical lines in the left - hand margin indicate changes compared wit h the previous version.",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 537
+  },
+  {
+    "id": "doc-prestain-sds-p9",
+    "docId": "doc-prestain-sds",
+    "pageNumber": 9,
+    "text": "Page: 9 /9\nSafety Data Sheet\nMaterial: 20071922 PRE STAIN BASE\nVersion: 2.5 (US) Date of print: 02/20/2017 Date of last alteration: 04/11/2016\nAll deliveries are subject to the SEMCO Health Care Policy.\n16.2 Glossary of Terms:\nACGIH - American Conference of Governmental Industrial\nHygienists\nDOT - Department of Transportation\nhPa - Hectopascals\nmPa*s - Milli Pascal - Seconds\nOSHA - Occupational Safety and Health Administration\nPEL - Permissible Exposure Limit\nppm - Parts per Million\nSARA - Superfund Amendments and Reauthorization Act\nSTEL - Shor t Term Exposure Limit\nTSCA - Toxic Substances Control Act\nTWA - Time Weighted Average\nWHMIS - Canadian Workplace Hazardous Materials\nIdentification System\nFlash point determination methods ........................................ Common name\nASTM D56................................................................................... Tagliabue (Tag) closed cup\nASTM D92, DIN 51376, ISO 2592 .............................................. Cleveland open cup\nASTM D93, DIN 51758, ISO 2719 .............................................. Pensky - Martens closed cup\nASTM D3278, DIN 55680, ISO 3679 .......................................... Setaflash or Rapid closed cup\nDIN 51755 ................................................................................... Abel - Pensky closed cup\n16.3 Conversion table:\nPressure:....................: 1 hPa * 0.75 = 1 mm Hg = 1 torr; 1 bar = 1000 hPa\nViscosity: ....................: 1 mPa*s = 1 centipoise (cP)",
+    "sourceDocument": "PreStain-SDS.pdf",
+    "title": "PreStain SDS",
+    "category": "PreStain",
+    "wordCount": 192
+  },
+  {
     "id": "doc-prestain-tech-sheet-p1",
     "docId": "doc-prestain-tech-sheet",
     "pageNumber": 1,
@@ -1399,11 +2330,21 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "wordCount": 23
   },
   {
+    "id": "doc-satin-stone-chemical-resistance-p1",
+    "docId": "doc-satin-stone-chemical-resistance",
+    "pageNumber": 1,
+    "text": "Acetic Acid, 15% 1 Chloroform 1 Methanol 2\nAcetic Acid, 25% 2 Chromic Acid, 50% *1 Methylene Chloride 3 3\nAcetic Acid, Glacial 3 Citric Acid, 50% 1 Methyl Ethyl Ketone 4\nAcetone 4 Cola Syrup 1 Nitric Acid, 15% *1\nAluminum Chloride 1 Copper Chloride 1 Oleic Acid 1\nAluminum Nitrate 1 Copper Nitrate 1 Phosphoric Acid, 85% 1\nAluminum Sulfate 1 Copper Sulfate 1 Potassium Chloride 1\nAmmonium Hydroxide 1 Diesel Fuel 1 Potassium Cyanide 1\nAmmonium Nitrate 1 Ethyl Acetate 1 Potassium Hydroxide 1\nAmmonium Sulfate 1 Ethyl Alcohol 1 Potassium Nitrate 1\nAniline 3 Formaldehyde 1 Potassium Sulfate 1\nBarium Chloride 1 Formic Acid 25% 1 Skydrol 1\nBarium Hydroxide 1 Hydrobromic Acid, 48% *1 Sodium Hydroxide, 50% 1\nBarium Sulfide 1 Hydrochloric Acid, 37% *1 Sodium Chloride 1\nBeer 1 Hydrofluoric Acid, 25% 2 Sulphuric Acid, 50% *1\nBenzene 1 Hydrogen Peroxide, 30% 1 Tetrahydrofuran 1\nBrake Fluid 1 Lactic Acid, 50% 1 Tolulene 1\nBoric Acid 1 Lactic Acid, 85% 2 Trichlorethylene 1\nN-Butyric Acid, 50% 3 Jet Fuel 1 Trichlorethane 1\nCalcium Chloride 1 Isopropyl Alcohol 1 Urea 1\nCalcium Hydroxide 1 Maleic Acid, 40% 2 Xylene 1",
+    "sourceDocument": "Satin-Stone-chemical-resistance.pdf",
+    "title": "Satin Stone chemical resistance",
+    "category": "Satin Stone",
+    "wordCount": 195
+  },
+  {
     "id": "doc-satin-stone-data-sheet-p1",
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 1,
     "text": "SATIN STONE Epoxy Polyaspartic Polyurethane\nUV Stable for Outdoors YES NO YES YES\nResistance to Highly Acidic Chemicals pH < 2 YES NO YES YES\nResistance to Extremely Alkaline Chemicals pH > 12 YES YES NO NO\nExtreme Abrasion Resistance YES YES NO NO\nBond strength exceeds 400 PSI YES YES NO YES",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 53
@@ -1413,7 +2354,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 2,
     "text": "Abrasion testing ISO 7784 with 10,000 rubs Mass loss of 0.017g only\nWater permeability EN 1062-3 W3 - low at 0.013\nVOC Emission test according EMICODE EC 1 PLUS\nPerformance test - stain resistance PASSED\nSlip resistance ADA Safety Surface DCOF 0.86\nSlip resistance AS/NZS 4586 - pendulum Slider 96(4S) - P4 = 45 - 54\n3/8” nap, woven",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 59
@@ -1423,7 +2364,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 3,
     "text": "Acetic Acid, 15% 1 Chloroform 1 Methanol 2\nAcetic Acid, 25% 2 Chromic Acid, 50% *1 Methylene Chloride 3 3\nAcetic Acid, Glacial 3 Citric Acid, 50% 1 Methyl Ethyl Ketone 4\nAcetone 4 Cola Syrup 1 Nitric Acid, 15% *1\nAluminum Chloride 1 Copper Chloride 1 Oleic Acid 1\nAluminum Nitrate 1 Copper Nitrate 1 Phosphoric Acid, 85% 1\nAluminum Sulfate 1 Copper Sulfate 1 Potassium Chloride 1\nAmmonium Hydroxide 1 Diesel Fuel 1 Potassium Cyanide 1\nAmmonium Nitrate 1 Ethyl Acetate 1 Potassium Hydroxide 1\nAmmonium Sulfate 1 Ethyl Alcohol 1 Potassium Nitrate 1\nAniline 3 Formaldehyde 1 Potassium Sulfate 1\nBarium Chloride 1 Formic Acid 25% 1 Skydrol 1\nBarium Hydroxide 1 Hydrobromic Acid, 48% *1 Sodium Hydroxide, 50% 1\n%DULXP\u00036XOƃGH 1 Hydrochloric Acid, 37% *1 Sodium Chloride 1\nBeer 1 +\\GURƄXRULF\u0003$FLG\u000f\u0003\u0015\u0018\b 2 Sulphuric Acid, 50% *1\nBenzene 1 Hydrogen Peroxide, 30% 1 Tetrahydrofuran 1\nBrake Fluid 1 Lactic Acid, 50% 1 Tolulene 1\nBoric Acid 1 Lactic Acid, 85% 2 Trichlorethylene 1\nN-Butyric Acid, 50% 3 Jet Fuel 1 Trichlorethane 1\nCalcium Chloride 1 Isopropyl Alcohol 1 Urea 1\nCalcium Hydroxide 1 Maleic Acid, 40% 2 Xylene 1",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 192
@@ -1433,7 +2374,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 4,
     "text": "Page 1 / 7\nSAFETY DATA SHEET\nIssue Date 3-04-2016 Revision Date 03-04-2016 Version 1\nProduct identifier\nProduct Name SATIN 6721(\nOther means of identification\nProduct Code XTS1000\nRecommended use of the chemical and restrictions on use\nRecommended Use For Industrial, and Commercial Use\nUses advised against No information available\nDetails of the supplier of the safety data sheet\nManufacturer Address\nSEMCO Modern Seamless Surface\n3620 West Reno Ave\nLas Vegas, NV 89118\nEmergency telephone number\nCompany Phone Number 702-222-9495\nEmergency Telephone Chemtrec 1-800-424-9300\nClassification\nOSHA Regulatory Status\nThis chemical is considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200)\nLabel elements\n1. IDENTIFICATION OF THE SUBSTANCE/PREPARATION AND OF THE COMPANY/UNDERTAKING\n2. HAZARDS IDENTIFICATION\nSkin sensitization Category 1\nEmergency Overview\nWarning\nHazard statements\nMay cause an allergic skin reaction\nAppearance P a r t A M i l k y W h i t e P a r t B\nClear Liquid Physical state Liquid Odor Slight",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 160
@@ -1443,7 +2384,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 5,
     "text": "Page 2 / 7\n6$7,1\u00036721( Revision Date 3-4-2016\nPrecautionary Statements - Prevention\nAvoid breathing dust/fume/gas/mist/vapors/spray\nContaminated work clothing should not be allowed out of the workplace\nWear protective gloves\nPrecautionary Statements - Response\nGet medical advice/attention if you feel unwell\nIF ON SKIN: Wash with plenty of soap and water\nIf skin irritation or rash occurs: Get medical advice/attention\nWash contaminated clothing before reuse\nPrecautionary Statements - Disposal\nDispose of contents/container to an approved waste disposal plant\nHazards not otherwise classified (HNOC)\nOther Information\n! \"#$%&'()*+)#,'#*-.)(-&/)0-*1)(+23)(#4*-23)/&&/.*4\n! \"#$%&'()*+)#,'#*-.)(-&/\nUnknown Acute Toxicity 52.60961% of the mixture consists of ingredient(s) of unknown toxicity\nChemical Name CAS No. Weight-% Trade Secret\nAmmonium hydroxide 1336-21-6 <0.10 *\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\nFirst aid measures\nEye contact Rinse thoroughly with plenty of water for at least 15 minutes, lifting lower and upper eyelids.\nConsult a physician.\nSkin Contact Wash skin with soap and water. Wash contaminated clothing before reuse.\nInhalation Remove to fresh air.\nIngestion Clean mouth with water and drink afterwards plenty of water.\nMost important symptoms and effects, both acute and delayed\nSymptoms No information available.\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment. Dry chemical, CO2,\nalcohol-resistant foam or water spray.\nUnsuitable extinguishing media Caution: Use of water spray when fighting fire may be inefficient.\nSpecific hazards arising from the chemical\nNo information available.\nExplosion data\n3. COMPOSITION/INFORMATION ON INGREDIENTS\n4. FIRST AID MEASURES\n5. FIRE-FIGHTING MEASURES",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 267
@@ -1453,7 +2394,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 6,
     "text": "Page 3 / 7\n6$7,1\u00036721( Revision Date 3-4-2016\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nAs in any fire, wear self-contained breathing apparatus pressure-demand, MSHA/NIOSH (approved or equivalent) and full\nprotective gear.\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Ensure adequate ventilation, especially in confined areas.\nEnvironmental precautions\nEnvironmental precautions See Section 12 for additional ecological information.\nMethods and material for containment and cleaning up\nMethods for containment Prevent further leakage or spillage if safe to do so. Dike far ahead of spill; use dry sand to\ncontain the flow of material.\nMethods for cleaning up Pick up and transfer to properly labeled containers.\nPrecautions for safe handling\nAdvice on safe handling Handle in accordance with good industrial hygiene and safety practice.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Keep containers tightly closed in a dry, cool and well-ventilated place.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines This product, as supplied, does not contain any hazardous materials with occupational\nexposure limits established by the region specific regulatory bodies.\nAppropriate engineering controls\nEngineering Controls Showers\nEyewash stations\nVentilation systems.\nIndividual protection measures, such as personal protective equipment\nEye/face protection No special technical protective measures are necessary.\nSkin and body protection No special technical protective measures are necessary.\nRespiratory protection If exposure limits are exceeded or irritation is experienced, NIOSH/MSHA approved\nrespiratory protection should be worn. Positive-pressure supplied air respirators may be\nrequired for high airborne contaminant concentrations. Respiratory protection must be\nprovided in accordance with current local regulations.\nGeneral Hygiene Considerations Handle in accordance with good industrial hygiene and safety practice.\n6. ACCIDENTAL RELEASE MEASURES\n7. HANDLING AND STORAGE\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION\n9. PHYSICAL AND CHEMICAL PROPERTIES",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 295
@@ -1463,7 +2404,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 7,
     "text": "Page 4 / 7\n6$7,1\u00036721( Revision Date 3-4-2016\nInformation on basic physical and chemical properties\nPhysical state Liquid\nAppearance Milky liquid Part A, Clear Part B Odor Slight\nOdor threshold No information available\nProperty\npH\nValues\n7-8\nRemarks • Method\nMelting point/freezing point 32°F\nBoiling point / boiling range >212°F similar to water\nFlash point Not applicable ,( water-base)\nproduct) Evaporation rate No information available\nFlammability (solid, gas) No information available\nFlammability Limit in Air\nUpper flammability limit:\nLower flammability limit:\nVapor pressure\nNo information available\nNo information available\nNo information available\nVapor density No information available\nWater solubility Dispersible\nSolubility in other solvents No information available\nPartition coefficient No information available\nAutoignition temperature No information available\nDecomposition temperature No information available\nReactivity\nNo data available\nChemical stability\nStable under recommended storage conditions.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nProtect from freezing - product stability may be affected.\nIncompatible materials\nNone known based on information supplied.\nHazardous Decomposition Products\nNone known based on information supplied.\nInformation on likely routes of exposure\nProduct Information No data available\nInhalation No data available.\nEye contact No data available.\nSkin Contact No data available.\nIngestion .\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 204
@@ -1473,7 +2414,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 8,
     "text": "Page 5 / 7\n6$7,1\u00036721( Revision Date 3-4-2016\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\nAmmonium hydroxide\n1336-21-6\n= 140 mg/kg ( Rat ) - -\nInformation on toxicological effects\nSymptoms No information available.\nDelayed and immediate effects as well as chronic effects from short and long-term exposure\nSensitization No information available.\nGerm cell mutagenicity No information available.\nCarcinogenicity No information available.\nReproductive toxicity No information available.\nSTOT - single exposure No information available.\nSTOT - repeated exposure No information available.\nAspiration hazard No information available.\nNumerical measures of toxicity - Product Information\nUnknown Acute Toxicity 20.60961% of the mixture consists of ingredient(s) of unknown toxicity\nEcotoxicity\nHarmful to aquatic life\n14.9100635% of the mixture consists of components(s) of unknown hazards to the aquatic environment\nChemical Name Algae/aquatic plants Fish Crustacea\nAmmonium hydroxide\n1336-21-6\n- 4.1: 96 h Pimephales promelas\nmg/L LC50\n0.33: 24 h water flea mg/L EC50\n0.22: 24 h Daphnia pulex mg/L\nEC50\nPersistence and degradability\nNo information available.\nBioaccumulation\nNo information available.\nOther adverse effects No information available\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations.\nContaminated packaging Do not reuse container.\n12. ECOLOGICAL INFORMATION\n13. DISPOSAL CONSIDERATIONS\n14. TRANSPORT INFORMATION",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 208
@@ -1483,7 +2424,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 9,
     "text": "Page 6 / 7\n6$7,1\u00036721( Revision Date 3-4-2016\nDOT Not regulated\nSea transport Not regulated\nInternational Inventories\nTSCA Complies\nDSL/NDSL Complies\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non-Domestic Substances List\nUS Federal Regulations\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product contains a chemical\nor chemicals which are subject to the reporting requirements of the Act and Title 40 of the Code of Federal Regulations, Part 372\nChemical Name SARA 313 - Threshold Values %\n6$7,1\u00036721(\nSARA 311/312 Hazard Categories\nAcute health hazard No\nChronic Health Hazard No\nFire hazard No\nSudden release of pressure hazard No\nReactive Hazard No\nCWA (Clean Water Act)\nThis product contains the following substances which are regulated pollutants pursuant to the Clean Water Act (40 CFR 122.21\nand 40 CFR 122.42)\nChemical Name CWA - Reportable\nQuantities\nCWA - Toxic Pollutants CWA - Priority Pollutants CWA - Hazardous\nSubstances\nAmmonium hydroxide\n1336-21-6\n1000 lb - - X\nCERCLA\nThis material, as supplied, contains one or more substances regulated as a hazardous substance under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302)\nChemical Name Hazardous Substances RQs CERCLA/SARA RQ Reportable Quantity (RQ)\nAmmonium hydroxide\n1336-21-6\n1000 lb - RQ 1000 lb final RQ\nRQ 454 kg final RQ\nUS State Regulations\nCalifornia Proposition 65\nWARNING: This product contains chemicals known to the State of California to cause cancer and birth defects or other\nreproductive harm.\nU.S. State Right-to-Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\nAmmonium hydroxide\n1336-21-6\nX X X\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\n15. REGULATORY INFORMATION",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 285
@@ -1493,10 +2434,90 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-satin-stone-data-sheet",
     "pageNumber": 10,
     "text": "Page 7 / 7\n6$7,1\u00036721( Revision Date 3-4-2016\nNFPA Health hazards 1 Flammability 0 Instability 0 Physical and Chemical\nProperties -\nHMIS Health hazards 1 Flammability 0 Physical hazards 0 Personal protection X\nPrepared By Samel Sem\nIssue Date 3-4-2016\nRevision Date 3-4-2016\nRevision Note\nNo information available\nDisclaimer\nThe information provided in this Material Safety Data Sheet is correct to the best of our knowledge, information and belief\nat the date of its publication. The information given is designed only as a guidance for safe handling, use, processing,\nstorage, transportation, disposal and release and is not to be considered a warranty or quality specification. The\ninformation relates only to the specific material designated and may not be valid for such material used in combination\nwith any other materials or in any process, unless specified in the text.\nEnd of Safety Data Sheet\n16. OTHER INFORMATION",
-    "sourceDocument": "Satin+Stone+Data+Sheet.pdf",
+    "sourceDocument": "Satin-Stone-Data-Sheet.pdf",
     "title": "Satin Stone Data Sheet",
     "category": "Satin Stone",
     "wordCount": 146
+  },
+  {
+    "id": "doc-satin-stone-sds-p1",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 1,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 1 of 7\nPage 1 / 7\nSAFETY DATA SHEET\nIssue Date 3-04-2016 Revision Date 03-04-2016 Version 1\nProduct identifier\nProduct Name SATIN STONE\nOther means of identification\nProduct Code XTS1000\nRecommended use of the chemical and restrictions on use\nRecommended Use For Industrial, and Commercial Use\nUses advised against No information available\nDetails of the supplier of the safety data sheet\nManufacturer Address\nSEMCO Modern Seamless Surface\n3620 West Reno Ave\nLas Vegas, NV 89118\nEmergency telephone number\nCompany Phone Number 702-222-9495\nEmergency Telephone Chemtrec 1-800-424-9300\nClassification\nOSHA Regulatory Status\nThis chemical is considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200)\nLabel elements\n1. IDENTIFICATION OF THE SUBSTANCE/PREPARATION AND OF THE COMPANY/UNDERTAKING\n2. HAZARDS IDENTIFICATION\nSkin sensitization Category 1\nEmergency Overview\nWarning\nHazard statements\nMay cause an allergic skin reaction\nAppearance P a r t A M i l k y w h i t e P a r t B\nC l e a t liquid Physical state Liquid Odor Slight\nSATIN STONE\nSAFETY DATA SHEET",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 187
+  },
+  {
+    "id": "doc-satin-stone-sds-p2",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 2,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 2 of 7\nPage 2 / 7\nSATIN STONE Revision Date 3-4-2016\nPrecautionary Statements - Prevention\nAvoid breathing dust/fume/gas/mist/vapors/spray\nContaminated work clothing should not be allowed out of the workplace\nWear protective gloves\nPrecautionary Statements - Response\nGet medical advice/attention if you feel unwell\nIF ON SKIN: Wash with plenty of soap and water\nIf skin irritation or rash occurs: Get medical advice/attention\nWash contaminated clothing before reuse\nPrecautionary Statements - Disposal\nDispose of contents/container to an approved waste disposal plant\nHazards not otherwise classified (HNOC)\nOther Information\n• Harmful to aquatic life with long lasting effects\n• Harmful to aquatic life\nUnknown Acute Toxicity 52.60961% of the mixture consists of ingredient(s) of unknown toxicity\nChemical Name CAS No. Weight-% Trade Secret\nAmmonium hydroxide 1336-21-6 <0.10 *\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\nFirst aid measures\nEye contact Rinse thoroughly with plenty of water for at least 15 minutes, lifting lower and upper eyelids.\nConsult a physician.\nSkin Contact Wash skin with soap and water. Wash contaminated clothing before reuse.\nInhalation Remove to fresh air.\nIngestion Clean mouth with water and drink afterwards plenty of water.\nMost important symptoms and effects, both acute and delayed\nSymptoms No information available.\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment. Dry chemical, CO2,\nalcohol-resistant foam or water spray.\nUnsuitable extinguishing media Caution: Use of water spray when fighting fire may be inefficient.\nSpecific hazards arising from the chemical\nNo information available.\nExplosion data\n3. COMPOSITION/INFORMATION ON INGREDIENTS\n4. FIRST AID MEASURES\n5. FIRE-FIGHTING MEASURES\nSATIN STONE Revision Date 3-4-2016",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 301
+  },
+  {
+    "id": "doc-satin-stone-sds-p3",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 3,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 3 of 7\nPage 3 / 7\nSATIN STONE Revision Date 3-4-2016\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nAs in any fire, wear self-contained breathing apparatus pressure-demand, MSHA/NIOSH (approved or equivalent) and full\nprotective gear.\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Ensure adequate ventilation, especially in confined areas.\nEnvironmental precautions\nEnvironmental precautions See Section 12 for additional ecological information.\nMethods and material for containment and cleaning up\nMethods for containment Prevent further leakage or spillage if safe to do so. Dike far ahead of spill; use dry sand to\ncontain the flow of material.\nMethods for cleaning up Pick up and transfer to properly labeled containers.\nPrecautions for safe handling\nAdvice on safe handling Handle in accordance with good industrial hygiene and safety practice.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Keep containers tightly closed in a dry, cool and well-ventilated place.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines This product, as supplied, does not contain any hazardous materials with occupational\nexposure limits established by the region specific regulatory bodies.\nAppropriate engineering controls\nEngineering Controls Showers\nEyewash stations\nVentilation systems.\nIndividual protection measures, such as personal protective equipment\nEye/face protection No special technical protective measures are necessary.\nSkin and body protection No special technical protective measures are necessary.\nRespiratory protection If exposure limits are exceeded or irritation is experienced, NIOSH/MSHA approved\nrespiratory protection should be worn. Positive-pressure supplied air respirators may be\nrequired for high airborne contaminant concentrations. Respiratory protection must be\nprovided in accordance with current local regulations.\nGeneral Hygiene Considerations Handle in accordance with good industrial hygiene and safety practice.\n6. ACCIDENTAL RELEASE MEASURES\n7. HANDLING AND STORAGE\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION\n9. PHYSICAL AND CHEMICAL PROPERTIES\nSATIN STONE Revision Date 3-4-2016",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 319
+  },
+  {
+    "id": "doc-satin-stone-sds-p4",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 4,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 4 of 7\nPage 4 / 7\nSATIN STONE Revision Date 3-4-2016\nInformation on basic physical and chemical properties\nPhysical state Liquid\nAppearance Milky liquid Part A, Clear Part B Odor Slight\nOdor threshold No information available\nProperty\npH\nValues\n7-8\nRemarks • Method\nMelting point/freezing point 32°F\nBoiling point / boiling range >212°F similar to water\nFlash point Not applicable ,( water-base)\nproduct) Evaporation rate No information available\nFlammability (solid, gas) No information available\nFlammability Limit in Air\nUpper flammability limit:\nLower flammability limit:\nVapor pressure\nNo information available\nNo information available\nNo information available\nVapor density No information available\nWater solubility Dispersible\nSolubility in other solvents No information available\nPartition coefficient No information available\nAutoignition temperature No information available\nDecomposition temperature No information available\nReactivity\nNo data available\nChemical stability\nStable under recommended storage conditions.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nProtect from freezing - product stability may be affected.\nIncompatible materials\nNone known based on information supplied.\nHazardous Decomposition Products\nNone known based on information supplied.\nInformation on likely routes of exposure\nProduct Information No data available\nInhalation No data available.\nEye contact No data available.\nSkin Contact No data available.\nIngestion .\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION\nSATIN STONE Revision Date 3-4-2016",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 228
+  },
+  {
+    "id": "doc-satin-stone-sds-p5",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 5,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 5 of 7\nPage 5 / 7\nSATIN STONE Revision Date 3-4-2016\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\nAmmonium hydroxide\n1336-21-6\n= 140 mg/kg ( Rat ) - -\nInformation on toxicological effects\nSymptoms No information available.\nDelayed and immediate effects as well as chronic effects from short and long-term exposure\nSensitization No information available.\nGerm cell mutagenicity No information available.\nCarcinogenicity No information available.\nReproductive toxicity No information available.\nSTOT - single exposure No information available.\nSTOT - repeated exposure No information available.\nAspiration hazard No information available.\nNumerical measures of toxicity - Product Information\nUnknown Acute Toxicity 20.60961% of the mixture consists of ingredient(s) of unknown toxicity\nEcotoxicity\nHarmful to aquatic life\n14.9100635% of the mixture consists of components(s) of unknown hazards to the aquatic environment\nChemical Name Algae/aquatic plants Fish Crustacea\nAmmonium hydroxide\n1336-21-6\n- 4.1: 96 h Pimephales promelas\nmg/L LC50\n0.33: 24 h water flea mg/L EC50\n0.22: 24 h Daphnia pulex mg/L\nEC50\nPersistence and degradability\nNo information available.\nBioaccumulation\nNo information available.\nOther adverse effects No information available\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations.\nContaminated packaging Do not reuse container.\n12. ECOLOGICAL INFORMATION\n13. DISPOSAL CONSIDERATIONS\n14. TRANSPORT INFORMATION\nSATIN STONE Revision Date 3-4-2016",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 232
+  },
+  {
+    "id": "doc-satin-stone-sds-p6",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 6,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 6 of 7\nPage 6 / 7\nSATIN STONE Revision Date 3-4-2016\nDOT Not regulated\nSea transport Not regulated\nInternational Inventories\nTSCA Complies\nDSL/NDSL Complies\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non-Domestic Substances List\nUS Federal Regulations\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product contains a chemical\nor chemicals which are subject to the reporting requirements of the Act and Title 40 of the Code of Federal Regulations, Part 372\nChemical Name SARA 313 - Threshold Values %\nSATIN STONE\nSARA 311/312 Hazard Categories\nAcute health hazard No\nChronic Health Hazard No\nFire hazard No\nSudden release of pressure hazard No\nReactive Hazard No\nCWA (Clean Water Act)\nThis product contains the following substances which are regulated pollutants pursuant to the Clean Water Act (40 CFR 122.21\nand 40 CFR 122.42)\nChemical Name CWA - Reportable\nQuantities\nCWA - Toxic Pollutants CWA - Priority Pollutants CWA - Hazardous\nSubstances\nAmmonium hydroxide\n1336-21-6\n1000 lb - - X\nCERCLA\nThis material, as supplied, contains one or more substances regulated as a hazardous substance under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302)\nChemical Name Hazardous Substances RQs CERCLA/SARA RQ Reportable Quantity (RQ)\nAmmonium hydroxide\n1336-21-6\n1000 lb - RQ 1000 lb final RQ\nRQ 454 kg final RQ\nUS State Regulations\nCalifornia Proposition 65\nWARNING: This product contains chemicals known to the State of California to cause cancer and birth defects or other\nreproductive harm.\nU.S. State Right-to-Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\nAmmonium hydroxide\n1336-21-6\nX X X\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\n15. REGULATORY INFORMATION\nSATIN STONE Revision Date 3-4-2016",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 310
+  },
+  {
+    "id": "doc-satin-stone-sds-p7",
+    "docId": "doc-satin-stone-sds",
+    "pageNumber": 7,
+    "text": "3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 / fax: 702.222.1788 semcosurfaces.com 7 of 7\nPage 7 / 7\nSATIN STONE Revision Date 3-4-2016\nNFPA Health hazards 1 Flammability 0 Instability 0 Physical and Chemical\nProperties -\nHMIS Health hazards 1 Flammability 0 Physical hazards 0 Personal protection X\nPrepared By Samel Sem\nIssue Date 3-4-2016\nRevision Date 3-4-2016\nRevision Note\nNo information available\nDisclaimer\nThe information provided in this Material Safety Data Sheet is correct to the best of our knowledge, information and belief\nat the date of its publication. The information given is designed only as a guidance for safe handling, use, processing,\nstorage, transportation, disposal and release and is not to be considered a warranty or quality specification. The\ninformation relates only to the specific material designated and may not be valid for such material used in combination\nwith any other materials or in any process, unless specified in the text.\nEnd of Safety Data Sheet\n16. OTHER INFORMATION\nSATIN STONE Revision Date 3-4-2016",
+    "sourceDocument": "Satin-Stone-SDS.pdf",
+    "title": "Satin Stone SDS",
+    "category": "Satin Stone",
+    "wordCount": 170
+  },
+  {
+    "id": "doc-satin-stone-tech-data-sheet-p1",
+    "docId": "doc-satin-stone-tech-data-sheet",
+    "pageNumber": 1,
+    "text": "PRODUCT DESCRIPTION\nSatin Stone is the latest technology in SEMCO Cross Linking sealers. It interlocks with applied substrates solidifying\nand creating total surface protection with a density enhancement of up to 85%. Excellent for interior and exterior\nuse while handling rigorous surface conditions including high traffic commercial and industrial environments.\nUsed automobile oil Excellent\nTransmission fluid Good\nWater Excellent\nCooking oil Excellent\nWine Excellent\nAlkali resistance Excellent\nHydrochloric acid (10%) Good\nPolished concrete 200-250\nX-Bond Seamless Stone 250-300\nArtificial stone 200-250\nStamped concrete 300-350\nBelow grade N/A\nApplication Airless sprayer tip size 21 at 1,000 PSI\nApplication environment Apply at temperatures from 50°F to 90°F\nDrying time 1 hour at 72°F\nCure time 12 hours light foot traffic, 7 days full cure at 72°F\nColor Part A - milky white, Part B - light amber\nChemical type Polyurethane hybrid\nClean up SEMCO Stone Soap with water\nShelf life 1 year\nUseful life after mixing Part A with Part B 35 minutes after mixing\nPackaging (base and color activator) Part A - 1 gal. pail, Part B - 0.5 gal. pail\nSATIN STONE\nIndustrial Satin Finish Sealer\nTechnical Product Information\nAPPLICATION AND SPECIFICATIONS\nCOVERAGE (sq. ft. per gallon of mixture)\nTEST RESULTS*\nFEATURES / BENEFITS\n• Withstands industrial and commercial vehicle traffic\n• Rejuvenates color, leaves natural look\n• For interior and exterior surfaces\n• Resistant to chemicals: can be used in hospitals, laboratories, food\npreparation areas and automotive facilities\n*Also available with a non-skid additive\n*Available in color\nSUBSTRATES\n• X-Bond Seamless Stone\n• Pre-Stain Color\n• Color Green\n• New and existing concrete\n• Stamped concrete\n• Natural stone\n• Industrial and commercial floors\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2018.V01\nSURFACE ENGINEERING COMPANY\nMIXING RATIO: 2 Parts A : 1 Part B\nConcrete or X-BOND substrate\nCatalyst\nResin",
+    "sourceDocument": "Satin-Stone-Tech-Data-Sheet.pdf",
+    "title": "Satin Stone Tech Data Sheet",
+    "category": "Satin Stone",
+    "wordCount": 306
   },
   {
     "id": "doc-satin-stone-tech-sheet-p1",
@@ -1527,6 +2548,56 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "title": "Satin Stone Tech Sheet",
     "category": "Satin Stone",
     "wordCount": 595
+  },
+  {
+    "id": "doc-section-09670-fluid-applied-surfaces-p1",
+    "docId": "doc-section-09670-fluid-applied-surfaces",
+    "pageNumber": 1,
+    "text": "SECTION 9700 – SEAMLESS STONE FINISH 1\nSEMCO Modern Seamless Surfa ce\n3620West Reno Avenue Suite J\nLas Vegas, Nevada 89118\nSECTION 0967 0\nFLUID APPLIED SURFACING\nPART 1 – GENERAL\n1.01 SUMMARY\nA. Section includes: Cleaning, preparation and color finishing of\nspecified concrete surfaces. This work shall include providing and\napplying special concrete Natural Finish coloration system\nin accordance with the provisions of the plan documents and other\nsections of the project specifications.\nB. Related Documents: The conditions of the Contract apply to this\nsection as fully as if repeated herein.\nC. Related Work: Se ction 9700\n1.02 SUBMITTALS\nA. Submit proposed construction material SDS sheets for materials\nto be used for the coloring, and/or etching of concrete surfaces.\n1.03 TEST PANEL (S)\nA. The Contractor shall demonstrate his workmanship by constructing\ntest panel(s) fo r coloring types specified using approved coloring\nmaterials.\nB. The architectural surface treatments of the finished work shall\nachieve the same final effect as demonstrated on the approved test panel(s).\nC. The material used in construction of the jobsi te test panel(s) shall comply\nwith the related concrete specification sections applicable to the project work.\nThe mix utilized for the test panel(s) shall be same pounds per square inch (PSI)\nconcrete mix as specified for the project work. The color sh all produce the same\ncolor intended for use on the finished surface and shall be incorporated into the\nfinal work. The test panel(s) shall be un - reinforced concrete; constructed to\ndetermine the surface coloring result by use of approved coloring material s. The\nsize of the concret e test panel(s) shall be three (3) feet wide by three (3 ) feet\nlong, (unless noted otherwise). Unsatisfactory panel(s) shall be removed and\nreplaced with satisfactory panel(s). Disposal of test panel(s) when work is\ncomplete to be done by General Contractor.",
+    "sourceDocument": "Section-09670-Fluid-Applied-Surfaces.pdf",
+    "title": "Section 09670 Fluid Applied Surfaces",
+    "category": "Technical doc",
+    "wordCount": 307
+  },
+  {
+    "id": "doc-section-09670-fluid-applied-surfaces-p2",
+    "docId": "doc-section-09670-fluid-applied-surfaces",
+    "pageNumber": 2,
+    "text": "SECTION 9700 – SEAMLESS STONE FINISH 2\nSEMCO Modern Seamless Surfa ce\n3620West Reno Avenue Suite J\nLas Vegas, Nevada 89118\n1.04 QUALITY ASSURANCE\nA. Quality Standards: The standards named herein are specified to\nestablish standards of quality, performance, and compliance with the design\nconcept which is to duplicate the color of the approved “r eferee sample”.\nB. Test Panels: Provide a minimum of two test panels utilizing the\nsame concrete materials as provided at the project site with the same finish as\nconcrete areas to receive coloring and etching. Each panel will be a minimum of\n9 square feet in size (unless noted otherwise), and found in unobtrusive location\nas selected by the Architect’s representative, to demonstrate color and texture of\nthe designed surface. Obtain the Architect’s representative’s acceptance of\nvis ual qualities of the test panels before start of the project coloring. Retain test\npanels during construction as standards for judging completed work.\nC. Experience and Qualifications:\n1. The products and work shall be supplied by a subcontractor h aving\nexperience in sandblast etching and coloring, being a Licensed and\nCertified Contractor by the manufacturer, and having two (2) years\nexperience with the “X - BOND” System, preparation, coloring and finish\nsystems.\n2. Contractor shall furnish evidence to the satisfaction of the\nArchitect that proposed products have been successfully used in other\nsimilar scale coloring applications.\nD. System Performance shall meet the following requirements:\n1. Standard Guide for Testing Industrial Protective C oatings:\nASTM – D6577 - 00a\n2. Standard Test Method for chipping resistance of coatings:\nASTM _ D3170 - 03\n3. Standard Test Method for bond strength adhesive systems used with\nconcrete as measured by direct tension:\nASTM – C1404/C1404M - 98(2003)\n4. Standard Test Met hod for pull off strength of coatings using portable\nadhesion testers:\nASTM – D541 - 02\n5. Determination of depth of penetration of clear penetrating water\nrepellents on concrete.\nASTM – WK5956\n6. Standard Test Method Volatile Organic Content\nASTM D - 3960\n7. Stan dard Test Method Water Content\nASTM D - 3792\n8. Standard Test Method Solvent Content\nASTM D - 4457",
+    "sourceDocument": "Section-09670-Fluid-Applied-Surfaces.pdf",
+    "title": "Section 09670 Fluid Applied Surfaces",
+    "category": "Technical doc",
+    "wordCount": 354
+  },
+  {
+    "id": "doc-section-09670-fluid-applied-surfaces-p3",
+    "docId": "doc-section-09670-fluid-applied-surfaces",
+    "pageNumber": 3,
+    "text": "SECTION 9700 – SEAMLESS STONE FINISH 3\nSEMCO Modern Seamless Surfa ce\n3620West Reno Avenue Suite J\nLas Vegas, Nevada 89118\n9. Standard Test Method Non Volatile Residue\nASTM D - 2369\n10. Standard Test Method Density\nASTM D - 1457\n1.05 WARRANTY\nA. SEMCO pr ovides a standard fi ve yea r warranty on the X - Bond System against\ndelamination when installed by a n approved in staller or installer that has received\na training course for use by SEMCO Surfaces Inc. ,\nPART 2 – PRODUCTS\n1.06 MATERIALS\nA. Specifications are based on products as manufactured by SEMCO, Inc.\n3620 W. Reno Ave Suite J , Las Vegas, Nevada 89118 . Phone: (702) 222 - 9495\nFax: (702) 222 - 1788.\nB. X - BOND SYSTEM with integral color to match final approved surface color.\nSuperior Adhesion, UV Resistance, Waterproof seamless stone system.\nTT - P - 001411 (Waterproofing below grade). Integration of SEMCO X - Bond\nLiquid Membrane and Re i nforcing F abric to meet ANSI 118 - 10 -\nW aterproofness ASTM D4068 - 01\nC. U se of the X - Bond Seamless Stone , Liquid Memb rane , and Reinforcing Fabric\ncan be used over interior joints to create a continuous surf ac e . Expansion j oints ,\ncold joints and/ or submerged joints in an exterior environment should be hono red\ndue to continuous fluctuations in temperatures and o ther exterior conditions .\nD. In accordance with the desired thickness, the use of the SEMCO X - BOND\nBROWN COAT will be necessary as a rap id 24 hour cure surface filler /level .\nSEMCO Brown Coat forms a mechanical cross link with the substrate enabling a\nperfe ct bond. The Brown Coat also has an integrated waterproofing system. TT -\nP - 001411 (Waterproofing below grade). Application can be done up to 6 inches\nin a single pour.\nE. Special surface colors shall be performed using approved colors\nsuitable for the purpos e intended and applied in a manner consistent with the\ndesign intent of the project. The Architects approved “test panel” shall act as the\nbasis for determining the appropriate color application.\nF. The color agent shall be a penetrating mix, compatible col or finish\nfor the exterior application on new concrete with field evidence of resistance to\nmoisture, alkali, acid and mildew, mold and fungus, or degradation. The\ncoloring agent shall be breathable, allowing moisture and vapor transmission.",
+    "sourceDocument": "Section-09670-Fluid-Applied-Surfaces.pdf",
+    "title": "Section 09670 Fluid Applied Surfaces",
+    "category": "Technical doc",
+    "wordCount": 411
+  },
+  {
+    "id": "doc-section-09670-fluid-applied-surfaces-p4",
+    "docId": "doc-section-09670-fluid-applied-surfaces",
+    "pageNumber": 4,
+    "text": "SECTION 9700 – SEAMLESS STONE FINISH 4\nSEMCO Modern Seamless Surfa ce\n3620West Reno Avenue Suite J\nLas Vegas, Nevada 89118\nG. All materia ls shall be furnished, prepared, applied, cured, and\nstored according to Product Manufacturer directions with special attention given\nt o recommended temperature range for finish systems.\nPART 3 – EXECUTION\n1.07 APPLICATION OF SEAMLESS STONE AND FINISH\nA. Concrete should be at least 28 days old, free from dark alkali spots,\na nd clean from grease, paint, oil, soap, and other foreign matter, which would\nprevent necessary bonding, penetration and subsequent reac tion of the color with\nthe concrete surface to be colored.\nB. Preparation: Clean concrete to ensure the surface is free of all\nlatency, dirt, dust, grease, efflorescence, paint, and any foreign material prior to\nthe color application in accordance with SEMCO manufacturer’s\nrecommendations. All surfaces must check pH balance and use solution to meet\nSEMCO manufacturer’s recommendations. The subcontractor shall correct, at\nhis own cost, any surface problems cr eated as a direct result of the surface\npreparation methods used.\nC. While substrate is damp apply STONE SOAP to all areas receiving X - BON D.\nUse a low speed scrubber with a blue nylon concrete cleaning brush to help\nagitate the surface and then pressure wash clean. Mixture ratio of (4:1) for\nnormal cleaning of newly cured concrete. Do not use hydrochloric acids or other\nchemicals that may r eact or allow discoloration of the substrate.\nD. Remove oil, wax, and grease by use of SEMCO Power Cleaner – Biodegradable\nDegreaser . Remov e mineral or calcium de posits by use of SEM CO NuLift\nClean er – Biodegradable Mineral Cleanser\nE. X - Bond Seamless Stone Thickness FOR WATERPROOFING required:\nminimum 8 mm. This includes the Brown Coat. For de tails of the installation\ntechniq ue of the X - Bond , please re fer to manufacturer insta llation instructions.\nF. Apply SEMCO X - Bond System to achieve desired texture; according to\napproved sample; only to areas or graphics intended to receive color. Apply\ncolor to provide coverage as recommended b y manufacturer or to achieve the\ncolors selected and to match the approved “test panel” for coloration. Apply\neach coat thin and evenly. ALWAYS TEST A SMALL AREA FIRST. Allow\nPRE STAIN SYSTEM to completely dry.\n1.08 SEALER",
+    "sourceDocument": "Section-09670-Fluid-Applied-Surfaces.pdf",
+    "title": "Section 09670 Fluid Applied Surfaces",
+    "category": "Technical doc",
+    "wordCount": 389
+  },
+  {
+    "id": "doc-section-09670-fluid-applied-surfaces-p5",
+    "docId": "doc-section-09670-fluid-applied-surfaces",
+    "pageNumber": 5,
+    "text": "SECTION 9700 – SEAMLESS STONE FINISH 5\nSEMCO Modern Seamless Surfa ce\n3620West Reno Avenue Suite J\nLas Vegas, Nevada 89118\nA. Consult SEMCO Surfaces Inc for the best suitable sealer . number (702) 22 2 -\n9495 , info@semco surfaces.com\n1.09 CLEAN - UP\nA. During the progress, and at the completion of work, Contractor is t o remove all\ntrash, debris, and all other foreign objects from the project site an d leaves the site\nclean and in an orderly condition.\n1.10 PROTECTION\nA. Protect applied colors from adverse climatic conditions during application and\ncuring stages. Apply only if weather conditions are between 50 and 100 degre es.\nDo not store in excessive heat or leave containers in direct sunlight.\nB. A ll special finishes and surfaces shall be protected prior to and up until\nfinal acceptance of the project.\n***END OF SECTION***",
+    "sourceDocument": "Section-09670-Fluid-Applied-Surfaces.pdf",
+    "title": "Section 09670 Fluid Applied Surfaces",
+    "category": "Technical doc",
+    "wordCount": 145
   },
   {
     "id": "doc-semco-surfaces-brochure-digital-v2-p1",
@@ -1673,17 +2744,187 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-shower-detail-concrete",
     "pageNumber": 1,
     "text": "EXISTING\nSUBSTRATE\nconcrete or construction\nboards/panels\n1. Existing substrate - concrete or construction boards/panels\n2. Scratch Coat\n3. SEMCO Liquid Membrane™ (Fabric Reinforcement at joints and inside corners)\n4. Scratch Coat\n5. Brown Coat (optional build)\n6. X-Bond Seamless Stone\n7. Satin Stone or Titan Shield Gloss\nTotal system thickness - 3/16” (4.75mm)\n1/8” X-Bond + 60 mil SEMCO Liquid Membrane™\n3 2 7 4\n1\n2021 .V02 * Drawings are not to scale\nSCRATCH COAT\nSEMCO\nLIQUID MEMBRANE™\nwith Fabric Reinforcement\nSCRATCH COAT\nBROWN COAT\noptional build\nX-BOND SEAMLESS\nSTONE\nX-Bond over concrete or construction boards/panels SURFACE ENGINEERING COMPANY\nSHOWER DETAIL\n5 6\nFINISH\nSatin Stone or Titan Shield Gloss\n*Xtra Gloss for steam showers\n*Xtra Gloss for steam showers",
-    "sourceDocument": "Shower+Detail+Concrete.pdf",
+    "sourceDocument": "Shower-Detail-Concrete.pdf",
     "title": "Shower Detail Concrete",
     "category": "Shower detail",
     "wordCount": 121
+  },
+  {
+    "id": "doc-shower-detail-wood-p1",
+    "docId": "doc-shower-detail-wood",
+    "pageNumber": 1,
+    "text": "2 6 3\n1\n2021 .V02 * Drawings are not to scale\n1. Existing substrate - wood (plywood and/or OSB boards)\n2. SEMCO Liquid Membrane™ (Fabric Reinforcement at joints and inside corners)\n3. Scratch Coat\n4. Brown Coat (optional build)\n5. X-Bond Seamless Stone\n6. Satin Stone or Titan Shield Gloss\nTotal system thickness - 3/16” (4.75mm)\n1/8” X-Bond + 60 mil SEMCO Liquid Membrane™\nEXISTING\nSUBSTRATE\nwood (plywood and/or\nOSB boards)\nSEMCO\nLIQUID MEMBRANE™\nwith Fabric Reinforcement\nSCRATCH COAT\nBROWN COAT\noptional build\nX-BOND SEAMLESS\nSTONE\nX-Bond over wood (plywood and/or OSB boards) SURFACE ENGINEERING COMPANY\nSHOWER DETAIL\n4 5\nFINISH\nSatin Stone or Titan Shield Gloss\n*Xtra Gloss for steam showers\n*Xtra Gloss for steam showers",
+    "sourceDocument": "Shower-Detail-Wood.pdf",
+    "title": "Shower Detail Wood",
+    "category": "Shower detail",
+    "wordCount": 118
+  },
+  {
+    "id": "doc-shower-detail-p1",
+    "docId": "doc-shower-detail",
+    "pageNumber": 1,
+    "text": "2 5 4 6 7 3\n1\n2021 .V02 * Drawings are not to scale\nEXISTING\nSUBSTRATE\ntile or grouted substrates\n(including block or CMU)\n1. Existing substrate - tile or grouted substrates (including block or CMU)\n2. Scratch Coat\n3. SEMCO Liquid Membrane™ (Fabric Reinforcement at joints and inside corners)\n4. Scratch Coat\n5. Brown Coat (required for leveling and grout elimination)\n6. X-Bond Seamless Stone\n7. Satin Stone or Titan Shield Gloss SCRATCH COAT\nTotal system thickness - 3/16” (4.75mm)\n1/8” X-Bond + 60 mil SEMCO Liquid Membrane™\nSEMCO\nLIQUID MEMBRANE™\nwith Fabric Reinforcement\nSCRATCH COAT\nBROWN COAT\nrequired for leveling and\ngrout elimination\nX-BOND SEAMLESS\nSTONE\nFINISH\nSatin Stone or Titan Shield Gloss\nX-Bond over tile or grouted substrates (including block or CMU) SURFACE ENGINEERING COMPANY\nSHOWER DETAIL\n*Xtra Gloss for steam showers\n*Xtra Gloss for steam showers",
+    "sourceDocument": "Shower-Detail.pdf",
+    "title": "Shower Detail",
+    "category": "Shower detail",
+    "wordCount": 141
+  },
+  {
+    "id": "doc-shower-drain-detail-p1",
+    "docId": "doc-shower-drain-detail",
+    "pageNumber": 1,
+    "text": "X-Bond Seamless Stone will bond directly\nto the drain enclosure, ensure application\nto drain enclosure only not the strainer\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10 X-Bond Seamless Stone\nX-Bond Brown Coat\nFabric reinforcement encapsulated in X-Bond Brown Coat\n1. Strainer\n2. Drain head adapter\n3. X-Bond Seamless Stone (minimum thickness 1/8”), sloped for proper drainage\n4. X-Bond Brown Coat (minimum thickness 1/4”), sloped for proper drainage\n5. Fabric reinforcement encapsulated in X-Bond Brown Coat. Applied directly to substrate, over drain flange and\nclamping collar. Extended 24” radius on substrate around the drain.\n6. Concrete substrate\n7. Flange\n8. Clamping collar\n9. Drain base\n10. Plumbing waste line\nScale 6”=1’-0”\nSHOWER DRAIN DETAIL\nX-Bond Seamless Stone over concrete substrate SURFACE ENGINEERING COMPANY\n3620 W Reno Avenue / Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n2019.V01",
+    "sourceDocument": "Shower-Drain-Detail.pdf",
+    "title": "Shower Drain Detail",
+    "category": "Shower detail",
+    "wordCount": 138
+  },
+  {
+    "id": "doc-stair-detail-p1",
+    "docId": "doc-stair-detail",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nPLYWOOD\nPREPARATION - TYPE E\nSEMCO\nLIQUID MEMBRANE™\n1st coat\nFABRIC REINFORCEMENT\n6” wide\nSEMCO\nLIQUID MEMBRANE™\n2nd coat\n2021 .V02 * Drawings are not to scale\nLiquid Membrane over plywood SURFACE ENGINEERING COMPANY\nSTAIR DETAIL",
+    "sourceDocument": "Stair-Detail.pdf",
+    "title": "Stair Detail",
+    "category": "Technical doc",
+    "wordCount": 38
+  },
+  {
+    "id": "doc-stone-soap-datasheet-p1",
+    "docId": "doc-stone-soap-datasheet",
+    "pageNumber": 1,
+    "text": "Used automobile oil Good\nTransmission fluid Good\nWater N/A\nDilution ratios with water Heavy duty cleaner - 1:4, regular cleaner - 1:9\nDrying time N/A\nCure time N/A\nColor Green\nChemical type Industrial cleaner\nClean up Water\nShelf life 1 year\nUseful life 3 years\nPackaging (base and color activator) 1 quart, 1 gal. pail, 5 gal. pail\nSTONE SOAP\nCommercial Neutral Cleaner\nTechnical Product Information\nPRODUCT DESCRIPTION\nStone Soap is a highly concentrated, heavy duty cleaner formulated for cleaning without harming\nfinished surfaces. Stone Soap is a 100% biodegradable product. Stone Soap is a user friendly,\nenvironmentally-responsible product that is excellent for cleaning any surface.\nAPPLICATION AND SPECIFICATIONS\nTEST RESULTS*\nFEATURES / BENEFITS\n• User friendly\n• Equally effective in hard or soft water\n• Neutral pH cleaner\n• 100% biodegradable\n• Can be safely used in confined environment\nSUBSTRATES\n• X-Bond Seamless Stone\n• Pre-Stain Color\n• Existing concrete or sealers\n• Ceramic tile and grout\n• Natural stone\n*Tests are based on Semco Modern Seamless Surface experience unless otherwise noted.\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners.\nNot for use on humans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet\nbefore using this product.\nLIMITED WARRANTY NOTICE\nSEMCO Modern Seamless Surface warrants that its products will meet their specifications. There are no other warranties, expressed or implied of merchantability or fitness\nof use. The only obligation of the seller-manufacturer shall be to replace material found to be defective. SEMCO Modern Seamless Surface will not be liable for labor or\nconsequential damage of any kind. The information contained herein is, to the best of our knowledge and belief, true and accurate. However, since the conditions of handling\nand use are beyond our control, we make no guarantee of results, and assume no liability for damages incurred by use of this material. It is the responsibility of the user to comply\nwith all applicable federal, state and local laws and regulations. All chemicals may present unknown health hazards and should be used with caution.\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2016.V02\nSURFACE ENGINEERING COMPANY",
+    "sourceDocument": "Stone-Soap-Datasheet.pdf",
+    "title": "Stone Soap Datasheet",
+    "category": "Technical doc",
+    "wordCount": 393
+  },
+  {
+    "id": "doc-stone-soap-sds-p1",
+    "docId": "doc-stone-soap-sds",
+    "pageNumber": 1,
+    "text": "Revised on 05 /10 /2017 Page 1 of 6\nSafety Data Sheet\n1. PRODUCT AND COMPANY IDENTIFICATION\nProduct Name: Stone Soap\nProduct Number: SS100, SS101, SS105, SS 155\nProduct Use: Industrial, Commercial, and Residential\nManufacturer: SEMCO Modern Seamless Surface I nc.\n3620 West Reno Ave.\nLas Vegas, NV 89118\nFor More Information Call: 702 - 222 - 9495 (Monday - Friday 9:00 - 4:00 PST)\nIn Case of Emergency Call: CHEMTREC - 800 - 424 - 9300 or 703 - 527 - 3887 (24 Hours/Day, 7 Days/Week)\n2. HAZARDS IDENTIFICATION\nOSHA Hazards : None\nTarget Organs: N/A\nSignal Words: None\nPictograms:\nN/A\nGHS Classification:\nNot a hazardous substance or mixture\nCarcinogenicity :\nSTONE SOAP",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "title": "Stone Soap SDS",
+    "category": "Technical doc",
+    "wordCount": 114
+  },
+  {
+    "id": "doc-stone-soap-sds-p2",
+    "docId": "doc-stone-soap-sds",
+    "pageNumber": 2,
+    "text": "Revised on 05 /10 /2017 Page 2 of 6\n3. COMPOSITION/INFORMATION ON INGREDIENTS\nHazardous components\nChemical Name CAS - No. Concentration [%]\nAlc ohols, C10 - 14, ethoxylated 66455 - 15 - 0 >= 1 - < 5\n1 - (1 - methyl - 2 - propoxyethoxy)propan - 2 - ol 29911 - 27 - 1 >= 1 - < 5\n4. FIRST - AID MEASURES\nEyes Rinse with plenty of water for at least 15 minutes and seek medical attention immediately.\nInhalation Move casual ty to fresh air and keep at rest. If breathing is difficult, give oxygen. If not\nbreathing, give artificial respiration. Get medical attention immediately.\nSkin Immediately flush with plenty of water for at least 15 minutes while removing contaminated\nclo thing and wash using soap. Get medical attention immediately.\nIngestion Do Not Induce Vomiting! Never give anything by mouth to an unconscious person. If\nconscious wash out mouth with water. Get medical attention immediately.\n5. FIRE - FIGHTING MEASURES\nS uitable (and unsuitable)\nextinguishing media\nDry chemical\nCarbon dioxide (CO2) Alcohol - resistant foam\nWater spray jet\nUnsuitable extinguishing media High Volume water jet\nSpecific hazards arising from\nthe chemical\nUse extinguishing measures that are app ropriate to local\ncircumstances and the surrounding environment.\n6. ACCIDENTAL RELEASE MEASURES\nPersonal precautions,\nprotective equipment and\nemergency procedures\nUse personal protective equipment. Ensure adequate\nventilation.\nRefer to protective measu res listed in sections 7 and 8.\nEnvironmental precautions Use personal protective equipment. Ensure adequate ventilation.\nRefer to protective measures listed in sections 7 and 8.\nMethods and materials for\ncontainment and cleaning up\nUse personal protecti ve equipment. Ensure adequate\nventilation.\nRefer to protective measures listed in sections 7 and 8.\n7. HANDLING AND STORAGE\nAdvice on safe handling : For personal protection see section 8.\nSmoking, eating and drinking should be prohibited\nin the applicat ion area.\nConditions for safe\nstorage\n: Electrical installations / working materials must comply\nwith the technological safety standards.\nMaterials to avoid : Keep away from oxidising agents and strongly acid or\nalkaline materials.",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "title": "Stone Soap SDS",
+    "category": "Technical doc",
+    "wordCount": 342
+  },
+  {
+    "id": "doc-stone-soap-sds-p3",
+    "docId": "doc-stone-soap-sds",
+    "pageNumber": 3,
+    "text": "Revised on 05 /10 /2017 Page 3 of 6\n8. EXPOSURE CONTROLS / PERSONAL PROTECTION\nOccupational exposure controls:\nComponents with workplace control parameters\nContains no substances with occupational exposure limit values.\nPersonal protective equipment\nRespiratory protection : In case of insufficient ventilatio n, wear suitable\nrespiratory\nequipment.\nHand protection\nRemarks : For prolonged or repeated contact use protective gloves.\nThe\nsuitability for a specific workplace should be discussed\nwith the producers of the protective gloves.\nEye protection : Safety glasses\nEnsure that eyewash stations and\nsafety showers are close to the\nworkstation location.\nSkin and body protection : impervious clothing\nChoose body protection according to the amount and\nconcentration of the dangerous substance at the work\nplace.\nHygiene measures : General industrial hygiene\npractice.\n9. PHYSICAL AND CHEMICAL PROPERTIES\nAppearance (physical state, color, etc.) Green liquid\nOdor Odorless.\nOdor threshold Not Available\npH 7.5\nMelting point/freezing point N/A\nInitia l boiling point and boiling range 100°C (212 °F)\nFlash point Not Flammable\nEvaporation rate Not Available\nFlammability (solid, gas) Not Flammable\nUpper/lower flammability or explosive limit Not Explosive\nVapor pressure Not determined\nVapor density 1. 03 g/cm3\nDensity 1. 01\nSolubility (ies) Soluble in water.\nPartition coefficient: n - octanol/water Not Available\nAuto - ignition temperature Not Available\nDecomposition temperature Not Available",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "title": "Stone Soap SDS",
+    "category": "Technical doc",
+    "wordCount": 212
+  },
+  {
+    "id": "doc-stone-soap-sds-p4",
+    "docId": "doc-stone-soap-sds",
+    "pageNumber": 4,
+    "text": "Revised on 05 /10 /2017 Page 4 of 6\n10. STABILITY AND REACTIVITY\nChemical Stability Stable\nPos sibility of Hazardous Reactions Will not occur.\nConditions to Avoid Not Available\nIncompatible Materials Acids and bases, oxidizing agents\nHazardous Decomposition Products No decomposition if stored and applied as directed\n11. TOXICOLOGICAL INFORMATION\nAcute Toxicity\nPhosphoric Acid\nSkin May cause skin irritation\nEyes Not Available\nRespiratory Not Available\nCarcinogenicity\nIARC No components of this product present at levels greater than or equal to 0.1% is identified\nas probable, possible or conf irmed human carcinogen by IARC.\nACGIH No components of this product present at levels greater than or equal to 0.1% is identified\nas a carcinogen or potential carcinogen by ACGIH.\nNTP No components of this product present at levels greater than or equal to 0.1% is identified\nas a known or anticipated carcinogen by NTP.\nOSHA No components of this product present at levels greater than or equal to 0.1% is identified\nas a carcinogen or potential carcinogen by OSHA.\nSigns & Symptoms of Exposure\nSkin Burning , itching, redness, inflammation, swelling of exposed tissue.\nEyes Eye burns, watering eyes.\nRespiratory Burning, choking, coughing, wheezing, laryngitis, shortness of breath, headache or\nnausea.\nIngestion Burning, choking, nausea, vomiting, severe pain .\nChronic Toxicity Damage to organs.\nTeratogenicity Not Available\nMutagenicity Not Available\nEmbryotoxicity Not Available\nSpecific Target Organ Toxicity Not Available\nReproductive Toxicity Not Available\nRespiratory/Skin Sensitization Not Available\n12. ECOLOGICAL INFORMATION\nEcotoxicity\nPhosphoric Acid\nAquatic Vertebrate Not Available\nAquatic Invertebrate Not Available\nTerrestrial Not Available\nPersistence and Degradability Not Available\nBioaccumulative Potential Not Available\nMobility in Soil Not Available\nPBT and vPvB Assessment Not Available\nOther Adverse Effects Not Available",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "title": "Stone Soap SDS",
+    "category": "Technical doc",
+    "wordCount": 278
+  },
+  {
+    "id": "doc-stone-soap-sds-p5",
+    "docId": "doc-stone-soap-sds",
+    "pageNumber": 5,
+    "text": "Revised on 05 /10 /2017 Page 5 of 6\n13. DISPOSAL CONSIDERATIONS\nWaste Product or\nResidues\nUsers should review their operations in terms of the applicable federal/national or\nlocal regulations and con sult with appropriate regulatory agencies if necessary before\ndisposing of waste product or residue.\nProduct\nContainers\nUsers should review their operations in terms of the applicable federal/national or\nlocal regulations and consult with appropriate regu latory agencies if necessary\nbefore disposing of waste product container.\nThe information offered in section 13 is for the product as shipped. Use and/or alterations to the product may\nsignificantly change the characteristics of the material and alter the waste classification and proper disposal\nmethods.",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "title": "Stone Soap SDS",
+    "category": "Technical doc",
+    "wordCount": 112
+  },
+  {
+    "id": "doc-stone-soap-sds-p6",
+    "docId": "doc-stone-soap-sds",
+    "pageNumber": 6,
+    "text": "Revised on 05 /10 /2017 Page 6 of 6\n14. TRANSPORTATION INFORMATION\nUS DOT Transportation Regulation: 49 CFR (USA): This material is not classified.\nTDG Transportation Regulation: 49 CFR (USA): This material is not classified.\nIMDG Transpo rtation Regulation: 49 CFR (USA): This material is not classified.\nMarine Pollutant No\nIATA/ICAO Transportation Regulation: 49 CFR (USA): This material is not classified.\n15. REGULATORY INFORMATION\nTSCA Inventory Status All ingredients are listed on th e TSCA inventory.\nDSCL (EEC) All ingredients are listed on the DSCL inventory.\nCalifornia Proposition 65 Not Listed\nSARA 302 Not Listed\nSARA 304 Not Listed\nSARA 311 Acute health hazard, Chronic health hazard.\nSARA 312 Acute health hazard, Chronic hea lth hazard.\nSARA 313 Not Listed\nWHMIS Canada Class E: Corrosive liquid.\n16. OTHER INFORMATION\nDisclaimer: SEMCO Modern Seamless Surface, Inc. (“SEMCO”) believes that the information herein is factual but is not intended to be all\ninclusive. The information relates only to the specific material designated and does not relate to its use in combination with other\nmaterials or its use as to any particular process. Because safety standards and regulations are subject to change and because SEMCO\nhas no continuing control over the material, those handling, storing or using the material should satisfy themselves that they have current\ninformation regarding the particular way the material is handled, stored or used and that the same is done in accordance with federal,\nstate and local law. SEMCO MAKES NO WARRANTY, EXPRESS OR IMPLIED, INCLUDING (W ITHOUT LIMITATION) WARRANTIES\nWITH RESPECT TO THE COMPLETENESS OR CONTINUING ACCURACY OF THE INFORMATION CONTAINED HEREIN OR WITH\nRESPECT TO FITNESS FOR ANY PARTICULAR USE.",
+    "sourceDocument": "Stone-Soap-SDS.pdf",
+    "title": "Stone Soap SDS",
+    "category": "Technical doc",
+    "wordCount": 273
+  },
+  {
+    "id": "doc-tech-sheet-satin-stone-v5-p1",
+    "docId": "doc-tech-sheet-satin-stone-v5",
+    "pageNumber": 1,
+    "text": "Product Data\nSATIN STONE\nSatin Stone is the latest technology in SEMCO Cross Linking sealers. It interlocks with applied\nsubstrates solidifying and creating total surface protection with a density enhancement of up to\n85%. Excellent for interior and exterior use while handling rigorous surface conditions including\nhigh traffic commercial and industrial environments.\nPRODUCT\nUSES\nCOVERAGE\nConcrete 200 - 250\nPolished concrete 250 - 300\nArtificial stone 200 - 250\nStamped Concrete 150 - 250\nNatural stone 150 - 250\nSEMCO ADA 150 - 250\nCOVERAGE sq ft. / 1,5 gal Kit @ min 2 coats at 20\nmils total thickness\nSUBSTRATES\n• X-BOND System\n• Pre-Stain System\n• New and existing concrete\n• New and existing coatings\n• Polished concrete\n• New and existing stamped\n• Concrete\nInterior\nExterior\nWetrooms\nCommercial\nIndustrial\n\n\n\n\n\nSURFACE ENGINEERING COMPANY\nGet the durability and\nperformance of a solvent-based\nsystem, but with the easy\napplication and clean-up of\nwater-based products.\nUV-resistant and can be applied to\nmultiple surfaces to give\nextra protection.\nWith its low water permeability, Satin\nStone can be used in showers.\nSatin Stone’s extreme durability and\nresistance to abrasion, allows it to be\nused in high foot traffic areas such as\ncommercial spaces.\nExcellent chemical resistance and\nindustrial strength finish allow Satin\nStone to be used in an industrial\nenvironment.",
+    "sourceDocument": "Tech_Sheet_Satin-Stone-v5.pdf",
+    "title": "Tech Sheet Satin Stone",
+    "category": "Satin Stone",
+    "wordCount": 222
+  },
+  {
+    "id": "doc-tech-sheet-satin-stone-v5-p2",
+    "docId": "doc-tech-sheet-satin-stone-v5",
+    "pageNumber": 2,
+    "text": "APPLICATION\nApplication Airless sprayer tip size 21 at 1,000 PSI , Magic Trowel, 3/8” soft woven roller\nApplication environment Apply at temperatures from 50°F to 90°F\nColor Part A - milky white, Part B - light amber\nChemical type Polyurethane hybrid\nClean up SEMCO Stone Soap with water\nShelf life 1 year in controlled environment (ambient temperature of 60F - 72F)\nPackaging Part A - 1 gal. pail, Part B - 0.5 gal. pail\nVOC Content 35 g/l (Part A+B)\nDRYING / RECOAT TIME\nT emperature in F\nTime\n72 F\n1 h\n50 F\nDrying times are affected by temperature and\nrelative humidity. The chart represents guidline\nvalues but each project is to be treated\nindividually.\nThe chart represents the time needed in be -\ntween coats at specified temperature.\nCure / humidity\nTime\n75%\n10 days 3 days\n50%\n12 hrs\nLight foot traffic\n50 F 72 F 95 F\n5 days 7 days\n95 F 80 F 60 F\n2.5 h\n2 h\nCURE TIME\nTEST RESULTS\nAbrasion testing ISO 7784 with 10,000 rubs Mass loss of 0.017g only\nWater permeability EN 1062-3 W3 - low at 0.013\nVOC Emission test according EMICODE EC 1 PLUS\nPerformance test - stain resistance passed\nSlip resistance ADA Safety Surface DCOF 0.86\nSlip resistance AS/NZS 4586 - pendulum Slider 96(4S) - P4 = 45 - 54\nCuring time is affected by temperature and\nhumidity.\nFor example at only 50F, a full cure would take\n10 days in comparison to at 95 F it would only\ntake 5 days to cure.",
+    "sourceDocument": "Tech_Sheet_Satin-Stone-v5.pdf",
+    "title": "Tech Sheet Satin Stone",
+    "category": "Satin Stone",
+    "wordCount": 260
+  },
+  {
+    "id": "doc-tech-sheet-satin-stone-v5-p3",
+    "docId": "doc-tech-sheet-satin-stone-v5",
+    "pageNumber": 3,
+    "text": "SURFACE ENGINEERING COMPANY\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners. Not for use on\nhumans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet before using this product.\nLIMITED WARRANTY NOTICE\nThe technical details, recommendations and other information contained in this data sheet are given in good faith and represent the best of our knowledge and experience at the time of printing. It\nis your responsibility to ensure that our products are used and handled correctly and in accordance to SEMCO Post Matrix procedure, recommendations and only for the uses they are intended. We\nalso reserve the right to update information without prior notice to you to reflect our ongoing research and development program. Federal, state and local specific recommendations, depending\non local standards, codes of practice, building regulations or industry guidelines, may effect specific installation recommendations. The supply of our products and services is also subject to certain\nterms, warranties and exclusions, which may have already been disclosed to you in prior dealings or are otherwise available to you on request.\n3620 W Reno Avenue | Las Vegas, NV 89118\nP 800.33.SEMCO | info@semcomfg.com\nNOTES\n• Extended application procedures can be found in the SEMCO SIP Manual.\n• Procedures for cleaning of the flooring system during operations can be found in the SEMCO SIP Manual or upon request\n• Safety Data Sheets for SEMCO Satin Stone are available upon request.\n• Over time due to normal wear, abrasion, traffic and cleaning. Generally, high gloss coatings are subject to a reduction in\ngloss, while matte finish coatings can increase in gloss level under normal operating conditions.\n• Excessive service conditions, such as steel- or hard plastic-wheeled traffic or dragging heavy metal equipment or loaded\npallets with protruding nails over the surface, are categorized as misuse and abuse.\n• Allowances must be made for scratches or abrasions that occur due to moving or sliding furniture or fixtures over the sur -\nface\nProudly made in USA\nPROCEDURE\n• Execute appropriate preparation method to suit your needs before application. Reference to the SEMCO SIP Manual under\nthe Surface Preparation Section.\n• Test pH level after preparation ( optimal pH level is 6.8 - 7.8 )\nSTEP 1\n• Mix 2 parts of Part A and 1 part of Part B (included in your product order) with a low speed mixer and epoxy mixing paddle\n(at 200 - 300 RPM for 20 seconds), stirring thoroughly, avoid mixing more product than can be applied. Product pot life is up\nto 35 minutes depending on temperature (MARK TIME ON CONTAINER)Test pH level after preparation\n• Use airless sprayer with tip size 21 at 850-1,000 PSI. Position the airless sprayer gun at 18” away from the floor\n• OPTIONAL: use magic trowel to spread the product. Do not go back and forth\n• Minimum of 2 coats is required to ensure a 20 mils total thickness\n• On vertical surfaces : Apply Satin Stone with a 3/8” soft woven roller and use Magic trowel to spread it evenly. Start from top\nto bottom. Minimum of 3 coats is required. Use HVLP with a large tip to apply Satin Stone on large surface areas.\nSTEP 2\nTOOLS NEEDED\n• Airless sprayer with tip size 21\n• Optional : Magic Trowel\n• Woven nap roller for vertical surfaces\nScan to watch application",
+    "sourceDocument": "Tech_Sheet_Satin-Stone-v5.pdf",
+    "title": "Tech Sheet Satin Stone",
+    "category": "Satin Stone",
+    "wordCount": 595
+  },
+  {
+    "id": "doc-tech-sheet-titanshield-v8-p1",
+    "docId": "doc-tech-sheet-titanshield-v8",
+    "pageNumber": 1,
+    "text": "Product Data Titan Shield Gloss\nThe Titan Shield Gloss is an advanced single component water-based polyurethane hybrid sealer.\nThe perfect sealer solution for cementitious surfaces such as concrete, micro toppings, pavers, block, and/\nor polished concrete.\nThe Titan Shield Gloss is a UV stable sealer making it great for residential and commercial interior and\nexterior applications. The Titan Shield Gloss provides superior protection; outperforming acrylic, urethane,\nand polyurea sealers with a high-density film forming topical membrane reducing degradation from all\nforms of foot, chemical, and/or vehicle traffic. The Titan Shield Gloss is easily applied with brush, roller, and/\nor sprayer. With its fast-drying system, a 3 coat application can be easily completed in a single day.\nPRODUCT\nSUBSTRATES\nCOVERAGE\nPolished concrete 150 - 200\nArtificial Stone 150 - 200\nStamped Concrete 250 - 300\nX-Bond 200 - 250\nCOVERAGE sq ft. / 1 gal @ min 3 coats\nat 6 - 8 mils total thickness\nBENEFITS\n• Withstand commercial foot\nand vehicle traffic\n• Enhances color\n• UV Resistant\n• Resistant to chemicals\n• Self-priming, sealer and\nhardener\n• Odorless\n• Low VOC’s to meet indoor\nairquality standards\nConcrete\nX-Bond\nDriveways\n\n\n\nSURFACE ENGINEERING COMPANY\nGet the durability and perfor-\nmance of a solvent-based system,\nbut with the easy application and\nclean-up of water-based\nproducts.\nEnhance the vivid colors of your\nX-Bond surface\nProtect your artifical stone from\nweathering and prolong its life\nspan with extra protection.",
+    "sourceDocument": "Tech_Sheet_TitanShield-v8.pdf",
+    "title": "Tech Sheet TitanShield",
+    "category": "Technical doc",
+    "wordCount": 239
+  },
+  {
+    "id": "doc-tech-sheet-titanshield-v8-p2",
+    "docId": "doc-tech-sheet-titanshield-v8",
+    "pageNumber": 2,
+    "text": "APPLICATION\nApplication Airless sprayer, tip size 17, 1/4” woven short nap roller or Magic Trowel\nApplication environment Apply at temperatures from 50°F to 90°F\nColor White/milky liquid\nChemical type Polyurethane hybrid\nClean up Stone Soap and water\nShelf life 1 year (ambient temperature of 60F - 72F)\nPackaging 1 gallon, 5 gallons\nDRYING / RECOAT TIME\nT emperature in F\nTime\n72 F\n12 min\n45 F\nDrying times are affected by temperature\nand relative humidity. The chart represents\nguidline values but each project is to be\ntreated individually.\nThe chart represents the time needed in\nbetween coats at specified temperature.\nCure / humidity\nTime\n75%\n48 hrs 12 hrs\n50%\n0 hrs\nLight foot traffic\n45 F 72 F 90 F\n18 hrs 24 hrs\n100 F 80 F 60 F\n1.5 hrs\n20 min\nCURE TIME\nCuring time is affected by temperature and\nhumidity.\nFor example at only 45 F, a full cure would\ntake 48 hours in comparison to at 90 F it\nwould only take 18 hours to cure.",
+    "sourceDocument": "Tech_Sheet_TitanShield-v8.pdf",
+    "title": "Tech Sheet TitanShield",
+    "category": "Technical doc",
+    "wordCount": 173
+  },
+  {
+    "id": "doc-tech-sheet-titanshield-v8-p3",
+    "docId": "doc-tech-sheet-titanshield-v8",
+    "pageNumber": 3,
+    "text": "SURFACE ENGINEERING COMPANY\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners. Not for use on\nhumans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet before using this product.\nLIMITED WARRANTY NOTICE\nThe technical details, recommendations and other information contained in this data sheet are given in good faith and represent the best of our knowledge and experience at the time of printing. It\nis your responsibility to ensure that our products are used and handled correctly and in accordance to SEMCO Post Matrix procedure, recommendations and only for the uses they are intended. We\nalso reserve the right to update information without prior notice to you to reflect our ongoing research and development program. Federal, state and local specific recommendations, depending\non local standards, codes of practice, building regulations or industry guidelines, may effect specific installation recommendations. The supply of our products and services is also subject to certain\nterms, warranties and exclusions, which may have already been disclosed to you in prior dealings or are otherwise available to you on request.\n3620 W Reno Avenue | Las Vegas, NV 89118\nP 800.33.SEMCO | info@semcomfg.com\nNOTES\n• Extended application procedures can be found in the SEMCO SIP Manual.\n• Procedures for cleaning of the flooring system during operations can be found in the SEMCO SIP Manual or\nupon request\n• Safety Data Sheets for SEMCO Titan Shield Gloss are available upon request.\n• Over time due to normal wear, abrasion, traffic and cleaning. Generally, high gloss coatings are subject to a re -\nduction in gloss, while matte finish coatings can increase in gloss level under normal operating conditions.\n• Excessive service conditions, such as steel- or hard plastic-wheeled traffic or dragging heavy metal equipment\nor loaded pallets with protruding nails over the surface, are categorized as misuse and abuse.\n• Allowances must be made for scratches or abrasions that occur due to moving or sliding furniture or fixtures\nover the surface\nProudly made in USA\nPROCEDURE\n• Execute appropriate preparation method to suit your needs before application. Reference to the SEMCO SIP\nManual under the Surface Preparation Section.\n• Test pH level after preparation ( optimal pH level is 6.8 - 7.8 )\nSTEP 1\n• Use airless sprayer with tip size 17 at 850-1,000 PSI. Position the airless sprayer gun at 18” away from the floor\n• OPTIONAL: use magic trowel or 1/4” woven short nap roller to apply the product. Do not go back and forth\n• Minimum of 3 coats is required to ensure 6 - 8 mils total film thickness\nVERTICAL SURFACES\n• Apply the Titan Shield Gloss with a woven 1/4” nap roller and use Magic trowel to spread it evenly. Start from top to\nbottom. Minimum of 3 coats is required. Use HVLP with a large tip size 17 to apply Titan Shield Gloss on large surface\nareas.\nSTEP 2\nTOOLS NEEDED\n• Airless sprayer with tip size 17\n• Magic Trowel\n• 1/4” woven short nap roller roller",
+    "sourceDocument": "Tech_Sheet_TitanShield-v8.pdf",
+    "title": "Tech Sheet TitanShield",
+    "category": "Technical doc",
+    "wordCount": 537
   },
   {
     "id": "doc-tech-sheet-x-bond-2024-v3-p1",
     "docId": "doc-tech-sheet-x-bond-2024-v3",
     "pageNumber": 1,
     "text": "Product Data X-Bond\nMicrocement\nSEMCO’s most innovative custom engineered product is X-Bond Microcement, which is the core\nelement in both the SEMCO Remodel without Removal™ and SEMCO’s ADA Safety Floor\nsystems. It creates chemical bond at the molecular level to any solid surface. X-Bond Microcement\nis a zero VOC hybrid of natural stone and advanced cross-linking technology. Perfect for floors,\nwalls, pool decks and waterproofing.\nPRODUCT\nUSES\nCOVERAGE\nConcrete 60 - 75\nPainted surface 60 - 75\nCeramic tile 55 - 75\nVinyl tile 60 - 75\nNatural stone 50 - 100\nMetal 60 - 75\n(sq. ft. per 2 gallons of X-Bond Liquid and 1 50 lb\nbag of X-Bond Stone, coverage is based on 1/8”\napplication)\nSUBSTRATES\n• Flexible waterproof membrane\n• Breathable and chemical resistant\n• Minimizes remodeling waste\n• disposal\n• Interior, exterior, and below grade\napplication\n• Can be safely used in confined areas\n• UV and freeze-thaw damage resistant\nInterior\nExterior\nWetrooms\nCommercial\nIndustrial\n\n\n\n\n\nSURFACE ENGINEERING COMPANY\nThrough the use of the X-Bond\nMicrocement, which chemically ad-\nheres to any existing surface,\nallows any space to be remodelled\nwithout the removal of the existing\nsubstrate.\nUV-resistant and can be applied to\nany existing hard surface\nWith its low water permeability,\nX-BOND Microcement can be used in\nwetrooms and pools.\nX-Bond Microcement’s extreme\ndurability and resistance to abrasion,\nallows it to be used in high foot traffic\nareas such as commercial spaces.\nExcellent chemical resistance and\nabrasion resistance allow the X-BOND\nMicrocement to be used in\nindustrial applications.",
-    "sourceDocument": "Tech_Sheet_X-Bond+2024+v3.pdf",
+    "sourceDocument": "Tech_Sheet_X-Bond-2024-v3.pdf",
     "title": "Tech Sheet X Bond",
     "category": "X-Bond",
     "wordCount": 258
@@ -1693,7 +2934,7 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-tech-sheet-x-bond-2024-v3",
     "pageNumber": 2,
     "text": "APPLICATION\nApplication Smoother, Magic Trowel, Hopper Texture Gun and compressor\nApplication environment Apply at temperatures from 45°F to 100°F\nColor White powder and white liquid\nChemical type Polymer modified stone\nClean up SEMCO Stone Soap with water\nShelf life 1 year in unopened containers (ambient temperature of 60F - 72F)\nPackaging 1 gal. pail, 5 gal. pail, 55 gal. drum / 50 lb bag\nDRYING / RECOAT TIME\nT emperature in F\nTime\n72 F\n2 hrs\n50 F\nDrying times are affected by temperature and\nrelative humidity. The chart represents guidline\nvalues but each project is to be treated\nindividually.\nThe chart represents the time needed in be-\ntween coats at specified temperature.\nCure / humidity\nTime\n75%\n48 hrs 8 hrs\n50%\n12 hrs\nLight foot\ntraffic\n50 F 72 F 95 F\n14 hrs 24 hrs\n95 F 80 F 60 F\n3.5 hrs\n2.5 hrs\nCURE TIME\nTEST RESULTS\nAbrasion testing ISO 7784 with 10,000 rubs Mass loss of 0.017g only\nASTM D-3960 - Volatile organic content (VOC) 0g / L\nASTM D-3l94 – Water content 48.9 %\nASTM D-2369 – Non volatile residue 25.9 %\nASTM C 1028-6 – Coefficient of friction (mineral) DCOF 0.86\nASTM C 1028-6 – Coefficient of friction (all finishes) 0.78 dry, 0.63 wet\nASTM C 109 / C109M – 8 – Compressive strength 27 MPa = 3,800 PSI\nASTM C 674 – Modulus of rupture 2,200 PSI\nISO 7784 – Abrasion resistance, metal 10,000 cycles with 0.017g mass loss\nASTM D 4060-07 – Abrasion resistance, metal 1022 cycles w/ .05 mil loss\nEN 1062-3 Water permeability test Class W3 - 0,013 kg/(m2.h0.5)\nCuring time is affected by temperature and\nhumidity.\nFor example at only 50F, a full cure would take\n10 days in comparison to at 95 F it would only\ntake 5 days to cure.",
-    "sourceDocument": "Tech_Sheet_X-Bond+2024+v3.pdf",
+    "sourceDocument": "Tech_Sheet_X-Bond-2024-v3.pdf",
     "title": "Tech Sheet X Bond",
     "category": "X-Bond",
     "wordCount": 306
@@ -1703,9 +2944,429 @@ export const TECHNICAL_DOC_PAGES: TechnicalDocPage[] = [
     "docId": "doc-tech-sheet-x-bond-2024-v3",
     "pageNumber": 3,
     "text": "SURFACE ENGINEERING COMPANY\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners. Not for use on\nhumans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet before using this product.\nLIMITED WARRANTY NOTICE\nThe technical details, recommendations and other information contained in this data sheet are given in good faith and represent the best of our knowledge and experience at the time of printing. It\nis your responsibility to ensure that our products are used and handled correctly and in accordance to SEMCO Post Matrix procedure, recommendations and only for the uses they are intended. We\nalso reserve the right to update information without prior notice to you to reflect our ongoing research and development program. Federal, state and local specific recommendations, depending\non local standards, codes of practice, building regulations or industry guidelines, may effect specific installation recommendations. The supply of our products and services is also subject to certain\nterms, warranties and exclusions, which may have already been disclosed to you in prior dealings or are otherwise available to you on request.\n3620 W Reno Avenue | Las Vegas, NV 89118\nP 800.33.SEMCO | info@semcomfg.com\nNOTES\n• Extended application procedures can be found in the SEMCO SIP Manual. Procedures for cleaning of the flooring system\nduring operations can be found in the SEMCO SIP Manual or upon request\n• Acceptable moisture levels in concrete according to ASTM standard, when testing via ASTM F2170, the rH level of a concrete\nslab needs to be at or below 75% rH, unless otherwise instructed in writing from SEMCO Technical Support Division\n• Procedures for cleaning of the flooring system during operations can be found in the SEMCO SIP Manual or upon request\n• Safety Data Sheets for SEMCO X-BOND Microcement are available upon request.\n• Over time due to normal wear, abrasion, traffic and cleaning. Generally, high gloss coatings are subject to a reduction in\ngloss, while matte finish coatings can increase in gloss level under normal operating conditions.\n• Excessive service conditions, such as steel- or hard plastic-wheeled traffic or dragging heavy metal equipment or loaded\npallets with protruding nails over the surface, are categorized as misuse and abuse.\n• Allowances must be made for scratches or abrasions that occur due to moving or sliding furniture or fixtures over the\nsurface\nProudly made in USA\nPROCEDURE\n• Execute appropriate preparation method to suit your needs before application. Reference to the SEMCO SIP Manual under\nthe Surface Preparation Section.\n• Test pH level after preparation ( optimal pH level is 6.8 - 7.8 )\nSTEP 1 - PREPARATION\n• Mix X-Bond mixture 1 part X-Bond Liquid to 2 parts of X-Bond Stone, in this order, and mix with square mixing paddle at low\nspeed (180-200 RPM)\n• While the X-Bond Liquid is still tacky, pour the mixture to the mud tray, use a hand broom to spread material from left to\nright, NOT up and down\n• Using hand broom spread material tightly, in ONE DIRECTION and allow surface to dry afterwards\nSTEP 2 - SCRATCH COAT / PRIMER COAT\nTOOLS NEEDED\n• X-Bond Smoother\n• Roll X-Bond Liquid as primer coat. Do not allow to dry\n• Mix X-Bond mixture 1 part X-Bond Liquid to 2 1/2 parts of X-Bond Stone, in this order, mix with square mixing paddle at low\nspeed (180-200 RPM) (OPTIONAL) Use integral color with X-Bond Color Activator\n• Using a Trowel or X-Bond smoother for larger areas, tilt smoother with the handle pointing to 10 o’clock, spread material\ntightly, in ONEDIRECTION. Thickness is 1/16 or 2mil\n• Allow coat of X-Bond to dry slightly to the touch (20-30 minutes) before applying second coat. Use shoe covers in between\ncoats\nSTEP 3 - SKIM COATS",
-    "sourceDocument": "Tech_Sheet_X-Bond+2024+v3.pdf",
+    "sourceDocument": "Tech_Sheet_X-Bond-2024-v3.pdf",
     "title": "Tech Sheet X Bond",
     "category": "X-Bond",
     "wordCount": 658
+  },
+  {
+    "id": "doc-titan-gloss-tech-data-sheet-p1",
+    "docId": "doc-titan-gloss-tech-data-sheet",
+    "pageNumber": 1,
+    "text": "Product Data Titan Shield Gloss\nThe Titan Shield Gloss is an advanced single component water-based polyurethane hybrid sealer.\nThe perfect sealer solution for cementitious surfaces such as concrete, micro toppings, pavers, block, and/\nor polished concrete.\nThe Titan Shield Gloss is a UV stable sealer making it great for residential and commercial interior and\nexterior applications. The Titan Shield Gloss provides superior protection; outperforming acrylic, urethane,\nand polyurea sealers with a high-density film forming topical membrane reducing degradation from all\nforms of foot, chemical, and/or vehicle traffic. The Titan Shield Gloss is easily applied with brush, roller, and/\nor sprayer. With its fast-drying system, a 3 coat application can be easily completed in a single day.\nPRODUCT\nSUBSTRATES\nCOVERAGE\nPolished concrete 150 - 200\nArtificial Stone 150 - 200\nStamped Concrete 250 - 300\nX-Bond 200 - 250\nCOVERAGE sq ft. / 1 gal @ min 3 coats\nat 20 mils total thickness\nBENEFITS\n• Withstand commercial foot\nand vehicle traffic\n• Enhances color\n• UV Resistant\n• Resistant to chemicals\n• Self-priming, sealer and\nhardener\n• Odorless\n• Low VOC’s to meet indoor\nairquality standards\nConcrete\nX-Bond\nDriveways\n\n\n\nSURFACE ENGINEERING COMPANY\nGet the durability and perfor -\nmance of a solvent-based system,\nbut with the easy application and\nclean-up of water-based\nproducts.\nEnhance the vivid colors of your\nX-Bond surface\nProtect your artifical stone from\nweathering and prolong its life\nspan with extra protection.",
+    "sourceDocument": "Titan-Gloss-Tech-Data-Sheet.pdf",
+    "title": "Titan Gloss Tech Data Sheet",
+    "category": "Technical doc",
+    "wordCount": 238
+  },
+  {
+    "id": "doc-titan-gloss-tech-data-sheet-p2",
+    "docId": "doc-titan-gloss-tech-data-sheet",
+    "pageNumber": 2,
+    "text": "APPLICATION\nApplication Airless sprayer, tip size 17, 1/4” woven short nap roller or Magic Trowel\nApplication environment Apply at temperatures from 50°F to 90°F\nColor White/milky liquid\nChemical type Polyurethane hybrid\nClean up Stone Soap and water\nShelf life 1 year (ambient temperature of 60F - 72F)\nPackaging 1 gallon, 5 gallons\nDRYING / RECOAT TIME\nT emperature in F\nTime\n72 F\n12 min\n45 F\nDrying times are affected by temperature\nand relative humidity. The chart represents\nguidline values but each project is to be\ntreated individually.\nThe chart represents the time needed in\nbetween coats at specified temperature.\nCure / humidity\nTime\n75%\n48 hrs 12 hrs\n50%\n0 hrs\nLight foot traffic\n45 F 72 F 90 F\n18 hrs 24 hrs\n100 F 80 F 60 F\n1.5 hrs\n20 min\nCURE TIME\nCuring time is affected by temperature and\nhumidity.\nFor example at only 45 F, a full cure would\ntake 48 hours in comparison to at 90 F it\nwould only take 18 hours to cure.",
+    "sourceDocument": "Titan-Gloss-Tech-Data-Sheet.pdf",
+    "title": "Titan Gloss Tech Data Sheet",
+    "category": "Technical doc",
+    "wordCount": 173
+  },
+  {
+    "id": "doc-titan-gloss-tech-data-sheet-p3",
+    "docId": "doc-titan-gloss-tech-data-sheet",
+    "pageNumber": 3,
+    "text": "SURFACE ENGINEERING COMPANY\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners. Not for use on\nhumans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet before using this product.\nLIMITED WARRANTY NOTICE\nThe technical details, recommendations and other information contained in this data sheet are given in good faith and represent the best of our knowledge and experience at the time of printing. It\nis your responsibility to ensure that our products are used and handled correctly and in accordance to SEMCO Post Matrix procedure, recommendations and only for the uses they are intended. We\nalso reserve the right to update information without prior notice to you to reflect our ongoing research and development program. Federal, state and local specific recommendations, depending\non local standards, codes of practice, building regulations or industry guidelines, may effect specific installation recommendations. The supply of our products and services is also subject to certain\nterms, warranties and exclusions, which may have already been disclosed to you in prior dealings or are otherwise available to you on request.\n3620 W Reno Avenue | Las Vegas, NV 89118\nP 800.33.SEMCO | info@semcomfg.com\nNOTES\n• Extended application procedures can be found in the SEMCO SIP Manual.\n• Procedures for cleaning of the flooring system during operations can be found in the SEMCO SIP Manual or\nupon request\n• Safety Data Sheets for SEMCO Titan Shield Gloss are available upon request.\n• Over time due to normal wear, abrasion, traffic and cleaning. Generally, high gloss coatings are subject to a re -\nduction in gloss, while matte finish coatings can increase in gloss level under normal operating conditions.\n• Excessive service conditions, such as steel- or hard plastic-wheeled traffic or dragging heavy metal equipment\nor loaded pallets with protruding nails over the surface, are categorized as misuse and abuse.\n• Allowances must be made for scratches or abrasions that occur due to moving or sliding furniture or fixtures\nover the surface\nProudly made in USA\nPROCEDURE\n• Execute appropriate preparation method to suit your needs before application. Reference to the SEMCO SIP\nManual under the Surface Preparation Section.\n• Test pH level after preparation ( optimal pH level is 6.8 - 7.8 )\nSTEP 1\n• Use airless sprayer with tip size 17 at 850-1,000 PSI. Position the airless sprayer gun at 18” away from the floor\n• OPTIONAL: use magic trowel or 1/4” woven short nap roller to apply the product. Do not go back and forth\n• Minimum of 3 coats is required to ensure 20 mils total film thickness\nVERTICAL SURFACES\n• Apply the Titan Shield Gloss with a woven 1/4” nap roller and use Magic trowel to spread it evenly. Start from top to\nbottom. Minimum of 3 coats is required. Use HVLP with a large tip size 17 to apply Titan Shield Gloss on large surface\nareas.\nSTEP 2\nTOOLS NEEDED\n• Airless sprayer with tip size 17\n• Magic Trowel\n• 1/4” woven short nap roller roller",
+    "sourceDocument": "Titan-Gloss-Tech-Data-Sheet.pdf",
+    "title": "Titan Gloss Tech Data Sheet",
+    "category": "Technical doc",
+    "wordCount": 535
+  },
+  {
+    "id": "doc-titan-shield-sds-p1",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 1,
+    "text": "Page 1 / 7\nSAFETY DATA SHEET\nIssue Date 21 - Mar - 201 7 Revision Date 22 - Sept - 20 18 Version 2\nProduct identifier\nProduct Name T ITAN SH IELD GLOSS – TITAN S H IELD MATTE\nOther means of identification\nProduct Code T SG700, 70 1, 705, 755\nDetails of the supplier of the safety data sheet\nCompany Name SEMCO Modern Seamless Surface Inc\n3620 West Reno Ave\nLas Vegas, NV 89118\n702 - 222 - 9495\nEmergency telephone number\nEmergency Telephone 1 - 800 - 424 - 9300\nClassification\nOSHA Regulatory Status\nThis chemical is not considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.122)\nLabel elements\nEmergency Overview\nAppearance Opaque Physical state Liquid Odor Acrylic\nPrecautionary Statements - Response\nIF exposed or concerned: Get medical advice/attention\nHazards not otherwise classified (HNOC)\nOther Information\n• Harmful to aquatic life with long lasting effects\nUnknown Acute Toxicity 0.70755868% of the mixture consists of ingredient(s) of unknown toxicity\nChemical Name CAS No. Weight - % Trade Secret\nAcrylic CoPolymer Proprietary 7 - 15 *\n1 - Phenoxy - 2 - propanol 770 - 35 - 4 3 - 5 *\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\n1. PRODUCT AND COMPANY IDENTIFICATION\n2. HAZARDS IDENTIFICATION\nAcute toxicity - Oral Not classified\nAcute toxicity - Dermal Not classified\n3. COMPOSITION/INFORMATION ON INGREDIENTS",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 233
+  },
+  {
+    "id": "doc-titan-shield-sds-p2",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 2,
+    "text": "Page 2 / 7\nTITAN S HIELD GLO S S - MATTE Revision Date 22 - Sept - 201 8\n4. FIRST AID MEASURES\nFirst aid measures\nSkin Contact Wash off immediately with plenty of water. Wash skin with soap and water.\nEye contact Rinse thoroughly with plenty of water for at least 15 minutes, lifting lower and upper eyelids.\nConsult a physician.\nInhalation Remove to fresh air.\nIngestion Clean mouth with water and drink afterwards plenty of water.\nMost important symptoms and effects, both acute and delayed\nSymptoms Any additional important symptoms and effects are described in Section 11: Toxicology\nInformation.\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\n5. FIRE - FIGHTING MEASURES\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment.\nUnsuitable extinguishing media Caution: Use of water spray when fighting fire may be inefficient.\nSpecific hazards arising from the chemical\nNo Information available.\nExplosion data\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nAs in any fire, wear self - contained breathing apparatus pressure - demand, MSHA/NIOSH (approved or equivalent) and full\nprotective gear.\n6. ACCIDENTAL RELEASE MEASURES\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Ensure adequate ventilation, especially in confined areas.\nEnvironmental precautions\nEnvironmental precautions See Section 12 for additional ecological information.\nMethods and material for containment and cleaning up\nMethods for containment Prevent further leakage or spillage if safe to do so.\nMethods for cleaning up Pick up and transfer to properly labeled containers.\n7. HANDLING AND STORAGE",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 268
+  },
+  {
+    "id": "doc-titan-shield-sds-p3",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 3,
+    "text": "Page 3 / 7\nTITAN S HIELD GLO S S - MATTE Revision Date 22 - S ept - 2018\nPrecautions for safe handling\nAdvice on safe handling Handle in accordance with good industrial hygiene and safety practice.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Keep containers tightly closed in a dry, cool and well - ventilated place.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines Exposure guidelines noted for ingredient(s).\nChemical Name ACGIH TLV OSHA PEL NIOSH IDLH\nSodium Hydroxide\n1310 - 73 - 2\nCeiling: 2 mg/m 3 TWA: 2 mg/m 3\n(vacated) Ceiling: 2 mg/m 3\nIDLH: 10 mg/m 3\nCeiling: 2 mg/m 3\nEthanol\n64 - 17 - 5\nSTEL: 1000 ppm TWA: 1000 ppm\nTWA: 1900 mg/m 3\n(vacated) TWA: 1000 ppm\n(vacated) TWA: 1900 mg/m 3\nIDLH: 3300 ppm\nTWA: 1000 ppm\nTWA: 1900 mg/m 3\nAmmonia\n7664 - 41 - 7\nSTEL: 35 ppm\nTWA: 25 ppm\nTWA: 50 ppm\nTWA: 35 mg/m 3\n(vacated) STEL: 35 ppm\n(vacated) STEL: 27 mg/m 3\nIDLH: 300 ppm\nTWA: 25 ppm\nTWA: 18 mg/m 3\nSTEL: 35 ppm\nSTEL: 27 mg/m 3\nNIOSH IDLH Immediately Dangerous to Life or Health\nOther Information Vacated limits revoked by the Court of Appeals decision in AFL - CIO v. OSHA, 965 F.2d\n962 (11th Cir., 1992).\nAppropriate engineering controls\nEngineering Controls Showers, Eyewash stations & Ventilation systems.\nIndividual protection measures, such as personal protective equipment\nEye/face protection Wear safety glasses with side shields (or goggles).\nSkin and body protection No special technical protective measures are necessary. Wear protective gloves and\nprotective clothing. Prolonged contact may cause redness and irritation. Wear protective\ngloves and protective clothing if needed.\nRespiratory protection If exposure limits are exceeded or irritation is experienced, NIOSH/MSHA approved\nrespiratory protection should be worn. Positive - pressure supplied air respirators may be\nrequired for high airborne contaminant concentrations. Respiratory protection must be\nprovided in accordance with current local regulations.\nGeneral Hygiene Handle in accordance with good industrial hygiene and safety practice.\nInformation on basic physical and chemical properties\nPhysical state Liquid\nAppearance Opaque\nColor Off - white\nOdor Acrylic /Urethane\nOdor threshold No Information available\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION\n9. PHYSICAL AND CHEMICAL PROPERTIES",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 373
+  },
+  {
+    "id": "doc-titan-shield-sds-p4",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 4,
+    "text": "Page 4 / 7\nTITAN S HIELD GLO S S - MATTE Revision Date 22 - S ept - 2018\nProperty Values Remarks • Method\npH 8.6 - 9.4\nSpecific Gravity 1.055\nViscosity <300 cP @ 25°C\nMelting point/freezing point No Information available\nFlash point Above 200°F\nBoiling point / boiling range >= 212 ° F (at 760 mm Hg)\nEvaporation rate No Information available\nFlammability (solid, gas) No data available\nFlammability Limits in Air\nUpper flammability limit: No Information available\nLower flammability limit: No Information available\nVapor pressure No Information available\nVapor density No Information available\nWater solubility Complete\nPartition coefficient No Information available\nAutoignition temperature No Information available\nDecomposition temperature No Information available\nOther Information\nDensity Lbs/Gal 8.80\nVOC Content (%) 0. 14 058 / 28 .2 g/L\nReactivity\nNo data available\nChemical stability\nStable under recommended storage conditions.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nExtremes of temperature and direct sunlight.\nIncompatible materials\nNone known based on information supplied.\nHazardous Decomposition Products\nNone known based on information supplied.\nInformation on likely routes of exposure\nProdu ct Information\nInhalation No data available. Avoid breathing vapors or mists.\nEye contact No data available. Avoid contact with eyes.\nSkin Contact No data available. No known hazard in contact with skin.\nIngestion No data available. Do not taste or swallow. Not an expected route of exposure.\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\n1 - Phenoxy - 2 - propanol = 2830 mg/kg ( Rat ) > 2 g/kg ( Rabbit ) -\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 264
+  },
+  {
+    "id": "doc-titan-shield-sds-p5",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 5,
+    "text": "Page 5 / 7\nTITAN S HIELD GLO S S - MATTE Revision Date 22 - S ept - 2018\n770 - 35 - 4\nInformation on toxicological effects\nSymptoms No Information available.\nDelayed and immediate effects as well as chronic effects from short and long - term exposure\nSensitization No Information available.\nGerm cell mutagenicity No Information available.\nCarcinogenicity Ethanol has been shown to be carcinogenic in long - term studies only when consumed as\nalcoholic beverage.\nReproductive toxicity No Information available.\nSTOT - single exposure No Information available.\nSTOT - repeated exposure No Information available.\nChronic toxicity Ethanol has been shown to be a reproductive toxin only when consumed as an alcoholic\nbeverage. Ethanol has been shown to be carcinogenic in long - term studies only when\nconsumed as alcoholic beverage.\nAspiration hazard No Information available.\nNumerical measures of t oxicity - Product Information\nUnknown Acute Toxicity 0.30355868% of the mixture consists of ingredient(s) of unknown toxicity\nThe following values are calculated based on chapter 3.1 of the GHS document .\nATEmix (oral) 11,430.00 mg/kg\nATEmix (dermal) 26,658.00 mg/kg\nEcotoxicity\n45.18747% of the mixture consists of components(s) of unknown haz ards to the aquatic environment\nChemical Name Algae/aquatic plants Fish Crustacea\nSodium Hydroxide\n1310 - 73 - 2\n- 45.4: 96 h Oncorhynchus mykiss\nmg/L LC50 static\n-\nEthanol\n64 - 17 - 5\n- 12.0 - 16.0: 96 h Oncorhynchus\nmykiss mL/L LC50 static 100: 96 h\nPimephales promelas mg/L LC50\nstatic 13 400 - 15100: 96 h\nPimephales promelas mg/L LC50\nflow - through\n10800: 24 h Daphnia magna mg/L\nEC50 9268 - 14221: 48 h Daphnia\nmagna mg/L LC50 2: 48 h Daphnia\nmagna mg/L EC50 Static\nAmmonia\n7664 - 41 - 7\n- 0.44: 96 h Cyprinus carpio mg/L\nLC50 1.5: 96 h Poecilia reticulata\nmg/L LC50 0.26 - 4.6: 96 h Lepomis\nmacrochirus mg/L LC50 5.9: 96 h\nPimephales promelas mg/L LC50\nstatic 1.19: 96 h Poecilia reticulata\nmg/L LC50 static 0.73 - 2.35: 96 h\nPimephales promelas mg/L LC50\n1.17: 96 h Lepomis macrochirus\nmg/L LC50 flow - through\n25.4: 48 h Daphnia magna mg/L\nLC50\nMethyl Chloro Isothiazolinone\n26172 - 55 - 4\n0.11 - 0.16: 72 h\nPseudokirchneriella subcapitata\nmg/L EC50 static 0.03 - 0.13: 96 h\nPseudokirchneriella subcapitata\nmg/L EC50 static 0.31: 120 h\nAnabaena flos - aquae mg/L EC50\n1.6: 96 h Oncorhynchus mykiss\nmg/L LC50 semi - static\n4.71: 48 h Daphnia magna mg/L\nEC50 0.12 - 0.3: 48 h Daphnia\nmagna mg/L EC50 Flow through\n0.71 - 0.99: 48 h Daphnia magna\nmg/L EC50 Static\nPersistence and degradability\nNo Information available.\n12. ECOLOGICAL INFORMATION",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 438
+  },
+  {
+    "id": "doc-titan-shield-sds-p6",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 6,
+    "text": "Page 6 / 7\nTITAN S HIELD GLO S S - MATTE Revision Date 22 - Sept - 201 8\nBioaccumulation\nNo Information available.\nOther adverse effects No Information available\n13. DISPOSAL CONSIDERATIONS\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations.\nContaminated packaging Do not reuse container.\n14. TRANSPORT INFORMATION\nThe basic description below is specific to the container size. This information is provided for at a glance DOT information.\nPlease refer to the container and/or shipping papers for the appropriate shipping description before tendering this material for\nshipment. For additional information, please contact the distributor listed in section 1 of this SDS.\nDOT Not regulated\n15. REGULATORY INFORMATION\nInternational Inventories\nTSCA Complies\nDSL/NDSL Complies\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non - Domestic Substances List\nUS Federal Regulations\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product does not contain any\nchemicals which are subject to the reporting requirements of the Act and Title 40 of the Code of Federal Regulations, Part 37 2\nSARA 311/312 Hazard Categories\nAcute health hazard No\nChronic Health Hazard No\nFire hazard No\nSudden release of pressure hazard No\nReactive Hazard No\nCWA (Clean Water Act)\nThis product does not contain any substances regulated as pollutants pursuant to the Clean Water Act (40 CFR 122.21 and 40\nCFR 122.42)\nCERCLA\nThis material, as supplied, does not contain any substances regulated as hazardous substances under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302) or the Superfund Amendments and\nReauthorization Act (SARA) (40 CFR 355). There may be specific reporting requirements at the local, regional, or state level\npertaining to releases of this material\nUS State Regulations\nCalifornia Proposition 65",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 312
+  },
+  {
+    "id": "doc-titan-shield-sds-p7",
+    "docId": "doc-titan-shield-sds",
+    "pageNumber": 7,
+    "text": "Page 7 / 7\nTITAN S HIELD GLO S S - MATTE Revision Date 22 - Sept - 201 8\nThis product contains the following Proposition 65 chemicals\nU.S. State Right - to - Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\nSodium Hydroxide\n1310 - 73 - 2\nX X X\nEthanol\n64 - 17 - 5\nX X X\nAmmonia\n7664 - 41 - 7\nX X X\nMagnesium Nitrate\n10377 - 60 - 3\nX X X\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\nNFPA Health hazards 0 Flammability 0 Instability 0 Physical and Chemical\nProperties Yes\nHMIS Health hazards 0 Flammability 0 Physical hazards 0 Personal protection X\nIssue Date 21 - Mar - 201 7\nRevision Date 22 - S ept - 201 8\nRevision Note\nNo Information available\nDisclaimer\nThe information provided in this Safety Data Sheet is correct to the best of our knowledge, information and belief at the\ndate of its publication. The information given is designed only as a gui dance for safe handling, use, processing, storage,\ntransportation, disposal and release and is not to be considered a warranty or quality specification. The information\nrelates only to the specific material designated and may not be valid for such material used in combination with any other\nmaterials or in any process, unless specified in the text.\nEnd of Safety Data Sheet\nChemical Name\nEthanol - 64 - 17 - 5\nCalifornia Proposition 65\nCarcinogen\nDevelopmental\n16. OTHER INFORMATION",
+    "sourceDocument": "Titan-Shield-SDS.pdf",
+    "title": "Titan Shield SDS",
+    "category": "Technical doc",
+    "wordCount": 249
+  },
+  {
+    "id": "doc-wood-detail-p1",
+    "docId": "doc-wood-detail",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\n(WOOD)\nJOINTS\n2 3 4\n1. Existing substrate - wood\n2. SEMCO Liquid Membrane™ - 1st coat at 15 mil\n3. Fabric reinforcement over joints\n4. SEMCO Liquid Membrane™ - 2nd coat at 15 mil\n1\nFABRIC REINFORCEMENT\n2021 .V05 * Drawings are not to scale\nSEMCO\nLIQUID MEMBRANE™\nSEMCO\nLIQUID MEMBRANE™\nSURFACE ENGINEERING COMPANY\nSEMCO Liquid Membrane™ over wood\nSEMCO\nLIQUID MEMBRANE™ DETAIL",
+    "sourceDocument": "Wood-Detail.pdf",
+    "title": "Wood Detail",
+    "category": "Technical doc",
+    "wordCount": 66
+  },
+  {
+    "id": "doc-x-bond-additive-sds-p1",
+    "docId": "doc-x-bond-additive-sds",
+    "pageNumber": 1,
+    "text": "SECTION 1: PRODUCT IDENTIFICATION\nSECTION 2: HAZARDS IDENTIFICATION\nSECTION 3: COMPOSITION & INFORMATION ON INGREDIENTS\nSECTION 4: FIRST AID MEASURES\nSafety Data Sheet\nVersion: 3 (U S ) Date of print: 0 1 /20/201 6 Date of last alteration: 04/11/2016\nProduct Name : X - Bond Additive\nChemical Name: Sodium Potassium Aluminum Silicate\nCAS #: 93763 - 70 - 3\nUses: Industrial Mineral for Horticulture, Construction, Industrial, Insulation, and\nEnvironmental Applications\nManufacturer : SEMCO Modern Seamless Surface Inc\n3620 West R eno Ave\nLas Vegas , N V 89118\nPhone: 702 2 22 - 9495\nOSHA Classification: Considered a nuisance dust only\nSignal Word: None required\nPictograms: None required\nHazard Statements: None required\nHNOC: None required\nSupplemental Statements:\n* Inhalation may cause throat irritation resulting in coughing or sneezing and may aggravate\npre - existing respiratory conditions.\n* Direct eye contact may cause mechanical irritation.\n* Direct skin contact may cause drying and roughness.\nSupplemental Recommenda tions:\n* Avoid creating unnecessary dust, and wear NIOSH approved dust protection mask.\n* Wear NIOSH approved eye protection when encountering perlite dust.\n* Apply skin creams or lotions to prevent drying.\n* Dispose of waste in accordance with applicable local, State, and Federal regulations.\nPerlite CAS #: 93763 - 70 - 3 – 100%\nQuartz : none detected\n(crystalline silica)\nInhalation: Remove to fresh air. Blow nose. Consult physician if symptoms persist.\nEyes: Flush with water. DO NOT rub eyes. Consult physician if symptoms persist.\nSkin: Wash with water. Apply creams or lotions to prevent dry ing.",
+    "sourceDocument": "X-Bond-Additive-SDS.pdf",
+    "title": "X Bond Additive SDS",
+    "category": "X-Bond",
+    "wordCount": 254
+  },
+  {
+    "id": "doc-x-bond-additive-sds-p2",
+    "docId": "doc-x-bond-additive-sds",
+    "pageNumber": 2,
+    "text": "SECTION 6: ACCIDENTAL RELEASE MEASURES\nSECTION 7: HANDLING & STORAGE\nSECTION 8: EXPOSURE CONTROLS/PERSONAL PROTECTION\nSECTION 9: PHYSICAL AND CHEMICAL PROPERTIES\nSECTION 10: STABILITY AND REACTIVITY\nNon – Flammable\nSpill or Leak Procedures: Use appropriate Personal Protective Equipment (PPE) and avoid creating\nunnecessary dust using normal cleanup methods: shovels brooms, vacuum with HEPA\nfilter, or wet material prior to cleanup.\nHandling Precautions: Avoid creating unnecessary dust and use appropriate respiratory and eye prote ction.\nStorage Precautions: Keep material dry\nIncompatible Materials: Hydrofluoric acid\nExposure Limits: OSHA PEL – 15 mg/m3 ACGIH TLV – 10 mg/m3\nEngineering Controls: Adequate ventilation to keep concentrations below exposure limits.\nRecommended PPE: Appropriate NIOSH/OSHA approved dust respirator, NIOSH/OSHA tight - fitting\nsafety glasses or goggles and gloves.\nPhysical S tate (Appearance): Solid white or gray powder or granules.\nOdor: Odorless\npH: 6 - 9 (10% slurry in water)\nFlash Point: N/A\nBoiling Point: N/A\nAuto - ignition Temperature: N/A\nFlash Point: N/A\nMelting Point: 2,100 F – 2,300 F\nBoiling & Decomposition\nPoints: N/A\nSpecific Gravity: 2.3\nBulk Density: less than 10 lbs per cubic foot\nWater Solubility: Negligible\nCo - efficient of Water/Oil\nDistribution: N/A\nStability: Stable under normal use and conditions.\nReactivity Hazards: Hydrofluoric Acid\nHazardous Decomposition\nProducts: Will react with hydrofluoric acid to produce toxic silicon tetrafluoride.\nHazardous Polymerization: None\nSECTION 5: FIRE FIGHTING MEASURES",
+    "sourceDocument": "X-Bond-Additive-SDS.pdf",
+    "title": "X Bond Additive SDS",
+    "category": "X-Bond",
+    "wordCount": 223
+  },
+  {
+    "id": "doc-x-bond-additive-sds-p3",
+    "docId": "doc-x-bond-additive-sds",
+    "pageNumber": 3,
+    "text": "SECTION 12: ECOLOGICAL INFORMATION\nSECTION 13: DISPOSAL CONSIDERATIONS\nSECTION 14: TRANSPORTATION INFORMATION\nSECTION 15: REGULATORY INFORMATION\nSECTION 16: OTHER INFORMATION\nPrepared b y: SEMCO M o der n Seamless Surface Inc., — 3620 W est Reno Ave nue\nLas Vegas , NV 89118 — January 20 , 201 6\nAcute Toxicity Information: None\nLD50/LC50/LDLo (Oral, Dermal, Inhalation): Not established\nSymptoms:\n* Inhalation may cause throat irritation resulting in coughing or sneezing and may aggravate\npre - respiratory conditions.\n* Direct eye contact will cause mechanical irritation.\n* Direct skin contact may cause drying and roughness.\n* Ingestion – no symptoms known\n* A spiration Hazard – none\nDelayed Effects of Short and Long - term Exposure: None known\nMutagenic Effects: None\nCarcinogenic Effects: None\nReproductive Toxicity (reproductive, developmental, teratogenic): None\nSpecific Target Organ Toxicity (single or repeated exposure): None\nPerlite is a natural occurring mineral and has no known ecotoxic effects.\nPerlite, by itself, is a non - hazardous waste and should be disposed of in accordance with applicable local,\nState and Federal regulations.\nProper Name: Expanded Perlite\nDOT: Not Regulated\nTDG/IMO/ICAO: Not Regulat ed\nOSHA: Perlite is NOT considered a hazardous or toxic substance.\nWHMIS: N/A\nSERA: Not Listed\nTSCA: Not Listed\nThe information provided in this document is correct to the best of our knowledge as of the publication date. This\ninformation pertains only to the material specified and may not be valid when this material is combined with other\nmaterials or subjected to other processes. No warranty or quality specification is implied by this information. It is\nthe responsibility of the user to handle the designated material in a safe manner and comply with all applicable local,\nState and Federal regulations .\nSECTION 11: TOXICOLOGICAL INFORMATION",
+    "sourceDocument": "X-Bond-Additive-SDS.pdf",
+    "title": "X Bond Additive SDS",
+    "category": "X-Bond",
+    "wordCount": 289
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p1",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 1,
+    "text": "Page 1 / 7\nSAFETY DATA SHEET\nIssue Date 16 - Dec - 2015 Revision Date 16 - Dec - 2015 Version 1\nProduct identifier\nProduct Name X - BOND LIQUID\nOther means of identification\nProduct Code XB800\nRecommended use of the chemical and restrictions on use\nRecommended Use Water - based emulsion polymers for use in coatings and adhesives. Only for use with the\nSEMCO X - Bond Stone\nUses advised against No information available\nDetails of the supplier of the safety data sheet\nManufacturer Address\nSEMCO Modern Seamless Surface\n3620 West Reno Ave\nLas Vegas, NV 89118\nEmergency telephone number\nCompany Phone Number 702 - 222 - 9495\nEmergency Telephone Chemtrec 1 - 800 - 424 - 9300\nClassification\nOSHA Regulatory Status\nThis chemical is considered hazardous by the 2012 OSHA Hazard Communication Standard (29 CFR 1910.1200)\nLabel elements\n1. IDENTIFICATION OF THE SUBSTANCE/PREPARATION AND OF THE COMPANY/UNDERTAKING\n2. HAZARDS IDENTIFICATION\nSkin sensitization Category 1\nEmergency Overview\nWarning\nHazard statements\nMay cause an allergic skin reaction\nAppearance Milky liquid Physical state Liquid Odor Slight",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 176
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p2",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 2,
+    "text": "Page 2 / 7\nX - BOND LIQUID Revision Date 16 - Dec - 2015\nPrecautionary Statements - Prevention\nAvoid breathing dust/fume/gas/mist/vapors/spray\nContaminated work clothing should not be allowed out of the workplace\nWear protective gloves\nPrecautionary Statements - Response\nGet medical advice/attention if you feel unwell\nIF ON SKIN: Wash with plenty of soap and water\nIf skin irritation or rash occurs: Get medical advice/attention\nWash contaminated clothing before reuse\nPrecautionary Statements - Disposal\nDispose of contents/container to an approved waste disposal plant\nHazards not otherwise classified (HNOC)\nOther Information\n• Harmful to aquatic life with long lasting effects\n• Harmful to aquatic life\nUnknown Acute Toxicity 52.60961% of the mixture consists of ingredient(s) of unknown toxicity\nChemical Name CAS No. Weight - % Trade Secret\nAmmonium hydroxide 1336 - 21 - 6 <0.20 *\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\nFirst aid measures\nEye contact Rinse thoroughly with plenty of water for at least 15 minutes, lifting lower and upper eyelids.\nConsult a physician.\nSkin Contact Wash skin with soap and water. Wash contaminated clothing before reuse.\nInhalation Remove to fresh air.\nIngestion Clean mouth with water and drink afterwards plenty of water.\nMost important symptoms and effects, both acute and delayed\nSymptoms No information available.\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment. Dry chemical, CO2,\nalcohol - resistant foam or water spray.\nUnsuitable extinguishing media Caution: Use of water spray when fighting fire may be inefficient.\nSpecific hazards arising from the chemical\nNo information available.\nExplosion data\n3. COMPOSITION/INFORMATION ON INGREDIENTS\n4. FIRST AID MEASURES\n5. FIRE - FIGHTING MEASURES",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 294
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p3",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 3,
+    "text": "Page 3 / 7\nX - BOND LIQUID Revision Date 16 - Dec - 2015\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nAs in any fire, wear self - contained breathing apparatus pressure - demand, MSHA/NIOSH (approved or equivalent) and full\nprotective gear.\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Ensure adequate ventilation, especially in confined areas.\nEnvironmental precautions\nEnvironmental precautions See Section 12 for additional ecological information.\nMethods and material for containment and cleaning up\nMethods for containment Prevent further leakage or spillage if safe to do so. Dike far ahead of spill; use dry sand to\ncontain the flow of material.\nMethods for cleaning up Pick up and transfer to properly labeled containers.\nPrecautions for safe handling\nAdvice on safe handling Handle in accordance with good industrial hygiene and safety practice.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Keep containers tightly closed in a dry, cool and well - ventilated place.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines This product, as supplied, does not contain any hazardous materials with occupational\nexposure limits established by the region specific regulatory bodies.\nAppropriate engineering controls\nEngineering Controls Showers\nEyewash stations\nVentilation systems.\nIndividual protection measures, such as personal protective equipment\nEye/face protection No special technical protective measures are necessary.\nSkin and body protection No special technical protective measures are necessary.\nRespiratory protection If exposure limits are exceeded or irritation is experienced, NIOSH/MSHA approved\nrespiratory protection should be worn. Positive - pressure supplied air respirators may be\nrequired for high airborne contaminant concentrations. Respiratory protection must be\nprovided in accordance with current local regulations.\nGeneral Hygiene Considerations Handle in accordance with good industrial hygiene and safety practice.\n6. ACCIDENTAL RELEASE MEASURES\n7. HANDLING AND STORAGE\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION\n9. PHYSICAL AND CHEMICAL PROPERTIES",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 310
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p4",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 4,
+    "text": "Page 4 / 7\nX - BOND LIQUID Revision Date 16 - Dec - 2015\nInformation on basic physical and chemical properties\nPhysical state Liquid\nAppearance Milky liquid Odor Slight\nOdor threshold No information available\nProperty\npH\nValues\n9 - 10\nR ema rk s • M e t hod\nMelting point/freezing point 32°F\nBoiling point / boiling range >200°F\nFlash point >200°F\nEvaporation rate No information available\nFlammability (solid, gas) No information available\nFlammability Limit in Air\nUpper flammability limit:\nLower flammability limit:\nVapor pressure\nNo information available\nNo information available\nNo information available\nVapor density No information available\nWater solubility Dispersible\nSolubility in other solvents No information available\nPartition coefficient No information available\nAutoignition temperature No information available\nDecomposition temperature No information available\nReactivity\nNo data available\nChemical stability\nStable under recommended storage conditions.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nProtect from freezing - product stability may be affected.\nIncompatible materials\nNone known based on information supplied.\nHazardous Decomposition Products\nNone known based on information supplied.\nInformation on likely routes of exposure\nProduct Information No data available\nInhalation No data available.\nEye contact No data available.\nSkin Contact No data available.\nIngestion .\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 207
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p5",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 5,
+    "text": "Page 5 / 7\nX - BOND LIQUID Revision Date 16 - Dec - 2015\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\nAmmonium hydroxide\n1336 - 21 - 6\n= 140 mg/kg ( Rat ) - -\nInformation on toxicological effects\nSymptoms No information available.\nDelayed and immediate effects as well as chronic effects from short and long - term exposure\nSensitization No information available.\nGerm cell mutagenicity No information available.\nCarcinogenicity No information available.\nReproductive toxicity No information available.\nSTOT - single exposure No information available.\nSTOT - repeated exposure No information available.\nAspiration hazard No information available.\nNumerical measures of toxicity - Product Information\nUnknown Acute Toxicity 20 .60961% of the mixture consists of ingredient(s) of unknown toxicity\nEcotoxicity\nHarmful to aquatic life\n14 .9100635% of the mixture consists of components(s) of unknown hazards to the aquatic environment\nChemical Name Algae/aquatic plants Fish Crustacea\nAmmonium hydroxide\n1336 - 21 - 6\n- 4.1 : 96 h Pimephales promelas\nmg/L LC50\n0.33 : 24 h water flea mg/L EC50\n0.22 : 24 h Daphnia pulex mg/L\nEC50\nPersistence and degradability\nNo information available.\nBioaccumulation\nNo information available.\nOther adverse effects No information available\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations.\nContaminated packaging Do not reuse container.\nChemical Name California Hazardous Waste Status\nAmmonium hydroxide\n1336 - 21 - 6\nToxic\nCorrosive\n12. ECOLOGICAL INFORMATION\n13. DISPOSAL CONSIDERATIONS\n14. TRANSPORT INFORMATION",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 245
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p6",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 6,
+    "text": "Page 6 / 7\nX - BOND LIQUID Revision Date 16 - Dec - 2015\nDOT Not regulated\nInternational Inventories\nTSCA Complies\nDSL/NDSL Complies\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non - Domestic Substances List\nUS Federal Regulations\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product contains a chemical\nor chemicals which are subject to the reporting requirements of the Act and Title 40 of the Code of Federal Regulations, Part 372\nChemical Name SARA 313 - Threshold Values %\nAmmonium hydroxide - 1336 - 21 - 6 1.0\nSARA 311/312 Hazard Categories\nAcute health hazard No\nChronic Health Hazard No\nFire hazard No\nSudden release of pressure hazard No\nReactive Hazard No\nCWA (Clean Water Act)\nThis product contains the following substances which are regulated pollutants pursuant to the Clean Water Act (40 CFR 122.21\nand 40 CFR 122.42)\nChemical Name CWA - Reportable\nQuantities\nCWA - Toxic Pollutants CWA - Priority Pollutants CWA - Hazardous\nSubstances\nAmmonium hydroxide\n1336 - 21 - 6\n1000 lb - - X\nCERCLA\nThis material, as supplied, contains one or more substances regulated as a hazardous substance under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302)\nChemical Name Hazardous Substances RQs CERCLA/SARA RQ Reportable Quantity (RQ)\nAmmonium hydroxide\n1336 - 21 - 6\n1000 lb - RQ 1000 lb final RQ\nRQ 454 kg final RQ\nUS State Regulations\nCalifornia Proposition 65\nWARNING: This product contains chemicals known to the State of California to cause cancer and birth defects or other\nreproductive harm.\nU.S. State Right - to - Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\nAmmonium hydroxide\n1336 - 21 - 6\nX X X\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\n15. REGULATORY INFORMATION",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 314
+  },
+  {
+    "id": "doc-x-bond-liquid-sds-p7",
+    "docId": "doc-x-bond-liquid-sds",
+    "pageNumber": 7,
+    "text": "Page 7 / 7\nX - BOND LIQUID Revision Date 16 - Dec - 2015\nNFPA Health hazards 1 Flammability 0 Instability 0 Physical and Chemical\nProperties -\nHMIS Health hazards 1 Flammability 0 Physical hazards 0 Personal protection X\nPrepared By Samel Sem\nIssue Date 16 - Dec - 201 5\nRevision Date 16 - Dec - 201 5\nRevision Note\nNo information available\nDisclaimer\nThe information provided in this Material Safety Data Sheet is correct to the best of our knowledge, information and belief\nat the date of its publication. The information given is designed only as a guidance for safe handling, use, processing,\nstorage, transportation, disposal and release and is not to be considered a warranty or quality specification. The\ninformation relates only to the specific material designated and may not be valid for such material used in combination\nwith any other materials or in any process, unless specified in the text.\nEnd of Safety Data Sheet\n16. OTHER INFORMATION",
+    "sourceDocument": "X-Bond-Liquid-SDS.pdf",
+    "title": "X Bond Liquid SDS",
+    "category": "X-Bond",
+    "wordCount": 163
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p1",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 1,
+    "text": "1\nSAFETY DATA SHEET\nIssue Date 01 - Mar - 2015 Revision Date 1 2 - September - 202 3 Version 4\nProduct identifier\nProduct Name MICROBOND\nOther means of identification\nProduct Code XBM50 , XBM25\nRecommended use of the chemical and restrictions on use\nRecommended Use Only for use with the SEMCO X - Bond Liquid.\nUses advised against No information available\nDetails of the supplier of the safety data sheet\nManufacturer Address\nSEMCO Modern Seamless Surface\n3620 West Reno Ave\nLas Vegas, NV 89118\nEmergency telephone number\nCompany Phone Number 702 - 222 - 9495\nEmergency Telephone 1 - 800 - 424 - 9300\nClassification\nOSHA Regulatory Status\nNot Regulated\nLabel elements\nEmergency Overview\nMay cause cancer (inhalation) (Category 1A)\n1. IDENTIFICATION OF THE SUBSTANCE/PREPARATION AND OF THE COMPANY/UNDERTAKING\n2. HAZARDS IDENTIFICATION\nCategory 1B Skin sensitization",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 138
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p2",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 2,
+    "text": "2\nMICRO BOND\nPage 1 of 7\nPrecautionary Statements - Prevention\nAvoid breathing dust/fume/gas/mist/vapors/spray\nContaminated work clothing should not be allowed out\nof the workplace Wear protective gloves\nPrecautionary Statements - Response\nGet medical advice/attention if you feel unwell\nIF ON SKIN: Wash with plenty of soap and water\nIf skin irritation or rash occurs: Get\nmedical advice/attention Wash\ncontaminated clothing before reuse\nPrecautionary Statements - Disposal\nDispose of contents/container to an approved waste disposal plant. Keep out of drains, sewers, ditches and\nwaterways. Minimize use of water to prevent environmental contamination.\n2.2 Potential Health Effects\nRelevant routes of exposure : Eye contact, skin contact, inhalation\nPotential Acute Health Effects:\nEye : Exposure to airborne concentrations above statutory or recommended exposure limits may cause irritation of\nthe eyes.\nSkin : May cause irritation on prolonged or repeated contact.\nInhalation : Exposure to airborne concentrations above statutory or recommended exposure limits may cause\nirritation of the nose, throat of the nose, throat and lungs. Chronic unprotected exposure may lead to silicosis.\nIngestion : Ingest of material may cause vomiting and/or stomach pains.\nCarcinogenicity: IARC: SiO2 NTP: Not Regulated OSHA: Not Regulated\nPotential Chronic Health Effects\nChronic effects : Contains Material that can cause target organ damage (lungs / respiratory system).\nTarget Organs : Contains material which causes damage to the following organs: lungs. Review Section 2\nand 11 for any additional assessments.\nOver - Exposure Signs/Symptoms\nInhalation : Adverse symptoms may include the following: respiratory tract irritation and coughing\n2.3 Potential Environmental Effects\n• Not considered to be harmful to aquatic and terrestrial life.",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 263
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p3",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 3,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n3\nHazards not otherwise classified (HNOC)\nOther Information\nUnknown Acute Toxicity 52.60961% of the mixture consists of ingredient(s) of unknown toxicity\nChemical Name CAS No. Lower Weight - % Upper Weight - %\nHollow Glass Micro s p heres 65997 - 17 - 3 46 49\nPortland Cement White 65997 - 15 - 1 4 7 .0 49 .0\nCalcium Carbonate 1317 - 65 - 3 0. 5 1\nCalcium Hydroxide 1305 - 62 - 0 1 3 .0\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\nFirst aid measures\nEye contact Immediately flush eyes with plenty of water for at least 15 minutes. Check for and remove\nany contact lenses. Get medical attention if irritation occurs.\nSkin Contact Wash skin with soap and water. Wash contaminated clothing before reuse. Consult a\nphysician or other qualified medical personnel if the condition persists.\nInhalation Remove to fresh air. Check for clear airway, breathing and presence of pulse. Provide\nCardiopulmonary resuscitation for persons without pulse or respirations. Consult a physician\nor other medical personnel.\nIngestion If swallowed, dilute by drinking large amounts of water, give at least 2 glasses of water to\ndrink. Consult a physician or other qualified medical personnel. Never give anything by\nmouth to an unconscious person.\nMost important symptoms and effects, both acute and delayed\nSymptoms\nInhalation Adverse symptoms may include the following: respiratory tract irritation and coughing\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment. Dry chemical, CO2,\nalcohol - resistant foam or water spray.\nUnsuitable extinguishing media: None\nProducts of Combustions: None\nUnusual Hazards: None\nSpecific hazards arising from the chemical\nNo information available\nExplosion Data\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nFirefighters should wear self - containing breathing apparatus (pressure demand MSHA/NIOSH\napproved or equivalent) and full fire - fighting turnout gear.\n3. COMPOSITION/INFORMATION ON INGREDIENTS\n4. FIRST AID MEASURES\n5. FIRE - FIGHTING MEASURES",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 359
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p4",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 4,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n4\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Use personal protection recommended in section 8.\nEnvironmental precautions\nEnvironmental precautions Keep out of drains, sewers, ditches and waterways. Minimize use of water to prevent\nenvironmental contamination.\nMethods and material for containment and cleaning up\nMethods for containment Handle as a nuisance dust. Use respiratory protection if dust becomes airborne.\nMethods for cleaning up Dispose of in accordance with applicable Federal, State, and Local regulations. Keep\nspills and runoff out of municipal sewers and open bodies of water.\nPrecautions for safe handling\nAdvice on safe handling Do not get in eyes. Avoid contact with skin. Use in well ventilated areas. Wash\nthoroughly after handling.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Store in a cool, dry location and out of direct sunlight. Protect sacks from weather and\nother damage.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines\nCHEMICAL NAME OSHA PEL ACGIH TLV NIOSH REL\nHollow Glass Microspheres Not Esta bli shed Not Established 0.05 mg/m 3 TWA\nPortland Cement 15 mg/m 3 TWA 10 mg/m 3 TWA 10 mg/m 3 TWA\nCalcium Carbonate 15 mg/m 3 TWA 10 mg/m 3 TWA 10 mg/m 3 TWA\nCalcium Hydroxide 15 mg/m 3 TWA 5 mg/m 3 TWA 5 mg/m 3 TWA\nAppropriate engineering controls\nEngineering Controls\nUse local ventilation, if needed.\nIndividual protection measures, such as personal protective equipment\nEye/face protection: Use chemical splash goggles (ANSI 287.1 or approved equivalent)\nSkin Protection: Use rubber or neoprene gloves to provide protection against wet material.\nRespiratory Protection: None required for normal use of this product. If material is sanded or ground when dry, NIOSH/MSHA\napproved respirators for dust should be provided and used. As with any safety product, workers using\n6. ACCIDENTAL RELEASE MEASURES\n7. HANDLING AND STORAGE\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 316
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p5",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 5,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n5\nrespirators should be trained in the proper selection, use and care of such equipment.\nGeneral Hygiene Considerations: Wash thoroughly after handling. Have eye - wash facilities immediately available.\nInformation on basic physical and chemical properties\nPhysical state Solid\nAppearance Powder Odor None\nOdor threshold Not available\nProperty\npH\nValues\nNot available\nRemarks •\nMethod\nMelting point/freezing point Not available\nBoiling point / boiling range Not applicable\nFlash point Noncombustible\nEvaporation rate Not applicable\nFlammability (solid, gas) Not available\nFlammability Limit in Air\nUpper flammability limit:\nLower flammability limit:\nVapor pressure\nNo information available\nNo information available\nNo information available\nVapor density No information available\nWater solubility Slightly\nSolubility in other solvents No information available\nPartition Coefficient No information available\nAuto ignition temperature No information available\nDecomposition Temperature No information available\nReactivity\nNo data available\nChemical stability\nStable under normal conditions of storage and use, hazardous polymerization will not occur.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nNone\nIncompatible materials\nNone\nHazardous Decomposition Products\nNone under normal conditions of storage and use.\nInformation on likely routes of exposure\nProduct Information No data available\n9. PHYSICAL AND CHEMICAL PROPERTIES\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 210
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p6",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 6,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n6\nInhalation No specific hazard known. May cause transient irritation, headache, nausea, and /or\ninflammation of the nose, throat or lungs.",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 32
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p7",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 7,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n7\nEye contact No specific hazard known. May cause transient irritation or alkali burns.\nSkin Contact No specific hazard known. May cause transient irritation or alkali burns.\nIngestion No specific hazard known.\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\n- - - -\nInformation on toxicological effects\nSymptoms No information available.\nDelayed and immediate effects as well as chronic effects from short and long - term exposure\nSensitization No information available.\nGerm cell mutagenicity No information available.\nCarcinogenicity No information available.\nReproductive toxicity No information available.\nSTOT - single exposure No information available.\nSTOT - repeated exposure No information available.\nAspiration hazard No information available.\nNumerical measures of toxicity - Product Information\nUnknown Acute Toxicity\nEcotoxicity\nNot harmful to aquatic life\nAquatic Toxicity: No data available.\nTerrestrial Toxicity: No data available.\nMobility: No data available.\nChemical Name Algae/aquatic plants Fish Crustacean\n- - - -\nPersistence and degradability\nNo information available.\nBioaccumulation\nNo information available.\nOther adverse effects No information available\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations. Local regulations may be more stringent than regional or national requirements.\nThe information presented below only applies to the material as supplied. The identification\n12. ECOLOGICAL INFORMATION\n13. DISPOSAL CONSIDERATIONS",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 223
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p8",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 8,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n8\nbased on characteristic(s) or listing may not apply if the material has been used or otherwise\ncontaminated.\nContaminated packaging It is the responsibility of the waste generator to determine toxicity and physical properties of\nthe material generated to determine the proper waste identification and disposal methods in\ncompliance with applicable regulations.\n.\nDOT Not regulated\nLand transport U S D O T Not classified as a dangerous good under transport regulations Sea transport IMDG\nNot classified as a dangerous good under transport regulations Air transport IATA/ICAO\nNot classified as a dangerous good under transport regulations\nInternational Inventories\nTSCA Complies\nDSL/NDSL Complies\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non - Domestic Substances List\nUS Federal Regulations\nHCS Classification: Target organ\neffects US Federal Regulations\nSARA 311/312 Classification Immediate (acute) health hazard, Delayed (chronic) health hazard\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product contains\nthe following toxic chemical(s) subject to the reporting requirements of Section 313 of Title III of the Superfund\nAmendments and Reauthorization Act of 1986, and Subpart C - Supplier Notification Requirement of 40 CFR Part 372.\nNone required.\nSARA 302 Extremely Hazardous Substances None required.\nCWA (Clean Water Act)\nThis product contains the following substances which are regulated pollutants pursuant to the Clean Water Act (40 CFR 122.21\nand 40 CFR 122.42)\nChemical Name CWA - Reportable\nQuantities\nCWA - Toxic Pollutants CWA - Priority Pollutants CWA - Hazardous\nSubstances\n- - - - -\nCERCLA\nThis material, as supplied, contains one or more substances regulated as a hazardous substance under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302)\nChemical Name Hazardous Substances CERCLA/SARA RQ Reportable Quantity (RQ)\n- - - -\nUS State Regulations\nCalifornia Proposition 65\nWARNING: This product contains chemicals known to the State of California to cause cancer and birth defects or other\n14. TRANSPORT INFORMATION\n15. REGULATORY INFORMATION",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 344
+  },
+  {
+    "id": "doc-x-bond-microbond-sds-p9",
+    "docId": "doc-x-bond-microbond-sds",
+    "pageNumber": 9,
+    "text": "Re Revision Date 12 - Sept - 202 3 MICRO BOND\n9\nU.S. State Right - to - Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\n- - - -\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\nNFPA Health Hazards 1 Flammability 0 Instability 0 Physical and\nChemical\nProperties -\nHMIS Health Hazards 1 Flammability 0 Physical hazards 0 Personal\nProtection -\nPrepared By Samel Sem\nIssue Date 01 - Jan - 2015\nRevision Date 12 - S eptember - 2023\nRevision Note\nNo information available\nDisclaimer\nThe information provided in this Material Safety Data Sheet is correct to the best of our knowledge, information and belief\nat the date of its publication. The information given is designed only as a guidance for safe handling, use, processing,\nstorage, transportation, disposal and release and is not to be considered a warranty or quality specification. The\ninformation r elates only to the specific material designated and may not be valid for such material used in combination\nwith any other materials or in any process, unless specified in the text.\n*See Section 2 Hazards Identification\nCaution: HMIS® ratings are based on a 0 - 4 rating scale, with 0 representing minimal hazards or risks, and 4 representing significant\nhazards or risks Although HMIS® ratings are not required on SDSs under 29 CFR 1910.1200, the preparer may choose to provide\nthem. HMIS® ratings are to be used with a fully implemented HMIS® program. HMIS® is a registered mark of the National Paint &\nCoatings Association (NPCA). HMIS® materials may be purchased exclusively from J. J. Keller (800) 327 - 6868.\nThe customer is responsible for determining the PPE code for this material. Legend\nThis information is furnished without warranty, representation, inducement or license if any kind, except that it is accurate to the\nbest of SEMCO Modern Seamless Surface Inc., knowledge or is obtained from sources believed to be accurate. SEMCO\nModern Seamless Surface Inc., does not assume any legal responsibility for its use or reliance upon same/ Customers are encouraged\nto conduct their own tests. Before using any product, read its label.\nEnd of Safety Data Sheet\n16. OTHER INFORMATION\nACGIH American Conference of Government Industrial Hygienists\nNTP National Toxicology Program\nOSHA Occupational Safety and Health Administration\nTWA Time Weighted Average",
+    "sourceDocument": "X-Bond-Microbond-SDS.pdf",
+    "title": "X Bond Microbond SDS",
+    "category": "X-Bond",
+    "wordCount": 381
+  },
+  {
+    "id": "doc-x-bond-over-tile-detail-p1",
+    "docId": "doc-x-bond-over-tile-detail",
+    "pageNumber": 1,
+    "text": "EXISTING SUBSTRATE\nSCRATCH COAT\nFINISH\nSatin Stone\nX-BOND SEAMLESS STONE\nper specification\n1. Existing substrate - tile\n2. X-Bond Scratch Coat\n3. SEMCO Liquid Membrane™ with fabric reinforcement\n4. X-Bond Scratch Coat\n5. X-Bond Brown Coat (up to 3/4”)\n6. X-Bond Seamless Stone - per specification\n7. Satin Stone (3 coats)\nTotal thickness 1/2” to 1”\n2 3 4\n1\n5 6 7\nSCRATCH COAT\nSEMCO\nLIQUID MEMBRANE™\nwith fabric reinforcement\nBROWN COAT\nup to 3/4”\n2021 .V02 * Drawings are not to scale\nX-Bond Seamless Stone over tile SURFACE ENGINEERING COMPANY\nFLOOR DETAIL",
+    "sourceDocument": "X-Bond-Over-Tile-Detail.pdf",
+    "title": "X Bond Over Tile Detail",
+    "category": "X-Bond",
+    "wordCount": 94
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p1",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 1,
+    "text": "Page 1 / 7\nSAFETY DATA SHEET\nIssue Date 01 - Mar - 2015 Revision Date 01 - Mar - 2015 Version 1\nProduct identifier\nProduct Name X - BOND STONE TEXTURE\nOther means of identification\nProduct Code XB T50\nRecommended use of the chemical and restrictions on use\nRecommended Use F or use with the SEMCO X - Bond Liquid .\nUses advised against No information available\nDetails of the supplier of the safety data sheet\nManufacturer Address\nSEMCO Modern Seamless Surface\n3620 West Reno Ave\nLas Vegas, NV 89118\nEmergency telephone number\nCompany Phone Number 702 - 222 - 9495\nEmergency Telephone Chemtrec 1 - 800 - 424 - 9300\nClassification\nOSHA Regulatory Status\nNot Regulated\nLabel elements\n1. IDENTIFICATION OF THE SUBSTANCE/PREPARATION AND OF THE COMPANY/UNDERTAKING\n2. HAZARDS IDENTIFICATION\nSkin sensitization Category 1B\nEmergency Overview\nAppearance Gray, White or Tan Sandy Powder Physical state Powder Odor None\nDANGER\nCauses severe skin burns and eye damage (Category 1B)\nMay cause allergy or asthma symptoms or breathing difficulties if inhaled\n(Category 1)\nMay cause cancer (inhalation) (Category 1A)\nCauses damage to organs (lung/respiratory system) through prolonged or\nrepeated exposure (inhalation). (Category 1)\nChronic unprotected exposure may lead to silicosis.",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 200
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p2",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 2,
+    "text": "Page 1 / 7\nX - BOND STONE\nPage 1 of 7\nPrecautionary Statements - Prevention\nAvoid breathing dust/fume/gas/mist/vapors/spray\nContaminated work clothing should not be allowed out\nof the workplace Wear protective gloves\nPrecautionary Statements - Response\nGet medical advice/attention if you feel unwell\nIF ON SKIN: Wash with plenty of soap and water\nIf skin irritation or rash occurs: Get\nmedical advice/attention Wash\ncontaminated clothing before reuse\nPrecautionary Statements - Disposal\nDispose of contents/container to an approved waste disposal plant. Keep out of drains, sewers, ditches and\nwaterways. Minimize use of water to prevent environmental contamination.\n2.2 Potential Health Effects\nRelevant routes of exposure : Eye contact, skin contact, inhalation\nPotential Acute Health Effects:\nEye : Exposure to airborne concentrations above statutory or recommended exposure limits may cause irritation\nof the eyes .\nSkin : May cause irritation on prolonged or repeated contact.\nInhalation : Exposure to airborne concentrations above statutory or recommended exposure limits may\ncause irritation of the nose, throat of the nose, throat and lungs. Chronic unprotected exposure may lead to\nsilicosis.\nIngestion : Ingest of material may cause vomiting and/or stomach pains.\nCarcinogenicity: IARC: SiO2 NTP: Not Regulated OSHA: Not Regulated\nPotential Chronic Health Effects\nChronic effects : Contains Material that can cause target organ damage (lungs / respiratory system).\nTarget Organs : Contains material which causes damage to the following organs: lungs. Review Section 2\nand 11 for any additional assessments.\nOver - Exposure Signs/Symptoms\nInhalation : Adverse symptoms may include the following: respiratory tract irritation and coughing\n2.3 Potential Environmental Effects\n• Not considered to be harmful to aquatic and terrestrial life.",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 269
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p3",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 3,
+    "text": "Page 2 / 7\nX-BOND STONE Revision Date 01-Mar-2015\nRe\nHazards not otherwise classified (HNOC)\nOther Information\nUnknown Acute Toxicity 52.60961% of the mixture consists of ingredient(s) of unknown toxicity\nChemical Name CAS No. Lower Weight-% Upper Weight-%\nSilica, Crystalline Quartz 14808-60-7 10.0 8.0\nPortland Cement 65997-15-1 15.0 55.0\nCalcium Carbonate 1317-65-3 0.0 7.0\nCalcium Hydroxide 1305-62-0 0.0 15.0\n*The exact percentage (concentration) of composition has been withheld as a trade secret.\nFirst aid measures\nEye contact Immediately flush eyes with plenty of water for at least 15 minutes. Check for and remove\nany contact lenses. Get medical attention if irritation occurs.\nSkin Contact Wash skin with soap and water. Wash contaminated clothing before reuse. Consult a\nphysician or other qualified medical personnel if the condition persists.\nInhalation Remove to fresh air. Check for clear airway, breathing and presence of pulse. Provide\nCardiopulmonary resuscitation for persons without pulse or respirations. Consult a physician\nor other medical personnel.\nIngestion If swallowed, dilute by drinking large amounts of water, give at least 2 glasses of water to\ndrink. Consult a physician or other qualified medical personnel. Never give anything by\nmouth to an unconscious person.\nMost important symptoms and effects, both acute and delayed\nSymptoms\nInhalation Adverse symptoms may include the following: respiratory tract irritation and coughing\nIndication of any immediate medical attention and special treatment needed\nNote to physicians Treat symptomatically.\nSuitable extinguishing media\nUse extinguishing measures that are appropriate to local circumstances and the surrounding environment. Dry chemical, CO2,\nalcohol-resistant foam or water spray.\nUnsuitable extinguishing media: None\nProducts of Combustions: None\nUnusual Hazards: None\nSpecific hazards arising from the chemical\nNo information available\nExplosion Data\nSensitivity to Mechanical Impact None.\nSensitivity to Static Discharge None.\nProtective equipment and precautions for firefighters\nFirefighters should wear self-containing breathing apparatus (pressure demand MSHA/NIOSH\napproved or equivalent) and full fire-fighting turnout gear.\n3. COMPOSITION/INFORMATION ON INGREDIENTS\n4. FIRST AID MEASURES\n5. FIRE-FIGHTING MEASURES",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 320
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p4",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 4,
+    "text": "Page 3 / 7\nX - BOND STONE Revision Date 01 - Mar - 2015\nRe\nPersonal precautions, protective equipment and emergency procedures\nPersonal precautions Use personal protection recommended in section 8.\nEnvironmental precautions\nEnvironmental precautions Keep out of drains, sewers, ditches and waterways. Minimize use of water to prevent\nenvironmental contamination.\nMethods and material for containment and cleaning up\nMethods for containment Handle as a nuisance dust. Use respiratory protection if dust becomes airborne.\nMethods for cleaning up Dispose of in accordance with applicable Federal, State, and Local regulations. Keep\nspills and runoff out of municipal sewers and open bodies of water.\nPrecautions for safe handling\nAdvice on safe handling Do not get in eyes. Avoid contact with skin. Use in well ventilated areas. Wash\nthoroughly after handling.\nConditions for safe storage, including any incompatibilities\nStorage Conditions Store in a cool, dry location and out of direct sunlight. Protect sacks from weather and\nother damage.\nIncompatible materials None known based on information supplied.\nControl parameters\nExposure Guidelines\nCHEMICAL NAME OSHA PEL ACGIH TLV NIOSH REL\nSilica, Crystalline Quartz 30 mg/m 3\n%SiO +2\nNot Established 0.05 mg/m 3 TWA\nPortland Cement 15 mg/m 3 TWA 10 mg/m 3 TWA 10 mg/m 3 TWA\nCalcium Carbonate 15 mg/m 3 TWA 10 mg/m 3 TWA 10 mg/m 3 TWA\nCalcium Hydroxide 15 mg/m 3 TWA 5 mg/m 3 TWA 5 mg/m 3 TWA\nAppropriate engineering controls\nEngineering Controls\nUse local ventilation , if needed.\nIndividual protection measures, such as personal protective equipment\nEye/face protection : Use chemical splash goggles (ANSI 287.1 or approved equivalent)\nSkin Protection: Use rubber or neoprene gloves to provide protection against wet material.\nRespiratory Protection: None required for normal use of this product. If material is sanded or ground when dry , NIOSH/MSHA\napproved respirators for dust should be provided and used. As with any safety product, workers using\n6. ACCIDENTAL RELEASE MEASURES\n7. HANDLING AND STORAGE\n8. EXPOSURE CONTROLS/PERSONAL PROTECTION",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 324
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p5",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 5,
+    "text": "Page 4 / 7\nX - BOND STONE Revision Date 01 - Mar - 2015\nRe\nrespirators should be trained in th e proper selection, use and care of such equipment.\nGeneral Hygiene Considerations: Wash thoroughly after handling. Have eye - wash facilities immediately available.\nInformation on basic physical and chemical properties\nPhysical state Solid\nAppearance Powder Odor None\nOdor threshold Not available\nProperty\npH\nValues\nNot available\nR ema rk s •\nM e t hod\nMelting point/freezing point Not available\nBoiling point / boiling range Not applicable\nFlash point Noncombustible\nEvaporation rate No t applicable\nFlammability (solid, gas) Not available\nFlammability Limit in Air\nUpper flammability limit:\nLower flammability limit:\nVapor pressure\nNo information available\nNo information available\nNo information available\nVapor density No information available\nWater solubility Slightly\nSolubility in other solvents No information available\nPartition Coefficient No information available\nAuto ignition temperature No information available\nDecomposition Temperature No information available\nReactivity\nNo data available\nChemical stability\nStable under normal conditions of storage and use, hazardous polymerization will not occur.\nPossibility of Hazardous Reactions\nNone under normal processing.\nConditions to avoid\nNone\nIncompatible materials\nNone\nHazardous Decomposition Products\nNone under normal conditions of storage and use .\nInformation on likely routes of exposure\nProduct Information No data available\nInhalation No specific hazard known. May cause transient irritation, headache, nausea, and /or\ninflammation of the nose, throat or lungs.\n9. PHYSICAL AND CHEMICAL PROPERTIES\n10. STABILITY AND REACTIVITY\n11. TOXICOLOGICAL INFORMATION",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 243
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p6",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 6,
+    "text": "Page 5 / 7\nX - BOND STONE Revision Date 01 - Mar - 2015\nRe\nEye contact No specific hazard known. May cause transient irritation or alkali burns.\nSkin Contact No specific hazard known. May cause transient irritation or alkali burns.\nIngestion No specific hazard known.\nChemical Name Oral LD50 Dermal LD50 Inhalation LC50\n- - - -\nInformation on toxicological effects\nSymptoms No information available.\nDelayed and immediate effects as well as chronic effects from short and long - term exposure\nSensitization No information available.\nGerm cell mutagenicity No information available.\nCarcinogenicity No information available.\nReproductive toxicity No information available.\nSTOT - single exposure No information available.\nSTOT - repeated exposure No information available.\nAspiration hazard No information available.\nNumerical measures of toxicity - Product Information\nUnknown Acute Toxicity\nEcotoxicity\nNot harmful to aquatic life\nAquatic Toxicity: No data available.\nTerrestrial Toxicity: No data available.\nMobility: No data available.\nChemical Name Algae/aquatic plants Fish Crustacean\n- - - -\nPersistence and degradability\nNo information available.\nBioaccumulation\nNo information available.\nOther adverse effects No information available\nWaste treatment methods\nDisposal of wastes Disposal should be in accordance with applicable regional, national and local laws and\nregulations. Local regulations may be more stringent than regional or national requirements.\nThe information presented below only applies to the material as supplied. The identification\n12. ECOLOGICAL INFORMATION\n13. DISPOSAL CONSIDERATIONS",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 227
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p7",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 7,
+    "text": "Page 6 / 7\nX - BOND STONE Revision Date 01 - Mar - 2015\nRe\nbased on characteristic(s) or listing may not apply if the material has been used or otherwise\ncontaminated.\nContaminated packaging It is the responsibility of the waste generator to determine toxicity and physical properties of\nthe material generated to determine the proper waste identification and disposal methods in\ncompliance with applicable regulations.\n.\nDOT Not regulated\nLand transport U S D O T Not classified as a dangerous good under transport regulations Sea transport IMDG\nNot classified as a dangerous good under transport regulations Air transport IATA/ICAO\nNot classified as a dangerous good under transport regulations\nInternational Inventories\nTSCA Complies\nDSL/NDSL Complies\nLegend:\nTSCA - United States Toxic Substances Control Act Section 8(b) Inventory\nDSL/NDSL - Canadian Domestic Substances List/Non - Domestic Substances List\nUS Federal Regulations\nHCS Classification: Target organ\neffects US Federal Regulations\nSARA 311/312 Classification Immediate (acute) health hazard, Delayed (chronic) health hazard\nSARA 313\nSection 313 of Title III of the Superfund Amendments and Reauthorization Act of 1986 (SARA). This product contains\nthe following toxic chemical(s) subject to the reporting requirements of Section 313 of Title III of the Superfund\nAmendments and Reauthorization Act of 1986, and Subpart C - Supplier Notification Requirement of 40 CFR Part 372.\nNone required.\nSARA 302 Extremely Hazardous Substances None required.\nCWA (Clean Water Act)\nThis product contains the following substances which are regulated pollutants pursuant to the Clean Water Act (40 CFR 122.21\nand 40 CFR 122.42)\nChemical Name CWA - Reportable\nQuantities\nCWA - Toxic Pollutants CWA - Priority Pollutants CWA - Hazardous\nSubstances\n- - - - -\nCERCLA\nThis material, as supplied, contains one or more substances regulated as a hazardous substance under the Comprehensive\nEnvironmental Response Compensation and Liability Act (CERCLA) (40 CFR 302)\nChemical Name Hazardous Substances\nRQs\nCERCLA/SARA RQ Reportable Quantity (RQ)\n- - - -\nUS State Regulations\nCalifornia Proposition 65\nWARNING: This product contains chemicals known to the State of California to cause cancer and birth defects or other\n14. TRANSPORT INFORMATION\n15. REGULATORY INFORMATION",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 349
+  },
+  {
+    "id": "doc-x-bond-stone-sds-p8",
+    "docId": "doc-x-bond-stone-sds",
+    "pageNumber": 8,
+    "text": "Page 7 / 7\nX - BOND STONE Revision Date 01 - Mar - 2015\nRe\nU.S. State Right - to - Know Regulations\nChemical Name New Jersey Massachusetts Pennsylvania\n- - - -\nU.S. EPA Label Information\nEPA Pesticide Registration Number Not Applicable\nPrepared By Samel Sem\nIssue Date 01 - Jan - 2015\nRevision Date 01 - Mar - 2015\nRevision Note\nNo information available\nDisclaimer\nThe information provided in this Material Safety Data Sheet is correct to the best of our knowledge, information and belief\nat the date of its publication. The information given is designed only as a guidance for safe handling, use, processing,\nstorage, transportation, disposal and release and is not to be considered a warranty or quality specification. The\ninformation relates only to the specific material designated and may not be valid for such material used in combination\nwith any other materials or in any process, unless specified in the text.\n*See Section 2 Hazards Identification\nCaution: HMIS® ratings are based on a 0 - 4 rating scale, with 0 representing minimal hazards or risks, and 4 representing significant\nhazards or risks Although HMIS® ratings are not required on SDSs under 29 CFR 1910.1200, the preparer may choose to provide\nthem. HMIS® ratings are to be used with a fully implemented HMIS® program. HMIS® is a registered mark of the National Paint &\nCoatings Association (NPCA). HMIS® materials may be purchased exclusively from J. J. Keller (800) 327 - 6868.\nThe customer is responsible for determining the PPE code for this material. Legend\nThis information is furnished without warranty, representation, inducement or license if any kind, except that it is accurate to the\nbest of SEMCO Modern Seamless Surface Inc., knowledge or is obtained from sources believed to be accurate. SEMCO\nModern Seamless Surface Inc., does not assume any legal responsibility for its use or reliance upon same/ Customers are\nencouraged to conduct their own tests. Before using any product, read its label.\nEnd of Safety Data Sheet\nNFPA Health Hazards 1 Flammability 0 Instability 0 Physical and\nChemical\nProperties -\nHMIS Health Hazards 1 Flammability 0 Physical hazards 0 Personal\nProtection -\n16. OTHER INFORMATION\nACGIH American Conference of Government Industrial Hygienists\nHMIS Hazardous Material Identification System\nN T P National Toxicology Program\nOSHA Occupational Safety and Health Administration\nSTEL Short Term Exposure Limit\nT W A Time Weighted Average\nNIOSH National Institute for Occupational Safety and Health\nPEL Permissible Exposure Limit",
+    "sourceDocument": "X-Bond-Stone-SDS.pdf",
+    "title": "X Bond Stone SDS",
+    "category": "X-Bond",
+    "wordCount": 409
+  },
+  {
+    "id": "doc-x-bondmicrocementdatasheet2024-p1",
+    "docId": "doc-x-bondmicrocementdatasheet2024",
+    "pageNumber": 1,
+    "text": "2024.V01 Page 1 of 2 Technical Product Information\nPRODUCT DESCRIPTION\nSEMCO’s most innovative custom engineered product is X-Bond Microcement , which is the core element in\nboth the SEMCO Remodel without Removal™ and SEMCO’s ADA Safety Floor systems. It creates\nchemical bond at the molecular level to any solid surface. X-Bond Microcement is a zero VOC hybrid of\nnatural stone and advanced cross-linking technology. Perfect for floors, walls, pool decks and waterproofing.\nFEATURES / BENEFITS\n• Flexible waterproof membrane\n• Breathable and chemical resistant\n• Minimizes remodeling waste disposal\n• Interior, exterior, and below grade application\n• Can be safely used in confined areas\n• UV and freeze-thaw damage resistant\nSUBSTRATES\nConcrete surfaces\nCoated surfaces\nCeramic tile\nWood surfaces / decks\nVinyl / VCT surfaces\nNatural stone\nMetal, glass and plexiglass\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2018.V01 Page 1 of 2\nSURFACE ENGINEERING COMPANY\nX-BOND MICROCEMENT\nResurfacing Made Easy\nX-Bond Seamless Stone creates chemical bond\nat the molecular level to any solid surface\nWATERPROOF SEAMLESS STONE\nPRODUCT DESCRIPTION\nSEMCO’s most innovative custom engineered product is X-Bond Seamless Stone, which is the core element\nin both the SEMCO Remodel without Removal™ and SEMCO’s ADA Safety Floor systems. It creates\nchemical bond at the molecular level to any solid surface. X-Bond Seamless Stone is a zero VOC hybrid of\nnatural stone and advanced cross-linking technology. Perfect for floors, walls, pool decks and waterproofing.\nResurfacing Made Easy\nTechnical Product Information\nFEATURES / BENEFITS\n• Flexible waterproof membrane\n• Breathable and chemical resistant\n• Minimizes remodeling waste disposal\n• Interior, exterior, and below grade application\n• Can be safely used in confined areas\n• UV and freeze-thaw damage resistant\nSUBSTRATES\nConcrete surfaces\nCoated surfaces\nCeramic tile\nWood surfaces / decks\nVinyl / VCT surfaces\nNatural stone\nMetal, glass and plexiglass\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 2018.V01 Page 1 of 2\nSURFACE ENGINEERING COMPANY\nX-BOND SEAMLESS STONE\nX-Bond Microcement creates chemical bond at\nthe molecular level to any solid surface\nWATERPROOF X-Bond Microcement",
+    "sourceDocument": "X-BondMicrocementDataSheet2024.pdf",
+    "title": "X BondMicrocementDataSheet2024",
+    "category": "X-Bond",
+    "wordCount": 342
+  },
+  {
+    "id": "doc-x-bondmicrocementdatasheet2024-p2",
+    "docId": "doc-x-bondmicrocementdatasheet2024",
+    "pageNumber": 2,
+    "text": "AASTM E84 Test Method for Surface Burning Class A\nASTM D635 Test Method for Rate of Burning Met passing criteria for HB classification\nASTM D-3960 - Volatile organic content (VOC) 0 g / L\nASTM D-3l94 – Water content 48.9%\nASTM D-2369 – Non volatile residue 25.9%\nASTM C 1028-6 – Coefficient of friction (mineral) 0.93 dry, 0.92 wet\nASTM C 1028-6 – Coefficient of friction (all finishes) 0.78 dry, 0.63 wet\nASTM C 109 / C109M – 8 – Compressive strength 27 MPa = 3,800 PSI\nASTM C 674 – Modulus of rupture 2,200 PSI\nASTM D 4060-07 – Abrasion resistance, metal 1022 cycles w/ .05 mil loss\nWater permeability test No dampness or formation of water\nSurface temperature reduction Up to 32°F versus standard concrete surface\nUsed automobile oil Excellent\nTransmission fluid Good\nBrake fluid Good\nWater Excellent\nAlkali resistance Excellent\nHydrochloric acid (10%) Good\nCorrosive Chemicals Good\nTechnical Product Information\nTEST RESULTS*\nLABORATORY RESULTS*\n*Tests are based on Semco Modern Seamless Surface experience unless otherwise noted.\nPRECAUTIONS\nAlways test a small area first to determine ease of application and desired results. Gloves and eye protection should be worn during application. Do not mix with other cleaners.\nNot for use on humans or animals. If any contact with skin or eyes occurs, wash immediately with plenty of water. Be sure to read container label and Material Safety Data Sheet\nbefore using this product.\nLIMITED WARRANTY NOTICE\nSEMCO Modern Seamless Surface warrants that its products will meet their specifications. There are no other warranties, expressed or implied of merchantability or fitness\nof use. The only obligation of the seller-manufacturer shall be to replace material found to be defective. SEMCO Modern Seamless Surface will not be liable for labor or\nconsequential damage of any kind. The information contained herein is, to the best of our knowledge and belief, true and accurate. However, since the conditions of handling\nand use are beyond our control, we make no guarantee of results, and assume no liability for damages incurred by use of this material. It is the responsibility of the user to comply\nwith all applicable federal, state and local laws and regulations. All chemicals may present unknown health hazards and should be used with caution.\n3620 W Reno Avenue / Las Vegas, NV 89118 / 702.222.9495 semcosurfaces.com 20 22 .V01\nSURFACE ENGINEERING COMPANY Page 2 of 2\nX-BOND MICROCEMENT\nResurfacing Made Easy\nColor Bond Creates a smooth and seamless surface. A generally solid color with very slight variations. Suitable for floors and walls\nNatural Grain Creates a vibrant and moving surface, unseen by any other material. Suitable for floors only\nPolished Bond Designed to create multiple color variations within itself. Suitable for floors and walls\nADA Safety Floor Engineered to assist in remodeling projects which is require ADA compliance in Coefficient of Friction\n(slip resistance), Surface Slope Regrading, and Surface Aperture Closure\nExisting concrete 60-75\nPainted surface 60-75\nCeramic tile 55-75\nVinyl tile 60-75\nNatural stone 50-100\nMetal 60-75\nDrying time 2 hours at 72°F\nCure time 24 hours\nColor White powder and white liquid\nChemical type Polymer modified stone\nClean up Water\nShelf life 1 year in unopened containers\nPackaging (X-Bond Liquid and X-Bond Stone) 1 gal. pail, 5 gal. pail, 55 gal. drum / 50 lb bag\nSPECIFICATIONS\nCOVERAGE (sq. ft. per 2 gallons of X-Bond Liquid and 1 50 lb bag of X-Bond Stone, coverage is based on 1/8” application)\nTEXTURE OPTIONS 2024.V01 Page 2 of 2",
+    "sourceDocument": "X-BondMicrocementDataSheet2024.pdf",
+    "title": "X BondMicrocementDataSheet2024",
+    "category": "X-Bond",
+    "wordCount": 578
+  },
+  {
+    "id": "doc-x-bondoverconcretefloordetail-2025-p1",
+    "docId": "doc-x-bondoverconcretefloordetail-2025",
+    "pageNumber": 1,
+    "text": "FLOOR DETAIL SEMCO modern seamless surface\nX-Bond Seamless Stone over concrete or\nconcrete boards/panels\nSURFACE ENGINEERING COMPANY\n... .. <'1 .. ... . . ... ... 4·\n... 4 . ...\n...\nTotal thickness 1/8 \" - 6 \"\n...\n.. 4 4\nD\nD\nD\nD\nD\nD\nIT WORKS!\nSEMCO SURFACES\n�\n. . ...\n.. . <'1 41. ... . '11111\n... - .... • . .. .. <'1\n4 · . ·. . ... �'q\n.. <'1 . .. • <'1 . ..... 4\n·<'1\n4\n. ...\n... 4·\n.. ....\nExisting substrate - concrete or concrete boards/panels\nX-Bond Scratch Coat\nSEMCO Liquid Membrane ™\n(fabric reinforcement at joints and corners)\nSecond X-Bond Scratch Coat\nX-Bond Brown Coat (starting at 1/8\") - optional\nX-Bond Seamless Stone texture - per specification\nColor Bond, Polished Bond, Natural Grain or\nADA Safety Floor\nSatin Stone or Titan Shield Gloss (3 coats)\nSCRATCH COAT\nX·BOND SEAMLESS\nSTONE TEXTURE\nFINISH � .,.,.----j\nSatin Stone or Titan Shield Gloss\n3620 W Reno Avenue/ Las Vegas, NV 89118 / 800.33.SEMCO semcosurfaces.com\n2022 .VOl • Drawings are not to scale\nCJ (/)\nz <(\n- LJ.J\nLL. �\n0 ::!E\n0 z LJ.J\nLJ.J\na::: c::\na. Cl\na::: Cl\nz\nw 1ii\n�\n::::,\n(/)\nc::\n3: <(\nLJ.J\n>-\n-IO\n(/) C'I\nc::\n� LJ.J\n0 0\nc::\nw 0\nC u..\n>-\n...J 5\n0 �\n0 LJ.J\nc::\na. �\n-0\n(/) �\n...J ::::,\n...J (/)\n<t u..\n0\n3: <(\n-w\n(/) �\nC::: Cl\n0�\nOffi ...J Cl\nLL. �\nMADE IN USA\nDISTRIBUTED GLOBALLY",
+    "sourceDocument": "X-BondoverConcreteFloorDetail-2025.pdf",
+    "title": "X BondoverConcreteFloorDetail",
+    "category": "X-Bond",
+    "wordCount": 269
   }
 ];

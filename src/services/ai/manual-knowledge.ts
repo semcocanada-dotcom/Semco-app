@@ -51,14 +51,23 @@ export function searchSipManual(query: string, limit = DEFAULT_LIMIT): ManualKno
   const terms = tokenize(query);
   if (terms.length === 0 || TECHNICAL_DOC_PAGES.length === 0) return [];
 
+  const normalizedQuery = normalize(query);
+
   const hits = TECHNICAL_DOC_PAGES.map((page) => {
-    const haystack = normalize(page.text);
+    const title = normalize(page.title);
+    const category = normalize(page.category);
+    const sourceDocument = normalize(page.sourceDocument);
+    const body = normalize(page.text);
     let score = 0;
 
     for (const term of terms) {
-      if (haystack.includes(term)) score += 1;
+      if (title.includes(term)) score += 4;
+      if (sourceDocument.includes(term)) score += 3;
+      if (category.includes(term)) score += 2;
+      if (body.includes(term)) score += 1;
     }
 
+    if (title.includes(normalizedQuery) || sourceDocument.includes(normalizedQuery)) score += 8;
     if (score === 0) return null;
 
     return {
