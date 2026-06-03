@@ -61,15 +61,34 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
 }
 
 function parsePigments(pigments: unknown): PigmentRatio[] {
-  if (Array.isArray(pigments)) return pigments;
-  if (typeof pigments !== 'string') return [];
+  let value = pigments;
 
-  try {
-    const parsed = JSON.parse(pigments);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+  for (let i = 0; i < 3 && typeof value === 'string'; i += 1) {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return [];
+    }
   }
+
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const raw = item as Partial<PigmentRatio>;
+      return {
+        pigmentCode: String(raw.pigmentCode ?? ''),
+        pigmentName: String(raw.pigmentName ?? raw.pigmentCode ?? 'Tint'),
+        mlPerQuart: Number(raw.mlPerQuart ?? 0),
+        mlPerGallon: Number(raw.mlPerGallon ?? 0),
+        mlPerFiveGallon: Number(raw.mlPerFiveGallon ?? 0),
+      };
+    })
+    .filter((item): item is PigmentRatio => {
+      if (!item) return false;
+      return [item.mlPerQuart, item.mlPerGallon, item.mlPerFiveGallon].every(Number.isFinite);
+    });
 }
 
 const styles = StyleSheet.create({

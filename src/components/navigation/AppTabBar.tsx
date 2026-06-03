@@ -2,61 +2,76 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Fonts } from '@/constants/theme';
+import { Colors, Fonts, TAP_TARGET_MIN } from '@/constants/theme';
 
 type RouteName = 'dashboard' | 'projects' | 'add' | 'library' | 'more';
 
 const TABS: {
   name: RouteName;
   label: string;
+  href: string;
   active: React.ComponentProps<typeof Ionicons>['name'];
   inactive: React.ComponentProps<typeof Ionicons>['name'];
 }[] = [
-  { name: 'dashboard', label: 'Home', active: 'home', inactive: 'home-outline' },
-  { name: 'projects', label: 'Projects', active: 'folder-open', inactive: 'folder-open-outline' },
-  { name: 'add', label: 'Add', active: 'add', inactive: 'add' },
-  { name: 'library', label: 'Library', active: 'book', inactive: 'book-outline' },
-  { name: 'more', label: 'More', active: 'ellipsis-horizontal-circle', inactive: 'ellipsis-horizontal-circle-outline' },
+  { name: 'dashboard', label: 'Home', href: '/dashboard', active: 'home', inactive: 'home-outline' },
+  { name: 'projects', label: 'Projects', href: '/projects', active: 'folder-open', inactive: 'folder-open-outline' },
+  { name: 'add', label: 'Add', href: '/add', active: 'add', inactive: 'add' },
+  { name: 'library', label: 'Library', href: '/library', active: 'book', inactive: 'book-outline' },
+  { name: 'more', label: 'More', href: '/more', active: 'ellipsis-horizontal-circle', inactive: 'ellipsis-horizontal-circle-outline' },
 ];
 
-const ACTIVE_PARENT: Record<string, RouteName> = {
-  assistant: 'library',
-  calculator: 'library',
-  colors: 'library',
-  orders: 'add',
-  products: 'library',
-  takeoff: 'add',
-};
+function getActiveTab(pathname: string): RouteName {
+  if (pathname.startsWith('/projects')) return 'projects';
+  if (pathname.startsWith('/add') || pathname.startsWith('/orders') || pathname.startsWith('/takeoff')) return 'add';
+  if (
+    pathname.startsWith('/library') ||
+    pathname.startsWith('/assistant') ||
+    pathname.startsWith('/calculator') ||
+    pathname.startsWith('/colors') ||
+    pathname.startsWith('/products')
+  ) {
+    return 'library';
+  }
+  if (pathname.startsWith('/more')) return 'more';
+  return 'dashboard';
+}
 
 export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const pathname = usePathname();
   const routeByName = new Map(state.routes.map((route, index) => [route.name, { route, index }]));
-  const focusedRoute = state.routes[state.index]?.name;
-  const activeRoute = ACTIVE_PARENT[focusedRoute] ?? focusedRoute;
+  const activeRoute = getActiveTab(pathname);
 
   return (
     <View style={[styles.shell, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       {TABS.map((tab) => {
         const match = routeByName.get(tab.name);
-        if (!match) return null;
-
-        const { route } = match;
+        const route = match?.route;
         const isFocused = activeRoute === tab.name;
         const isAdd = tab.name === 'add';
-        const descriptor = descriptors[route.key];
+        const descriptor = route ? descriptors[route.key] : undefined;
         const title = descriptor?.options.title ?? tab.label;
 
         const onPress = () => {
-          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (!isFocused && !event.defaultPrevented) {
+          const event = route
+            ? navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
+            : { defaultPrevented: false };
+
+          if (event.defaultPrevented) return;
+
+          if (route) {
             navigation.navigate(route.name as never);
+          } else {
+            router.replace(tab.href as any);
           }
         };
 
         return (
           <TouchableOpacity
-            key={route.key}
+            key={tab.name}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={title}
@@ -99,6 +114,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 10,
     paddingHorizontal: 8,
+    minHeight: 78,
+    flexShrink: 0,
     shadowColor: '#000',
     shadowOpacity: 0.12,
     shadowRadius: 18,
@@ -109,7 +126,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 62,
+    minHeight: TAP_TARGET_MIN + 14,
   },
   addItem: {
     marginTop: -18,

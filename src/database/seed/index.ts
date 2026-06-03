@@ -5,6 +5,8 @@ import { eq } from 'drizzle-orm';
 import productsData from './products.json';
 import colorsData from './colors.json';
 
+const SQLITE_INSERT_CHUNK_SIZE = 40;
+
 export async function seedDatabase() {
   const existing = await db.select().from(products).limit(1);
   if (existing.length === 0) {
@@ -30,6 +32,8 @@ export async function seedDatabase() {
   const standardColorCount = existingColors.filter((c) => c.isStandard).length;
   if (standardColorCount < seededColors.length) {
     await db.delete(colors).where(eq(colors.isStandard, true));
-    await db.insert(colors).values(seededColors);
+    for (let i = 0; i < seededColors.length; i += SQLITE_INSERT_CHUNK_SIZE) {
+      await db.insert(colors).values(seededColors.slice(i, i + SQLITE_INSERT_CHUNK_SIZE));
+    }
   }
 }

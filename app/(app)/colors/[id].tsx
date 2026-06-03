@@ -16,32 +16,56 @@ import { seedDatabase } from '@/database/seed';
 import colorsData from '@/database/seed/colors.json';
 import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
-import { Card, Badge } from '@/components/ui';
+import { Button, Card, Badge, EmptyState } from '@/components/ui';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 
 const STANDARD_COLORS = colorsData as Color[];
 
+function getParamValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function findBundledColor(value?: string) {
+  if (!value) return null;
+  const normalized = value.toLowerCase();
+  return (
+    STANDARD_COLORS.find((standardColor) => standardColor.id === value) ??
+    STANDARD_COLORS.find((standardColor) => standardColor.code?.toLowerCase() === normalized) ??
+    null
+  );
+}
+
 export default function ColorDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: string | string[] }>();
+  const colorId = getParamValue(id);
   const router = useRouter();
-  const [color, setColor] = useState<Color | null>(null);
+  const [color, setColor] = useState<Color | null>(() => findBundledColor(colorId));
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!colorId) {
+      setIsLoading(false);
+      return;
+    }
+
     let isMounted = true;
+    const resolvedColorId = colorId;
+    const fallbackColor = findBundledColor(resolvedColorId);
+    setColor(fallbackColor);
+    setIsLoading(true);
 
     async function loadColor() {
-      const fallbackColor = STANDARD_COLORS.find((standardColor) => standardColor.id === id) ?? null;
-
       try {
         await initDatabase();
         await seedDatabase();
-        const rows = await db.select().from(colors).where(eq(colors.id, id));
+        const rows = await db.select().from(colors).where(eq(colors.id, resolvedColorId));
         if (isMounted) setColor(rows[0] ?? fallbackColor);
       } catch (error) {
         console.error(error);
         if (isMounted) setColor(fallbackColor);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     }
 
@@ -50,12 +74,19 @@ export default function ColorDetailScreen() {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [colorId]);
 
   if (!color) {
     return (
       <SafeAreaView style={styles.safe}>
-        <Text style={styles.loading}>Loading...</Text>
+        {isLoading ? (
+          <Text style={styles.loading}>Loading...</Text>
+        ) : (
+          <View style={styles.emptyWrap}>
+            <EmptyState icon="color-palette-outline" title="Color not found" body="Go back to the color grid and choose another swatch." />
+            <Button label="Back to colors" variant="primary" onPress={() => router.replace('/colors' as any)} fullWidth />
+          </View>
+        )}
       </SafeAreaView>
     );
   }
@@ -113,8 +144,9 @@ export default function ColorDetailScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl },
+  scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl + 64 },
   back: { marginBottom: Spacing.sm },
+  emptyWrap: { flex: 1, padding: Spacing.base, justifyContent: 'center', gap: Spacing.md },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   titleLeft: { flex: 1 },
   name: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },

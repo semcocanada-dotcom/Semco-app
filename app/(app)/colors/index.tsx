@@ -13,7 +13,7 @@ import { Colors, Spacing } from '@/constants/theme';
 const STANDARD_COLORS = colorsData as Color[];
 
 export default function ColorsScreen() {
-  const [allColors, setAllColors] = useState<Color[]>([]);
+  const [allColors, setAllColors] = useState<Color[]>(STANDARD_COLORS);
   const [query, setQuery] = useState('');
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -33,7 +33,7 @@ export default function ColorsScreen() {
         await initDatabase();
         await seedDatabase();
         const rows = await db.select().from(colors);
-        if (isMounted) setAllColors(rows.length > 0 ? rows : STANDARD_COLORS);
+        if (isMounted && rows.length > 0) setAllColors(rows);
       } catch (error) {
         console.error(error);
         if (isMounted) setAllColors(STANDARD_COLORS);
@@ -93,7 +93,7 @@ export default function ColorsScreen() {
           <ColorTile
             color={item}
             size={tileSize}
-            onPress={() => router.push({ pathname: '/(app)/colors/[id]', params: { id: item.id } })}
+            onPress={() => router.push({ pathname: '/colors/[id]', params: { id: item.id } } as any)}
           />
         )}
         columnWrapperStyle={styles.gridRow}

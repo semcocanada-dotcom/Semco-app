@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '@/database/client';
+import { db, initDatabase } from '@/database/client';
+import { seedDatabase } from '@/database/seed';
+import colorsData from '@/database/seed/colors.json';
 import { products } from '@/database/schema/products';
 import { colors } from '@/database/schema/colors';
 import type { Product } from '@/database/schema/products';
@@ -13,11 +15,13 @@ import { Colors, Typography, Spacing } from '@/constants/theme';
 import { TECHNICAL_DOCS, TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
 
 const HUB_CARDS = [
-  { title: 'Products', description: 'Browse seeded product data and future uploads.', icon: 'cube-outline' as const, route: '/(app)/products' },
-  { title: 'Colours', description: 'Review the standard palette and custom mixes.', icon: 'color-palette-outline' as const, route: '/(app)/colors' },
-  { title: 'Calculator', description: 'Run coverage calculations off the same library.', icon: 'calculator-outline' as const, route: '/(app)/calculator' },
-  { title: 'Assistant', description: 'Look up product guidance and process notes.', icon: 'chatbubble-ellipses-outline' as const, route: '/(app)/assistant' },
+  { title: 'Products', description: 'Browse seeded product data and future uploads.', icon: 'cube-outline' as const, route: '/products' },
+  { title: 'Colours', description: 'Review the standard palette and custom mixes.', icon: 'color-palette-outline' as const, route: '/colors' },
+  { title: 'Calculator', description: 'Run coverage calculations off the same library.', icon: 'calculator-outline' as const, route: '/calculator' },
+  { title: 'Assistant', description: 'Look up product guidance and process notes.', icon: 'chatbubble-ellipses-outline' as const, route: '/assistant' },
 ] as const;
+
+const STANDARD_COLORS = colorsData as Color[];
 
 export default function LibraryScreen() {
   const router = useRouter();
@@ -25,17 +29,34 @@ export default function LibraryScreen() {
   const [productCount, setProductCount] = React.useState(0);
   const [colorCount, setColorCount] = React.useState(0);
   const [productsList, setProductsList] = React.useState<Product[]>([]);
-  const [colorsList, setColorsList] = React.useState<Color[]>([]);
+  const [colorsList, setColorsList] = React.useState<Color[]>(STANDARD_COLORS.slice(0, 3));
 
   React.useEffect(() => {
-    Promise.all([db.select().from(products), db.select().from(colors)])
-      .then(([productRows, colorRows]) => {
+    let isMounted = true;
+
+    async function loadLibrary() {
+      try {
+        await initDatabase();
+        await seedDatabase();
+        const [productRows, colorRows] = await Promise.all([db.select().from(products), db.select().from(colors)]);
+        if (!isMounted) return;
         setProductsList(productRows);
-        setColorsList(colorRows);
+        setColorsList(colorRows.length > 0 ? colorRows : STANDARD_COLORS.slice(0, 3));
         setProductCount(productRows.length);
-        setColorCount(colorRows.length);
-      })
-      .catch(console.error);
+        setColorCount(colorRows.length || STANDARD_COLORS.length);
+      } catch (error) {
+        console.error(error);
+        if (!isMounted) return;
+        setColorsList(STANDARD_COLORS.slice(0, 3));
+        setColorCount(STANDARD_COLORS.length);
+      }
+    }
+
+    loadLibrary();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
