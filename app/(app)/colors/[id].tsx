@@ -11,12 +11,16 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '@/database/client';
+import { db, initDatabase } from '@/database/client';
+import { seedDatabase } from '@/database/seed';
+import colorsData from '@/database/seed/colors.json';
 import { colors } from '@/database/schema/colors';
-import type { Color, PigmentRatio } from '@/database/schema/colors';
+import type { Color } from '@/database/schema/colors';
 import { Card, Badge } from '@/components/ui';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
+
+const STANDARD_COLORS = colorsData as Color[];
 
 export default function ColorDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,20 +29,36 @@ export default function ColorDetailScreen() {
 
   useEffect(() => {
     if (!id) return;
-    db.select().from(colors).where(eq(colors.id, id)).then((rows) => {
-      setColor(rows[0] ?? null);
-    }).catch(console.error);
+    let isMounted = true;
+
+    async function loadColor() {
+      const fallbackColor = STANDARD_COLORS.find((standardColor) => standardColor.id === id) ?? null;
+
+      try {
+        await initDatabase();
+        await seedDatabase();
+        const rows = await db.select().from(colors).where(eq(colors.id, id));
+        if (isMounted) setColor(rows[0] ?? fallbackColor);
+      } catch (error) {
+        console.error(error);
+        if (isMounted) setColor(fallbackColor);
+      }
+    }
+
+    loadColor();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   if (!color) {
     return (
       <SafeAreaView style={styles.safe}>
-        <Text style={styles.loading}>Loading…</Text>
+        <Text style={styles.loading}>Loading...</Text>
       </SafeAreaView>
     );
   }
-
-  const pigments = (color.pigments as PigmentRatio[]) ?? [];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -78,7 +98,7 @@ export default function ColorDetailScreen() {
           </View>
         )}
 
-        <FormulaDisplay pigments={pigments} colorName={color.name} />
+        <FormulaDisplay pigments={color.pigments} colorName={color.name} />
 
         {color.notes ? (
           <Card>

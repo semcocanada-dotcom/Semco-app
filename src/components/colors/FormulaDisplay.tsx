@@ -6,13 +6,13 @@ import { getFormulaForBatch, BATCH_SIZES, type BatchSize } from '@/services/colo
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 
 interface FormulaDisplayProps {
-  pigments: PigmentRatio[];
+  pigments: unknown;
   colorName: string;
 }
 
 export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
   const [batchSize, setBatchSize] = useState<BatchSize>('quart');
-  const formula = getFormulaForBatch(pigments, batchSize);
+  const formula = getFormulaForBatch(parsePigments(pigments), batchSize);
 
   return (
     <Card>
@@ -58,6 +58,18 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
       <Text style={styles.notes}>{formula.mixingNotes}</Text>
     </Card>
   );
+}
+
+function parsePigments(pigments: unknown): PigmentRatio[] {
+  if (Array.isArray(pigments)) return pigments;
+  if (typeof pigments !== 'string') return [];
+
+  try {
+    const parsed = JSON.parse(pigments);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 const styles = StyleSheet.create({
