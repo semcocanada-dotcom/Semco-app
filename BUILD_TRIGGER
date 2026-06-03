@@ -12,3 +12,4 @@
 2026-05-31T00:00:00Z — rebuild: fix tab bar (6 tabs, Respite visible), OTA auto-apply on foreground
 2026-05-31T17:00:00Z — retrigger after EXPO_TOKEN refresh: verify build pipeline restored
 2026-05-31T21:30:00Z – OTA update: Respite tab + 6-tab fix
+2026-06-03T04:10:00Z — rebuild: real provider addresses + per-provider distances
