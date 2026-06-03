@@ -77,7 +77,7 @@ async function handleOffline(userMessage: string): Promise<AssistantResponse> {
   if (manualHits.length > 0) {
     return {
       content: formatSipManualResponse(manualHits),
-      source: 'sip_manual',
+      source: 'technical_docs',
       isOffline: true,
     };
   }

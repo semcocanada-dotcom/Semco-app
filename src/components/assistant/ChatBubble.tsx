@@ -52,8 +52,10 @@ interface ChatBubbleProps {
 
 const SOURCE_LABELS: Record<string, string> = {
   claude: 'Claude',
-  offline_fts: 'SIP manual',
-  product_library: 'SIP manual',
+  offline_fts: 'Product library',
+  product_library: 'Product library',
+  sip_manual: 'Tech docs',
+  technical_docs: 'Tech docs',
 };
 
 export function ChatBubble({ message }: ChatBubbleProps) {

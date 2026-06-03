@@ -20,9 +20,20 @@ const TABS: {
   { name: 'more', label: 'More', active: 'ellipsis-horizontal-circle', inactive: 'ellipsis-horizontal-circle-outline' },
 ];
 
+const ACTIVE_PARENT: Record<string, RouteName> = {
+  assistant: 'library',
+  calculator: 'library',
+  colors: 'library',
+  orders: 'add',
+  products: 'library',
+  takeoff: 'add',
+};
+
 export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const routeByName = new Map(state.routes.map((route, index) => [route.name, { route, index }]));
+  const focusedRoute = state.routes[state.index]?.name;
+  const activeRoute = ACTIVE_PARENT[focusedRoute] ?? focusedRoute;
 
   return (
     <View style={[styles.shell, { paddingBottom: Math.max(insets.bottom, 10) }]}>
@@ -30,8 +41,8 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
         const match = routeByName.get(tab.name);
         if (!match) return null;
 
-        const { route, index } = match;
-        const isFocused = state.index === index;
+        const { route } = match;
+        const isFocused = activeRoute === tab.name;
         const isAdd = tab.name === 'add';
         const descriptor = descriptors[route.key];
         const title = descriptor?.options.title ?? tab.label;

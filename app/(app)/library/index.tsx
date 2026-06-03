@@ -10,6 +10,7 @@ import type { Color } from '@/database/schema/colors';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { ActionCard, Badge, Card, SectionHeader } from '@/components/ui';
 import { Colors, Typography, Spacing } from '@/constants/theme';
+import { TECHNICAL_DOCS, TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
 
 const HUB_CARDS = [
   { title: 'Products', description: 'Browse seeded product data and future uploads.', icon: 'cube-outline' as const, route: '/(app)/products' },
@@ -47,7 +48,7 @@ export default function LibraryScreen() {
           </View>
           <Text style={styles.heroTitle}>Everything that backs the install lives here.</Text>
           <Text style={styles.heroBody}>
-            Product sheets, colour references, calculator inputs and guidance all share the same visual language.
+            Product sheets, colour formulas, calculator inputs and Semco technical docs all share the same visual language.
           </Text>
         </Card>
 
@@ -69,7 +70,7 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Current seed data" subtitle="This is the content available before the full product upload." />
+          <SectionHeader title="Current seed data" subtitle="Loaded content available for field lookup." />
           <View style={styles.statsRow}>
             <Card style={styles.statBox}>
               <Text style={styles.statValue}>{productCount}</Text>
@@ -79,7 +80,28 @@ export default function LibraryScreen() {
               <Text style={styles.statValue}>{colorCount}</Text>
               <Text style={styles.statLabel}>Colours</Text>
             </Card>
+            <Card style={styles.statBox}>
+              <Text style={styles.statValue}>{TECHNICAL_DOCS.length}</Text>
+              <Text style={styles.statLabel}>Docs</Text>
+            </Card>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader
+            title="Technical docs"
+            subtitle={`${TECHNICAL_DOC_PAGES.length} searchable pages loaded into Ask Semco.`}
+          />
+          {TECHNICAL_DOCS.map((doc) => (
+            <Card key={doc.id} style={styles.lineCard}>
+              <View style={styles.lineTop}>
+                <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
+                <Text style={styles.lineTitle}>{doc.title}</Text>
+                <Badge label={doc.category} variant="neutral" />
+              </View>
+              <Text style={styles.lineBody}>{doc.pageCount} page{doc.pageCount === 1 ? '' : 's'}</Text>
+            </Card>
+          ))}
         </View>
 
         <View style={styles.section}>
