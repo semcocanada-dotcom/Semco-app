@@ -2,76 +2,71 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '@/database/client';
-import { products } from '@/database/schema/products';
-import type { Product } from '@/database/schema/products';
 import { AppHeader, Badge, EmptyState, SearchBar } from '@/components/ui';
+import { TECHNICAL_DOCS, type TechnicalDoc } from '@/knowledge/technical-docs';
 import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
-const CATEGORY_BADGE: Record<string, 'warning' | 'neutral' | 'primary' | 'success'> = {
-  primer: 'warning',
-  base_coat: 'neutral',
-  finish_coat: 'primary',
-  sealer: 'success',
-  pigment: 'neutral',
-};
+const PRODUCT_DOCS = TECHNICAL_DOCS.filter((doc) =>
+  /(data sheet|datasheet|tech sheet|sds|safety|x-?bond|liquid membrane|natural shield|stone soap|cleaner|sealer|nulif?t)/i.test(
+    `${doc.title} ${doc.sourceDocument} ${doc.category}`,
+  ),
+);
 
-const CATEGORY_LABEL: Record<string, string> = {
-  primer: 'Primer',
-  base_coat: 'Base Coat',
-  finish_coat: 'Finish Coat',
-  sealer: 'Sealer',
-  pigment: 'Pigment',
-};
+function getBadgeVariant(category: string): 'warning' | 'neutral' | 'primary' | 'success' | 'accent' {
+  if (/sds|safety/i.test(category)) return 'warning';
+  if (/x-?bond/i.test(category)) return 'accent';
+  if (/liquid membrane/i.test(category)) return 'primary';
+  if (/brochure|manual/i.test(category)) return 'success';
+  return 'neutral';
+}
 
 export default function ProductsScreen() {
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allDocs, setAllDocs] = useState<TechnicalDoc[]>(PRODUCT_DOCS);
   const [query, setQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    db.select().from(products).then(setAllProducts).catch(console.error);
+    setAllDocs(PRODUCT_DOCS);
   }, []);
 
   const filtered = query.trim()
-    ? allProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.sku.toLowerCase().includes(query.toLowerCase()),
+    ? allDocs.filter(
+        (doc) =>
+          doc.title.toLowerCase().includes(query.toLowerCase()) ||
+          doc.sourceDocument.toLowerCase().includes(query.toLowerCase()) ||
+          doc.category.toLowerCase().includes(query.toLowerCase()),
       )
-    : allProducts;
+    : allDocs;
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <AppHeader title="Product Library" subtitle="Search products, SKUs, and system data." rightIcon="cube-outline" />
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search products or SKU..." showMic={false} />
+        <AppHeader title="Product Docs" subtitle="Verified Semco sheets, SDS, and technical references." rightIcon="document-text-outline" />
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search sheets, SDS, or system..." showMic={false} />
       </View>
 
       <FlatList
         data={filtered}
-        keyExtractor={(p) => p.id}
+        keyExtractor={(doc) => doc.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => router.push({ pathname: '/(app)/products/[id]', params: { id: item.id } })}
+            onPress={() => router.push('/assistant' as any)}
             style={styles.row}
             accessibilityRole="button"
-            accessibilityLabel={item.name}
+            accessibilityLabel={item.title}
           >
             <View style={styles.rowLeft}>
-              <Badge
-                label={CATEGORY_LABEL[item.category] ?? item.category}
-                variant={CATEGORY_BADGE[item.category] ?? 'neutral'}
-              />
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.sku}>{item.sku}</Text>
+              <Badge label={item.category} variant={getBadgeVariant(item.category)} />
+              <Text style={styles.productName}>{item.title}</Text>
+              <Text style={styles.sku}>{item.sourceDocument}</Text>
+              <Text style={styles.meta}>{item.pageCount} page{item.pageCount === 1 ? '' : 's'} loaded for Ask Semco</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={Colors.textDisabled} />
           </TouchableOpacity>
         )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <EmptyState icon="cube-outline" title="No products found" body="Try another product name or SKU." />
+          <EmptyState icon="document-text-outline" title="No docs found" body="Try another product, system, or SDS term." />
         }
       />
     </SafeAreaView>
@@ -103,4 +98,5 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   sku: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.medium },
+  meta: { color: Colors.textDisabled, fontSize: Typography.size.xs, fontFamily: Fonts.regular },
 });

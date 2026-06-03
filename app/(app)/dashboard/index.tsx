@@ -1,49 +1,49 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { desc } from 'drizzle-orm';
-import { BrandMark } from '@/components/brand/BrandMark';
 import { ActionCard, Badge, EmptyState, SearchBar, StatCard } from '@/components/ui';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
-import { products } from '@/database/schema/products';
 import { colors } from '@/database/schema/colors';
+import colorsData from '@/database/seed/colors.json';
 import type { Project } from '@/database/schema/projects';
-import type { Product } from '@/database/schema/products';
 import type { Color } from '@/database/schema/colors';
+import { TECHNICAL_DOCS } from '@/knowledge/technical-docs';
 import { Colors, Fonts, Spacing, Typography } from '@/constants/theme';
 
 type LoadState = {
   projects: Project[];
-  products: Product[];
   colors: Color[];
 };
 
+const STANDARD_COLORS = colorsData as Color[];
+
 const FEATURE_CARDS = [
-  { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/(app)/projects' },
-  { title: 'Photos', description: 'Capture stage', icon: 'camera-outline' as const, tone: 'accent' as const, route: '/(app)/add' },
-  { title: 'Batches', description: 'Track pours', icon: 'layers-outline' as const, tone: 'neutral' as const, route: '/(app)/library' },
-  { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'primary' as const, route: '/(app)/calculator' },
-  { title: 'Takeoff', description: 'Measure scope', icon: 'triangle-outline' as const, tone: 'accent' as const, route: '/(app)/takeoff' },
-  { title: 'Library', description: 'System guide', icon: 'book-outline' as const, tone: 'neutral' as const, route: '/(app)/library' },
+  { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/projects' },
+  { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'accent' as const, route: '/calculator' },
+  { title: 'Takeoff', description: 'Measure scope', icon: 'triangle-outline' as const, tone: 'primary' as const, route: '/takeoff' },
+  { title: 'Photos', description: 'Capture stage', icon: 'camera-outline' as const, tone: 'accent' as const, route: '/add' },
+  { title: 'Product Docs', description: 'Verified sheets', icon: 'document-text-outline' as const, tone: 'neutral' as const, route: '/products' },
+  { title: 'Library', description: 'Manuals + tools', icon: 'book-outline' as const, tone: 'primary' as const, route: '/library' },
 ];
 
 export default function DashboardScreen() {
   const router = useRouter();
   const push = (href: string) => router.push(href as any);
-  const [state, setState] = useState<LoadState>({ projects: [], products: [], colors: [] });
+  const [state, setState] = useState<LoadState>({ projects: [], colors: STANDARD_COLORS });
 
   useEffect(() => {
     Promise.all([
       db.select().from(projects).orderBy(desc(projects.updatedAt)),
-      db.select().from(products).orderBy(desc(products.updatedAt)),
       db.select().from(colors).orderBy(desc(colors.updatedAt)),
     ])
-      .then(([projectRows, productRows, colorRows]) => {
-        setState({ projects: projectRows, products: productRows, colors: colorRows });
+      .then(([projectRows, colorRows]) => {
+        setState({ projects: projectRows, colors: colorRows.length > 0 ? colorRows : STANDARD_COLORS });
       })
       .catch(console.error);
   }, []);
@@ -54,10 +54,10 @@ export default function DashboardScreen() {
     return [
       { label: 'Projects', value: String(state.projects.length || 0), detail: 'Total', icon: 'folder-open-outline' as const, tone: 'primary' as const },
       { label: 'In Progress', value: String(active || 0), detail: 'Live jobs', icon: 'pulse-outline' as const, tone: 'accent' as const },
-      { label: 'Products', value: String(state.products.length || 0), detail: 'Catalog', icon: 'cube-outline' as const, tone: 'primary' as const },
-      { label: 'Colors', value: String(state.colors.length || 0), detail: 'Matched', icon: 'color-palette-outline' as const, tone: 'accent' as const },
+      { label: 'Colours', value: String(state.colors.length || STANDARD_COLORS.length), detail: 'Formulas', icon: 'color-palette-outline' as const, tone: 'accent' as const },
+      { label: 'Docs', value: String(TECHNICAL_DOCS.length), detail: 'Semco sheets', icon: 'document-text-outline' as const, tone: 'primary' as const },
     ];
-  }, [state.projects, state.products, state.colors]);
+  }, [state.projects, state.colors]);
 
   const recentProjects = state.projects.slice(0, 3);
 
@@ -66,7 +66,13 @@ export default function DashboardScreen() {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.tealHeader}>
           <View style={styles.logoRow}>
-            <BrandMark compact />
+            <View style={styles.logoCard}>
+              <Image
+                source={require('../../../assets/images/semco-surfaces-logo.png')}
+                style={styles.logoImage}
+                contentFit="contain"
+              />
+            </View>
             <TouchableOpacity style={styles.notificationButton} accessibilityLabel="Notifications">
               <Ionicons name="notifications-outline" size={22} color={Colors.navy} />
               <View style={styles.notificationDot} />
@@ -89,6 +95,23 @@ export default function DashboardScreen() {
             onPressIn={() => push('/(app)/assistant')}
             containerStyle={styles.askBar}
           />
+
+          <TouchableOpacity
+            style={styles.colourHero}
+            onPress={() => push('/colors')}
+            activeOpacity={0.84}
+            accessibilityRole="button"
+            accessibilityLabel="Open Semco colours and formulas"
+          >
+            <View style={styles.colourHeroIcon}>
+              <Ionicons name="color-palette-outline" size={26} color={Colors.white} />
+            </View>
+            <View style={styles.colourHeroText}>
+              <Text style={styles.colourHeroTitle}>Colours</Text>
+              <Text style={styles.colourHeroSubtitle}>Swatches, names, and XBond formulas</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.semcoOrange} />
+          </TouchableOpacity>
 
           <View style={styles.featureGrid}>
             {FEATURE_CARDS.map((card) => (
@@ -169,6 +192,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  logoCard: {
+    flex: 1,
+    maxWidth: 230,
+    height: 58,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  logoImage: {
+    width: '100%',
+    height: 42,
   },
   notificationButton: {
     width: 48,
@@ -214,10 +253,46 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   featureCard: {
-    width: '31.6%',
-    flexBasis: '31.6%',
+    width: '48.5%',
+    flexBasis: '48.5%',
     flexGrow: 0,
     flexShrink: 0,
+  },
+  colourHero: {
+    minHeight: 76,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.accentMuted,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  colourHeroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: Colors.semcoOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  colourHeroText: { flex: 1, gap: 2 },
+  colourHeroTitle: {
+    color: Colors.navy,
+    fontSize: Typography.size.lg,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  colourHeroSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.medium,
   },
   askBar: {
     shadowColor: '#000',
