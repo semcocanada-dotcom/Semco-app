@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, SectionHeader, Badge, ActionCard } from '@/components/ui';
+import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 
 const SETTINGS = [
@@ -57,10 +58,10 @@ export default function MoreScreen() {
           <Card style={styles.statusCard}>
             <View style={styles.statusRow}>
               <Ionicons name="shield-checkmark-outline" size={18} color={Colors.primary} />
-              <Text style={styles.statusTitle}>Design shell ready</Text>
+              <Text style={styles.statusTitle}>{BUILD_LABEL}</Text>
             </View>
             <Text style={styles.statusBody}>
-              Dashboard, navigation and library hubs are now wired in the new visual style. Takeoff and order flows can be expanded next.
+              {BUILD_NOTE}. If this marker is visible, the device is running the latest Semco preview build from GitHub.
             </Text>
           </Card>
         </View>
