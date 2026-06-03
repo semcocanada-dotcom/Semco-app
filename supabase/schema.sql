@@ -146,7 +146,9 @@ CREATE TABLE providers (
   notes          TEXT,
   is_approved_sk BOOLEAN NOT NULL DEFAULT true,
   parent_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,  -- NULL = global seed
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  lat            DOUBLE PRECISION,  -- geocoded from address (server-side)
+  lng            DOUBLE PRECISION
 );
 
 CREATE INDEX idx_providers_category ON providers(category, is_approved_sk);

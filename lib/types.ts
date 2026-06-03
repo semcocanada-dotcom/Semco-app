@@ -74,6 +74,8 @@ export interface Provider {
   is_approved_sk: boolean;
   parent_id: string | null;
   created_at: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface Expense {

@@ -60,7 +60,41 @@ const SK_CITIES: Record<string, { lat: number; lng: number }> = {
   'White City':        { lat: 50.4422,  lng: -104.3597 },
   'Martensville':      { lat: 52.2894,  lng: -106.6686 },
   'Warman':            { lat: 52.3214,  lng: -106.5836 },
+  // Additional towns from provider addresses
+  'Elrose':            { lat: 51.2796,  lng: -108.0118 },
+  'Rosthern':          { lat: 52.6657,  lng: -106.3272 },
+  'Langenburg':        { lat: 50.8465,  lng: -101.7120 },
+  'Arcola':            { lat: 49.6294,  lng: -102.5051 },
+  'Wawota':            { lat: 49.8907,  lng: -101.9375 },
+  'Craven':            { lat: 50.5889,  lng: -104.9846 },
+  'Osler':             { lat: 52.3763,  lng: -106.5856 },
+  'Duck Lake':         { lat: 52.8163,  lng: -106.2484 },
+  'Duck':              { lat: 52.8163,  lng: -106.2484 }, // alias for Duck Lake
+  'Dundurn':           { lat: 51.7744,  lng: -106.4961 },
+  'Aylesbury':         { lat: 50.5500,  lng: -104.7500 },
+  'Assiniboia':        { lat: 49.6331,  lng: -105.9798 },
+  'Biggar':            { lat: 52.0595,  lng: -107.9791 },
+  'Wilkie':            { lat: 52.4176,  lng: -108.7058 },
+  'Unity':             { lat: 52.4525,  lng: -109.1614 },
+  'Esterhazy':         { lat: 50.6511,  lng: -102.0832 },
+  'Grenfell':          { lat: 50.4139,  lng: -102.9280 },
+  'Waskatenau':        { lat: 54.0767,  lng: -112.7750 },
+  'Lloydminster, AB':  { lat: 53.2784,  lng: -110.0053 },
+  'Southwest':         { lat: 50.2896,  lng: -107.7965 }, // Swift Current region
 };
+
+// Extracts city name from an address like "101-123 Main St, Saskatoon, SK"
+function parseCityFromAddress(address: string): string | null {
+  const parts = address.split(',').map(s => s.trim()).filter(Boolean);
+  // Walk backward: skip province/territory codes and the last segment if it's 2-chars
+  for (let i = parts.length - 1; i >= 1; i--) {
+    const seg = parts[i];
+    if (seg.length <= 3 || /^(SK|AB|MB|BC|ON)$/.test(seg)) continue;
+    if (/^\d/.test(seg)) continue; // postal code starts with digit
+    return seg;
+  }
+  return null;
+}
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
@@ -497,13 +531,22 @@ export default function ProvidersScreen() {
   // ── Attach distances + sort ──────────────────────────────────────────────────
   const sortedProviders = useMemo((): ProviderWithDist[] => {
     const withDist = providers.map(p => {
-      // Prefer the provider's own geocoded address; fall back to city centroid.
-      const exact = p.address ? addrCoords.get(p.address.trim()) : undefined;
-      const target = exact ?? SK_CITIES[p.city ?? ''];
+      // Priority 1: coordinates stored in DB (populated by server-side geocoding)
+      const dbCoords = (p.lat != null && p.lng != null) ? { lat: p.lat, lng: p.lng } : undefined;
+      // Priority 2: on-device geocache result for this address
+      const geocached = p.address ? addrCoords.get(p.address.trim()) : undefined;
+      // Priority 3: city parsed from the address string (more accurate than service-area city column)
+      const addrCity = p.address ? parseCityFromAddress(p.address) : null;
+      const addrCityCoords = addrCity ? SK_CITIES[addrCity] : undefined;
+      // Priority 4: service-area city column as last resort
+      const cityCoords = SK_CITIES[p.city ?? ''];
+
+      const target = dbCoords ?? geocached ?? addrCityCoords ?? cityCoords;
+      const isExact = !!(dbCoords || geocached);
       const distanceKm = userCoords && target
         ? haversineKm(userCoords.lat, userCoords.lng, target.lat, target.lng)
         : null;
-      return { ...p, distanceKm, exactDistance: !!exact };
+      return { ...p, distanceKm, exactDistance: isExact };
     });
 
     return withDist.sort((a, b) => {
