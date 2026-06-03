@@ -16,7 +16,7 @@ import { colors } from '@/database/schema/colors';
 import type { Color, PigmentRatio } from '@/database/schema/colors';
 import { Card, Badge } from '@/components/ui';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
-import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 
 export default function ColorDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -65,10 +65,16 @@ export default function ColorDetailScreen() {
             contentFit="cover"
             transition={200}
           />
+        ) : color.swatchHex ? (
+          <View style={[styles.photo, styles.swatchPanel, { backgroundColor: color.swatchHex }]}>
+            <View style={styles.swatchCodePill}>
+              <Text style={styles.swatchCodeText}>{color.swatchHex}</Text>
+            </View>
+          </View>
         ) : (
           <View style={[styles.photo, styles.photoPlaceholder]}>
             <Ionicons name="image-outline" size={40} color={Colors.textDisabled} />
-            <Text style={styles.photoPlaceholderText}>No photo yet</Text>
+            <Text style={styles.photoPlaceholderText}>No swatch yet</Text>
           </View>
         )}
 
@@ -95,9 +101,28 @@ const styles = StyleSheet.create({
   code: { color: Colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
   photo: {
     width: '100%',
-    height: 220,
+    height: 180,
     borderRadius: Radius.lg,
     backgroundColor: Colors.surfaceElevated,
+  },
+  swatchPanel: {
+    justifyContent: 'flex-end',
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  swatchCodePill: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.white,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+  },
+  swatchCodeText: {
+    color: Colors.navy,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
   },
   photoPlaceholder: { alignItems: 'center', justifyContent: 'center', gap: Spacing.sm },
   photoPlaceholderText: { color: Colors.textDisabled, fontSize: Typography.size.sm },
@@ -106,7 +131,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0,
     marginBottom: Spacing.sm,
   },
   notesText: { color: Colors.textPrimary, fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },

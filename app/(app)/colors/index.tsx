@@ -31,14 +31,14 @@ export default function ColorsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <AppHeader title="Color Library" subtitle="Look up standard colors and saved custom mixes." rightIcon="color-palette-outline" />
+        <AppHeader title="Color Library" subtitle={`${standard.length || allColors.length} XBond colors`} rightIcon="color-palette-outline" />
         <Button label="Add Color" variant="primary" onPress={() => router.push('/(app)/colors/create')} fullWidth />
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search by name or code..." showMic={false} />
       </View>
 
       <FlatList
         data={[
-          ...(standard.length > 0 ? [{ type: 'header', label: 'Standard Semco Colors' } as const] : []),
+          ...(standard.length > 0 ? [{ type: 'header', label: `Standard Semco Colors (${standard.length})` } as const] : []),
           ...standard.map((c) => ({ type: 'color', color: c } as const)),
           ...(custom.length > 0 ? [{ type: 'header', label: 'My Custom Colors' } as const] : []),
           ...custom.map((c) => ({ type: 'color', color: c } as const)),

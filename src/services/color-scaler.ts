@@ -55,11 +55,11 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
 function formatMl(ml: number): string {
   if (ml === 0) return '0 ml';
   if (ml >= 1000) return `${(ml / 1000).toFixed(2)} L`;
-  if (ml < 1) return `${(ml * 1000).toFixed(0)} µl`;
+  if (ml < 1) return `${(ml * 1000).toFixed(0)} ul`;
   return `${Number.isInteger(ml) ? ml.toFixed(0) : ml.toFixed(1)} ml`;
 }
 
-/** For custom colours — installer enters ml per quart, we auto-scale. */
+/** For custom colours, installer enters ml per quart and the app auto-scales. */
 export function buildPigmentRatio(
   pigmentCode: string,
   pigmentName: string,

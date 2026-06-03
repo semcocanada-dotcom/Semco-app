@@ -21,7 +21,7 @@ export function ColorSwatch({ color, onPress, style, showCode = true }: ColorSwa
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={`Color: ${color.name}`}
     >
-      <View style={styles.swatch} />
+      <View style={[styles.swatch, { backgroundColor: color.swatchHex ?? Colors.softGrey }]} />
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>{color.name}</Text>
         {showCode && color.code ? (
@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
   },
   swatch: {
     width: TAP_TARGET_MIN,
-    height: TAP_TARGET_MIN,
-    backgroundColor: Colors.border,
+    alignSelf: 'stretch',
+    minHeight: TAP_TARGET_MIN,
   },
   info: { flex: 1, gap: 2 },
   name: {

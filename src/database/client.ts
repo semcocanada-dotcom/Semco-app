@@ -61,6 +61,7 @@ export async function initDatabase() {
       is_standard INTEGER NOT NULL DEFAULT 1,
       installer_id TEXT,
       pigments TEXT NOT NULL DEFAULT '[]',
+      swatch_hex TEXT,
       photo_url TEXT,
       notes TEXT,
       created_at TEXT NOT NULL,
@@ -150,6 +151,12 @@ export async function initDatabase() {
     );
     CREATE INDEX IF NOT EXISTS conversations_installer_idx ON conversations(installer_id);
   `);
+
+  try {
+    await sqlite.execAsync(`ALTER TABLE colors ADD COLUMN swatch_hex TEXT;`);
+  } catch {
+    // Existing local databases may already have the column.
+  }
 }
 
 export { sqlite };

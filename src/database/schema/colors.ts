@@ -10,6 +10,7 @@ export const colors = sqliteTable(
     installerId: text('installer_id'),
     // JSON: [{pigmentSku: string, ratioGPerKg: number}]
     pigments: text('pigments', { mode: 'json' }).notNull().default('[]'),
+    swatchHex: text('swatch_hex'),
     photoUrl: text('photo_url'),
     notes: text('notes'),
     createdAt: text('created_at').notNull(),

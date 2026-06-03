@@ -19,6 +19,7 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
       <Text style={styles.heading}>{colorName}</Text>
       <Text style={styles.subheading}>XBond tint formula</Text>
 
+      <Text style={styles.selectorLabel}>Batch size</Text>
       <View style={styles.batchSelector}>
         {BATCH_SIZES.map((b) => (
           <TouchableOpacity
@@ -66,10 +67,17 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   subheading: { color: Colors.textSecondary, fontSize: Typography.size.sm, marginTop: 2 },
+  selectorLabel: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semibold,
+    textTransform: 'uppercase',
+    marginTop: Spacing.md,
+  },
   batchSelector: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
   },
   batchBtn: {
     flex: 1,
