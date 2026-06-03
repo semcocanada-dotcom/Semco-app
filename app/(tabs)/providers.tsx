@@ -21,7 +21,8 @@ import { router } from 'expo-router';
 import { AppLogo } from '@components/AppLogo';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
-import { geocodeAddress } from '@lib/geocoding';
+import { geocodeAddress, type Coords } from '@lib/geocoding';
+import { resolveAddressCoords } from '@lib/geocodeCache';
 import { useAuth } from '@context/AuthContext';
 import type { Provider, ProviderCategory } from '@lib/types';
 
@@ -196,7 +197,7 @@ function openInMaps(address: string) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ProviderWithDist = Provider & { distanceKm: number | null };
+type ProviderWithDist = Provider & { distanceKm: number | null; exactDistance?: boolean };
 
 // ─── ProviderCard ─────────────────────────────────────────────────────────────
 
@@ -230,7 +231,9 @@ function ProviderCard({ provider, onPress }: { provider: ProviderWithDist; onPre
             <Text style={s.cardCity}>
               {provider.city}, SK
               {provider.distanceKm !== null
-                ? `  •  ${fmtKm(provider.distanceKm)} to town`
+                ? provider.exactDistance
+                  ? `  •  ${provider.distanceKm < 10 ? provider.distanceKm.toFixed(1) : Math.round(provider.distanceKm)} km away`
+                  : `  •  ${fmtKm(provider.distanceKm)} to town`
                 : ''}
             </Text>
           </View>
@@ -419,6 +422,7 @@ export default function ProvidersScreen() {
   const [userCoords,     setUserCoords]     = useState<{ lat: number; lng: number } | null>(null);
   const [locationLabel,  setLocationLabel]  = useState('Saskatchewan');
   const [locLoading,     setLocLoading]     = useState(true);
+  const [addrCoords,     setAddrCoords]     = useState<Map<string, Coords>>(new Map());
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Fetch providers ──────────────────────────────────────────────────────────
@@ -433,6 +437,24 @@ export default function ProvidersScreen() {
         setLoading(false);
       });
   }, []);
+
+  // ── Geocode provider street addresses (cached per device) ────────────────────
+  // Only matters once we know where the user is; resolves each distinct address
+  // once via the free geocoder and caches it, then per-provider distances are exact.
+  useEffect(() => {
+    if (!userCoords || providers.length === 0) return;
+    let cancelled = false;
+    const addresses = providers
+      .map(p => p.address?.trim())
+      .filter((a): a is string => !!a);
+    if (addresses.length === 0) return;
+    resolveAddressCoords(addresses, partial => {
+      if (!cancelled) setAddrCoords(new Map(partial));
+    }).then(final => {
+      if (!cancelled) setAddrCoords(final);
+    });
+    return () => { cancelled = true; };
+  }, [providers, userCoords]);
 
   // ── Resolve user location ────────────────────────────────────────────────────
   useEffect(() => {
@@ -475,11 +497,13 @@ export default function ProvidersScreen() {
   // ── Attach distances + sort ──────────────────────────────────────────────────
   const sortedProviders = useMemo((): ProviderWithDist[] => {
     const withDist = providers.map(p => {
-      const cityCoords = SK_CITIES[p.city ?? ''];
-      const distanceKm = userCoords && cityCoords
-        ? haversineKm(userCoords.lat, userCoords.lng, cityCoords.lat, cityCoords.lng)
+      // Prefer the provider's own geocoded address; fall back to city centroid.
+      const exact = p.address ? addrCoords.get(p.address.trim()) : undefined;
+      const target = exact ?? SK_CITIES[p.city ?? ''];
+      const distanceKm = userCoords && target
+        ? haversineKm(userCoords.lat, userCoords.lng, target.lat, target.lng)
         : null;
-      return { ...p, distanceKm };
+      return { ...p, distanceKm, exactDistance: !!exact };
     });
 
     return withDist.sort((a, b) => {
@@ -488,7 +512,7 @@ export default function ProvidersScreen() {
       if (b.distanceKm === null) return -1;
       return a.distanceKm - b.distanceKm;
     });
-  }, [providers, userCoords]);
+  }, [providers, userCoords, addrCoords]);
 
   // ── Filter ───────────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
