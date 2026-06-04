@@ -1,6 +1,6 @@
 import type { SubstrateId } from '@/constants/substrates';
 
-export type CoverageUnit = 'kit' | 'gal';
+export type CoverageUnit = 'bag' | 'kit' | 'gal';
 export type CoverageCategory = 'microcement' | 'waterproofing' | 'sealer';
 
 export interface CoverageRange {
@@ -47,48 +47,48 @@ const XBOND: CoverageProduct = {
   sku: 'XBOND-MICROCEMENT',
   name: 'SEMCO X-Bond Microcement',
   category: 'microcement',
-  packLabel: '2 gal X-Bond Liquid + 1 x 50 lb X-Bond Stone',
+  packLabel: '1 x 50 lb X-Bond Stone bag + matching X-Bond Liquid',
   defaultRange: 'concrete',
   ranges: {
     concrete: {
-      label: 'Existing concrete',
-      minSqftPerUnit: 60,
+      label: 'Finished X-Bond bag',
+      minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
-      unit: 'kit',
+      unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Coverage per 2 gal X-Bond Liquid and 1 x 50 lb X-Bond Stone at 1/8 inch application.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
     },
     painted: {
-      label: 'Painted surface',
-      minSqftPerUnit: 60,
+      label: 'Finished X-Bond bag',
+      minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
-      unit: 'kit',
+      unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Coverage per 2 gal X-Bond Liquid and 1 x 50 lb X-Bond Stone at 1/8 inch application.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
     },
     tile: {
-      label: 'Ceramic tile',
-      minSqftPerUnit: 55,
+      label: 'Finished X-Bond bag',
+      minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
-      unit: 'kit',
+      unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Coverage per 2 gal X-Bond Liquid and 1 x 50 lb X-Bond Stone at 1/8 inch application.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
     },
     naturalStone: {
-      label: 'Natural stone',
-      minSqftPerUnit: 50,
-      maxSqftPerUnit: 100,
-      unit: 'kit',
+      label: 'Finished X-Bond bag',
+      minSqftPerUnit: 75,
+      maxSqftPerUnit: 75,
+      unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Coverage per 2 gal X-Bond Liquid and 1 x 50 lb X-Bond Stone at 1/8 inch application.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
     },
   },
 };
@@ -313,16 +313,20 @@ export function getSealerRange(product: CoverageProduct): CoverageRange {
   return product.ranges[product.defaultRange];
 }
 
-export function estimateCoverage(product: CoverageProduct, range: CoverageRange, areaSqm: number, wastePct: number): CoverageEstimate {
-  const adjustedSqft = areaSqm * SQFT_PER_SQM * (1 + wastePct / 100);
+export function estimateCoverage(product: CoverageProduct, range: CoverageRange, areaSqft: number, wastePct: number): CoverageEstimate {
+  const adjustedSqft = areaSqft * (1 + wastePct / 100);
   const avgCoverage = (range.minSqftPerUnit + range.maxSqftPerUnit) / 2;
   const exactUnits = adjustedSqft / avgCoverage;
   const roundedUnits = Math.max(1, Math.ceil(exactUnits));
-  const unitLabel = range.unit === 'kit' ? 'kit' : 'gal';
+  const unitLabel = range.unit;
   const plural = roundedUnits === 1 ? unitLabel : `${unitLabel}s`;
-  const quantityLabel = `${formatQuantity(range.unit === 'kit' ? roundedUnits : exactUnits)} ${range.unit === 'kit' ? plural : unitLabel}`;
+  const exactLabel = range.minSqftPerUnit === range.maxSqftPerUnit
+    ? `${range.minSqftPerUnit} sq ft/${unitLabel}`
+    : `${range.minSqftPerUnit}-${range.maxSqftPerUnit} sq ft/${unitLabel}`;
+  const isWholeUnit = range.unit === 'kit' || range.unit === 'bag';
+  const quantityLabel = `${formatQuantity(isWholeUnit ? roundedUnits : exactUnits)} ${isWholeUnit ? plural : unitLabel}`;
   const purchaseLabel =
-    range.unit === 'kit'
+    isWholeUnit
       ? `${roundedUnits} ${plural} to stage`
       : `Round up to ${roundedUnits} ${roundedUnits === 1 ? 'gal' : 'gals'} for ordering`;
 
@@ -332,7 +336,7 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
     exactUnits,
     roundedUnits,
     adjustedSqft,
-    coverageLabel: `${range.label}: ${range.minSqftPerUnit}-${range.maxSqftPerUnit} sq ft/${unitLabel}`,
+    coverageLabel: `${range.label}: ${exactLabel}`,
     quantityLabel,
     purchaseLabel,
   };

@@ -13,24 +13,30 @@ import type { CoverageEstimate } from '@/constants/product-coverage';
 import type { CalculationResult, MaterialLayer } from '@/database/schema/calculations';
 
 interface CalculatorInput {
-  areaSqm: number;
+  areaSqft?: number;
+  areaSqm?: number;
   substrateType: SubstrateId;
   wastePct: number;
   sealerSku?: string;
 }
 
 export function calculate(input: CalculatorInput): CalculationResult {
-  const { areaSqm, substrateType, wastePct, sealerSku } = input;
+  const { substrateType, wastePct, sealerSku } = input;
+  const areaSqft = input.areaSqft ?? (input.areaSqm ? input.areaSqm * SQFT_PER_SQM : 0);
+  const areaSqm = areaSqft / SQFT_PER_SQM;
 
   if (!SUBSTRATE_MAP[substrateType]) {
     throw new Error(`No substrate found: ${substrateType}`);
   }
+  if (!areaSqft || areaSqft <= 0) {
+    throw new Error('Please enter a valid area greater than 0');
+  }
 
   const sealerProduct = getSealerProduct(sealerSku);
   const estimates = [
-    estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqm, wastePct),
-    estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, getLiquidMembraneRange(substrateType), areaSqm, wastePct),
-    estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqm, wastePct),
+    estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqft, wastePct),
+    estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, getLiquidMembraneRange(substrateType), areaSqft, wastePct),
+    estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqft, wastePct),
   ];
 
   return {
@@ -38,7 +44,8 @@ export function calculate(input: CalculatorInput): CalculationResult {
     totalKg: 0,
     wastePct,
     areaSqm,
-    sourceSummary: 'Coverage is calculated from loaded Semco technical sheets. Quantities are internal estimates only.',
+    areaSqft,
+    sourceSummary: 'Coverage is calculated from Semco technical sheets plus the configured X-Bond field bag rate. Quantities are internal estimates only.',
   };
 }
 

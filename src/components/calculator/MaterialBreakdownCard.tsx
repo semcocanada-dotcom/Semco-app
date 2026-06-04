@@ -21,12 +21,15 @@ interface MaterialBreakdownCardProps {
 
 export function MaterialBreakdownCard({ result }: MaterialBreakdownCardProps) {
   const usesDocUnits = result.layers.some((layer) => Boolean(layer.quantityLabel));
+  const areaLabel = result.areaSqft
+    ? `${formatArea(result.areaSqft)} sq ft`
+    : `${formatArea(result.areaSqm)} m2`;
 
   return (
     <Card>
       <Text style={styles.heading}>Material Breakdown</Text>
       <Text style={styles.subheading}>
-        {result.areaSqm} m2 - {result.wastePct}% waste included
+        {areaLabel} - {result.wastePct}% waste included
       </Text>
       {result.sourceSummary ? <Text style={styles.sourceSummary}>{result.sourceSummary}</Text> : null}
 
@@ -45,6 +48,10 @@ export function MaterialBreakdownCard({ result }: MaterialBreakdownCardProps) {
       </View>
     </Card>
   );
+}
+
+function formatArea(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function LayerRow({ layer }: { layer: MaterialLayer }) {

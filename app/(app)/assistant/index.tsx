@@ -10,7 +10,9 @@ import {
   Platform,
   SafeAreaView,
   Alert,
+  Keyboard,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAssistant } from '@/hooks/useAssistant';
 import { ChatBubble } from '@/components/assistant/ChatBubble';
@@ -19,14 +21,8 @@ import { OfflineBanner } from '@/components/assistant/OfflineBanner';
 import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
-const PLACEHOLDER_SUGGESTIONS = [
-  'Primer for heated floors',
-  'Curing time between coats',
-  'Fix pinholing in finish coat',
-  'Mix ratio for 5 kg base coat',
-];
-
 export default function AssistantScreen() {
+  const router = useRouter();
   const { messages, isLoading, error, send, clearHistory, isOnline } = useAssistant();
   const [inputText, setInputText] = React.useState('');
   const listRef = useRef<FlatList<ConversationMessage>>(null);
@@ -38,7 +34,14 @@ export default function AssistantScreen() {
     send(text);
   };
 
-  const handleSuggestion = (text: string) => send(text);
+  const handleBack = () => {
+    Keyboard.dismiss();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.push('/library' as any);
+    }
+  };
 
   const handleClearHistory = () => {
     Alert.alert(
@@ -62,6 +65,14 @@ export default function AssistantScreen() {
       {!isOnline && <OfflineBanner />}
 
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={styles.backBtn}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+        >
+          <Ionicons name="chevron-back" size={22} color={Colors.navy} />
+        </TouchableOpacity>
         <View style={styles.headerContent}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>Ask Semco</Text>
@@ -70,7 +81,7 @@ export default function AssistantScreen() {
             </View>
           </View>
           <Text style={styles.subtitle}>
-            Fast answers from the Semco knowledge base, with source labels when offline.
+            Direct answers from Semco docs, with source labels when available.
           </Text>
         </View>
         {messages.length > 0 && (
@@ -88,22 +99,10 @@ export default function AssistantScreen() {
         <View style={styles.emptyState}>
           <View style={styles.heroCard}>
             <Ionicons name="document-text-outline" size={34} color={Colors.primary} />
-            <Text style={styles.emptyTitle}>Ask about products, process, or troubleshooting</Text>
+            <Text style={styles.emptyTitle}>Ask a Semco install question</Text>
             <Text style={styles.emptyBody}>
-              Built for quick lookup. Keep it short, and the assistant will search the manual first.
+              Type the exact jobsite question. The assistant will answer directly and cite the closest source when it has one.
             </Text>
-          </View>
-          <View style={styles.suggestions}>
-            {PLACEHOLDER_SUGGESTIONS.map((s) => (
-              <TouchableOpacity
-                key={s}
-                onPress={() => handleSuggestion(s)}
-                style={styles.suggestionChip}
-              >
-                <Text style={styles.suggestionText}>{s}</Text>
-                <Ionicons name="chevron-forward" size={16} color={Colors.textDisabled} />
-              </TouchableOpacity>
-            ))}
           </View>
         </View>
       ) : (
@@ -125,6 +124,14 @@ export default function AssistantScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.inputBar}>
+          <TouchableOpacity
+            onPress={Keyboard.dismiss}
+            style={styles.dismissBtn}
+            accessibilityLabel="Dismiss keyboard"
+            accessibilityRole="button"
+          >
+            <Ionicons name="chevron-down" size={20} color={Colors.primary} />
+          </TouchableOpacity>
           <TextInput
             style={styles.input}
             value={inputText}
@@ -161,6 +168,16 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     paddingBottom: Spacing.sm,
     gap: Spacing.sm,
+  },
+  backBtn: {
+    width: TAP_TARGET_MIN,
+    height: TAP_TARGET_MIN,
+    borderRadius: TAP_TARGET_MIN / 2,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerContent: { flex: 1 },
   titleRow: {
@@ -218,20 +235,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.5,
   },
-  suggestions: { gap: Spacing.sm, width: '100%' },
-  suggestionChip: {
-    backgroundColor: Colors.white,
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  suggestionText: { color: Colors.navy, fontSize: Typography.size.sm, fontFamily: Fonts.medium, flex: 1 },
   error: {
     color: Colors.danger,
     fontSize: Typography.size.sm,
@@ -246,6 +249,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     backgroundColor: Colors.white,
+  },
+  dismissBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.lightTeal,
+    marginBottom: 4,
   },
   input: {
     flex: 1,

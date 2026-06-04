@@ -4,7 +4,7 @@ import type { SubstrateId } from '@/constants/substrates';
 import type { CalculationResult } from '@/database/schema/calculations';
 
 interface CalculatorState {
-  areaSqm: string;
+  areaSqft: string;
   substrateType: SubstrateId | null;
   wastePct: number;
   sealerSku: string;
@@ -12,7 +12,7 @@ interface CalculatorState {
 
 export function useCalculator() {
   const [form, setForm] = useState<CalculatorState>({
-    areaSqm: '',
+    areaSqft: '',
     substrateType: null,
     wastePct: 10,
     sealerSku: 'SATIN-STONE',
@@ -20,14 +20,14 @@ export function useCalculator() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const setAreaSqm = useCallback((v: string) => setForm((f) => ({ ...f, areaSqm: v })), []);
+  const setAreaSqft = useCallback((v: string) => setForm((f) => ({ ...f, areaSqft: v })), []);
   const setSubstrate = useCallback((v: SubstrateId) => setForm((f) => ({ ...f, substrateType: v })), []);
   const setWastePct = useCallback((v: number) => setForm((f) => ({ ...f, wastePct: v })), []);
   const setSealerSku = useCallback((v: string) => setForm((f) => ({ ...f, sealerSku: v })), []);
 
   const runCalculation = useCallback(() => {
     setError(null);
-    const area = parseFloat(form.areaSqm);
+    const area = parseFloat(form.areaSqft);
 
     if (isNaN(area) || area <= 0) {
       setError('Please enter a valid area greater than 0');
@@ -40,7 +40,7 @@ export function useCalculator() {
 
     try {
       const res = calculate({
-        areaSqm: area,
+        areaSqft: area,
         substrateType: form.substrateType,
         wastePct: form.wastePct,
         sealerSku: form.sealerSku,
@@ -54,14 +54,14 @@ export function useCalculator() {
   const reset = useCallback(() => {
     setResult(null);
     setError(null);
-    setForm({ areaSqm: '', substrateType: null, wastePct: 10, sealerSku: 'SATIN-STONE' });
+    setForm({ areaSqft: '', substrateType: null, wastePct: 10, sealerSku: 'SATIN-STONE' });
   }, []);
 
   return {
     form,
     result,
     error,
-    setAreaSqm,
+    setAreaSqft,
     setSubstrate,
     setWastePct,
     setSealerSku,

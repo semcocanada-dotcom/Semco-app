@@ -9,11 +9,10 @@ import { WasteToggle } from '@/components/calculator/WasteToggle';
 import { SEALER_OPTIONS } from '@/constants/product-coverage';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
-const CALCULATOR_LIST = [
-  { title: 'Coverage Calculator', body: 'Uses Semco tech sheet coverage by area and substrate', icon: 'calculator-outline' as const },
-  { title: 'Material Estimator', body: 'Shows kits, gallons, and the source sheet for each line', icon: 'reader-outline' as const },
-  { title: 'Mix Ratio Calculator', body: 'Calculate mix ratios and component amounts', icon: 'beaker-outline' as const },
-  { title: 'Cost Calculator', body: 'Estimate project costs and budget', icon: 'cash-outline' as const },
+const ESTIMATOR_POINTS = [
+  'X-Bond bags at 75 sq ft finished per bag',
+  'Liquid Membrane gallons by substrate type',
+  'Natural, Satin, or Gloss sealer coverage',
 ];
 
 export default function CalculatorScreen() {
@@ -21,7 +20,7 @@ export default function CalculatorScreen() {
     form,
     result,
     error,
-    setAreaSqm,
+    setAreaSqft,
     setSubstrate,
     setWastePct,
     setSealerSku,
@@ -38,19 +37,25 @@ export default function CalculatorScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <AppHeader title="Calculators" subtitle="Fast field math for estimating and planning." rightIcon="ellipsis-vertical" />
 
-          <View style={styles.calculatorList}>
-            {CALCULATOR_LIST.map((item) => (
-              <Card key={item.title} style={styles.calculatorRow}>
-                <View style={styles.calculatorIcon}>
-                  <Ionicons name={item.icon} size={24} color={Colors.white} />
+          <Card style={styles.infoCard}>
+            <View style={styles.calculatorRow}>
+              <View style={styles.calculatorIcon}>
+                <Ionicons name="calculator-outline" size={24} color={Colors.white} />
+              </View>
+              <View style={styles.calculatorCopy}>
+                <Text style={styles.calculatorTitle}>Coverage estimator</Text>
+                <Text style={styles.calculatorBody}>This is one estimating tool, not four separate buttons.</Text>
+              </View>
+            </View>
+            <View style={styles.pointList}>
+              {ESTIMATOR_POINTS.map((point) => (
+                <View key={point} style={styles.pointRow}>
+                  <Ionicons name="checkmark-circle-outline" size={16} color={Colors.primary} />
+                  <Text style={styles.pointText}>{point}</Text>
                 </View>
-                <View style={styles.calculatorCopy}>
-                  <Text style={styles.calculatorTitle}>{item.title}</Text>
-                  <Text style={styles.calculatorBody}>{item.body}</Text>
-                </View>
-              </Card>
-            ))}
-          </View>
+              ))}
+            </View>
+          </Card>
 
           <Card style={styles.formCard}>
             <Text style={styles.heading}>Coverage Calculator</Text>
@@ -60,11 +65,11 @@ export default function CalculatorScreen() {
 
             <Input
               label="Area"
-              value={form.areaSqm}
-              onChangeText={setAreaSqm}
+              value={form.areaSqft}
+              onChangeText={setAreaSqft}
               keyboardType="decimal-pad"
-              placeholder="e.g. 45"
-              suffix="m2"
+              placeholder="e.g. 500"
+              suffix="sq ft"
               error={error && error.includes('area') ? error : undefined}
             />
 
@@ -115,7 +120,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
   flex: { flex: 1 },
   scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl + 44 },
-  calculatorList: { gap: Spacing.sm },
+  infoCard: { gap: Spacing.md },
   calculatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,6 +147,14 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     fontFamily: Fonts.regular,
     lineHeight: Typography.size.sm * 1.35,
+  },
+  pointList: { gap: Spacing.sm },
+  pointRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  pointText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.medium,
+    flex: 1,
   },
   formCard: { gap: Spacing.md },
   heading: {

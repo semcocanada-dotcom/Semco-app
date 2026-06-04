@@ -26,6 +26,7 @@ export interface CalculationResult {
   totalKg: number;
   wastePct: number;
   areaSqm: number;
+  areaSqft?: number;
   sourceSummary?: string;
 }
 
