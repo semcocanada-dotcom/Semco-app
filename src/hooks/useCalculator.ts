@@ -15,7 +15,7 @@ export function useCalculator() {
     areaSqm: '',
     substrateType: null,
     wastePct: 10,
-    sealerSku: 'SEAL-2K-S',
+    sealerSku: 'SATIN-STONE',
   });
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export function useCalculator() {
   const reset = useCallback(() => {
     setResult(null);
     setError(null);
-    setForm({ areaSqm: '', substrateType: null, wastePct: 10, sealerSku: 'SEAL-2K-S' });
+    setForm({ areaSqm: '', substrateType: null, wastePct: 10, sealerSku: 'SATIN-STONE' });
   }, []);
 
   return {

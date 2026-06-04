@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Radius } from '@/constants/theme';
 
 interface BrandMarkProps {
   compact?: boolean;
@@ -10,20 +10,14 @@ interface BrandMarkProps {
 export function BrandMark({ compact = false }: BrandMarkProps) {
   return (
     <View style={[styles.container, compact && styles.compact]}>
-      <View style={styles.logoWrap}>
+      <View style={[styles.logoWrap, compact && styles.logoWrapCompact]}>
         <Image
-          source={require('../../../assets/images/icon.png')}
-          style={styles.logo}
+          source={require('../../../assets/images/semco-surfaces-logo.png')}
+          style={[styles.logo, compact && styles.logoCompact]}
           contentFit="contain"
           transition={200}
         />
       </View>
-      {!compact ? (
-        <View>
-          <Text style={styles.brand}>Semco Pro</Text>
-          <Text style={styles.sub}>Installer workspace</Text>
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -32,21 +26,23 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
   },
-  compact: { gap: 0 },
+  compact: {},
   logoWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.lg,
-    backgroundColor: Colors.surfaceElevated,
+    width: 172,
+    height: 48,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  logo: { width: 32, height: 32 },
-  brand: { color: Colors.textPrimary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold, letterSpacing: 0.2 },
-  sub: { color: Colors.textSecondary, fontSize: Typography.size.xs, letterSpacing: 0.6, textTransform: 'uppercase' },
+  logoWrapCompact: {
+    width: 132,
+    height: 38,
+  },
+  logo: { width: 148, height: 34 },
+  logoCompact: { width: 112, height: 28 },
 });

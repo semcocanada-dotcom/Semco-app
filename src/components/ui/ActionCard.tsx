@@ -9,23 +9,28 @@ interface ActionCardProps {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   onPress: () => void;
   tone?: 'primary' | 'accent' | 'neutral';
+  compact?: boolean;
   style?: ViewStyle;
 }
 
-export function ActionCard({ title, description, icon, onPress, tone = 'neutral', style }: ActionCardProps) {
+export function ActionCard({ title, description, icon, onPress, tone = 'neutral', compact = false, style }: ActionCardProps) {
   const iconColor = tone === 'accent' ? Colors.semcoOrange : tone === 'primary' ? Colors.primary : Colors.lightTeal;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.card, styles[`tone_${tone}`], style]}>
-      <View style={[styles.iconWrap, styles[`icon_${tone}`]]}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={[styles.card, compact && styles.cardCompact, styles[`tone_${tone}`], style]}
+    >
+      <View style={[styles.iconWrap, compact && styles.iconWrapCompact, styles[`icon_${tone}`]]}>
         <Ionicons
           name={icon}
-          size={24}
+          size={compact ? 20 : 24}
           color={iconColor}
         />
       </View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+      <Text style={[styles.title, compact && styles.titleCompact]}>{title}</Text>
+      <Text style={[styles.description, compact && styles.descriptionCompact]}>{description}</Text>
     </TouchableOpacity>
   );
 }
@@ -49,6 +54,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 2,
   },
+  cardCompact: {
+    minHeight: 82,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    gap: 4,
+  },
   tone_primary: { borderColor: Colors.primaryMuted },
   tone_accent: { borderColor: Colors.accentMuted },
   tone_neutral: {},
@@ -61,6 +72,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconWrapCompact: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.sm,
+  },
   icon_primary: { backgroundColor: Colors.primaryMuted, borderColor: '#C6EEF0' },
   icon_accent: { backgroundColor: Colors.accentMuted, borderColor: '#F5CBBB' },
   icon_neutral: { backgroundColor: '#E8FAFB', borderColor: '#CBEFF2' },
@@ -71,11 +87,18 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
     textAlign: 'center',
   },
+  titleCompact: {
+    fontSize: Typography.size.xs,
+  },
   description: {
     color: Colors.textSecondary,
     fontSize: Typography.size.xs,
     fontFamily: Fonts.medium,
     lineHeight: Typography.size.xs * 1.25,
     textAlign: 'center',
+  },
+  descriptionCompact: {
+    fontSize: 10,
+    lineHeight: 12,
   },
 });

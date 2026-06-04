@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { db, initDatabase } from '@/database/client';
@@ -9,23 +9,57 @@ import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { ActionCard, Badge, Card, SectionHeader } from '@/components/ui';
-import { Colors, Typography, Spacing } from '@/constants/theme';
-import { TECHNICAL_DOCS, TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
+import {
+  BROWSABLE_DOC_GROUPS,
+  PRODUCT_DOCS,
+  countDocsForGroup,
+  getDocBadgeVariant,
+} from '@/knowledge/doc-catalog';
+import type { DocGroupId } from '@/knowledge/doc-catalog';
+import { TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
+import { Colors, Fonts, Radius, Typography, Spacing } from '@/constants/theme';
 
 const HUB_CARDS = [
-  { title: 'Colours', description: 'Review swatches and formulas.', icon: 'color-palette-outline' as const, route: '/colors' },
-  { title: 'Product Docs', description: 'Use verified Semco sheets.', icon: 'document-text-outline' as const, route: '/products' },
-  { title: 'Calculator', description: 'Run coverage calculations off the same library.', icon: 'calculator-outline' as const, route: '/calculator' },
-  { title: 'Assistant', description: 'Look up product guidance and process notes.', icon: 'chatbubble-ellipses-outline' as const, route: '/assistant' },
+  { title: 'Product Docs', description: 'Grouped sheets', icon: 'document-text-outline' as const, route: '/products' },
+  { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, route: '/colors' },
+  { title: 'Calculator', description: 'Tech coverage', icon: 'calculator-outline' as const, route: '/calculator' },
+  { title: 'Ask Semco', description: 'Source answers', icon: 'chatbubble-ellipses-outline' as const, route: '/assistant' },
 ] as const;
 
+const DOC_GROUP_ICONS: Record<DocGroupId, React.ComponentProps<typeof Ionicons>['name']> = {
+  all: 'documents-outline',
+  'x-bond': 'layers-outline',
+  waterproofing: 'water-outline',
+  sealers: 'shield-checkmark-outline',
+  cleaners: 'sparkles-outline',
+  details: 'construct-outline',
+  sds: 'warning-outline',
+  manuals: 'book-outline',
+};
+
+const KEY_DOC_IDS = [
+  'doc-x-bondmicrocementdatasheet2024',
+  'doc-lm-tech-sheet',
+  'doc-natural-shield-tech-sheet',
+  'doc-satin-stone-tech-sheet',
+  'doc-tech-sheet-titanshield-v8',
+  'doc-open-sip-manual-master-copy-v2019-3-2',
+];
+
 const STANDARD_COLORS = colorsData as Color[];
+
+function getSwatchColor(color: Color): string {
+  return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(color.swatchHex ?? '') ? String(color.swatchHex) : Colors.softGrey;
+}
 
 export default function LibraryScreen() {
   const router = useRouter();
   const push = (href: string) => router.push(href as any);
-  const [colorCount, setColorCount] = React.useState(0);
-  const [colorsList, setColorsList] = React.useState<Color[]>(STANDARD_COLORS.slice(0, 3));
+  const [colorCount, setColorCount] = React.useState(STANDARD_COLORS.length);
+  const [colorsList, setColorsList] = React.useState<Color[]>(STANDARD_COLORS.slice(0, 4));
+  const keyDocs = KEY_DOC_IDS
+    .map((id) => PRODUCT_DOCS.find((doc) => doc.id === id))
+    .filter((doc): doc is (typeof PRODUCT_DOCS)[number] => Boolean(doc));
 
   React.useEffect(() => {
     let isMounted = true;
@@ -36,12 +70,12 @@ export default function LibraryScreen() {
         await seedDatabase();
         const colorRows = await db.select().from(colors);
         if (!isMounted) return;
-        setColorsList(colorRows.length > 0 ? colorRows : STANDARD_COLORS.slice(0, 3));
+        setColorsList((colorRows.length > 0 ? colorRows : STANDARD_COLORS).slice(0, 4));
         setColorCount(colorRows.length || STANDARD_COLORS.length);
       } catch (error) {
         console.error(error);
         if (!isMounted) return;
-        setColorsList(STANDARD_COLORS.slice(0, 3));
+        setColorsList(STANDARD_COLORS.slice(0, 4));
         setColorCount(STANDARD_COLORS.length);
       }
     }
@@ -61,14 +95,14 @@ export default function LibraryScreen() {
             <BrandMark />
             <Badge label="Library" variant="primary" />
           </View>
-          <Text style={styles.heroTitle}>Everything that backs the install lives here.</Text>
+          <Text style={styles.heroTitle}>Semco field knowledge, grouped by job task.</Text>
           <Text style={styles.heroBody}>
-            Product sheets, colour formulas, calculator inputs and Semco technical docs all share the same visual language.
+            Product sheets, SDS, system details, colour formulas, and calculator inputs are organized for quick lookup.
           </Text>
         </Card>
 
         <View style={styles.section}>
-          <SectionHeader title="Library hubs" subtitle="Jump into the core working surfaces." />
+          <SectionHeader title="Quick access" subtitle="Open the working surface you need." />
           <View style={styles.cardsGrid}>
             {HUB_CARDS.map((card, index) => (
               <ActionCard
@@ -78,6 +112,7 @@ export default function LibraryScreen() {
                 icon={card.icon}
                 tone={index % 2 === 0 ? 'primary' : 'accent'}
                 onPress={() => push(card.route)}
+                compact
                 style={styles.hubCard}
               />
             ))}
@@ -85,60 +120,79 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Current seed data" subtitle="Loaded content available for field lookup." />
+          <SectionHeader title="Library groups" subtitle="Browse a smaller set first, then search inside it." />
+          <View style={styles.groupGrid}>
+            {BROWSABLE_DOC_GROUPS.map((group) => (
+              <TouchableOpacity
+                key={group.id}
+                onPress={() => router.push({ pathname: '/products', params: { group: group.id } } as any)}
+                activeOpacity={0.78}
+                style={styles.groupCard}
+              >
+                <View style={styles.groupIcon}>
+                  <Ionicons name={DOC_GROUP_ICONS[group.id]} size={20} color={Colors.primary} />
+                </View>
+                <Text style={styles.groupTitle}>{group.label}</Text>
+                <Text style={styles.groupDescription}>{group.description}</Text>
+                <Badge label={`${countDocsForGroup(group.id)} docs`} variant="neutral" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Loaded content" subtitle="Seeded references available to the app and Ask Semco." />
           <View style={styles.statsRow}>
             <Card style={styles.statBox}>
-              <Text style={styles.statValue}>{TECHNICAL_DOCS.length}</Text>
+              <Text style={styles.statValue}>{PRODUCT_DOCS.length}</Text>
               <Text style={styles.statLabel}>Docs</Text>
+            </Card>
+            <Card style={styles.statBox}>
+              <Text style={styles.statValue}>{TECHNICAL_DOC_PAGES.length}</Text>
+              <Text style={styles.statLabel}>Pages</Text>
             </Card>
             <Card style={styles.statBox}>
               <Text style={styles.statValue}>{colorCount}</Text>
               <Text style={styles.statLabel}>Colours</Text>
             </Card>
-            <Card style={styles.statBox}>
-              <Text style={styles.statValue}>{TECHNICAL_DOCS.length}</Text>
-              <Text style={styles.statLabel}>Docs</Text>
-            </Card>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader title="Key references" subtitle="Core docs used by the calculator and installer support." />
+          {keyDocs.map((doc) => (
+            <TouchableOpacity
+              key={doc.id}
+              onPress={() => router.push('/assistant' as any)}
+              activeOpacity={0.78}
+              style={styles.lineCard}
+            >
+              <View style={styles.lineTop}>
+                <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
+                <Text style={styles.lineTitle}>{doc.title}</Text>
+                <Badge label={doc.category} variant={getDocBadgeVariant(doc.category)} />
+              </View>
+              <Text style={styles.lineBody}>{doc.sourceDocument} - {doc.pageCount} page{doc.pageCount === 1 ? '' : 's'}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         <View style={styles.section}>
           <SectionHeader
-            title="Technical docs"
-            subtitle={`${TECHNICAL_DOC_PAGES.length} searchable pages loaded into Ask Semco.`}
+            title="Colour fan deck"
+            subtitle="The colour grid opens in the imported fan deck order."
+            actionLabel="Open"
+            onActionPress={() => push('/colors')}
           />
-          {TECHNICAL_DOCS.map((doc) => (
-            <Card key={doc.id} style={styles.lineCard}>
-              <View style={styles.lineTop}>
-                <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
-                <Text style={styles.lineTitle}>{doc.title}</Text>
-                <Badge label={doc.category} variant="neutral" />
+          <View style={styles.colorPreview}>
+            {colorsList.map((color) => (
+              <View key={color.id} style={styles.colorPreviewItem}>
+                <View style={[styles.colorDot, { backgroundColor: getSwatchColor(color) }]} />
+                <Text style={styles.colorCode}>{color.code ?? 'Custom'}</Text>
               </View>
-              <Text style={styles.lineBody}>{doc.pageCount} page{doc.pageCount === 1 ? '' : 's'}</Text>
-            </Card>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <SectionHeader title="Seeded colours" subtitle="The standard palette is ready for later uploads." />
-          {colorsList.slice(0, 3).map((color) => (
-            <Card key={color.id} style={styles.lineCard}>
-              <View style={styles.lineTop}>
-                <View style={styles.colorDot} />
-                <Text style={styles.lineTitle}>{color.name}</Text>
-                <Badge label={color.isStandard ? 'Standard' : 'Custom'} variant={color.isStandard ? 'primary' : 'accent'} />
-              </View>
-              <Text style={styles.lineBody}>{color.code ?? 'No code yet'}</Text>
-            </Card>
-          ))}
-        </View>
-
-        <Card style={styles.noteCard}>
-          <View style={styles.noteRow}>
-            <Ionicons name="lock-closed-outline" size={18} color={Colors.accent} />
-            <Text style={styles.noteText}>Your later upload can slot in without reworking the layout.</Text>
+            ))}
           </View>
-        </Card>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -146,24 +200,100 @@ export default function LibraryScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 16, gap: Spacing.lg },
+  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 44, gap: Spacing.lg },
   heroCard: { gap: Spacing.md, borderColor: Colors.primaryMuted, backgroundColor: Colors.surfaceElevated },
   heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md },
-  heroTitle: { color: Colors.textPrimary, fontSize: Typography.size.xxl, lineHeight: Typography.size.xxl * 1.05, fontWeight: Typography.weight.bold },
-  heroBody: { color: Colors.textSecondary, fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },
+  heroTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.size.xl,
+    lineHeight: Typography.size.xl * 1.12,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  heroBody: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.5,
+    fontFamily: Fonts.regular,
+  },
   section: { gap: Spacing.md },
   cardsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  hubCard: { width: '48%' },
+  hubCard: { width: '48.5%', flexBasis: '48.5%', flexGrow: 0 },
+  groupGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
+  groupCard: {
+    width: '48.5%',
+    flexBasis: '48.5%',
+    flexGrow: 0,
+    minHeight: 150,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: Spacing.xs,
+  },
+  groupIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+  },
+  groupTitle: {
+    color: Colors.navy,
+    fontSize: Typography.size.base,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  groupDescription: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
+    fontFamily: Fonts.regular,
+    flex: 1,
+  },
   statsRow: { flexDirection: 'row', gap: Spacing.sm },
-  statBox: { flex: 1, alignItems: 'center', gap: 6 },
-  statValue: { color: Colors.textPrimary, fontSize: Typography.size.xxl, fontWeight: Typography.weight.bold },
-  statLabel: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontWeight: Typography.weight.medium },
-  lineCard: { gap: 6 },
+  statBox: { flex: 1, alignItems: 'center', gap: 6, paddingHorizontal: Spacing.sm },
+  statValue: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },
+  statLabel: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.medium, fontWeight: Typography.weight.medium },
+  lineCard: {
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    gap: 6,
+  },
   lineTop: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
-  lineTitle: { color: Colors.textPrimary, fontSize: Typography.size.base, fontWeight: Typography.weight.bold, flex: 1 },
-  lineBody: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  colorDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: Colors.accent, borderWidth: 1, borderColor: Colors.border },
-  noteCard: { borderColor: Colors.accentMuted },
-  noteRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  noteText: { color: Colors.textSecondary, fontSize: Typography.size.sm, flex: 1, lineHeight: Typography.size.sm * 1.45 },
+  lineTitle: { color: Colors.textPrimary, fontSize: Typography.size.base, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold, flex: 1 },
+  lineBody: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular },
+  colorPreview: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  colorPreviewItem: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  colorDot: {
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  colorCode: {
+    color: Colors.navy,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+    textAlign: 'center',
+  },
 });

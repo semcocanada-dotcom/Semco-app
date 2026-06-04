@@ -26,6 +26,7 @@ const STANDARD_COLORS = colorsData as Color[];
 const FEATURE_CARDS = [
   { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/projects' },
   { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'accent' as const, route: '/calculator' },
+  { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, tone: 'neutral' as const, route: '/colors' },
   { title: 'Takeoff', description: 'Measure scope', icon: 'triangle-outline' as const, tone: 'primary' as const, route: '/takeoff' },
   { title: 'Photos', description: 'Capture stage', icon: 'camera-outline' as const, tone: 'accent' as const, route: '/add' },
   { title: 'Product Docs', description: 'Verified sheets', icon: 'document-text-outline' as const, tone: 'neutral' as const, route: '/products' },
@@ -96,23 +97,6 @@ export default function DashboardScreen() {
             containerStyle={styles.askBar}
           />
 
-          <TouchableOpacity
-            style={styles.colourHero}
-            onPress={() => push('/colors')}
-            activeOpacity={0.84}
-            accessibilityRole="button"
-            accessibilityLabel="Open Semco colours and formulas"
-          >
-            <View style={styles.colourHeroIcon}>
-              <Ionicons name="color-palette-outline" size={26} color={Colors.white} />
-            </View>
-            <View style={styles.colourHeroText}>
-              <Text style={styles.colourHeroTitle}>Colours</Text>
-              <Text style={styles.colourHeroSubtitle}>Swatches, names, and XBond formulas</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.semcoOrange} />
-          </TouchableOpacity>
-
           <View style={styles.featureGrid}>
             {FEATURE_CARDS.map((card) => (
               <ActionCard
@@ -122,6 +106,7 @@ export default function DashboardScreen() {
                 icon={card.icon}
                 tone={card.tone}
                 onPress={() => push(card.route)}
+                compact
                 style={styles.featureCard}
               />
             ))}
@@ -253,46 +238,10 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   featureCard: {
-    width: '48.5%',
-    flexBasis: '48.5%',
+    width: '31.5%',
+    flexBasis: '31.5%',
     flexGrow: 0,
     flexShrink: 0,
-  },
-  colourHero: {
-    minHeight: 76,
-    borderRadius: 16,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.accentMuted,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
-  },
-  colourHeroIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: Colors.semcoOrange,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  colourHeroText: { flex: 1, gap: 2 },
-  colourHeroTitle: {
-    color: Colors.navy,
-    fontSize: Typography.size.lg,
-    fontFamily: Fonts.bold,
-    fontWeight: Typography.weight.bold,
-  },
-  colourHeroSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontFamily: Fonts.medium,
   },
   askBar: {
     shadowColor: '#000',

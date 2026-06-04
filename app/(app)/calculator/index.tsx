@@ -6,17 +6,12 @@ import { AppHeader, Button, Card, Input } from '@/components/ui';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
+import { SEALER_OPTIONS } from '@/constants/product-coverage';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
-const SEALER_OPTIONS = [
-  { sku: 'SEAL-2K-M', label: 'Matte' },
-  { sku: 'SEAL-2K-S', label: 'Satin' },
-  { sku: 'SEAL-2K-G', label: 'Gloss' },
-];
-
 const CALCULATOR_LIST = [
-  { title: 'Coverage Calculator', body: 'Calculate coverage by area and product', icon: 'calculator-outline' as const },
-  { title: 'Material Estimator', body: 'Estimate materials and quantities', icon: 'reader-outline' as const },
+  { title: 'Coverage Calculator', body: 'Uses Semco tech sheet coverage by area and substrate', icon: 'calculator-outline' as const },
+  { title: 'Material Estimator', body: 'Shows kits, gallons, and the source sheet for each line', icon: 'reader-outline' as const },
   { title: 'Mix Ratio Calculator', body: 'Calculate mix ratios and component amounts', icon: 'beaker-outline' as const },
   { title: 'Cost Calculator', body: 'Estimate project costs and budget', icon: 'cash-outline' as const },
 ];
@@ -60,7 +55,7 @@ export default function CalculatorScreen() {
           <Card style={styles.formCard}>
             <Text style={styles.heading}>Coverage Calculator</Text>
             <Text style={styles.subheading}>
-              Input your area and substrate to get the full material list.
+              Input your area and substrate to estimate X-Bond, membrane, and the selected sealer.
             </Text>
 
             <Input

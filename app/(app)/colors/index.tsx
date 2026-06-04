@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, FlatList, StyleSheet, SafeAreaView, useWindowDimensions } from 'react-native';
+import { View, Text, FlatList, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { db, initDatabase } from '@/database/client';
 import { seedDatabase } from '@/database/seed';
@@ -8,13 +8,49 @@ import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
 import { ColorTile } from '@/components/colors/ColorTile';
 import { AppHeader, Button, EmptyState, SearchBar } from '@/components/ui';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
 const STANDARD_COLORS = colorsData as Color[];
+type ColorSeries = 'all' | 'P' | 'T' | 'D' | 'C' | 'custom';
+
+const SERIES_OPTIONS: { value: ColorSeries; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'P', label: 'P' },
+  { value: 'T', label: 'T' },
+  { value: 'D', label: 'D' },
+  { value: 'C', label: 'C' },
+  { value: 'custom', label: 'Custom' },
+];
+
+const FAN_DECK_ORDER = STANDARD_COLORS.reduce<Record<string, number>>((order, color, index) => {
+  order[color.id] = index;
+  if (color.code) order[color.code.toUpperCase()] = index;
+  return order;
+}, {});
+
+function getColorSeries(color: Color): ColorSeries {
+  if (!color.isStandard) return 'custom';
+  const suffix = String(color.code ?? '').match(/[A-Za-z]+$/)?.[0]?.toUpperCase();
+  return suffix === 'P' || suffix === 'T' || suffix === 'D' || suffix === 'C' ? suffix : 'all';
+}
+
+function getFanDeckIndex(color: Color): number {
+  const byId = FAN_DECK_ORDER[color.id];
+  const byCode = color.code ? FAN_DECK_ORDER[color.code.toUpperCase()] : undefined;
+  return byId ?? byCode ?? Number.MAX_SAFE_INTEGER;
+}
+
+function sortByFanDeck(a: Color, b: Color): number {
+  if (a.isStandard !== b.isStandard) return a.isStandard ? -1 : 1;
+  const orderDelta = getFanDeckIndex(a) - getFanDeckIndex(b);
+  if (orderDelta !== 0) return orderDelta;
+  return String(a.code ?? a.name ?? '').localeCompare(String(b.code ?? b.name ?? ''));
+}
 
 export default function ColorsScreen() {
   const [allColors, setAllColors] = useState<Color[]>(STANDARD_COLORS);
   const [query, setQuery] = useState('');
+  const [series, setSeries] = useState<ColorSeries>('all');
   const router = useRouter();
   const { width } = useWindowDimensions();
   const numColumns = width >= 560 ? 4 : 3;
@@ -49,18 +85,18 @@ export default function ColorsScreen() {
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const sorted = [...allColors].sort((a, b) => {
-      if (a.isStandard !== b.isStandard) return a.isStandard ? -1 : 1;
-      return String(a.name ?? '').localeCompare(String(b.name ?? ''));
-    });
+    const sorted = [...allColors].sort(sortByFanDeck);
+    const seriesFiltered =
+      series === 'all' ? sorted : sorted.filter((color) => getColorSeries(color) === series);
 
-    if (!normalizedQuery) return sorted;
+    if (!normalizedQuery) return seriesFiltered;
 
-    return sorted.filter((color) => {
+    return seriesFiltered.filter((color) => {
       const searchable = [
         color.name,
         color.code,
         color.swatchHex,
+        getColorSeries(color),
         color.isStandard ? 'standard' : 'custom',
       ]
         .filter(Boolean)
@@ -69,19 +105,38 @@ export default function ColorsScreen() {
 
       return searchable.includes(normalizedQuery);
     });
-  }, [allColors, query]);
+  }, [allColors, query, series]);
 
   const standardCount = filtered.filter((c) => c.isStandard).length;
   const resultLabel = query.trim()
     ? `${filtered.length} match${filtered.length === 1 ? '' : 'es'}`
-    : `${standardCount || allColors.length} XBond colors`;
+    : `Fan deck order - ${standardCount || filtered.length} XBond colors`;
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <AppHeader title="Color Library" subtitle={resultLabel} rightIcon="color-palette-outline" />
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search color name, code, or tone..." showMic={false} />
-        <Button label="Add Color" variant="primary" onPress={() => router.push('/(app)/colors/create')} fullWidth />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.seriesRow}
+        >
+          {SERIES_OPTIONS.map((option) => {
+            const active = option.value === series;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                onPress={() => setSeries(option.value)}
+                activeOpacity={0.76}
+                style={[styles.seriesChip, active && styles.seriesChipActive]}
+              >
+                <Text style={[styles.seriesText, active && styles.seriesTextActive]}>{option.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        <Button label="Add Custom Color" variant="primary" onPress={() => router.push('/(app)/colors/create')} fullWidth />
       </View>
 
       <FlatList
@@ -110,6 +165,33 @@ export default function ColorsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
   header: { padding: Spacing.base, gap: Spacing.md },
+  seriesRow: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.base,
+  },
+  seriesChip: {
+    minHeight: 36,
+    minWidth: 54,
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  seriesChipActive: {
+    backgroundColor: Colors.semcoOrange,
+    borderColor: Colors.semcoOrange,
+  },
+  seriesText: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.sm,
+  },
+  seriesTextActive: {
+    color: Colors.white,
+  },
   list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xxxl + 44 },
   emptyList: { flexGrow: 1 },
   gridRow: {

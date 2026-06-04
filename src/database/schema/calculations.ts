@@ -10,6 +10,15 @@ export interface MaterialLayer {
   quantityPacks: number;
   packSizeKg: number;
   coverageRateSqmPerKg: number;
+  quantityLabel?: string;
+  purchaseLabel?: string;
+  packLabel?: string;
+  coverageLabel?: string;
+  sourceDocument?: string;
+  sourcePage?: number;
+  sourceNote?: string;
+  exactQuantity?: number;
+  roundedQuantity?: number;
 }
 
 export interface CalculationResult {
@@ -17,6 +26,7 @@ export interface CalculationResult {
   totalKg: number;
   wastePct: number;
   areaSqm: number;
+  sourceSummary?: string;
 }
 
 export const calculations = sqliteTable(

@@ -9,6 +9,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   primer: 'Primer',
   base_coat: 'Base Coat',
   finish_coat: 'Finish Coat',
+  microcement: 'X-Bond',
+  waterproofing: 'Membrane',
   sealer: 'Sealer',
   pigment: 'Pigment',
 };
@@ -18,12 +20,15 @@ interface MaterialBreakdownCardProps {
 }
 
 export function MaterialBreakdownCard({ result }: MaterialBreakdownCardProps) {
+  const usesDocUnits = result.layers.some((layer) => Boolean(layer.quantityLabel));
+
   return (
     <Card>
       <Text style={styles.heading}>Material Breakdown</Text>
       <Text style={styles.subheading}>
         {result.areaSqm} m2 - {result.wastePct}% waste included
       </Text>
+      {result.sourceSummary ? <Text style={styles.sourceSummary}>{result.sourceSummary}</Text> : null}
 
       <View style={styles.divider} />
 
@@ -33,8 +38,10 @@ export function MaterialBreakdownCard({ result }: MaterialBreakdownCardProps) {
 
       <View style={styles.divider} />
       <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Total Material</Text>
-        <Text style={styles.totalValue}>{result.totalKg.toFixed(1)} kg</Text>
+        <Text style={styles.totalLabel}>{usesDocUnits ? 'Estimate Lines' : 'Total Material'}</Text>
+        <Text style={styles.totalValue}>
+          {usesDocUnits ? `${result.layers.length} products` : `${result.totalKg.toFixed(1)} kg`}
+        </Text>
       </View>
     </Card>
   );
@@ -42,24 +49,30 @@ export function MaterialBreakdownCard({ result }: MaterialBreakdownCardProps) {
 
 function LayerRow({ layer }: { layer: MaterialLayer }) {
   const badgeVariant =
-    layer.category === 'primer' ? 'warning' :
+    layer.category === 'primer' || layer.category === 'waterproofing' ? 'warning' :
     layer.category === 'sealer' ? 'primary' :
+    layer.category === 'microcement' ? 'accent' :
     'neutral';
+  const detail = layer.coverageLabel ?? `${layer.coats} coat${layer.coats > 1 ? 's' : ''} - ${layer.coverageRateSqmPerKg.toFixed(1)} m2/kg avg`;
+  const sourceLabel = layer.sourceDocument
+    ? `Source: ${layer.sourceDocument}${layer.sourcePage ? ` p${layer.sourcePage}` : ''}`
+    : undefined;
 
   return (
     <View style={styles.layerRow}>
       <View style={styles.layerLeft}>
         <Badge label={CATEGORY_LABELS[layer.category] ?? layer.category} variant={badgeVariant} />
         <Text style={styles.layerName}>{layer.productName}</Text>
-        <Text style={styles.layerDetail}>
-          {layer.coats} coat{layer.coats > 1 ? 's' : ''} - {layer.coverageRateSqmPerKg.toFixed(1)} m2/kg avg
-        </Text>
+        <Text style={styles.layerDetail}>{detail}</Text>
+        {layer.sourceNote ? <Text style={styles.layerNote}>{layer.sourceNote}</Text> : null}
+        {sourceLabel ? <Text style={styles.sourceLabel}>{sourceLabel}</Text> : null}
       </View>
       <View style={styles.layerRight}>
-        <Text style={styles.qty}>{layer.quantityKg.toFixed(1)} kg</Text>
+        <Text style={styles.qty}>{layer.quantityLabel ?? `${layer.quantityKg.toFixed(1)} kg`}</Text>
         <Text style={styles.packs}>
-          {layer.quantityPacks} x {layer.packSizeKg} kg
+          {layer.purchaseLabel ?? `${layer.quantityPacks} x ${layer.packSizeKg} kg`}
         </Text>
+        {layer.packLabel ? <Text style={styles.packLabel}>{layer.packLabel}</Text> : null}
       </View>
     </View>
   );
@@ -74,6 +87,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
   },
   subheading: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular },
+  sourceSummary: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.xs * 1.45,
+    marginTop: Spacing.xs,
+  },
   divider: { height: 1, backgroundColor: Colors.border, marginVertical: Spacing.md },
   layerRow: {
     flexDirection: 'row',
@@ -85,9 +105,28 @@ const styles = StyleSheet.create({
   layerLeft: { flex: 1, gap: Spacing.xs },
   layerName: { color: Colors.navy, fontSize: Typography.size.base, fontFamily: Fonts.semibold, fontWeight: Typography.weight.medium },
   layerDetail: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular },
-  layerRight: { alignItems: 'flex-end', gap: 2 },
+  layerNote: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.xs * 1.35,
+  },
+  sourceLabel: {
+    color: Colors.semcoOrange,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+  },
+  layerRight: { alignItems: 'flex-end', gap: 2, maxWidth: 142 },
   qty: { color: Colors.semcoOrange, fontSize: Typography.size.lg, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },
-  packs: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular },
+  packs: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular, textAlign: 'right' },
+  packLabel: {
+    color: Colors.textDisabled,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.regular,
+    textAlign: 'right',
+    lineHeight: Typography.size.xs * 1.3,
+  },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalLabel: { color: Colors.textSecondary, fontSize: Typography.size.base, fontFamily: Fonts.medium, fontWeight: Typography.weight.medium },
   totalValue: { color: Colors.navy, fontSize: Typography.size.xl, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },

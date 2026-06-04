@@ -1,91 +1,77 @@
 import type { SubstrateId } from '@/constants/substrates';
+import { SUBSTRATE_MAP } from '@/constants/substrates';
+import {
+  COVERAGE_PRODUCTS,
+  SQFT_PER_SQM,
+  estimateCoverage,
+  getLiquidMembraneRange,
+  getSealerProduct,
+  getSealerRange,
+  getXBondRange,
+} from '@/constants/product-coverage';
+import type { CoverageEstimate } from '@/constants/product-coverage';
 import type { CalculationResult, MaterialLayer } from '@/database/schema/calculations';
-import applicationMatrix from '@/database/seed/application-matrix.json';
-import productsData from '@/database/seed/products.json';
-
-interface MatrixLayer {
-  sku: string;
-  coats: number;
-  required: boolean;
-  note?: string;
-}
-
-interface MatrixEntry {
-  label: string;
-  layers: MatrixLayer[];
-}
 
 interface CalculatorInput {
   areaSqm: number;
   substrateType: SubstrateId;
   wastePct: number;
-  sealerSku?: string; // allows choosing gloss/satin/matte
+  sealerSku?: string;
 }
 
 export function calculate(input: CalculatorInput): CalculationResult {
   const { areaSqm, substrateType, wastePct, sealerSku } = input;
-  const matrix = (applicationMatrix as Record<string, MatrixEntry>)[substrateType];
 
-  if (!matrix) {
-    throw new Error(`No application matrix found for substrate: ${substrateType}`);
+  if (!SUBSTRATE_MAP[substrateType]) {
+    throw new Error(`No substrate found: ${substrateType}`);
   }
 
-  const productMap = Object.fromEntries(
-    (productsData as {
-      id: string;
-      sku: string;
-      name: string;
-      category: string;
-      coverageMinSqmPerKg: number | null;
-      coverageMaxSqmPerKg: number | null;
-      packSizeKg: number;
-    }[]).map((p) => [p.sku, p]),
-  );
-
-  const layers: MaterialLayer[] = [];
-
-  for (const entry of matrix.layers) {
-    // Allow caller to swap sealer SKU (gloss/satin/matte)
-    const sku =
-      entry.sku.startsWith('SEAL-') && sealerSku ? sealerSku : entry.sku;
-
-    const product = productMap[sku];
-    if (!product) continue;
-
-    const minCov = product.coverageMinSqmPerKg ?? 5;
-    const maxCov = product.coverageMaxSqmPerKg ?? 8;
-    const avgCoverage = (minCov + maxCov) / 2;
-    const packSize = product.packSizeKg ?? 1;
-    const wasteMultiplier = 1 + wastePct / 100;
-
-    const rawKgPerCoat = areaSqm / avgCoverage;
-    const rawKgTotal = rawKgPerCoat * entry.coats * wasteMultiplier;
-    const quantityPacks = Math.ceil(rawKgTotal / packSize);
-    const quantityKg = quantityPacks * packSize;
-
-    layers.push({
-      productId: product.id,
-      productSku: product.sku,
-      productName: product.name,
-      category: product.category,
-      coats: entry.coats,
-      quantityKg,
-      quantityPacks,
-      packSizeKg: packSize,
-      coverageRateSqmPerKg: avgCoverage,
-    });
-  }
-
-  const totalKg = layers.reduce((sum, l) => sum + l.quantityKg, 0);
+  const sealerProduct = getSealerProduct(sealerSku);
+  const estimates = [
+    estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqm, wastePct),
+    estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, getLiquidMembraneRange(substrateType), areaSqm, wastePct),
+    estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqm, wastePct),
+  ];
 
   return {
-    layers,
-    totalKg,
+    layers: estimates.map(toMaterialLayer),
+    totalKg: 0,
     wastePct,
     areaSqm,
+    sourceSummary: 'Coverage is calculated from loaded Semco technical sheets. Quantities are internal estimates only.',
+  };
+}
+
+function toMaterialLayer(estimate: CoverageEstimate): MaterialLayer {
+  const { product, range } = estimate;
+  const avgSqftPerUnit = (range.minSqftPerUnit + range.maxSqftPerUnit) / 2;
+
+  return {
+    productId: product.sku.toLowerCase(),
+    productSku: product.sku,
+    productName: product.name,
+    category: product.category,
+    coats: range.coats,
+    quantityKg: 0,
+    quantityPacks: estimate.roundedUnits,
+    packSizeKg: 0,
+    coverageRateSqmPerKg: avgSqftPerUnit / SQFT_PER_SQM,
+    quantityLabel: estimate.quantityLabel,
+    purchaseLabel: estimate.purchaseLabel,
+    packLabel: product.packLabel,
+    coverageLabel: estimate.coverageLabel,
+    sourceDocument: range.sourceDocument,
+    sourcePage: range.sourcePage,
+    sourceNote: range.note ?? range.basis,
+    exactQuantity: estimate.exactUnits,
+    roundedQuantity: estimate.roundedUnits,
   };
 }
 
 export function formatLayerSummary(layer: MaterialLayer): string {
-  return `${layer.productName}: ${layer.quantityKg.toFixed(1)} kg (${layer.quantityPacks} × ${layer.packSizeKg} kg pack) — ${layer.coats} coat${layer.coats > 1 ? 's' : ''}`;
+  if (layer.quantityLabel) {
+    return `${layer.productName}: ${layer.quantityLabel} (${layer.packLabel ?? layer.productSku}) - ${layer.coats} coat${layer.coats > 1 ? 's' : ''}`;
+  }
+
+  return `${layer.productName}: ${layer.quantityKg.toFixed(1)} kg (${layer.quantityPacks} x ${layer.packSizeKg} kg pack) - ${layer.coats} coat${layer.coats > 1 ? 's' : ''}`;
 }
