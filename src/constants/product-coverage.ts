@@ -1,6 +1,6 @@
 import type { SubstrateId } from '@/constants/substrates';
 
-export type CoverageUnit = 'bag' | 'kit' | 'gal' | 'qt';
+export type CoverageUnit = 'bag' | 'kit' | 'gal' | 'qt' | 'pail';
 export type CoverageCategory = 'microcement' | 'x_bond_liquid' | 'microbond_finish' | 'waterproofing' | 'sealer';
 export type WaterproofingMode = 'none' | 'above_grade' | 'submerged';
 export type XBondFinishSku = 'XBOND-STANDARD' | 'MICROBOND-SMOOTH';
@@ -142,18 +142,18 @@ const MICROBOND_STONE: CoverageProduct = {
   sku: 'MICROBOND-STONE',
   name: 'SEMCO MicroBond Stone',
   category: 'microbond_finish',
-  packLabel: 'Quart smooth-finish allowance',
+  packLabel: '5 gal / 30 lb pail',
   defaultRange: 'smoothFinish',
   ranges: {
     smoothFinish: {
       label: 'MicroBond smooth finish',
-      minSqftPerUnit: 50,
-      maxSqftPerUnit: 50,
-      unit: 'qt',
+      minSqftPerUnit: 1000,
+      maxSqftPerUnit: 1000,
+      unit: 'pail',
       coats: 2,
-      sourceDocument: 'SEMCO X-Bond Microcement Kit 100 sq ft',
+      sourceDocument: 'Semco West installer package rate',
       sourcePage: 0,
-      basis: 'Smooth kit allowance: 2 qt MicroBond for up to 100 sq ft. SIP manual confirms MicroBond is optional for smoother texture and uses 1 part X-Bond Liquid to 2 parts MicroBond Stone.',
+      basis: 'Installer pail rate: 1 x 5 gal / 30 lb MicroBond pail covers 1000 sq ft for smooth finish. SIP manual confirms MicroBond is optional for smoother texture and uses 1 part X-Bond Liquid to 2 parts MicroBond Stone.',
       note: 'Use for optional smooth MicroBond finish only; standard X-Bond finish does not add this row.',
     },
   },
@@ -418,7 +418,7 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
   const exactLabel = range.minSqftPerUnit === range.maxSqftPerUnit
     ? `${range.minSqftPerUnit} sq ft/${unitLabel}`
     : `${range.minSqftPerUnit}-${range.maxSqftPerUnit} sq ft/${unitLabel}`;
-  const isWholeUnit = range.unit === 'kit' || range.unit === 'bag' || range.unit === 'qt';
+  const isWholeUnit = range.unit === 'kit' || range.unit === 'bag' || range.unit === 'qt' || range.unit === 'pail';
   const displayQuantity = isWholeUnit ? roundedUnits : exactUnits;
   const quantityLabel = `${formatQuantity(displayQuantity)} ${isWholeUnit ? plural : unitLabel}`;
   const purchaseUnitLabel = product.purchaseUnitLabel ?? unitLabel;
@@ -450,5 +450,6 @@ function formatQuantity(value: number): string {
 function formatUnitLabel(unit: string, quantity: number): string {
   if (unit === 'gal') return 'gal';
   if (unit === 'qt') return quantity === 1 ? 'qt' : 'qts';
+  if (unit === 'pail') return quantity === 1 ? 'pail' : 'pails';
   return quantity === 1 ? unit : `${unit}s`;
 }
