@@ -1,7 +1,9 @@
 import type { SubstrateId } from '@/constants/substrates';
 
-export type CoverageUnit = 'bag' | 'kit' | 'gal';
-export type CoverageCategory = 'microcement' | 'waterproofing' | 'sealer';
+export type CoverageUnit = 'bag' | 'kit' | 'gal' | 'qt';
+export type CoverageCategory = 'microcement' | 'x_bond_liquid' | 'microbond_finish' | 'waterproofing' | 'sealer';
+export type WaterproofingMode = 'none' | 'above_grade' | 'submerged';
+export type XBondFinishSku = 'XBOND-STANDARD' | 'MICROBOND-SMOOTH';
 
 export interface CoverageRange {
   label: string;
@@ -22,6 +24,8 @@ export interface CoverageProduct {
   packLabel: string;
   ranges: Record<string, CoverageRange>;
   defaultRange: string;
+  purchaseUnitLabel?: string;
+  purchaseUnitSize?: number;
 }
 
 export interface CoverageEstimate {
@@ -43,52 +47,114 @@ export const SEALER_OPTIONS = [
   { sku: 'TITAN-SHIELD', label: 'Gloss', productName: 'Titan Shield Gloss' },
 ] as const;
 
+export const WATERPROOFING_OPTIONS = [
+  { mode: 'none', label: 'No membrane', description: 'Skip membrane for dry areas where it is not specified.' },
+  { mode: 'above_grade', label: 'Above grade', description: '2 coats at 200-250 sq ft/gal.' },
+  { mode: 'submerged', label: 'Wet / below grade', description: '3 coats at 100-150 sq ft/gal.' },
+] as const satisfies readonly { mode: WaterproofingMode; label: string; description: string }[];
+
+export const XBOND_FINISH_OPTIONS = [
+  { sku: 'XBOND-STANDARD', label: 'X-Bond finish', description: 'Standard X-Bond Stone finish.' },
+  { sku: 'MICROBOND-SMOOTH', label: 'MicroBond smooth', description: 'Adds optional MicroBond smooth finish coat.' },
+] as const satisfies readonly { sku: XBondFinishSku; label: string; description: string }[];
+
 const XBOND: CoverageProduct = {
-  sku: 'XBOND-MICROCEMENT',
-  name: 'SEMCO X-Bond Microcement',
+  sku: 'XBOND-STONE',
+  name: 'SEMCO X-Bond Stone',
   category: 'microcement',
-  packLabel: '1 x 50 lb X-Bond Stone bag + matching X-Bond Liquid',
+  packLabel: '50 lb bag',
   defaultRange: 'concrete',
   ranges: {
     concrete: {
-      label: 'Finished X-Bond bag',
+      label: 'X-Bond Stone at 1/8 inch',
       minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
       unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Data sheet coverage is per 2 gal X-Bond Liquid + 1 x 50 lb X-Bond Stone at 1/8 inch.',
     },
     painted: {
-      label: 'Finished X-Bond bag',
+      label: 'X-Bond Stone at 1/8 inch',
       minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
       unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Data sheet coverage is per 2 gal X-Bond Liquid + 1 x 50 lb X-Bond Stone at 1/8 inch.',
     },
     tile: {
-      label: 'Finished X-Bond bag',
+      label: 'X-Bond Stone at 1/8 inch',
       minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
       unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Data sheet coverage is per 2 gal X-Bond Liquid + 1 x 50 lb X-Bond Stone at 1/8 inch.',
     },
     naturalStone: {
-      label: 'Finished X-Bond bag',
+      label: 'X-Bond Stone at 1/8 inch',
       minSqftPerUnit: 75,
       maxSqftPerUnit: 75,
       unit: 'bag',
       coats: 1,
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
-      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Tech sheet range lists up to 75 sq ft per 2 gal liquid + 1 x 50 lb stone.',
+      basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Data sheet coverage is per 2 gal X-Bond Liquid + 1 x 50 lb X-Bond Stone at 1/8 inch.',
+    },
+  },
+};
+
+const XBOND_LIQUID: CoverageProduct = {
+  sku: 'XBOND-LIQUID',
+  name: 'SEMCO X-Bond Liquid',
+  category: 'x_bond_liquid',
+  packLabel: '1 gal, 5 gal, and 55 gal pails',
+  defaultRange: 'stoneMix',
+  ranges: {
+    stoneMix: {
+      label: 'Liquid for X-Bond Stone mix',
+      minSqftPerUnit: 37.5,
+      maxSqftPerUnit: 37.5,
+      unit: 'gal',
+      coats: 1,
+      sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
+      sourcePage: 2,
+      basis: '2 gal X-Bond Liquid is mixed with 1 x 50 lb X-Bond Stone bag for up to 75 sq ft at 1/8 inch.',
+    },
+    microbondMix: {
+      label: 'Liquid for MicroBond finish mix',
+      minSqftPerUnit: 400,
+      maxSqftPerUnit: 400,
+      unit: 'gal',
+      coats: 2,
+      sourceDocument: 'Open SIP manual - master copy v2019-3 2.pdf',
+      sourcePage: 33,
+      basis: 'MicroBond mix ratio is 1 part X-Bond Liquid to 2 parts MicroBond Stone. Liquid quantity is tied to the MicroBond smooth-finish estimate.',
+    },
+  },
+};
+
+const MICROBOND_STONE: CoverageProduct = {
+  sku: 'MICROBOND-STONE',
+  name: 'SEMCO MicroBond Stone',
+  category: 'microbond_finish',
+  packLabel: 'Quart smooth-finish allowance',
+  defaultRange: 'smoothFinish',
+  ranges: {
+    smoothFinish: {
+      label: 'MicroBond smooth finish',
+      minSqftPerUnit: 50,
+      maxSqftPerUnit: 50,
+      unit: 'qt',
+      coats: 2,
+      sourceDocument: 'SEMCO X-Bond Microcement Kit 100 sq ft',
+      sourcePage: 0,
+      basis: 'Smooth kit allowance: 2 qt MicroBond for up to 100 sq ft. SIP manual confirms MicroBond is optional for smoother texture and uses 1 part X-Bond Liquid to 2 parts MicroBond Stone.',
+      note: 'Use for optional smooth MicroBond finish only; standard X-Bond finish does not add this row.',
     },
   },
 };
@@ -98,37 +164,28 @@ const LIQUID_MEMBRANE: CoverageProduct = {
   name: 'SEMCO Liquid Membrane',
   category: 'waterproofing',
   packLabel: '1 gal, 5 gal, and 55 gal pails',
-  defaultRange: 'openPore',
+  defaultRange: 'aboveGrade',
   ranges: {
-    openPore: {
-      label: 'Open pore substrates',
-      minSqftPerUnit: 100,
-      maxSqftPerUnit: 200,
-      unit: 'gal',
-      coats: 2,
-      sourceDocument: 'LM-Tech-Sheet.pdf',
-      sourcePage: 1,
-      basis: 'Coverage sq ft / gallon at 2 coats.',
-    },
-    closedPore: {
-      label: 'Closed pore substrates',
-      minSqftPerUnit: 140,
+    aboveGrade: {
+      label: 'Non-submerged / above grade',
+      minSqftPerUnit: 200,
       maxSqftPerUnit: 250,
       unit: 'gal',
       coats: 2,
-      sourceDocument: 'LM-Tech-Sheet.pdf',
-      sourcePage: 1,
-      basis: 'Coverage sq ft / gallon at 2 coats.',
+      sourceDocument: 'semcosurfaces.com/liquid-waterproofing-membrane',
+      sourcePage: 0,
+      basis: 'Current SEMCO product page: 200-250 sq ft/gal for non-submerged / above grade at 2 coats.',
     },
-    xbondScratch: {
-      label: 'X-Bond scratch coat',
-      minSqftPerUnit: 200,
-      maxSqftPerUnit: 300,
+    submerged: {
+      label: 'Submerged / below grade',
+      minSqftPerUnit: 100,
+      maxSqftPerUnit: 150,
       unit: 'gal',
-      coats: 2,
-      sourceDocument: 'LM-Tech-Sheet.pdf',
-      sourcePage: 1,
-      basis: 'Coverage sq ft / gallon at 2 coats.',
+      coats: 3,
+      sourceDocument: 'semcosurfaces.com/liquid-waterproofing-membrane',
+      sourcePage: 0,
+      basis: 'Current SEMCO product page: 100-150 sq ft/gal for submerged / below grade at 3 coats.',
+      note: 'Use for showers, pools, below-grade, and continuous-water exposure.',
     },
   },
 };
@@ -138,8 +195,18 @@ const NATURAL_SHIELD: CoverageProduct = {
   name: 'SEMCO Natural Shield',
   category: 'sealer',
   packLabel: '1 gal, 5 gal, and 55 gal pails',
-  defaultRange: 'polishedConcrete',
+  defaultRange: 'xbond',
   ranges: {
+    xbond: {
+      label: 'X-Bond / artificial stone',
+      minSqftPerUnit: 200,
+      maxSqftPerUnit: 250,
+      unit: 'gal',
+      coats: 3,
+      sourceDocument: 'Natural-Shield-Tech-Sheet.pdf',
+      sourcePage: 1,
+      basis: 'Natural Shield is recommended for X-Bond Microcement; current coverage table does not list X-Bond separately, so the Artificial Stone row is used for X-Bond estimating.',
+    },
     artificialStone: {
       label: 'Artificial stone',
       minSqftPerUnit: 200,
@@ -179,57 +246,69 @@ const SATIN_STONE: CoverageProduct = {
   name: 'SEMCO Satin Stone',
   category: 'sealer',
   packLabel: '1.5 gal kit: Part A 1 gal + Part B 0.5 gal',
-  defaultRange: 'concrete',
+  defaultRange: 'xbond',
+  purchaseUnitLabel: 'kit',
+  purchaseUnitSize: 1.5,
   ranges: {
+    xbond: {
+      label: 'X-Bond Microcement',
+      minSqftPerUnit: 250,
+      maxSqftPerUnit: 300,
+      unit: 'gal',
+      coats: 2,
+      sourceDocument: 'Satin Stone Sealer - semcosurfaces.com',
+      sourcePage: 0,
+      basis: 'Current SEMCO product page: X-Bond Microcement 250-300 sq ft/gal, minimum 2 coats at 20 mil total thickness.',
+    },
     concrete: {
       label: 'Concrete',
       minSqftPerUnit: 200,
       maxSqftPerUnit: 250,
-      unit: 'kit',
+      unit: 'gal',
       coats: 2,
       sourceDocument: 'Satin+Stone+Tech+Sheet.pdf',
       sourcePage: 1,
-      basis: 'Coverage sq ft / 1.5 gal kit at minimum 2 coats and 20 mil total thickness.',
+      basis: 'Coverage sq ft / gallon at minimum 2 coats and 20 mil total thickness.',
     },
     polishedConcrete: {
       label: 'Polished concrete',
-      minSqftPerUnit: 250,
-      maxSqftPerUnit: 300,
-      unit: 'kit',
+      minSqftPerUnit: 200,
+      maxSqftPerUnit: 250,
+      unit: 'gal',
       coats: 2,
       sourceDocument: 'Satin+Stone+Tech+Sheet.pdf',
       sourcePage: 1,
-      basis: 'Coverage sq ft / 1.5 gal kit at minimum 2 coats and 20 mil total thickness.',
+      basis: 'Coverage sq ft / gallon at minimum 2 coats and 20 mil total thickness.',
     },
     artificialStone: {
       label: 'Artificial stone',
       minSqftPerUnit: 200,
       maxSqftPerUnit: 250,
-      unit: 'kit',
+      unit: 'gal',
       coats: 2,
       sourceDocument: 'Satin+Stone+Tech+Sheet.pdf',
       sourcePage: 1,
-      basis: 'Coverage sq ft / 1.5 gal kit at minimum 2 coats and 20 mil total thickness.',
+      basis: 'Coverage sq ft / gallon at minimum 2 coats and 20 mil total thickness.',
     },
     stampedConcrete: {
       label: 'Stamped Concrete',
-      minSqftPerUnit: 150,
-      maxSqftPerUnit: 250,
-      unit: 'kit',
+      minSqftPerUnit: 300,
+      maxSqftPerUnit: 350,
+      unit: 'gal',
       coats: 2,
       sourceDocument: 'Satin+Stone+Tech+Sheet.pdf',
       sourcePage: 1,
-      basis: 'Coverage sq ft / 1.5 gal kit at minimum 2 coats and 20 mil total thickness.',
+      basis: 'Coverage sq ft / gallon at minimum 2 coats and 20 mil total thickness.',
     },
     semcoAda: {
       label: 'SEMCO ADA',
       minSqftPerUnit: 150,
       maxSqftPerUnit: 250,
-      unit: 'kit',
+      unit: 'gal',
       coats: 2,
       sourceDocument: 'Satin+Stone+Tech+Sheet.pdf',
       sourcePage: 1,
-      basis: 'Coverage sq ft / 1.5 gal kit at minimum 2 coats and 20 mil total thickness.',
+      basis: 'Coverage sq ft / gallon at minimum 2 coats and 20 mil total thickness.',
     },
   },
 };
@@ -286,6 +365,8 @@ const TITAN_SHIELD: CoverageProduct = {
 
 export const COVERAGE_PRODUCTS = {
   XBOND,
+  XBOND_LIQUID,
+  MICROBOND_STONE,
   LIQUID_MEMBRANE,
   NATURAL_SHIELD,
   SATIN_STONE,
@@ -298,9 +379,22 @@ export function getXBondRange(substrate: SubstrateId): CoverageRange {
   return XBOND.ranges.concrete;
 }
 
-export function getLiquidMembraneRange(substrate: SubstrateId): CoverageRange {
-  if (substrate === 'existing_tile' || substrate === 'existing_paint') return LIQUID_MEMBRANE.ranges.closedPore;
-  return LIQUID_MEMBRANE.ranges.openPore;
+export function getXBondLiquidRange(): CoverageRange {
+  return XBOND_LIQUID.ranges.stoneMix;
+}
+
+export function getMicroBondRange(): CoverageRange {
+  return MICROBOND_STONE.ranges.smoothFinish;
+}
+
+export function getMicroBondLiquidRange(): CoverageRange {
+  return XBOND_LIQUID.ranges.microbondMix;
+}
+
+export function getLiquidMembraneRange(mode: WaterproofingMode): CoverageRange | null {
+  if (mode === 'none') return null;
+  if (mode === 'submerged') return LIQUID_MEMBRANE.ranges.submerged;
+  return LIQUID_MEMBRANE.ranges.aboveGrade;
 }
 
 export function getSealerProduct(sku?: string): CoverageProduct {
@@ -317,18 +411,24 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
   const adjustedSqft = areaSqft * (1 + wastePct / 100);
   const avgCoverage = (range.minSqftPerUnit + range.maxSqftPerUnit) / 2;
   const exactUnits = adjustedSqft / avgCoverage;
-  const roundedUnits = Math.max(1, Math.ceil(exactUnits));
+  const purchaseUnitSize = product.purchaseUnitSize ?? 1;
+  const roundedUnits = Math.max(1, Math.ceil(exactUnits / purchaseUnitSize));
   const unitLabel = range.unit;
-  const plural = roundedUnits === 1 ? unitLabel : `${unitLabel}s`;
+  const plural = formatUnitLabel(unitLabel, roundedUnits);
   const exactLabel = range.minSqftPerUnit === range.maxSqftPerUnit
     ? `${range.minSqftPerUnit} sq ft/${unitLabel}`
     : `${range.minSqftPerUnit}-${range.maxSqftPerUnit} sq ft/${unitLabel}`;
-  const isWholeUnit = range.unit === 'kit' || range.unit === 'bag';
-  const quantityLabel = `${formatQuantity(isWholeUnit ? roundedUnits : exactUnits)} ${isWholeUnit ? plural : unitLabel}`;
-  const purchaseLabel =
-    isWholeUnit
+  const isWholeUnit = range.unit === 'kit' || range.unit === 'bag' || range.unit === 'qt';
+  const displayQuantity = isWholeUnit ? roundedUnits : exactUnits;
+  const quantityLabel = `${formatQuantity(displayQuantity)} ${isWholeUnit ? plural : unitLabel}`;
+  const purchaseUnitLabel = product.purchaseUnitLabel ?? unitLabel;
+  const purchasePlural = formatUnitLabel(purchaseUnitLabel, roundedUnits);
+  const stagedQuantity = product.purchaseUnitSize ? roundedUnits * product.purchaseUnitSize : roundedUnits;
+  const purchaseLabel = product.purchaseUnitSize
+    ? `Round up to ${roundedUnits} ${purchasePlural} (${formatQuantity(stagedQuantity)} ${unitLabel})`
+    : isWholeUnit
       ? `${roundedUnits} ${plural} to stage`
-      : `Round up to ${roundedUnits} ${roundedUnits === 1 ? 'gal' : 'gals'} for ordering`;
+      : `Round up to ${roundedUnits} ${formatUnitLabel(unitLabel, roundedUnits)} for ordering`;
 
   return {
     product,
@@ -345,4 +445,10 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
 function formatQuantity(value: number): string {
   if (value >= 10 || Number.isInteger(value)) return String(Math.ceil(value));
   return value.toFixed(1);
+}
+
+function formatUnitLabel(unit: string, quantity: number): string {
+  if (unit === 'gal') return 'gal';
+  if (unit === 'qt') return quantity === 1 ? 'qt' : 'qts';
+  return quantity === 1 ? unit : `${unit}s`;
 }

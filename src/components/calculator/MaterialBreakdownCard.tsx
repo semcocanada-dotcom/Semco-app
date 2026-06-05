@@ -10,6 +10,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   base_coat: 'Base Coat',
   finish_coat: 'Finish Coat',
   microcement: 'X-Bond',
+  x_bond_liquid: 'X-Bond Liquid',
+  microbond_finish: 'MicroBond',
   waterproofing: 'Membrane',
   sealer: 'Sealer',
   pigment: 'Pigment',
@@ -58,7 +60,9 @@ function LayerRow({ layer }: { layer: MaterialLayer }) {
   const badgeVariant =
     layer.category === 'primer' || layer.category === 'waterproofing' ? 'warning' :
     layer.category === 'sealer' ? 'primary' :
+    layer.category === 'x_bond_liquid' ? 'neutral' :
     layer.category === 'microcement' ? 'accent' :
+    layer.category === 'microbond_finish' ? 'accent' :
     'neutral';
   const detail = layer.coverageLabel ?? `${layer.coats} coat${layer.coats > 1 ? 's' : ''} - ${layer.coverageRateSqmPerKg.toFixed(1)} m2/kg avg`;
   const sourceLabel = layer.sourceDocument

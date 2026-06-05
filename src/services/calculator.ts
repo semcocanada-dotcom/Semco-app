@@ -5,11 +5,14 @@ import {
   SQFT_PER_SQM,
   estimateCoverage,
   getLiquidMembraneRange,
+  getMicroBondLiquidRange,
+  getMicroBondRange,
   getSealerProduct,
   getSealerRange,
+  getXBondLiquidRange,
   getXBondRange,
 } from '@/constants/product-coverage';
-import type { CoverageEstimate } from '@/constants/product-coverage';
+import type { CoverageEstimate, WaterproofingMode, XBondFinishSku } from '@/constants/product-coverage';
 import type { CalculationResult, MaterialLayer } from '@/database/schema/calculations';
 
 interface CalculatorInput {
@@ -18,10 +21,18 @@ interface CalculatorInput {
   substrateType: SubstrateId;
   wastePct: number;
   sealerSku?: string;
+  waterproofingMode?: WaterproofingMode;
+  finishSku?: XBondFinishSku;
 }
 
 export function calculate(input: CalculatorInput): CalculationResult {
-  const { substrateType, wastePct, sealerSku } = input;
+  const {
+    substrateType,
+    wastePct,
+    sealerSku,
+    waterproofingMode = 'above_grade',
+    finishSku = 'XBOND-STANDARD',
+  } = input;
   const areaSqft = input.areaSqft ?? (input.areaSqm ? input.areaSqm * SQFT_PER_SQM : 0);
   const areaSqm = areaSqft / SQFT_PER_SQM;
 
@@ -33,11 +44,24 @@ export function calculate(input: CalculatorInput): CalculationResult {
   }
 
   const sealerProduct = getSealerProduct(sealerSku);
-  const estimates = [
+  const estimates: CoverageEstimate[] = [
     estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqft, wastePct),
-    estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, getLiquidMembraneRange(substrateType), areaSqft, wastePct),
-    estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqft, wastePct),
+    estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getXBondLiquidRange(), areaSqft, wastePct),
   ];
+
+  const membraneRange = getLiquidMembraneRange(waterproofingMode);
+  if (membraneRange) {
+    estimates.push(estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, membraneRange, areaSqft, wastePct));
+  }
+
+  if (finishSku === 'MICROBOND-SMOOTH') {
+    estimates.push(
+      estimateCoverage(COVERAGE_PRODUCTS.MICROBOND_STONE, getMicroBondRange(), areaSqft, wastePct),
+      estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getMicroBondLiquidRange(), areaSqft, wastePct),
+    );
+  }
+
+  estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqft, wastePct));
 
   return {
     layers: estimates.map(toMaterialLayer),
@@ -45,7 +69,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     wastePct,
     areaSqm,
     areaSqft,
-    sourceSummary: 'Coverage is calculated from Semco technical sheets plus the configured X-Bond field bag rate. Quantities are internal estimates only.',
+    sourceSummary: 'Coverage is calculated from current Semco product pages, imported Semco technical sheets, and the configured X-Bond field bag rate. Quantities are internal estimates only.',
   };
 }
 
