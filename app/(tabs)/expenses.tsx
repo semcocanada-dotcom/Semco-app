@@ -30,6 +30,7 @@ import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, buildMileageProposalFromAddress, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import { DateField } from '@components/DateField';
 import { inferCategoryFromText } from '@lib/ocr';
 import { router, useLocalSearchParams } from 'expo-router';
 
@@ -727,13 +728,7 @@ function QuickAddModal({
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
               <View style={{ flex: 1 }}>
                 <Text style={s.fieldLabel}>Date</Text>
-                <TextInput
-                  style={s.textField}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={Colors.textMuted}
-                />
+                <DateField value={date} onChange={setDate} />
               </View>
               <View style={{ flex: 2 }}>
                 <Text style={s.fieldLabel}>Notes (optional)</Text>
@@ -1252,7 +1247,7 @@ function MileageOnlyModal({
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
               <View style={{ flex: 1 }}>
                 <Text style={s.fieldLabel}>Date</Text>
-                <TextInput style={s.textField} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+                <DateField value={date} onChange={setDate} />
               </View>
               <View style={{ flex: 2 }}>
                 <Text style={s.fieldLabel}>Notes (optional)</Text>

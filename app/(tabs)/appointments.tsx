@@ -10,6 +10,7 @@ import * as CalendarAPI from 'expo-calendar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO, isFuture, isPast } from 'date-fns';
 import { Colors } from '@constants/colors';
+import { DateField } from '@components/DateField';
 import { supabase } from '@lib/supabase';
 import type { Appointment, Provider, ProviderCategory } from '@lib/types';
 import { useChild } from '@context/ChildContext';
@@ -308,13 +309,7 @@ function AddAppointmentModal({
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
               <View style={{ flex: 3 }}>
                 <Text style={s.fieldLabel}>Date</Text>
-                <TextInput
-                  style={s.textField}
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={Colors.textMuted}
-                />
+                <DateField value={date} onChange={setDate} maximumDate={new Date(2100, 0, 1)} />
               </View>
               <View style={{ flex: 2 }}>
                 <Text style={s.fieldLabel}>Time</Text>

@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { AppLogo } from '@components/AppLogo';
 import { ChildSelector } from '@components/ChildSelector';
+import { DateField } from '@components/DateField';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { RespiteSession, RespiteWorker } from '@lib/types';
@@ -333,8 +334,7 @@ function LogSessionModal({
             {/* Date */}
             <View>
               <Text style={m.label}>Date</Text>
-              <TextInput style={m.input} value={date} onChangeText={setDate}
-                placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+              <DateField value={date} onChange={setDate} />
             </View>
 
             {/* Worker picker */}

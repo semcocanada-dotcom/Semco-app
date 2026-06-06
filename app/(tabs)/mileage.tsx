@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path, Rect, Circle, Polygon, Line, Ellipse } from 'react-native-svg';
 import { format, parseISO } from 'date-fns';
 import { AppLogo } from '@components/AppLogo';
+import { DateField } from '@components/DateField';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { MileageLog, Provider, ProviderCategory } from '@lib/types';
@@ -141,7 +142,7 @@ function AddTripModal({
           <ScrollView contentContainerStyle={s.mBody} keyboardShouldPersistTaps="handled">
 
             <Text style={s.label}>Date</Text>
-            <TextInput style={s.field} value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.textMuted} />
+            <DateField value={date} onChange={setDate} />
 
             <Text style={[s.label, { marginTop: 18 }]}>Provider (optional — auto-calculates km)</Text>
             {selectedProvider ? (
