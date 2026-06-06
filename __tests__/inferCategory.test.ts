@@ -18,6 +18,15 @@ describe('inferCategoryFromText', () => {
     expect(inferCategoryFromText('Physiotherapy assessment')).toBe('physical_therapy');
   });
 
+  it('detects sensory equipment (crash pad) as assistive technology', () => {
+    expect(inferCategoryFromText("Skil-Care 5' x 5' Crash Pad")).toBe('assistive_technology');
+  });
+
+  it('reads OT off a Pathways receipt with an MScOT therapist', () => {
+    expect(inferCategoryFromText('Occupational Therapy 50-minutes\nAngela Kretschmer MScOT (Reg.) SK'))
+      .toBe('occupational_therapy');
+  });
+
   it('returns null when no service keyword is present', () => {
     expect(inferCategoryFromText('Receipt\nTotal $140.00\nThank you')).toBeNull();
   });

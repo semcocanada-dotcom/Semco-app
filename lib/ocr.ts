@@ -159,7 +159,7 @@ const CATEGORY_KEYWORDS: { category: ProviderCategory; patterns: RegExp[] }[] = 
   { category: 'social_skills',        patterns: [/social skill/i] },
   { category: 'swimming',             patterns: [/swim/i, /aquatic/i] },
   { category: 'respite',              patterns: [/respite/i] },
-  { category: 'assistive_technology', patterns: [/assistive tech/i, /\baac\b/i, /communication device/i] },
+  { category: 'assistive_technology', patterns: [/assistive tech/i, /\baac\b/i, /communication device/i, /crash pad/i, /sensory/i, /weighted (blanket|vest)/i, /trampoline/i, /\bipad\b/i, /tablet/i] },
 ];
 
 /**
