@@ -68,21 +68,24 @@ export default function LoginScreen() {
         >
           {/* Header */}
           <View style={{ marginBottom: 40, alignItems: 'center' }}>
-            <LinearGradient
-              colors={Colors.gradients.purple}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+            <View
               style={{
-                width: 80,
-                height: 80,
-                borderRadius: 22,
+                width: 96,
+                height: 96,
+                borderRadius: 24,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 20,
+                backgroundColor: Colors.surface,
+                shadowColor: '#7C5CFC',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.16,
+                shadowRadius: 16,
+                elevation: 4,
               }}
             >
-              <AppLogo size={62} variant="light" />
-            </LinearGradient>
+              <AppLogo size={72} />
+            </View>
             <Text style={{ fontSize: 26, fontWeight: '700', color: Colors.textPrimary, letterSpacing: -0.5, textAlign: 'center' }}>
               Autism Fund Tracker
             </Text>
