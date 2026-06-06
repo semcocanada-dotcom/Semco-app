@@ -158,7 +158,7 @@ export function BudgetRing({
 
       {/* 4-stat grid */}
       <View style={s.statsRow}>
-        <StatCol icon="⚪" label="Remaining" value={fmt(Math.max(remaining, 0))} sub={pctStr(Math.max(remaining, 0), totalBudget)} color={Colors.textSecondary} />
+        <StatCol icon="🟢" label="Remaining" value={fmt(Math.max(remaining, 0))} sub={pctStr(Math.max(remaining, 0), totalBudget)} color="#15803D" />
         <View style={s.vDivider} />
         <StatCol icon="🔵" label="Spent"     value={fmt(totalSpent)}            sub={pctStr(totalSpent, totalBudget)}            color={Colors.purple} />
         <View style={s.vDivider} />
