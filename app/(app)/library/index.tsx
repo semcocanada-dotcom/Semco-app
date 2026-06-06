@@ -8,6 +8,7 @@ import colorsData from '@/database/seed/colors.json';
 import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
 import { BrandMark } from '@/components/brand/BrandMark';
+import { SystemGuideCard } from '@/components/library/SystemGuideCard';
 import { ActionCard, Badge, Card, SectionHeader } from '@/components/ui';
 import {
   BROWSABLE_DOC_GROUPS,
@@ -17,9 +18,11 @@ import {
 } from '@/knowledge/doc-catalog';
 import type { DocGroupId } from '@/knowledge/doc-catalog';
 import { TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
+import { INSTALLATION_GUIDES } from '@/knowledge/installation-guides';
 import { Colors, Fonts, Radius, Typography, Spacing } from '@/constants/theme';
 
 const HUB_CARDS = [
+  { title: 'System Diagrams', description: 'Layers + process', icon: 'layers-outline' as const, route: '/library/guides' },
   { title: 'Product Docs', description: 'Grouped sheets', icon: 'document-text-outline' as const, route: '/products' },
   { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, route: '/colors' },
   { title: 'Calculator', description: 'Tech coverage', icon: 'calculator-outline' as const, route: '/calculator' },
@@ -114,6 +117,25 @@ export default function LibraryScreen() {
                 onPress={() => push(card.route)}
                 compact
                 style={styles.hubCard}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader
+            title="Installation diagrams"
+            subtitle="Layer stacks and process cards for field reference."
+            actionLabel="View all"
+            onActionPress={() => push('/library/guides')}
+          />
+          <View style={styles.guidePreviewList}>
+            {INSTALLATION_GUIDES.slice(0, 2).map((guide) => (
+              <SystemGuideCard
+                key={guide.id}
+                guide={guide}
+                compact
+                onPress={() => push('/library/guides')}
               />
             ))}
           </View>
@@ -219,6 +241,7 @@ const styles = StyleSheet.create({
   section: { gap: Spacing.md },
   cardsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   hubCard: { width: '48.5%', flexBasis: '48.5%', flexGrow: 0 },
+  guidePreviewList: { gap: Spacing.sm },
   groupGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   groupCard: {
     width: '48.5%',

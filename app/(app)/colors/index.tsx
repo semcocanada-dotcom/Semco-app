@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { db, initDatabase } from '@/database/client';
 import { seedDatabase } from '@/database/seed';
 import colorsData from '@/database/seed/colors.json';
 import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
 import { ColorTile } from '@/components/colors/ColorTile';
-import { AppHeader, Button, EmptyState, SearchBar } from '@/components/ui';
+import { AppHeader, EmptyState, SearchBar } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
 const STANDARD_COLORS = colorsData as Color[];
@@ -53,11 +54,11 @@ export default function ColorsScreen() {
   const [series, setSeries] = useState<ColorSeries>('all');
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const numColumns = width >= 560 ? 4 : 3;
+  const numColumns = width >= 720 ? 8 : width >= 560 ? 7 : width >= 430 ? 6 : 5;
   const horizontalPadding = Spacing.base * 2;
-  const gridGap = Spacing.sm;
+  const gridGap = 6;
   const tileSize = Math.max(
-    72,
+    48,
     Math.floor((width - horizontalPadding - gridGap * (numColumns - 1)) / numColumns),
   );
 
@@ -117,13 +118,21 @@ export default function ColorsScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <AppHeader title="Colour Library" subtitle={resultLabel} rightIcon="color-palette-outline" />
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search color name, code, or tone..." showMic={false} />
-        <View style={styles.seriesSummary}>
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search colour name, code, or tone..." showMic={false} />
+        <View style={styles.filterHeader}>
           <View>
-            <Text style={styles.seriesSummaryLabel}>Fan deck group</Text>
-            <Text style={styles.seriesSummaryTitle}>{activeSeries.label}</Text>
+            <Text style={styles.filterLabel}>Fan deck group</Text>
+            <Text style={styles.filterTitle}>{activeSeries.shortLabel} · {filtered.length}</Text>
           </View>
-          <Text style={styles.seriesSummaryCount}>{filtered.length}</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(app)/colors/create')}
+            style={styles.customButton}
+            accessibilityRole="button"
+            accessibilityLabel="Add custom colour"
+          >
+            <Ionicons name="add" size={18} color={Colors.white} />
+            <Text style={styles.customButtonText}>Custom</Text>
+          </TouchableOpacity>
         </View>
         <ScrollView
           horizontal
@@ -144,7 +153,6 @@ export default function ColorsScreen() {
             );
           })}
         </ScrollView>
-        <Button label="Add Custom Color" variant="primary" onPress={() => router.push('/(app)/colors/create')} fullWidth />
       </View>
 
       <FlatList
@@ -172,46 +180,49 @@ export default function ColorsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  header: { padding: Spacing.base, gap: Spacing.md },
-  seriesSummary: {
-    minHeight: 64,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.primaryMuted,
-    borderWidth: 1,
-    borderColor: Colors.lightTeal,
+  header: { padding: Spacing.base, paddingBottom: Spacing.sm, gap: Spacing.sm },
+  filterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.md,
   },
-  seriesSummaryLabel: {
+  filterLabel: {
     color: Colors.darkTeal,
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.xs,
     textTransform: 'uppercase',
   },
-  seriesSummaryTitle: {
+  filterTitle: {
     color: Colors.navy,
     fontFamily: Fonts.bold,
-    fontSize: Typography.size.base,
+    fontSize: Typography.size.sm,
     marginTop: 2,
   },
-  seriesSummaryCount: {
-    color: Colors.semcoOrange,
+  customButton: {
+    minHeight: 36,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.semcoOrange,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.md,
+  },
+  customButtonText: {
+    color: Colors.white,
     fontFamily: Fonts.bold,
-    fontSize: Typography.size.xl,
+    fontSize: Typography.size.xs,
   },
   seriesRow: {
-    gap: Spacing.sm,
+    gap: 6,
     paddingRight: Spacing.base,
   },
   seriesChip: {
-    minHeight: 40,
-    minWidth: 86,
+    minHeight: 34,
+    minWidth: 74,
     borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.sm,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.primaryMuted,
@@ -225,15 +236,12 @@ const styles = StyleSheet.create({
   seriesText: {
     color: Colors.textSecondary,
     fontFamily: Fonts.semibold,
-    fontSize: Typography.size.sm,
+    fontSize: Typography.size.xs,
   },
   seriesTextActive: {
     color: Colors.white,
   },
   list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xxxl + 44 },
   emptyList: { flexGrow: 1 },
-  gridRow: {
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
+  gridRow: { gap: 6, marginBottom: 6 },
 });
