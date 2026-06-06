@@ -26,13 +26,22 @@ const BANDS = [
   { r: 113, color: '#7C3AED' }, // violet — innermost
 ];
 
-const DOT_R    = 125; // progress badge rides on the arc
-const DOT_SIZE = 28;
+const DOT_R    = 125.5; // knob rides the middle of the rainbow band
+const KNOB     = 22;
 const SVG_H    = 160;
 
 function arcPath(r: number) {
   // sweep-flag 1 → upward semicircular arch (rainbow shape)
   return `M ${CX - r},${CY} A ${r},${r} 0 0,1 ${CX + r},${CY}`;
+}
+
+// Partial arc from the left end to the given progress fraction (0–1).
+function progressArcPath(r: number, pct: number) {
+  const p = Math.min(Math.max(pct, 0), 1);
+  const angle = Math.PI * (1 - p);
+  const ex = CX + r * Math.cos(angle);
+  const ey = CY - r * Math.sin(angle);
+  return `M ${CX - r},${CY} A ${r},${r} 0 0,1 ${ex},${ey}`;
 }
 
 function dotXY(pct: number) {
@@ -95,29 +104,40 @@ export function BudgetRing({
       {/* Rainbow arc */}
       <View style={{ width: W, alignSelf: 'center' }}>
         <Svg width={W} height={SVG_H} viewBox={`0 0 ${W} ${SVG_H}`}>
+          {/* faded full track = the whole grant */}
           {BANDS.map(b => (
             <Path
-              key={b.r}
+              key={`track-${b.r}`}
               d={arcPath(b.r)}
               stroke={b.color}
               strokeWidth={BAND_W}
-              strokeLinecap="butt"
+              strokeLinecap="round"
               fill="none"
-              opacity={0.88}
+              opacity={0.18}
+            />
+          ))}
+          {/* bright fill = portion spent */}
+          {totalSpentPct > 0 && BANDS.map(b => (
+            <Path
+              key={`fill-${b.r}`}
+              d={progressArcPath(b.r, totalSpentPct)}
+              stroke={b.color}
+              strokeWidth={BAND_W}
+              strokeLinecap="round"
+              fill="none"
             />
           ))}
         </Svg>
 
-        {/* Progress dot */}
+        {/* Progress knob — a clean white slider thumb at the spent point */}
         <Animated.View
           style={[
-            s.dot,
-            { left: dot.x - DOT_SIZE / 2, top: dot.y - DOT_SIZE / 2 },
+            s.knob,
+            { left: dot.x - KNOB / 2, top: dot.y - KNOB / 2 },
             dotAnim,
           ]}
         >
-          <Text style={s.dotPct}>{pctStr(totalSpent, totalBudget)}</Text>
-          <Text style={s.dotUsed}>used</Text>
+          <View style={s.knobCore} />
         </Animated.View>
 
         {/* Cloud endpoints */}
@@ -198,22 +218,26 @@ const s = StyleSheet.create({
   totalSpentBadge:    { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20 },
   totalSpentBadgeText:{ fontSize: 12, fontWeight: '700' },
 
-  dot: {
+  knob: {
     position: 'absolute',
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-    backgroundColor: '#1D4ED8',
+    width: KNOB,
+    height: KNOB,
+    borderRadius: KNOB / 2,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
+    shadowColor: '#1E1B4B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.30,
+    shadowRadius: 5,
     elevation: 5,
   },
-  dotPct:  { fontSize: 11, fontWeight: '800', color: '#fff', lineHeight: 14 },
-  dotUsed: { fontSize: 8,  fontWeight: '600', color: 'rgba(255,255,255,0.75)', lineHeight: 10 },
+  knobCore: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: Colors.purple,
+  },
 
   cloud:      { position: 'absolute', width: 40, height: 28, alignItems: 'center', justifyContent: 'flex-end' },
   cloudPuff:  { position: 'absolute', top: 0, width: 22, height: 22, borderRadius: 11, backgroundColor: '#FFFFFF' },
