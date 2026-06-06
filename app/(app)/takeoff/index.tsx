@@ -15,6 +15,7 @@ import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdown
 import { WasteToggle } from '@/components/calculator/WasteToggle';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { Button, Card, Badge, SectionHeader } from '@/components/ui';
+import { formatSqftFromSqm, sqmToSqft } from '@/utils/area';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 
 export default function TakeoffScreen() {
@@ -69,7 +70,7 @@ export default function TakeoffScreen() {
         if (loadedProject?.totalAreaSqm && loadedProject.substrateType) {
           const substrate = loadedProject.substrateType as SubstrateId;
           const calculated = calculate({
-            areaSqm: loadedProject.totalAreaSqm,
+            areaSqft: sqmToSqft(loadedProject.totalAreaSqm),
             substrateType: substrate,
             wastePct: 10,
             sealerSku: loadedProject.sealerProductId ?? undefined,
@@ -96,7 +97,7 @@ export default function TakeoffScreen() {
     const substrate = project.substrateType as SubstrateId;
     setResult(
       calculate({
-        areaSqm: project.totalAreaSqm,
+        areaSqft: sqmToSqft(project.totalAreaSqm),
         substrateType: substrate,
         wastePct,
         sealerSku: project.sealerProductId ?? undefined,
@@ -210,7 +211,7 @@ export default function TakeoffScreen() {
                 <View style={styles.metaRow}>
                   <View style={styles.metaItem}>
                     <Text style={styles.metaLabel}>Area</Text>
-                    <Text style={styles.metaValue}>{project.totalAreaSqm ?? '—'} m²</Text>
+                    <Text style={styles.metaValue}>{formatSqftFromSqm(project.totalAreaSqm)}</Text>
                   </View>
                   <View style={styles.metaItem}>
                     <Text style={styles.metaLabel}>Substrate</Text>

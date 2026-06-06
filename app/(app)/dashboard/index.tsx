@@ -9,42 +9,29 @@ import { ProjectCard } from '@/components/projects/ProjectCard';
 import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
-import { colors } from '@/database/schema/colors';
-import colorsData from '@/database/seed/colors.json';
 import type { Project } from '@/database/schema/projects';
-import type { Color } from '@/database/schema/colors';
-import { TECHNICAL_DOCS } from '@/knowledge/technical-docs';
 import { Colors, Fonts, Spacing, Typography } from '@/constants/theme';
 
 type LoadState = {
   projects: Project[];
-  colors: Color[];
 };
-
-const STANDARD_COLORS = colorsData as Color[];
 
 const FEATURE_CARDS = [
   { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/projects' },
   { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'accent' as const, route: '/calculator' },
-  { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, tone: 'neutral' as const, route: '/colors' },
   { title: 'Takeoff', description: 'Measure scope', icon: 'triangle-outline' as const, tone: 'primary' as const, route: '/takeoff' },
   { title: 'Photos', description: 'Capture stage', icon: 'camera-outline' as const, tone: 'accent' as const, route: '/add' },
-  { title: 'Product Docs', description: 'Verified sheets', icon: 'document-text-outline' as const, tone: 'neutral' as const, route: '/products' },
-  { title: 'Library', description: 'Manuals + tools', icon: 'book-outline' as const, tone: 'primary' as const, route: '/library' },
 ];
 
 export default function DashboardScreen() {
   const router = useRouter();
   const push = (href: string) => router.push(href as any);
-  const [state, setState] = useState<LoadState>({ projects: [], colors: STANDARD_COLORS });
+  const [state, setState] = useState<LoadState>({ projects: [] });
 
   useEffect(() => {
-    Promise.all([
-      db.select().from(projects).orderBy(desc(projects.updatedAt)),
-      db.select().from(colors).orderBy(desc(colors.updatedAt)),
-    ])
-      .then(([projectRows, colorRows]) => {
-        setState({ projects: projectRows, colors: colorRows.length > 0 ? colorRows : STANDARD_COLORS });
+    db.select().from(projects).orderBy(desc(projects.updatedAt))
+      .then((projectRows) => {
+        setState({ projects: projectRows });
       })
       .catch(console.error);
   }, []);
@@ -55,10 +42,8 @@ export default function DashboardScreen() {
     return [
       { label: 'Projects', value: String(state.projects.length || 0), detail: 'Total', icon: 'folder-open-outline' as const, tone: 'primary' as const },
       { label: 'In Progress', value: String(active || 0), detail: 'Live jobs', icon: 'pulse-outline' as const, tone: 'accent' as const },
-      { label: 'Colours', value: String(state.colors.length || STANDARD_COLORS.length), detail: 'Formulas', icon: 'color-palette-outline' as const, tone: 'accent' as const },
-      { label: 'Docs', value: String(TECHNICAL_DOCS.length), detail: 'Semco sheets', icon: 'document-text-outline' as const, tone: 'primary' as const },
     ];
-  }, [state.projects, state.colors]);
+  }, [state.projects]);
 
   const recentProjects = state.projects.slice(0, 3);
 
@@ -238,8 +223,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   featureCard: {
-    width: '31.5%',
-    flexBasis: '31.5%',
+    width: '48.5%',
+    flexBasis: '48.5%',
     flexGrow: 0,
     flexShrink: 0,
   },

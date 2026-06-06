@@ -13,6 +13,7 @@ import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
 import { useAuthStore } from '@/store/auth';
 import { Badge, BatchCard, Button, Card, EmptyState, TabControl } from '@/components/ui';
+import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
 type DetailTab = 'overview' | 'photos' | 'batches' | 'warranty';
@@ -177,7 +178,7 @@ export default function ProjectDetailScreen() {
                 <BatchCard
                   key={batch.id}
                   batchNumber={batch.batchNumber}
-                  detail={`${batch.quantityKg ?? 0} kg${batch.coverageAchievedSqm != null ? ` - ${batch.coverageAchievedSqm} m2` : ''}`}
+                  detail={`${batch.quantityKg ?? 0} kg${batch.coverageAchievedSqm != null ? ` - ${formatSqftFromSqm(batch.coverageAchievedSqm)}` : ''}`}
                   notes={batch.notes}
                 />
               ))

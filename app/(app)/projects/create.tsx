@@ -15,6 +15,7 @@ import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
 import type { SubstrateId } from '@/constants/substrates';
 import { useAuthStore } from '@/store/auth';
+import { sqftToSqm } from '@/utils/area';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 
 const FINISH_OPTIONS: { id: string; label: string }[] = [
@@ -32,7 +33,7 @@ export default function CreateProjectScreen() {
   const [clientPhone, setClientPhone] = useState('');
   const [siteAddress, setSiteAddress] = useState('');
   const [substrateType, setSubstrateType] = useState<SubstrateId | null>(null);
-  const [totalAreaSqm, setTotalAreaSqm] = useState('');
+  const [totalAreaSqft, setTotalAreaSqft] = useState('');
   const [finishType, setFinishType] = useState('satin');
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -43,7 +44,7 @@ export default function CreateProjectScreen() {
     setError(null);
     setIsSaving(true);
 
-    const area = parseFloat(totalAreaSqm);
+    const areaSqft = parseFloat(totalAreaSqft);
 
     await db.insert(projects).values({
       id: `proj-${Date.now()}`,
@@ -53,7 +54,7 @@ export default function CreateProjectScreen() {
       clientPhone: clientPhone.trim() || null,
       siteAddress: siteAddress.trim() || null,
       substrateType: substrateType ?? null,
-      totalAreaSqm: isNaN(area) ? null : area,
+      totalAreaSqm: isNaN(areaSqft) ? null : sqftToSqm(areaSqft),
       finishType,
       status: 'active',
       warrantyIssued: false,
@@ -85,7 +86,7 @@ export default function CreateProjectScreen() {
         <Text style={styles.sectionLabel}>Application Spec</Text>
         <SubstratePicker selected={substrateType} onSelect={setSubstrateType} />
 
-        <Input label="Total Area" value={totalAreaSqm} onChangeText={setTotalAreaSqm} keyboardType="decimal-pad" placeholder="e.g. 45" suffix="m²" />
+        <Input label="Total Area" value={totalAreaSqft} onChangeText={setTotalAreaSqft} keyboardType="decimal-pad" placeholder="e.g. 500" suffix="sq ft" />
 
         <Text style={styles.label}>Finish</Text>
         <View style={styles.finishRow}>

@@ -3,6 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '@/components/ui/Badge';
 import type { Project } from '@/database/schema/projects';
+import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 
 const STATUS_MAP: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> = {
@@ -47,7 +48,7 @@ export function ProjectCard({ project, onPress }: ProjectCardProps) {
           {project.totalAreaSqm ? (
             <View style={styles.metaItem}>
               <Ionicons name="expand-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.metaText}>{project.totalAreaSqm} m2</Text>
+              <Text style={styles.metaText}>{formatSqftFromSqm(project.totalAreaSqm)}</Text>
             </View>
           ) : null}
           {project.substrateType ? (
