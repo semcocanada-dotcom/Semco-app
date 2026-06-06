@@ -24,7 +24,7 @@ const TABS: {
 
 function getActiveTab(pathname: string): RouteName {
   if (pathname.startsWith('/projects')) return 'projects';
-  if (pathname.startsWith('/add') || pathname.startsWith('/orders') || pathname.startsWith('/takeoff')) return 'add';
+  if (pathname.startsWith('/add') || pathname.startsWith('/orders')) return 'add';
   if (
     pathname.startsWith('/library') ||
     pathname.startsWith('/assistant') ||

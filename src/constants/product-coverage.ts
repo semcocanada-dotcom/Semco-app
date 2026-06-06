@@ -1,7 +1,7 @@
 import type { SubstrateId } from '@/constants/substrates';
 
 export type CoverageUnit = 'bag' | 'kit' | 'gal' | 'qt' | 'pail';
-export type CoverageCategory = 'microcement' | 'x_bond_liquid' | 'microbond_finish' | 'waterproofing' | 'sealer';
+export type CoverageCategory = 'prep' | 'microcement' | 'x_bond_liquid' | 'microbond_finish' | 'waterproofing' | 'sealer';
 export type WaterproofingMode = 'none' | 'above_grade' | 'submerged';
 export type XBondFinishSku = 'XBOND-STANDARD' | 'MICROBOND-SMOOTH';
 
@@ -26,6 +26,7 @@ export interface CoverageProduct {
   defaultRange: string;
   purchaseUnitLabel?: string;
   purchaseUnitSize?: number;
+  purchaseSizes?: number[];
 }
 
 export interface CoverageEstimate {
@@ -49,8 +50,7 @@ export const SEALER_OPTIONS = [
 
 export const WATERPROOFING_OPTIONS = [
   { mode: 'none', label: 'No membrane', description: 'Skip membrane for dry areas where it is not specified.' },
-  { mode: 'above_grade', label: 'Above grade', description: '2 coats at 200-250 sq ft/gal.' },
-  { mode: 'submerged', label: 'Wet / below grade', description: '3 coats at 100-150 sq ft/gal.' },
+  { mode: 'above_grade', label: 'Add membrane', description: 'Adds Liquid Membrane. Pool substrate uses the wet-area rate automatically.' },
 ] as const satisfies readonly { mode: WaterproofingMode; label: string; description: string }[];
 
 export const XBOND_FINISH_OPTIONS = [
@@ -113,6 +113,7 @@ const XBOND_LIQUID: CoverageProduct = {
   name: 'SEMCO X-Bond Liquid',
   category: 'x_bond_liquid',
   packLabel: '1 gal, 5 gal, and 55 gal pails',
+  purchaseSizes: [1, 5, 55],
   defaultRange: 'stoneMix',
   ranges: {
     stoneMix: {
@@ -164,28 +165,29 @@ const LIQUID_MEMBRANE: CoverageProduct = {
   name: 'SEMCO Liquid Membrane',
   category: 'waterproofing',
   packLabel: '1 gal, 5 gal, and 55 gal pails',
+  purchaseSizes: [1, 5, 55],
   defaultRange: 'aboveGrade',
   ranges: {
     aboveGrade: {
-      label: 'Non-submerged / above grade',
+      label: 'Standard Liquid Membrane',
       minSqftPerUnit: 200,
       maxSqftPerUnit: 250,
       unit: 'gal',
       coats: 2,
-      sourceDocument: 'semcosurfaces.com/liquid-waterproofing-membrane',
+      sourceDocument: 'Semco installer field rate',
       sourcePage: 0,
-      basis: 'Current SEMCO product page: 200-250 sq ft/gal for non-submerged / above grade at 2 coats.',
+      basis: 'Field rate: standard non-submerged Liquid Membrane gets over 1000 sq ft per 5 gal pail, estimated at 200-250 sq ft/gal.',
     },
     submerged: {
-      label: 'Submerged / below grade',
-      minSqftPerUnit: 100,
-      maxSqftPerUnit: 150,
+      label: 'Pool / wet-area Liquid Membrane',
+      minSqftPerUnit: 50,
+      maxSqftPerUnit: 75,
       unit: 'gal',
-      coats: 3,
-      sourceDocument: 'semcosurfaces.com/liquid-waterproofing-membrane',
-      sourcePage: 0,
-      basis: 'Current SEMCO product page: 100-150 sq ft/gal for submerged / below grade at 3 coats.',
-      note: 'Use for showers, pools, below-grade, and continuous-water exposure.',
+      coats: 4,
+      sourceDocument: 'Pool-Resurfacing-Detail-Interior-Below-Grade.pdf',
+      sourcePage: 1,
+      basis: 'Pool resurfacing detail calls for 4 coats at 15 mil each for 60 mil total. Rate is derived from the 100-150 sq ft/gal 2-coat X-Bond scratch coat rate.',
+      note: 'Used automatically when Pool is selected.',
     },
   },
 };
@@ -195,6 +197,7 @@ const NATURAL_SHIELD: CoverageProduct = {
   name: 'SEMCO Natural Shield',
   category: 'sealer',
   packLabel: '1 gal, 5 gal, and 55 gal pails',
+  purchaseSizes: [1, 5, 55],
   defaultRange: 'xbond',
   ranges: {
     xbond: {
@@ -318,6 +321,7 @@ const TITAN_SHIELD: CoverageProduct = {
   name: 'SEMCO Titan Shield Gloss',
   category: 'sealer',
   packLabel: '1 gal and 5 gal pails',
+  purchaseSizes: [1, 5],
   defaultRange: 'xbond',
   ranges: {
     polishedConcrete: {
@@ -411,8 +415,9 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
   const adjustedSqft = areaSqft * (1 + wastePct / 100);
   const avgCoverage = (range.minSqftPerUnit + range.maxSqftPerUnit) / 2;
   const exactUnits = adjustedSqft / avgCoverage;
+  const purchase = getPurchaseRecommendation(product, range.unit, exactUnits);
   const purchaseUnitSize = product.purchaseUnitSize ?? 1;
-  const roundedUnits = Math.max(1, Math.ceil(exactUnits / purchaseUnitSize));
+  const roundedUnits = purchase.roundedUnits ?? Math.max(1, Math.ceil(exactUnits / purchaseUnitSize));
   const unitLabel = range.unit;
   const plural = formatUnitLabel(unitLabel, roundedUnits);
   const exactLabel = range.minSqftPerUnit === range.maxSqftPerUnit
@@ -421,14 +426,7 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
   const isWholeUnit = range.unit === 'kit' || range.unit === 'bag' || range.unit === 'qt' || range.unit === 'pail';
   const displayQuantity = isWholeUnit ? roundedUnits : exactUnits;
   const quantityLabel = `${formatQuantity(displayQuantity)} ${isWholeUnit ? plural : unitLabel}`;
-  const purchaseUnitLabel = product.purchaseUnitLabel ?? unitLabel;
-  const purchasePlural = formatUnitLabel(purchaseUnitLabel, roundedUnits);
-  const stagedQuantity = product.purchaseUnitSize ? roundedUnits * product.purchaseUnitSize : roundedUnits;
-  const purchaseLabel = product.purchaseUnitSize
-    ? `Round up to ${roundedUnits} ${purchasePlural} (${formatQuantity(stagedQuantity)} ${unitLabel})`
-    : isWholeUnit
-      ? `${roundedUnits} ${plural} to stage`
-      : `Round up to ${roundedUnits} ${formatUnitLabel(unitLabel, roundedUnits)} for ordering`;
+  const purchaseLabel = purchase.purchaseLabel ?? getDefaultPurchaseLabel(product, unitLabel, roundedUnits, isWholeUnit);
 
   return {
     product,
@@ -439,6 +437,53 @@ export function estimateCoverage(product: CoverageProduct, range: CoverageRange,
     coverageLabel: `${range.label}: ${exactLabel}`,
     quantityLabel,
     purchaseLabel,
+  };
+}
+
+function getDefaultPurchaseLabel(product: CoverageProduct, unitLabel: string, roundedUnits: number, isWholeUnit: boolean): string {
+  const purchaseUnitLabel = product.purchaseUnitLabel ?? unitLabel;
+  const purchasePlural = formatUnitLabel(purchaseUnitLabel, roundedUnits);
+  const stagedQuantity = product.purchaseUnitSize ? roundedUnits * product.purchaseUnitSize : roundedUnits;
+
+  if (product.purchaseUnitSize) {
+    return `Buy ${roundedUnits} ${purchasePlural} (${formatQuantity(stagedQuantity)} ${unitLabel})`;
+  }
+
+  return isWholeUnit
+    ? `Stage ${roundedUnits} ${formatUnitLabel(unitLabel, roundedUnits)}`
+    : `Buy ${roundedUnits} ${formatUnitLabel(unitLabel, roundedUnits)}`;
+}
+
+function getPurchaseRecommendation(product: CoverageProduct, unit: CoverageUnit, exactUnits: number): { roundedUnits?: number; purchaseLabel?: string } {
+  if (unit !== 'gal' || !product.purchaseSizes?.length) return {};
+
+  const sizes = [...product.purchaseSizes].sort((a, b) => a - b);
+  const smallSize = sizes[0] ?? 1;
+  const pailSize = sizes.find((size) => size >= 5) ?? sizes[sizes.length - 1] ?? 1;
+  const drumSize = sizes.find((size) => size >= 55);
+
+  if (exactUnits <= smallSize) {
+    return { roundedUnits: smallSize, purchaseLabel: `Buy ${formatQuantity(smallSize)} gal` };
+  }
+
+  if (exactUnits <= pailSize) {
+    return { roundedUnits: pailSize, purchaseLabel: `Buy 1 x ${formatQuantity(pailSize)} gal pail` };
+  }
+
+  if (drumSize && exactUnits > pailSize * 8) {
+    const drumCount = Math.ceil(exactUnits / drumSize);
+    const total = drumCount * drumSize;
+    return {
+      roundedUnits: total,
+      purchaseLabel: `Buy ${drumCount} x ${formatQuantity(drumSize)} gal drum${drumCount === 1 ? '' : 's'} (${formatQuantity(total)} gal)`,
+    };
+  }
+
+  const pailCount = Math.ceil(exactUnits / pailSize);
+  const total = pailCount * pailSize;
+  return {
+    roundedUnits: total,
+    purchaseLabel: `Buy ${pailCount} x ${formatQuantity(pailSize)} gal pail${pailCount === 1 ? '' : 's'} (${formatQuantity(total)} gal)`,
   };
 }
 

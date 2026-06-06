@@ -9,8 +9,9 @@ export interface ManualKnowledgeHit {
   score: number;
 }
 
-const DEFAULT_LIMIT = 5;
+const DEFAULT_LIMIT = 3;
 const EXCERPT_PADDING = 120;
+const RESPONSE_EXCERPT_LENGTH = 220;
 
 function normalize(text: string): string {
   return text
@@ -99,13 +100,27 @@ export function formatSipManualResponse(hits: ManualKnowledgeHit[]): string {
     return '';
   }
 
-  const bulletLines = hits.map(
-    (hit) => `- ${hit.title}, p. ${hit.pageNumber}: ${hit.excerpt}`,
-  );
+  const topHit = hits[0];
+  const extraHits = hits.slice(1).map((hit) => `- ${hit.title}, p. ${hit.pageNumber}`);
 
   return [
-    'Based on the Semco technical docs:',
+    'Answer: I found the closest Semco doc match.',
     '',
-    ...bulletLines,
+    `Best match: ${topHit.title}, p. ${topHit.pageNumber}`,
+    summarizeExcerpt(topHit.excerpt),
+    '',
+    `Source: ${topHit.sourceDocument}`,
+    ...(extraHits.length ? ['', 'Also relevant:', ...extraHits] : []),
   ].join('\n');
+}
+
+function summarizeExcerpt(excerpt: string): string {
+  const cleaned = excerpt
+    .replace(/\s+/g, ' ')
+    .replace(/^\.\.\./, '')
+    .replace(/\.\.\.$/, '')
+    .trim();
+
+  if (cleaned.length <= RESPONSE_EXCERPT_LENGTH) return cleaned;
+  return `${cleaned.slice(0, RESPONSE_EXCERPT_LENGTH).trim()}...`;
 }

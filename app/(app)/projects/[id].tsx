@@ -154,7 +154,7 @@ export default function ProjectDetailScreen() {
             </Card>
 
             <View style={styles.quickActions}>
-              <QuickAction icon="triangle-outline" label="Takeoff" onPress={() => router.push({ pathname: '/takeoff', params: { projectId: project.id } } as any)} />
+              <QuickAction icon="calculator-outline" label="Calculator" onPress={() => router.push('/calculator' as any)} />
               <QuickAction icon="receipt-outline" label="Batch Log" onPress={() => setTab('batches')} />
               <QuickAction icon="shield-checkmark-outline" label="Warranty" onPress={() => setTab('warranty')} />
             </View>

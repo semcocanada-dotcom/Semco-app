@@ -19,7 +19,7 @@ type LoadState = {
 const FEATURE_CARDS = [
   { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/projects' },
   { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'accent' as const, route: '/calculator' },
-  { title: 'Takeoff', description: 'Measure scope', icon: 'triangle-outline' as const, tone: 'primary' as const, route: '/takeoff' },
+  { title: 'Materials', description: 'Order review', icon: 'cart-outline' as const, tone: 'primary' as const, route: '/orders' },
   { title: 'Photos', description: 'Capture stage', icon: 'camera-outline' as const, tone: 'accent' as const, route: '/add' },
 ];
 

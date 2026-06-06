@@ -102,7 +102,7 @@ export default function OrdersScreen() {
           <Badge label="Order materials" variant="accent" />
           <Text style={styles.title}>{project ? `${projectTitle} · Order review` : 'Pick a project to review the request'}</Text>
           <Text style={styles.body}>
-            The order flow stays review-first. It captures a status, links back to the takeoff, and stops short of auto-ordering.
+            The order flow stays review-first. It can link to a saved calculator estimate and stops short of auto-ordering.
           </Text>
           <View style={styles.iconWrap}>
             <Ionicons name="cart-outline" size={26} color={Colors.accent} />
@@ -160,7 +160,7 @@ export default function OrdersScreen() {
         )}
 
         <View style={styles.buttonRow}>
-          <Button label="Takeoff" variant="secondary" onPress={() => router.push('/takeoff' as any)} style={styles.button} />
+          <Button label="Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} style={styles.button} />
           <Button label="Dashboard" variant="secondary" onPress={() => router.push('/dashboard' as any)} style={styles.button} />
         </View>
       </ScrollView>

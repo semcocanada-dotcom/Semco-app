@@ -2,6 +2,7 @@ import { retrieveRelevantChunks, buildContextBlock } from './rag';
 import { askClaude } from './claude';
 import { searchProductsOffline, formatOfflineResponse } from './offline-search';
 import { searchSipManual, buildSipManualContext, formatSipManualResponse } from './manual-knowledge';
+import { buildContextFieldNotes, buildFieldAnswer } from './field-answer';
 import {
   extractTopicFromMessage,
   fetchUserProgress,
@@ -53,14 +54,28 @@ async function handleOnline(
     installerId ? fetchUserProgress(installerId) : Promise.resolve([]),
   ]);
 
+  const fieldAnswer = buildFieldAnswer(userMessage, manualHits);
+  if (fieldAnswer?.confidence === 'high') {
+    if (installerId) {
+      recordTopicAsked(installerId, topic, 5).catch(() => {});
+    }
+
+    return {
+      content: fieldAnswer.content,
+      source: 'technical_docs',
+      isOffline: false,
+    };
+  }
+
+  const fieldContext = buildContextFieldNotes(userMessage, manualHits);
   const manualContext = buildSipManualContext(manualHits);
   const ragContext = buildContextBlock(chunks);
-  const contextBlock = [manualContext, ragContext].filter(Boolean).join('\n\n---\n\n');
+  const contextBlock = [fieldContext, manualContext, ragContext].filter(Boolean).join('\n\n---\n\n');
   const progressContext = buildProgressContext(progress);
 
   const response = await askClaude(userMessage, contextBlock, history, progressContext || undefined);
 
-  // Record this topic asynchronously — don't block the response
+  // Record this topic asynchronously; do not block the response.
   if (installerId) {
     recordTopicAsked(installerId, topic, 5).catch(() => {});
   }
@@ -74,6 +89,15 @@ async function handleOnline(
 
 async function handleOffline(userMessage: string): Promise<AssistantResponse> {
   const manualHits = searchSipManual(userMessage);
+  const fieldAnswer = buildFieldAnswer(userMessage, manualHits);
+  if (fieldAnswer) {
+    return {
+      content: fieldAnswer.content,
+      source: 'technical_docs',
+      isOffline: true,
+    };
+  }
+
   if (manualHits.length > 0) {
     return {
       content: formatSipManualResponse(manualHits),

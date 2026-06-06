@@ -6,12 +6,12 @@ import { AppHeader, Button, Card, Input } from '@/components/ui';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
-import { SEALER_OPTIONS, WATERPROOFING_OPTIONS, XBOND_FINISH_OPTIONS } from '@/constants/product-coverage';
+import { SEALER_OPTIONS, XBOND_FINISH_OPTIONS } from '@/constants/product-coverage';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
 const ESTIMATOR_POINTS = [
   'X-Bond Stone plus required X-Bond Liquid',
-  'Liquid Membrane by exposure scope',
+  'Liquid Membrane included by system',
   'Sealer coverage on X-Bond surface',
   'Optional MicroBond smooth finish',
 ];
@@ -25,7 +25,6 @@ export default function CalculatorScreen() {
     setSubstrate,
     setWastePct,
     setSealerSku,
-    setWaterproofingMode,
     setFinishSku,
     runCalculation,
     reset,
@@ -38,7 +37,7 @@ export default function CalculatorScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <AppHeader title="Calculators" subtitle="Fast field math for estimating and planning." rightIcon="ellipsis-vertical" />
+          <AppHeader title="Calculator" subtitle="Fast field material estimating." rightIcon="calculator-outline" />
 
           <Card style={styles.infoCard}>
             <View style={styles.calculatorRow}>
@@ -47,7 +46,7 @@ export default function CalculatorScreen() {
               </View>
               <View style={styles.calculatorCopy}>
                 <Text style={styles.calculatorTitle}>Coverage estimator</Text>
-                <Text style={styles.calculatorBody}>This is one estimating tool, not four separate buttons.</Text>
+                <Text style={styles.calculatorBody}>Enter square footage, choose the common substrate, then review what to stage and what to buy.</Text>
               </View>
             </View>
             <View style={styles.pointList}>
@@ -63,7 +62,7 @@ export default function CalculatorScreen() {
           <Card style={styles.formCard}>
             <Text style={styles.heading}>Coverage Calculator</Text>
             <Text style={styles.subheading}>
-              Input your area and scope to estimate X-Bond Stone, X-Bond Liquid, membrane, MicroBond, and sealer.
+              Input area and scope to estimate prep items, X-Bond Stone, X-Bond Liquid, Liquid Membrane, MicroBond, and sealer.
             </Text>
 
             <Input
@@ -95,23 +94,12 @@ export default function CalculatorScreen() {
               </View>
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.label}>Liquid Membrane</Text>
-              <View style={styles.optionGrid}>
-                {WATERPROOFING_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt.mode}
-                    label={opt.label}
-                    onPress={() => setWaterproofingMode(opt.mode)}
-                    variant={form.waterproofingMode === opt.mode ? 'primary' : 'secondary'}
-                    size="sm"
-                    style={styles.optionBtn}
-                    textStyle={styles.optionText}
-                  />
-                ))}
+            <View style={styles.systemNote}>
+              <View style={styles.systemNoteIcon}>
+                <Ionicons name="water-outline" size={18} color={Colors.darkTeal} />
               </View>
-              <Text style={styles.helperText}>
-                Above grade uses 200-250 sq ft/gal. Wet or below grade uses 100-150 sq ft/gal.
+              <Text style={styles.systemNoteText}>
+                Liquid Membrane is included by default. Pool uses the wet-area rate automatically.
               </Text>
             </View>
 
@@ -239,6 +227,28 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
     fontFamily: Fonts.regular,
     lineHeight: Typography.size.xs * 1.35,
+  },
+  systemNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.primaryMuted,
+    borderColor: '#C6EEF0',
+  },
+  systemNoteIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+  },
+  systemNoteText: {
+    flex: 1,
+    color: Colors.navy,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+    lineHeight: Typography.size.sm * 1.35,
   },
   error: { color: Colors.danger, fontSize: Typography.size.sm },
   resultSection: { gap: Spacing.md },

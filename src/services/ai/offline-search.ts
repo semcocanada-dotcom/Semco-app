@@ -9,8 +9,8 @@ export interface OfflineSearchResult {
   rank: number;
 }
 
-const MAX_RESULTS = 5;
-const EXCERPT_LENGTH = 300;
+const MAX_RESULTS = 3;
+const EXCERPT_LENGTH = 180;
 
 /**
  * FTS5 full-text search over locally seeded product TDS content.
@@ -68,22 +68,23 @@ function extractExcerpt(text: string, query: string): string {
     if (idx !== -1) {
       const start = Math.max(0, idx - 80);
       const end = Math.min(text.length, idx + EXCERPT_LENGTH);
-      const excerpt = text.slice(start, end).trim();
-      return (start > 0 ? '…' : '') + excerpt + (end < text.length ? '…' : '');
+      const excerpt = text.slice(start, end).replace(/\s+/g, ' ').trim();
+      return (start > 0 ? '...' : '') + excerpt + (end < text.length ? '...' : '');
     }
   }
 
-  return text.slice(0, EXCERPT_LENGTH) + (text.length > EXCERPT_LENGTH ? '…' : '');
+  const excerpt = text.slice(0, EXCERPT_LENGTH).replace(/\s+/g, ' ').trim();
+  return excerpt + (text.length > EXCERPT_LENGTH ? '...' : '');
 }
 
 export function formatOfflineResponse(results: OfflineSearchResult[]): string {
   if (results.length === 0) {
     return 'No matching product information found in the local database for that query.';
   }
-  return results
-    .map(
-      (r, i) =>
-        `**${i + 1}. ${r.name} (${r.sku})**\n${r.relevantExcerpt}`,
-    )
-    .join('\n\n---\n\n');
+
+  return [
+    'Offline product match:',
+    '',
+    ...results.map((r) => `- ${r.name} (${r.sku}): ${r.relevantExcerpt}`),
+  ].join('\n');
 }

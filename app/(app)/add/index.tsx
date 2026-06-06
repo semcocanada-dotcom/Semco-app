@@ -7,7 +7,7 @@ import { Colors, Typography, Spacing } from '@/constants/theme';
 
 const ACTIONS = [
   { title: 'New project', description: 'Create a fresh install workspace.', icon: 'folder-open-outline' as const, route: '/(app)/projects/create' },
-  { title: 'Takeoff', description: 'Open the material takeoff workspace.', icon: 'layers-outline' as const, route: '/(app)/takeoff' },
+  { title: 'Calculator', description: 'Estimate materials from square footage.', icon: 'calculator-outline' as const, route: '/(app)/calculator' },
   { title: 'Order materials', description: 'Prepare an internal order request.', icon: 'cart-outline' as const, route: '/(app)/orders' },
   { title: 'Quick lookup', description: 'Jump to the assistant or calculator.', icon: 'search-outline' as const, route: '/(app)/assistant' },
 ] as const;
@@ -53,10 +53,10 @@ export default function AddScreen() {
         <Card style={styles.noteCard}>
           <View style={styles.noteRow}>
             <Ionicons name="sparkles-outline" size={18} color={Colors.accent} />
-            <Text style={styles.noteTitle}>Next stage</Text>
+            <Text style={styles.noteTitle}>Material planning</Text>
           </View>
           <Text style={styles.noteBody}>
-            The dedicated takeoff and order screens will slot into these buttons next. For now, the shell stays active and functional.
+            Use Calculator for square-foot material estimates. Use Order materials for internal request review.
           </Text>
         </Card>
       </ScrollView>

@@ -49,7 +49,8 @@ export function calculate(input: CalculatorInput): CalculationResult {
     estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getXBondLiquidRange(), areaSqft, wastePct),
   ];
 
-  const membraneRange = getLiquidMembraneRange(waterproofingMode);
+  const membraneMode = substrateType === 'pool' ? 'submerged' : waterproofingMode;
+  const membraneRange = getLiquidMembraneRange(membraneMode);
   if (membraneRange) {
     estimates.push(estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, membraneRange, areaSqft, wastePct));
   }
@@ -64,12 +65,129 @@ export function calculate(input: CalculatorInput): CalculationResult {
   estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqft, wastePct));
 
   return {
-    layers: estimates.map(toMaterialLayer),
+    layers: [...getPrepLayers(substrateType), ...estimates.map(toMaterialLayer)],
     totalKg: 0,
     wastePct,
     areaSqm,
     areaSqft,
-    sourceSummary: 'Coverage is calculated from current Semco product pages, imported Semco technical sheets, and the configured X-Bond field bag rate. Quantities are internal estimates only.',
+    sourceSummary: 'Material quantities include Liquid Membrane by default because the checked Semco X-Bond, shower, pool, tile, wood, cove, and drain details show it inside the assembly. Cleaner prep rows follow SIP prep types and should be staged only when the substrate condition calls for them.',
+  };
+}
+
+function getPrepLayers(substrateType: SubstrateId): MaterialLayer[] {
+  const base: MaterialLayer[] = [];
+
+  if (substrateType === 'plywood') {
+    base.push(createPrepLayer({
+      sku: 'PREP-WOOD',
+      name: 'Wood substrate prep',
+      label: 'Sweep, secure, membrane, fabric',
+      note: 'SIP Preparation Type E: wood surfaces start with Liquid Membrane and anti-fracture fabric before X-Bond.',
+      sourcePage: 24,
+      purchaseLabel: 'No cleaner quantity; stage membrane/fabric in material rows',
+    }));
+    return base;
+  }
+
+  if (substrateType === 'metal') {
+    base.push(createPrepLayer({
+      sku: 'POWER-CLEANER',
+      name: 'SEMCO Power Cleaner',
+      label: 'Degrease metal before adhesion test',
+      note: 'Use when oil, wax, grease, or other bond-breaking residue is present. Confirm metal profile and adhesion before coating.',
+      sourcePage: 14,
+      purchaseLabel: 'Stage if surface has oil, grease, or shop residue',
+    }));
+    return base;
+  }
+
+  if (substrateType === 'existing_tile' || substrateType === 'pool') {
+    base.push(
+      createPrepLayer({
+        sku: 'NU-LIFT',
+        name: 'SEMCO Nu-Lift Cleaner',
+        label: 'Mineral / efflorescence prep',
+        note: 'SIP Type D uses Nu-Lift for tile, magnesium, efflorescence, exterior block/stucco, and below-grade plaster conditions.',
+        sourcePage: 23,
+        purchaseLabel: 'Stage if mineral, calcium, efflorescence, or pool residue is present',
+      }),
+      createPrepLayer({
+        sku: 'STONE-SOAP',
+        name: 'SEMCO Stone Soap',
+        label: 'Final clean after Nu-Lift',
+        note: 'SIP Type D follows Nu-Lift with Stone Soap solution 1:4 to clean chemical residue.',
+        sourcePage: 23,
+        purchaseLabel: 'Stage Stone Soap for final wash',
+      }),
+    );
+    return base;
+  }
+
+  if (substrateType === 'icf') {
+    base.push(
+      createPrepLayer({
+        sku: 'STONE-SOAP',
+        name: 'SEMCO Stone Soap',
+        label: 'Standard wash',
+        note: 'SIP Type A uses Stone Soap solution 1:4 for standard surface preparation.',
+        sourcePage: 15,
+        purchaseLabel: 'Stage Stone Soap for standard wash',
+      }),
+      createPrepLayer({
+        sku: 'NU-LIFT',
+        name: 'SEMCO Nu-Lift Cleaner',
+        label: 'Use only for mineral deposits',
+        note: 'Use Nu-Lift when the surface has calcium, magnesium, mineral residue, alkali, or efflorescence.',
+        sourcePage: 23,
+        purchaseLabel: 'Add only if mineral contamination is visible',
+      }),
+    );
+    return base;
+  }
+
+  base.push(createPrepLayer({
+    sku: 'STONE-SOAP',
+    name: 'SEMCO Stone Soap',
+    label: 'Standard wash',
+    note: 'SIP Type A uses Stone Soap solution 1:4. Use Power Cleaner first if grease, oil, wax, glue, paint, or topical coatings are present.',
+    sourcePage: 15,
+    purchaseLabel: 'Stage Stone Soap; add Power Cleaner only if contamination is present',
+  }));
+
+  return base;
+}
+
+function createPrepLayer({
+  sku,
+  name,
+  label,
+  note,
+  sourcePage,
+  purchaseLabel,
+}: {
+  sku: string;
+  name: string;
+  label: string;
+  note: string;
+  sourcePage: number;
+  purchaseLabel: string;
+}): MaterialLayer {
+  return {
+    productId: sku.toLowerCase(),
+    productSku: sku,
+    productName: name,
+    category: 'prep',
+    coats: 0,
+    quantityKg: 0,
+    quantityPacks: 0,
+    packSizeKg: 0,
+    coverageRateSqmPerKg: 0,
+    quantityLabel: 'As needed',
+    purchaseLabel,
+    coverageLabel: label,
+    sourceDocument: 'Open SIP manual - master copy v2019-3 2.pdf',
+    sourcePage,
+    sourceNote: note,
   };
 }
 

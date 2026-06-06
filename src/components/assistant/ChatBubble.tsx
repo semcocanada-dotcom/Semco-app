@@ -51,7 +51,7 @@ interface ChatBubbleProps {
 }
 
 const SOURCE_LABELS: Record<string, string> = {
-  claude: 'Claude',
+  claude: 'Ask Semco AI',
   offline_fts: 'Product library',
   product_library: 'Product library',
   sip_manual: 'Tech docs',

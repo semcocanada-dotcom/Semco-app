@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { SUBSTRATES, SubstrateId } from '@/constants/substrates';
+import { SUBSTRATE_MAP, VISIBLE_SUBSTRATES, SubstrateId } from '@/constants/substrates';
 import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
 interface SubstratePickerProps {
@@ -13,7 +13,7 @@ export function SubstratePicker({ selected, onSelect }: SubstratePickerProps) {
     <View>
       <Text style={styles.label}>Substrate Type</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {SUBSTRATES.map((sub) => {
+        {VISIBLE_SUBSTRATES.map((sub) => {
           const isSelected = selected === sub.id;
           return (
             <TouchableOpacity
@@ -31,9 +31,9 @@ export function SubstratePicker({ selected, onSelect }: SubstratePickerProps) {
           );
         })}
       </ScrollView>
-      {selected && SUBSTRATES.find((s) => s.id === selected)?.notes ? (
+      {selected && SUBSTRATE_MAP[selected]?.notes ? (
         <Text style={styles.note}>
-          Warning: {SUBSTRATES.find((s) => s.id === selected)!.notes}
+          Note: {SUBSTRATE_MAP[selected].notes}
         </Text>
       ) : null}
     </View>

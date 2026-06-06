@@ -6,6 +6,7 @@ import type { MaterialLayer, CalculationResult } from '@/database/schema/calcula
 import { Colors, Fonts, Typography, Spacing } from '@/constants/theme';
 
 const CATEGORY_LABELS: Record<string, string> = {
+  prep: 'Prep',
   primer: 'Primer',
   base_coat: 'Base Coat',
   finish_coat: 'Finish Coat',
@@ -58,6 +59,7 @@ function formatArea(value: number): string {
 
 function LayerRow({ layer }: { layer: MaterialLayer }) {
   const badgeVariant =
+    layer.category === 'prep' ? 'success' :
     layer.category === 'primer' || layer.category === 'waterproofing' ? 'warning' :
     layer.category === 'sealer' ? 'primary' :
     layer.category === 'x_bond_liquid' ? 'neutral' :

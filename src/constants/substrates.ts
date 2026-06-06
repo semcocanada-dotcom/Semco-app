@@ -1,11 +1,14 @@
 export type SubstrateId =
   | 'concrete'
-  | 'concrete_block'
   | 'plywood'
-  | 'cement_board'
+  | 'icf'
+  | 'metal'
   | 'existing_tile'
-  | 'existing_paint'
   | 'gypsum_board'
+  | 'pool'
+  | 'concrete_block'
+  | 'cement_board'
+  | 'existing_paint'
   | 'heated_floor';
 
 export interface SubstrateDefinition {
@@ -14,64 +17,95 @@ export interface SubstrateDefinition {
   description: string;
   requiresPrimer2K: boolean;
   notes?: string;
+  visible?: boolean;
 }
 
 export const SUBSTRATES: SubstrateDefinition[] = [
   {
     id: 'concrete',
     label: 'Concrete',
-    description: 'Poured or pre-cast concrete slab',
+    description: 'Poured, pre-cast, or broom-finished concrete',
     requiresPrimer2K: true,
-  },
-  {
-    id: 'concrete_block',
-    label: 'Concrete Block / CMU',
-    description: 'Concrete masonry unit walls',
-    requiresPrimer2K: true,
-    notes: 'May require a skim coat before microcement if surface is highly porous',
+    visible: true,
   },
   {
     id: 'plywood',
     label: 'Plywood / OSB',
-    description: 'Structural wood subfloor',
+    description: 'Structural wood floor or panel',
     requiresPrimer2K: true,
-    notes: 'Minimum 18mm plywood. Screw every 150mm to eliminate flex.',
+    notes: 'Secure the floor first. Any movement in wood framing can telegraph through the coating.',
+    visible: true,
   },
   {
-    id: 'cement_board',
-    label: 'Cement Board / Backer Board',
-    description: 'Fibre cement tile backer',
+    id: 'icf',
+    label: 'ICF',
+    description: 'Insulated concrete form wall or foundation',
     requiresPrimer2K: true,
+    visible: true,
+  },
+  {
+    id: 'metal',
+    label: 'Metal',
+    description: 'Prepared metal surface',
+    requiresPrimer2K: true,
+    notes: 'Confirm cleaning, surface profile, and adhesion before coating metal.',
+    visible: true,
   },
   {
     id: 'existing_tile',
-    label: 'Existing Tile',
+    label: 'Tile',
     description: 'Ceramic, porcelain, or stone tile in good condition',
     requiresPrimer2K: true,
-    notes: 'Grout lines must be filled flush with Semco Filler before priming.',
-  },
-  {
-    id: 'existing_paint',
-    label: 'Existing Paint / Coating',
-    description: 'Previously painted or coated surface',
-    requiresPrimer2K: false,
-    notes: 'Test adhesion with crosshatch test. Remove any flaking paint before applying Semco Adhesion Primer.',
+    notes: 'Fill grout lines flush before coating.',
+    visible: true,
   },
   {
     id: 'gypsum_board',
-    label: 'Drywall / Gypsum Board',
-    description: 'Standard interior gypsum wallboard',
+    label: 'Drywall',
+    description: 'Interior wallboard',
     requiresPrimer2K: false,
-    notes: 'Walls only — not suitable for floors. Use Semco Adhesion Primer.',
+    notes: 'Walls only. Do not use drywall as a floor substrate.',
+    visible: true,
+  },
+  {
+    id: 'pool',
+    label: 'Pool',
+    description: 'Pool, submerged, or continuous wet exposure',
+    requiresPrimer2K: true,
+    notes: 'Pool work uses the wet-area Liquid Membrane rate when membrane is included.',
+    visible: true,
+  },
+  {
+    id: 'concrete_block',
+    label: 'Concrete Block / CMU',
+    description: 'Legacy option kept for saved projects',
+    requiresPrimer2K: true,
+    visible: false,
+  },
+  {
+    id: 'cement_board',
+    label: 'Cement Board',
+    description: 'Legacy option kept for saved projects',
+    requiresPrimer2K: true,
+    visible: false,
+  },
+  {
+    id: 'existing_paint',
+    label: 'Paint / Coating',
+    description: 'Legacy option kept for saved projects',
+    requiresPrimer2K: false,
+    visible: false,
   },
   {
     id: 'heated_floor',
-    label: 'Heated Floor (UFH)',
-    description: 'In-floor radiant heating system (electric or hydronic)',
+    label: 'Heated Floor',
+    description: 'Legacy option kept for saved projects',
     requiresPrimer2K: true,
-    notes: 'Turn off heating 24h before application. Do not exceed 28°C surface temp during curing.',
+    visible: false,
   },
 ];
+
+export const VISIBLE_SUBSTRATES = SUBSTRATES.filter((substrate) => substrate.visible !== false);
 
 export const SUBSTRATE_MAP = Object.fromEntries(
   SUBSTRATES.map((s) => [s.id, s]),

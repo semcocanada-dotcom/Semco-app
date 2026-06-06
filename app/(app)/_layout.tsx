@@ -38,7 +38,6 @@ export default function AppLayout() {
         <Tabs.Screen name="colors" options={{ href: null }} />
         <Tabs.Screen name="orders" options={{ href: null }} />
         <Tabs.Screen name="products" options={{ href: null }} />
-        <Tabs.Screen name="takeoff" options={{ href: null }} />
       </Tabs>
     </GestureHandlerRootView>
   );
