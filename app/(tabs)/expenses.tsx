@@ -381,6 +381,32 @@ function QuickAddModal({
       Alert.alert('Amount required', 'Enter the expense amount.'); return;
     }
     if (!session) return;
+
+    // Duplicate guard: same child + date + amount almost always means the same
+    // receipt was logged twice (common when re-photographing a backlog).
+    const { data: dupes } = await supabase
+      .from('expenses')
+      .select('id')
+      .eq('child_id', childId)
+      .eq('expense_date', date)
+      .eq('amount', parsed)
+      .limit(1);
+    if (dupes && dupes.length > 0) {
+      Alert.alert(
+        'Possible duplicate',
+        `An expense of ${CAD(parsed)} on ${date} is already logged. Add it again anyway?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Add Anyway', style: 'destructive', onPress: () => performSave(parsed) },
+        ],
+      );
+      return;
+    }
+    performSave(parsed);
+  }
+
+  async function performSave(parsed: number) {
+    if (!session) return;
     setSaving(true);
     try {
       const { data: row, error } = await supabase
