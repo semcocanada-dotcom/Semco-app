@@ -87,7 +87,7 @@ export default function LoginScreen() {
               <AppLogo size={72} />
             </View>
             <Text style={{ fontSize: 26, fontWeight: '700', color: Colors.textPrimary, letterSpacing: -0.5, textAlign: 'center' }}>
-              Autism Fund Tracker
+              Autism Funding Tracker
             </Text>
             <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 8, textAlign: 'center' }}>
               Saskatchewan ASD-IF Grant Management

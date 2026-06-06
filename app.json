@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Autism Fund Tracker",
+    "name": "Autism Funding Tracker",
     "slug": "semco-app",
     "owner": "kitzul88",
     "version": "1.0.0",
@@ -24,7 +24,9 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ca.semco.app"
+      "bundleIdentifier": "ca.semco.app",
+      "appleTeamId": "9M779XQXAW",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
