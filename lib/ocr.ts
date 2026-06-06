@@ -3,11 +3,12 @@ import * as FileSystem from 'expo-file-system';
 import type { ProviderCategory } from '@lib/types';
 
 export interface OcrResult {
-  businessName: string | null;
-  address:      string | null;
-  amount:       number | null;
-  date:         string | null;   // YYYY-MM-DD parsed from the receipt, if found
-  rawText:      string;
+  businessName:  string | null;
+  address:       string | null;
+  amount:        number | null;
+  date:          string | null;   // YYYY-MM-DD parsed from the receipt, if found
+  receiptNumber: string | null;   // invoice / order / confirmation number, if found
+  rawText:       string;
 }
 
 /**
@@ -24,7 +25,7 @@ export async function extractReceiptData(fileUri: string, mimeType = 'image/jpeg
   const apiKey: string | undefined =
     (Constants.expoConfig?.extra as any)?.googleVisionApiKey;
 
-  const empty: OcrResult = { businessName: null, address: null, amount: null, date: null, rawText: '' };
+  const empty: OcrResult = { businessName: null, address: null, amount: null, date: null, receiptNumber: null, rawText: '' };
   if (!apiKey) return empty;
 
   try {
@@ -175,15 +176,39 @@ export function inferCategoryFromText(text: string): ProviderCategory | null {
   return null;
 }
 
+// ─── Receipt-number extraction (unique key for duplicate detection) ──────────
+
+// Matches "Invoice #J29959-P01", "Order # 702-5618413-2695448", "Entry ID
+// 100291", "Receipt No: 4471", "Confirmation: ABC-123", etc. The label comes
+// first so we don't grab phone numbers or postal codes.
+const RECEIPT_NUMBER_RE =
+  /\b(?:invoice|receipt|order|ref(?:erence)?|entry|transaction|confirmation|inv)\b[\s#:.\-]*(?:id|no|number|#)?[\s#:.\-]*([A-Za-z0-9][A-Za-z0-9\-]{3,})/i;
+
+/**
+ * Finds the receipt's unique invoice/order number so the same receipt can be
+ * recognised if it is uploaded again. Returns the normalized (upper-cased)
+ * identifier, or null when none is present.
+ */
+export function extractReceiptNumber(text: string): string | null {
+  if (!text) return null;
+  const m = text.match(RECEIPT_NUMBER_RE);
+  if (!m) return null;
+  const id = m[1].toUpperCase().replace(/[-.]+$/, '');
+  // Reject all-zero or too-short tokens that slipped through.
+  if (id.replace(/[^A-Z0-9]/g, '').length < 4) return null;
+  return id;
+}
+
 // ─── Parsing helpers ──────────────────────────────────────────────────────────
 
 function parseReceiptText(text: string): Omit<OcrResult, 'rawText'> {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   return {
-    businessName: extractBusinessName(lines),
-    address:      extractAddress(lines),
-    amount:       extractAmount(lines),
-    date:         extractReceiptDate(text),
+    businessName:  extractBusinessName(lines),
+    address:       extractAddress(lines),
+    amount:        extractAmount(lines),
+    date:          extractReceiptDate(text),
+    receiptNumber: extractReceiptNumber(text),
   };
 }
 

@@ -187,6 +187,7 @@ CREATE TABLE expenses (
   expense_date    DATE NOT NULL DEFAULT CURRENT_DATE,
   status          expense_status NOT NULL DEFAULT 'pending',
   receipt_urls    TEXT[] NOT NULL DEFAULT '{}',
+  receipt_number  TEXT,
   logged_by       UUID NOT NULL REFERENCES auth.users(id),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -195,6 +196,7 @@ CREATE TABLE expenses (
 CREATE INDEX idx_expenses_child_year ON expenses(child_id, funding_year_id);
 CREATE INDEX idx_expenses_child_date ON expenses(child_id, expense_date DESC);
 CREATE INDEX idx_expenses_status ON expenses(child_id, status);
+CREATE INDEX idx_expenses_receipt_number ON expenses(child_id, receipt_number);
 
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 

@@ -89,6 +89,7 @@ export interface Expense {
   expense_date: string;
   status: ExpenseStatus;
   receipt_urls: string[];
+  receipt_number: string | null;
   logged_by: string;
   created_at: string;
   updated_at: string;

@@ -225,6 +225,7 @@ function QuickAddModal({
   const [saving,          setSaving]          = useState(false);
   const [ocrLoading,      setOcrLoading]      = useState(false);
   const [ocrBizName,      setOcrBizName]      = useState<string | null>(null);
+  const [receiptNumber,   setReceiptNumber]   = useState<string | null>(null);
   const [providerMatches, setProviderMatches] = useState<ReceiptAnalysis['allMatches']>([]);
   const [mileageProposal, setMileageProposal] = useState<MileageProposal | null>(null);
   const [mileageLoading,  setMileageLoading]  = useState(false);
@@ -239,7 +240,7 @@ function QuickAddModal({
       setAmount(''); setDescription(''); setDate(format(new Date(), 'yyyy-MM-dd'));
       setReceiptUri(null); setProviderQuery(''); setSelectedProvider(null);
       setProviderResults([]); setSaving(false);
-      setOcrLoading(false); setOcrBizName(null); setProviderMatches([]);
+      setOcrLoading(false); setOcrBizName(null); setReceiptNumber(null); setProviderMatches([]);
       setMileageProposal(null); setMileageLoading(false); setIncludeMileage(false);
       setHomeAddress(profile?.home_address ?? '');
       setTimeout(() => amountRef.current?.focus(), 350);
@@ -288,6 +289,7 @@ function QuickAddModal({
     try {
       const analysis = await analyseReceipt(uri, mime);
       setOcrBizName(analysis.ocrResult.businessName ?? null);
+      setReceiptNumber(analysis.ocrResult.receiptNumber ?? null);
       setProviderMatches(analysis.allMatches);
       if (analysis.ocrResult.amount !== null) {
         setAmount(String(analysis.ocrResult.amount));
@@ -382,24 +384,38 @@ function QuickAddModal({
     }
     if (!session) return;
 
-    // Duplicate guard: same child + date + amount almost always means the same
-    // receipt was logged twice (common when re-photographing a backlog).
-    const { data: dupes } = await supabase
-      .from('expenses')
-      .select('id')
-      .eq('child_id', childId)
-      .eq('expense_date', date)
-      .eq('amount', parsed)
-      .limit(1);
-    if (dupes && dupes.length > 0) {
-      Alert.alert(
-        'Possible duplicate',
-        `An expense of ${CAD(parsed)} on ${date} is already logged. Add it again anyway?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Add Anyway', style: 'destructive', onPress: () => performSave(parsed) },
-        ],
-      );
+    // Duplicate guard. The receipt's invoice/order number is the strongest
+    // signal — if this exact receipt was already uploaded, flag it. Otherwise
+    // fall back to same child + date + amount (a re-photographed backlog).
+    let dupMessage: string | null = null;
+    if (receiptNumber) {
+      const { data } = await supabase
+        .from('expenses')
+        .select('id, expense_date')
+        .eq('child_id', childId)
+        .eq('receipt_number', receiptNumber)
+        .limit(1);
+      if (data && data.length > 0) {
+        dupMessage = `Receipt #${receiptNumber} was already uploaded (logged ${data[0].expense_date}). Add it again anyway?`;
+      }
+    }
+    if (!dupMessage) {
+      const { data } = await supabase
+        .from('expenses')
+        .select('id')
+        .eq('child_id', childId)
+        .eq('expense_date', date)
+        .eq('amount', parsed)
+        .limit(1);
+      if (data && data.length > 0) {
+        dupMessage = `An expense of ${CAD(parsed)} on ${date} is already logged. Add it again anyway?`;
+      }
+    }
+    if (dupMessage) {
+      Alert.alert('Possible duplicate', dupMessage, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Add Anyway', style: 'destructive', onPress: () => performSave(parsed) },
+      ]);
       return;
     }
     performSave(parsed);
@@ -421,6 +437,7 @@ function QuickAddModal({
           expense_date:    date,
           status:          'approved' as ExpenseStatus,
           receipt_urls:    [],
+          receipt_number:  receiptNumber,
           logged_by:       session.user.id,
         })
         .select('id').single();
