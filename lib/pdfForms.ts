@@ -55,6 +55,23 @@ function setField(form: PDFForm, name: string, value: string): void {
   }
 }
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+// Encode bytes to base64 in slices — spreading a large Uint8Array into
+// String.fromCharCode overflows the call stack on multi-page PDFs.
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const SLICE = 0x8000;
+  for (let i = 0; i < bytes.length; i += SLICE) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + SLICE));
+  }
+  return btoa(binary);
+}
+
 export async function generateAndShareMileagePdf(data: MileagePdfInput): Promise<void> {
   const html = buildMileageHtml(data);
   const { uri } = await Print.printToFileAsync({ html, base64: false });
@@ -68,8 +85,12 @@ export async function generateAndShareMileagePdf(data: MileagePdfInput): Promise
   }
 }
 
-// Fill and share the official SK government AcroForm PDF (up to 9 trips)
-export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Promise<void> {
+// Fill and share the official SK government AcroForm PDF. A month with more
+// trips than fit on one page (9) spills onto additional pages, all combined
+// into a single multi-page PDF; each page is a complete form with its own total.
+async function fillMileagePage(
+  data: MileagePdfInput, rows: MileagePdfRow[], pageTotal: number,
+): Promise<PDFDocument> {
   const pdfDoc  = await PDFDocument.load(
     Uint8Array.from(atob(MILEAGE_FORM_BASE64), c => c.charCodeAt(0))
   );
@@ -86,7 +107,6 @@ export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Pro
   setField(form, 'email address', data.parentEmail);
   setField(form, 'Month', data.monthLabel);
 
-  const rows = data.rows.slice(0, 9);
   rows.forEach((row, i) => {
     const n = i + 1;
     setField(form, `Date MMDDYYRow${n}`, fmtDate(row.trip_date));
@@ -96,14 +116,27 @@ export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Pro
     setField(form, `Expense Amount  km x mileage rateRow${n}`, `$${Number(row.reimbursement_amount).toFixed(2)}`);
   });
 
-  setField(form, 'Total', `$${data.total.toFixed(2)}`);
+  setField(form, 'Total', `$${pageTotal.toFixed(2)}`);
   setField(form, 'Printed Name ParentGuardian', data.parentName);
   setField(form, 'Date MMDDYYYY', fmtDateLong(today));
-
   form.flatten();
+  return pdfDoc;
+}
 
-  const pdfBytes = await pdfDoc.save();
-  const b64 = btoa(String.fromCharCode(...pdfBytes));
+export async function fillAndShareOfficialMileagePdf(data: MileagePdfInput): Promise<void> {
+  const ROWS_PER_PAGE = 9;
+  const groups = data.rows.length ? chunk(data.rows, ROWS_PER_PAGE) : [[]];
+
+  const master = await PDFDocument.create();
+  for (const rows of groups) {
+    const pageTotal = rows.reduce((s, r) => s + Number(r.reimbursement_amount), 0);
+    const filled = await fillMileagePage(data, rows, pageTotal);
+    const copied = await master.copyPages(filled, filled.getPageIndices());
+    copied.forEach(p => master.addPage(p));
+  }
+
+  const pdfBytes = await master.save();
+  const b64 = bytesToBase64(pdfBytes);
   const path = `${FileSystem.cacheDirectory}MileageInvoice_${data.monthLabel.replace(/\s/g, '_')}.pdf`;
   await FileSystem.writeAsStringAsync(path, b64, { encoding: FileSystem.EncodingType.Base64 });
 
@@ -135,7 +168,9 @@ export interface RespitePdfInput {
   submittedDate?:       string;
 }
 
-export async function fillAndShareOfficialRespitePdf(data: RespitePdfInput): Promise<void> {
+async function fillRespitePage(
+  data: RespitePdfInput, rows: RespitePdfRow[], pageTotal: number,
+): Promise<PDFDocument> {
   const pdfDoc = await PDFDocument.load(
     Uint8Array.from(atob(RESPITE_FORM_BASE64), c => c.charCodeAt(0))
   );
@@ -152,7 +187,6 @@ export async function fillAndShareOfficialRespitePdf(data: RespitePdfInput): Pro
   setField(form, 'Email Address', data.parentEmail);
   setField(form, 'Month', data.monthLabel);
 
-  const rows = data.rows.slice(0, 11);
   rows.forEach((row, i) => {
     const n = i + 1;
     setField(form, `Date MMDDYYRow${n}`, fmtDate(row.session_date));
@@ -161,14 +195,27 @@ export async function fillAndShareOfficialRespitePdf(data: RespitePdfInput): Pro
     setField(form, `Amount Paid Row${n}`, `$${Number(row.amount_paid).toFixed(2)}`);
   });
 
-  setField(form, 'Total', `$${data.total.toFixed(2)}`);
+  setField(form, 'Total', `$${pageTotal.toFixed(2)}`);
   setField(form, 'Printed Name ParentGuardian', data.parentName);
   setField(form, 'Date MMDDYYYY', fmtDateLong(today));
-
   form.flatten();
+  return pdfDoc;
+}
 
-  const pdfBytes = await pdfDoc.save();
-  const b64 = btoa(String.fromCharCode(...pdfBytes));
+export async function fillAndShareOfficialRespitePdf(data: RespitePdfInput): Promise<void> {
+  const ROWS_PER_PAGE = 11;
+  const groups = data.rows.length ? chunk(data.rows, ROWS_PER_PAGE) : [[]];
+
+  const master = await PDFDocument.create();
+  for (const rows of groups) {
+    const pageTotal = rows.reduce((s, r) => s + Number(r.amount_paid), 0);
+    const filled = await fillRespitePage(data, rows, pageTotal);
+    const copied = await master.copyPages(filled, filled.getPageIndices());
+    copied.forEach(p => master.addPage(p));
+  }
+
+  const pdfBytes = await master.save();
+  const b64 = bytesToBase64(pdfBytes);
   const path = `${FileSystem.cacheDirectory}RespiteInvoice_${data.monthLabel.replace(/\s/g, '_')}.pdf`;
   await FileSystem.writeAsStringAsync(path, b64, { encoding: FileSystem.EncodingType.Base64 });
 
