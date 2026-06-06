@@ -2,7 +2,7 @@
   "expo": {
     "name": "Semco Pro",
     "slug": "semco-pro",
-    "version": "1.0.8",
+    "version": "1.0.9",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "semco",
@@ -18,14 +18,14 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.semcocanada.semcopro",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to capture color samples for custom formulas and project progress photos.",
         "NSPhotoLibraryUsageDescription": "Used to save and access project and color photos."
       }
     },
     "android": {
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0D0D0D"

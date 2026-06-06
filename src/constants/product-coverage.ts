@@ -133,7 +133,7 @@ const XBOND_LIQUID: CoverageProduct = {
       coats: 2,
       sourceDocument: 'Open SIP manual - master copy v2019-3 2.pdf',
       sourcePage: 33,
-      basis: 'MicroBond mix ratio is 1 part X-Bond Liquid to 2 parts MicroBond Stone. Liquid quantity is tied to the MicroBond smooth-finish estimate.',
+      basis: 'MicroBond mix ratio is 1 part X-Bond Liquid to 2 parts MicroBond Stone. Derived rate: 2.5 gal X-Bond Liquid per full 5 gal MicroBond pail, equal to 400 sq ft/gal at 1000 sq ft/pail.',
     },
   },
 };
