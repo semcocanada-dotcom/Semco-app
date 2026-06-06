@@ -18,6 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import { base64ToBytes } from '@lib/base64';
 import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
@@ -349,20 +351,27 @@ function QuickAddModal({
     }
   }
 
-  async function uploadReceipt(expenseId: string): Promise<string | null> {
-    if (!receiptUri || !session) return null;
+  async function uploadReceipt(expenseId: string): Promise<{ path: string | null; error: string | null }> {
+    if (!receiptUri || !session) return { path: null, error: null };
     try {
-      const resp = await fetch(receiptUri);
-      const blob = await resp.blob();
+      // RN's fetch().blob() uploads an empty/corrupt object to Supabase Storage,
+      // so read the file as base64 and upload the decoded bytes (ArrayBuffer).
+      const base64 = await FileSystem.readAsStringAsync(receiptUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      const bytes = base64ToBytes(base64);
+      if (bytes.byteLength === 0) return { path: null, error: 'Receipt file was empty.' };
+
       const path = `${session.user.id}/${childId}/${expenseId}/${receiptName}`;
       const { data, error } = await supabase.storage
-        .from('receipts').upload(path, blob, { contentType: receiptMime, upsert: true });
-      if (error || !data) return null;
+        .from('receipts')
+        .upload(path, bytes.buffer as ArrayBuffer, { contentType: receiptMime, upsert: true });
+      if (error || !data) return { path: null, error: error?.message ?? 'Upload failed.' };
       // Store the private object path, not a public URL. The bucket is
       // private; viewers must mint a short-lived signed URL on demand.
-      return data.path ?? path;
-    } catch {
-      return null;
+      return { path: data.path ?? path, error: null };
+    } catch (e: any) {
+      return { path: null, error: e?.message ?? 'Upload failed.' };
     }
   }
 
@@ -392,9 +401,14 @@ function QuickAddModal({
 
       if (error || !row) throw error;
 
+      let receiptWarning: string | null = null;
       if (receiptUri) {
-        const url = await uploadReceipt(row.id);
-        if (url) await supabase.from('expenses').update({ receipt_urls: [url] }).eq('id', row.id);
+        const { path, error: upErr } = await uploadReceipt(row.id);
+        if (path) {
+          await supabase.from('expenses').update({ receipt_urls: [path] }).eq('id', row.id);
+        } else {
+          receiptWarning = upErr;
+        }
       }
 
       if (includeMileage && mileageProposal) {
@@ -414,7 +428,8 @@ function QuickAddModal({
       onClose();
       Alert.alert(
         '✅ Expense Logged',
-        `${CAD(parsed)} has been added as pending.\n\nEstimated grant remaining: ${CAD(newRemaining)}`,
+        `${CAD(parsed)} has been logged.\n\nEstimated grant remaining: ${CAD(newRemaining)}` +
+          (receiptWarning ? `\n\n⚠️ Receipt could not be attached: ${receiptWarning}` : ''),
         [{ text: 'OK' }]
       );
     } catch (err: any) {
