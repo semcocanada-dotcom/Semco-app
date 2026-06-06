@@ -259,6 +259,36 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        {/* Mileage reimbursement (grant year) */}
+        {activeChild && (
+          <View style={{ paddingHorizontal: 20, marginBottom: 18 }}>
+            <Pressable
+              onPress={() => router.push('/(tabs)/mileage')}
+              style={({ pressed }) => [{
+                backgroundColor: Colors.surface, borderRadius: 16, padding: 16,
+                flexDirection: 'row', alignItems: 'center', gap: 12,
+                shadowColor: '#1E1B4B', shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.07, shadowRadius: 10, elevation: 2,
+              }, pressed ? { opacity: 0.85 } : null]}
+            >
+              <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#14B8A61A', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 20 }}>🚗</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F766E', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  Mileage Reimbursement
+                </Text>
+                <Text style={{ fontSize: 13, color: Colors.textMuted, marginTop: 1 }}>
+                  This grant year
+                </Text>
+              </View>
+              <Text style={{ fontSize: 22, fontWeight: '800', color: '#15803D', letterSpacing: -0.5 }}>
+                {formatCAD(summary.totalMileage)}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+
         {/* Recent expenses */}
         {activeChild && (
           <View style={{ paddingHorizontal: 20 }}>

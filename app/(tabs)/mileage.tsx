@@ -509,6 +509,12 @@ export default function MileageScreen() {
                   </View>
                 </View>
               </View>
+
+              {/* Grant-year total */}
+              <View style={s.yearTotalRow}>
+                <Text style={s.yearTotalLabel}>This grant year</Text>
+                <Text style={s.yearTotalValue}>{CAD(summary.totalMileage)}</Text>
+              </View>
             </View>
 
             {/* Add Trip + Export Invoice buttons */}
@@ -617,6 +623,9 @@ const s = StyleSheet.create({
   statUnit:       { fontSize: 14, color: Colors.textMuted, fontWeight: '600', marginBottom: 2 },
   rateBadge:      { backgroundColor: Colors.surfaceAlt, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 1, borderColor: Colors.border },
   rateBadgeText:  { fontSize: 11, color: Colors.textSecondary, fontWeight: '600' },
+  yearTotalRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: Colors.border },
+  yearTotalLabel: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' },
+  yearTotalValue: { fontSize: 17, fontWeight: '800', color: '#15803D' },
 
   addBtn:     {
     backgroundColor: '#1E40AF', borderRadius: 16, height: 56,
