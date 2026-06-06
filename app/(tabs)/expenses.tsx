@@ -783,12 +783,23 @@ function ExpenseDetailModal({
   const [mProvQuery, setMProvQuery] = useState('');
   const [mProvResults, setMProvResults] = useState<Provider[]>([]);
   const [savingMileage, setSavingMileage] = useState(false);
+  // Edit mode
+  const [editing, setEditing] = useState(false);
+  const [eAmount, setEAmount] = useState('');
+  const [eCategory, setECategory] = useState<ProviderCategory>('speech_language');
+  const [eDate, setEDate] = useState('');
+  const [eDescription, setEDescription] = useState('');
+  const [eProvider, setEProvider] = useState<{ id: string; name: string } | null>(null);
+  const [eProvQuery, setEProvQuery] = useState('');
+  const [eProvResults, setEProvResults] = useState<Provider[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Load the signed receipt URL and any mileage trip filed on the same day.
   useEffect(() => {
     if (!visible || !expense) {
       setReceiptUrl(null); setReceiptIsPdf(false); setMileage(null);
       setAddingMileage(false); setMProvQuery(''); setMProvResults([]);
+      setEditing(false); setEProvQuery(''); setEProvResults([]);
       return;
     }
     let cancelled = false;
@@ -879,6 +890,47 @@ function ExpenseDetailModal({
     }
   }
 
+  function startEdit() {
+    setEAmount(String(expense!.amount));
+    setECategory(expense!.category);
+    setEDate(expense!.expense_date);
+    setEDescription(expense!.description ?? '');
+    const linked = (expense as any).providers;
+    setEProvider(expense!.provider_id && linked ? { id: expense!.provider_id, name: linked.name } : null);
+    setEProvQuery(''); setEProvResults([]);
+    setEditing(true);
+  }
+
+  async function searchEditProviders(q: string) {
+    if (!q.trim()) { setEProvResults([]); return; }
+    const { data } = await supabase
+      .from('providers')
+      .select('id, name, category, city, organization, address, lat, lng')
+      .or(`name.ilike.%${q}%,organization.ilike.%${q}%`)
+      .limit(6);
+    setEProvResults((data ?? []) as Provider[]);
+  }
+
+  async function saveEdit() {
+    const parsed = parseFloat(eAmount.replace(/[^0-9.]/g, ''));
+    if (!parsed || parsed <= 0) { Alert.alert('Amount required', 'Enter the expense amount.'); return; }
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase.from('expenses').update({
+        amount:       parsed,
+        category:     eCategory,
+        expense_date: eDate,
+        description:  eDescription.trim() || null,
+        provider_id:  eProvider?.id ?? null,
+      }).eq('id', expense!.id);
+      if (error) { Alert.alert('Save failed', error.message); return; }
+      setEditing(false);
+      onUpdated(); onClose();
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   const st   = STATUS_STYLE[expense.status];
   const prov = (expense as any).providers;
 
@@ -903,31 +955,128 @@ function ExpenseDetailModal({
             </View>
           </View>
 
-          {/* Provider */}
-          <View style={s.detailRow}>
-            <Text style={s.detailLabel}>Provider</Text>
-            <Text style={s.detailValue}>{prov?.name ?? 'Not linked'}</Text>
-          </View>
+          {editing ? (
+            <>
+              {/* Amount */}
+              <Text style={[s.fieldLabel, { marginTop: 4 }]}>Amount *</Text>
+              <View style={s.amountRow}>
+                <Text style={s.amountSign}>$</Text>
+                <TextInput
+                  style={s.amountInput}
+                  value={eAmount}
+                  onChangeText={setEAmount}
+                  keyboardType="decimal-pad"
+                  placeholder="0.00"
+                  placeholderTextColor={Colors.textMuted}
+                />
+              </View>
 
-          {/* Category */}
-          <View style={s.detailRow}>
-            <Text style={s.detailLabel}>Category</Text>
-            <Text style={s.detailValue}>{catEmoji(expense.category)} {catLabel(expense.category)}</Text>
-          </View>
+              {/* Category */}
+              <Text style={[s.fieldLabel, { marginTop: 16 }]}>Category</Text>
+              <ScrollView
+                horizontal showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, paddingVertical: 2 }}
+                keyboardShouldPersistTaps="always"
+              >
+                {CATEGORY_CONFIG.map(c => {
+                  const active = eCategory === c.value;
+                  return (
+                    <TouchableOpacity
+                      key={c.value}
+                      onPress={() => setECategory(c.value)}
+                      style={active ? [s.catActive, { backgroundColor: Colors.purple }] : s.cat}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={active ? s.catActiveText : s.catText}>{c.emoji} {c.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-          {/* Date */}
-          <View style={s.detailRow}>
-            <Text style={s.detailLabel}>Date</Text>
-            <Text style={s.detailValue}>{format(parseISO(expense.expense_date), 'EEEE, MMMM d, yyyy')}</Text>
-          </View>
+              {/* Provider */}
+              <Text style={[s.fieldLabel, { marginTop: 16 }]}>Provider</Text>
+              {eProvider ? (
+                <View style={s.selectedProv}>
+                  <Text style={s.selectedProvText}>{eProvider.name}</Text>
+                  <TouchableOpacity onPress={() => setEProvider(null)}>
+                    <Text style={{ color: Colors.textMuted, fontSize: 18 }}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={s.searchBox}>
+                    <Text style={{ fontSize: 14 }}>🔍</Text>
+                    <TextInput
+                      style={s.searchInput}
+                      placeholder="Search providers…"
+                      placeholderTextColor={Colors.textMuted}
+                      value={eProvQuery}
+                      onChangeText={q => { setEProvQuery(q); searchEditProviders(q); }}
+                      autoCorrect={false}
+                    />
+                  </View>
+                  {eProvResults.length > 0 && (
+                    <View style={s.dropdown}>
+                      {eProvResults.map((p, i) => (
+                        <TouchableOpacity
+                          key={p.id}
+                          style={[s.dropItem, i < eProvResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]}
+                          onPress={() => { setEProvider({ id: p.id, name: p.name }); setECategory(p.category); setEProvQuery(''); setEProvResults([]); }}
+                        >
+                          <Text style={s.dropName}>{p.name}</Text>
+                          <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.organization ?? p.city}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </>
+              )}
 
-          {expense.description && (
-            <View style={s.detailRow}>
-              <Text style={s.detailLabel}>Notes</Text>
-              <Text style={s.detailValue}>{expense.description}</Text>
-            </View>
+              {/* Date */}
+              <Text style={[s.fieldLabel, { marginTop: 16 }]}>Date</Text>
+              <DateField value={eDate} onChange={setEDate} />
+
+              {/* Notes */}
+              <Text style={[s.fieldLabel, { marginTop: 16 }]}>Notes (optional)</Text>
+              <TextInput
+                style={s.textField}
+                value={eDescription}
+                onChangeText={setEDescription}
+                placeholder="e.g. session 12"
+                placeholderTextColor={Colors.textMuted}
+              />
+            </>
+          ) : (
+            <>
+              {/* Provider */}
+              <View style={s.detailRow}>
+                <Text style={s.detailLabel}>Provider</Text>
+                <Text style={s.detailValue}>{prov?.name ?? 'Not linked'}</Text>
+              </View>
+
+              {/* Category */}
+              <View style={s.detailRow}>
+                <Text style={s.detailLabel}>Category</Text>
+                <Text style={s.detailValue}>{catEmoji(expense.category)} {catLabel(expense.category)}</Text>
+              </View>
+
+              {/* Date */}
+              <View style={s.detailRow}>
+                <Text style={s.detailLabel}>Date</Text>
+                <Text style={s.detailValue}>{format(parseISO(expense.expense_date), 'EEEE, MMMM d, yyyy')}</Text>
+              </View>
+
+              {expense.description && (
+                <View style={s.detailRow}>
+                  <Text style={s.detailLabel}>Notes</Text>
+                  <Text style={s.detailValue}>{expense.description}</Text>
+                </View>
+              )}
+            </>
           )}
 
+          {!editing && (
+          <>
           {/* Linked mileage */}
           <View style={s.detailRow}>
             <Text style={s.detailLabel}>Mileage</Text>
@@ -999,10 +1148,28 @@ function ExpenseDetailModal({
               <Text style={[s.detailValue, { color: Colors.textMuted }]}>No receipt attached</Text>
             )}
           </View>
+          </>
+          )}
 
-          <TouchableOpacity style={s.deleteRowBtn} onPress={deleteExpense}>
-            <Text style={s.deleteRowBtnText}>Delete Expense</Text>
-          </TouchableOpacity>
+          {editing ? (
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 24 }}>
+              <TouchableOpacity style={s.editCancelBtn} onPress={() => setEditing(false)} disabled={savingEdit}>
+                <Text style={s.editCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.editSaveBtn} onPress={saveEdit} disabled={savingEdit} activeOpacity={0.85}>
+                {savingEdit ? <ActivityIndicator color="#fff" /> : <Text style={s.editSaveText}>Save Changes</Text>}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity style={s.editRowBtn} onPress={startEdit}>
+                <Text style={s.editRowBtnText}>Edit Expense</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.deleteRowBtn} onPress={deleteExpense}>
+                <Text style={s.deleteRowBtnText}>Delete Expense</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -1505,6 +1672,12 @@ const s = StyleSheet.create({
   deleteRowBtnText:{ color: '#BE123C', fontWeight: '600', fontSize: 14 },
   addMileageBtn:    { marginTop: 10, alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#86EFAC' },
   addMileageBtnText:{ color: '#15803D', fontWeight: '700', fontSize: 13 },
+  editRowBtn:     { marginTop: 24, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: Colors.purple, alignItems: 'center' },
+  editRowBtnText: { color: Colors.purple, fontWeight: '700', fontSize: 14 },
+  editCancelBtn:  { flex: 1, padding: 15, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', backgroundColor: Colors.surfaceAlt },
+  editCancelText: { color: Colors.textSecondary, fontWeight: '700', fontSize: 15 },
+  editSaveBtn:    { flex: 2, padding: 15, borderRadius: 14, alignItems: 'center', backgroundColor: Colors.purple },
+  editSaveText:   { color: '#fff', fontWeight: '700', fontSize: 15 },
 
   // Mileage-only
   checkbox:    { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
