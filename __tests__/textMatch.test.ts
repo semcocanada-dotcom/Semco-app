@@ -16,6 +16,25 @@ describe('normalize', () => {
   it('strips OT designations the same way', () => {
     expect(normalize('Angela Kretschmer MScOT (Reg.) SK # 1395')).toBe('angela kretschmer mscot');
   });
+
+  it('strips calendar words so a receipt date is not a name', () => {
+    expect(normalize('Tuesday April 7, 2026')).toBe('');
+  });
+
+  it('keeps the surname when a provider is named after a month', () => {
+    expect(normalize('April Johnson')).toBe('johnson');
+  });
+});
+
+describe('date no longer collides with a provider name', () => {
+  it('a receipt date does not match a month-named provider', () => {
+    expect(similarity(normalize('April 7, 2026'), normalize('April Johnson'))).toBe(0);
+  });
+
+  it('the real therapist line still matches', () => {
+    const line = normalize('Angela (Angie) Kretschmer MScOT (Reg.) SK (# 1395)');
+    expect(similarity(line, normalize('Angela Kretschmer'))).toBeGreaterThanOrEqual(0.45);
+  });
 });
 
 describe('similarity after normalize', () => {

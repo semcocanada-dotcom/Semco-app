@@ -1,9 +1,11 @@
 // Pure string-matching helpers used to fuzzy-match OCR business names
 // against the providers table. Kept dependency-free so they are easy to test.
 
-/** Lowercases, strips punctuation, corporate suffixes, and the professional
- *  designations / registration numbers that clutter therapist names on receipts
- *  (e.g. "Carissa Vance Msc - SLP, Reg. SK #1834" → "carissa vance"). */
+/** Lowercases, strips punctuation, corporate suffixes, professional
+ *  designations / registration numbers, and calendar words that clutter
+ *  therapist names on receipts (e.g. "Carissa Vance Msc - SLP, Reg. SK #1834"
+ *  → "carissa vance"). Month/day words are stripped so a receipt date like
+ *  "April 7, 2026" can't be mistaken for a provider named "April". */
 export function normalize(s: string): string {
   return s
     .toLowerCase()
@@ -11,6 +13,8 @@ export function normalize(s: string): string {
     .replace(/\b(inc|ltd|llc|corp|co|the|and|of|for|&)\b/g, '')
     // professional designations, registration markers, province codes
     .replace(/\b(msc|ma|bsc|ba|bed|med|phd|edd|slp|slpa|spa|ot|ota|pt|pta|bcba|bcaba|rpn|rn|lpn|msw|rsw|reg|registered|sk|ab|mb)\b/g, '')
+    // calendar words (receipt dates) — applied to both sides so real names survive
+    .replace(/\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sept|sep|oct|nov|dec|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/g, '')
     .replace(/\b\d+\b/g, '')            // standalone numbers (invoice / reg #s)
     .replace(/\s+/g, ' ')
     .trim();
