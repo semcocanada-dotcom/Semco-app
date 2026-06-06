@@ -5,6 +5,7 @@ export interface OcrResult {
   businessName: string | null;
   address:      string | null;
   amount:       number | null;
+  date:         string | null;   // YYYY-MM-DD parsed from the receipt, if found
   rawText:      string;
 }
 
@@ -22,7 +23,7 @@ export async function extractReceiptData(fileUri: string, mimeType = 'image/jpeg
   const apiKey: string | undefined =
     (Constants.expoConfig?.extra as any)?.googleVisionApiKey;
 
-  const empty: OcrResult = { businessName: null, address: null, amount: null, rawText: '' };
+  const empty: OcrResult = { businessName: null, address: null, amount: null, date: null, rawText: '' };
   if (!apiKey) return empty;
 
   try {
@@ -78,6 +79,69 @@ export async function extractReceiptData(fileUri: string, mimeType = 'image/jpeg
   }
 }
 
+// ─── Date extraction (for back-dating receipts to the correct month) ─────────
+
+const MONTHS: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+};
+
+/** Builds a YYYY-MM-DD string, rejecting impossible or implausible dates. */
+function toIso(y: number, m: number, d: number): string | null {
+  if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+  // Receipts are in the past: drop anything in the future or older than 3 years.
+  const t = dt.getTime();
+  const now = Date.now();
+  if (t > now + 86_400_000) return null;
+  if (t < now - 3 * 365 * 86_400_000) return null;
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+/**
+ * Finds the transaction date on a receipt. Handles ISO (2024-03-15), month
+ * names (March 15, 2024 / 15 Mar 2024), and numeric slashes. For ambiguous
+ * all-numeric dates it assumes month-first (the common printed-receipt format);
+ * the user can still correct the date field before saving.
+ */
+export function extractReceiptDate(text: string): string | null {
+  const flat = text.replace(/\n/g, ' ');
+
+  // 1) ISO-ish: 2024-03-15 / 2024/03/15
+  let m = flat.match(/\b(20\d{2})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  if (m) { const iso = toIso(+m[1], +m[2], +m[3]); if (iso) return iso; }
+
+  // 2) Month name first: "March 15, 2024" / "Mar 15 2024"
+  m = flat.match(/\b([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(20\d{2})\b/);
+  if (m) {
+    const mon = MONTHS[m[1].slice(0, 3).toLowerCase()];
+    if (mon) { const iso = toIso(+m[3], mon, +m[2]); if (iso) return iso; }
+  }
+
+  // 3) Day then month name: "15 March 2024"
+  m = flat.match(/\b(\d{1,2})\s+([A-Za-z]{3,9})\.?\s+(20\d{2})\b/);
+  if (m) {
+    const mon = MONTHS[m[2].slice(0, 3).toLowerCase()];
+    if (mon) { const iso = toIso(+m[3], mon, +m[1]); if (iso) return iso; }
+  }
+
+  // 4) Numeric slashes: dd/mm/yyyy or mm/dd/yyyy (or 2-digit year)
+  m = flat.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](20\d{2}|\d{2})\b/);
+  if (m) {
+    const a = +m[1], b = +m[2];
+    let y = +m[3]; if (y < 100) y += 2000;
+    let day: number, mon: number;
+    if (a > 12 && b <= 12)      { day = a; mon = b; }  // unambiguous dd/mm
+    else if (b > 12 && a <= 12) { mon = a; day = b; }  // unambiguous mm/dd
+    else                        { mon = a; day = b; }  // ambiguous → month-first
+    const iso = toIso(y, mon, day);
+    if (iso) return iso;
+  }
+
+  return null;
+}
+
 // ─── Parsing helpers ──────────────────────────────────────────────────────────
 
 function parseReceiptText(text: string): Omit<OcrResult, 'rawText'> {
@@ -86,6 +150,7 @@ function parseReceiptText(text: string): Omit<OcrResult, 'rawText'> {
     businessName: extractBusinessName(lines),
     address:      extractAddress(lines),
     amount:       extractAmount(lines),
+    date:         extractReceiptDate(text),
   };
 }
 

@@ -289,6 +289,11 @@ function QuickAddModal({
       if (analysis.ocrResult.amount !== null) {
         setAmount(String(analysis.ocrResult.amount));
       }
+      // Back-date the expense (and its mileage) to the receipt's date so a
+      // backlog photographed months later files into the correct month.
+      if (analysis.ocrResult.date) {
+        setDate(analysis.ocrResult.date);
+      }
       const top = analysis.topMatch;
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);

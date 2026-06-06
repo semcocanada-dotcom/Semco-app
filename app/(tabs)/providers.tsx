@@ -122,9 +122,9 @@ const CAT_META: Record<string, CatMeta> = {
   speech_language:      { label: 'Speech Therapy',        emoji: '💬', color: '#7C3AED', bg: '#EDE9FE' },
   occupational_therapy: { label: 'Occupational Therapy',  emoji: '✋', color: '#059669', bg: '#D1FAE5' },
   aba_ibi:              { label: 'ABA / IBI',              emoji: '🧩', color: '#1D4ED8', bg: '#DBEAFE' },
-  psychology:           { label: 'Behaviour / Psychology', emoji: '🧠', color: '#DB2777', bg: '#FCE7F3' },
+  psychology:           { label: 'Behaviour / Psychology', emoji: '🧠', color: '#7C3AED', bg: '#F3E8FF' },
   physical_therapy:     { label: 'Physical Therapy',       emoji: '🏃', color: '#D97706', bg: '#FEF3C7' },
-  respite:              { label: 'Respite Care',           emoji: '🏠', color: '#DC2626', bg: '#FEE2E2' },
+  respite:              { label: 'Respite Care',           emoji: '🏠', color: '#0D9488', bg: '#CCFBF1' },
   swimming:             { label: 'Swimming',               emoji: '🏊', color: '#0891B2', bg: '#CFFAFE' },
   social_skills:        { label: 'Social Skills',          emoji: '👫', color: '#7C3AED', bg: '#F3E8FF' },
   music_therapy:        { label: 'Music Therapy',          emoji: '🎵', color: '#16A34A', bg: '#F0FDF4' },
@@ -259,7 +259,7 @@ function ProviderCard({ provider, onPress }: { provider: ProviderWithDist; onPre
 
         <View style={s.cardInfo}>
           <Text style={s.cardName} numberOfLines={2}>{provider.name}</Text>
-          <Text style={[s.cardCategory, { color: meta.color }]}>{meta.label}</Text>
+          <Text style={s.cardCategory}>{meta.label}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}>
             <Ionicons name="location-outline" size={12} color={Colors.textMuted} />
             <Text style={s.cardCity}>
@@ -773,7 +773,7 @@ const s = StyleSheet.create({
   iconEmoji:   { fontSize: 24 },
   cardInfo:    { flex: 1, gap: 2 },
   cardName:    { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
-  cardCategory:{ fontSize: 13, fontWeight: '600' },
+  cardCategory:{ fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   cardCity:    { fontSize: 13, color: Colors.textMuted, marginTop: 2 },
   chevron:     { fontSize: 22, color: Colors.textMuted, marginTop: 2 },
 

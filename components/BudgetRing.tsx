@@ -14,18 +14,19 @@ import { Colors } from '@constants/colors';
 const W    = 300;
 const CX   = W / 2;
 const CY   = 150;   // arc baseline (centre)
-const BAND_W = 8;
+const BAND_W = 4.5; // slim bands → a natural, delicate rainbow
+const OUTER_R = 138;
 
 const BANDS = [
   { r: 138, color: '#EF4444' }, // red    — outermost
-  { r: 126, color: '#F97316' }, // orange
-  { r: 114, color: '#EAB308' }, // yellow
-  { r: 102, color: '#22C55E' }, // green
-  { r:  90, color: '#3B82F6' }, // blue
-  { r:  78, color: '#7C3AED' }, // violet — innermost
+  { r: 133, color: '#F97316' }, // orange
+  { r: 128, color: '#EAB308' }, // yellow
+  { r: 123, color: '#22C55E' }, // green
+  { r: 118, color: '#3B82F6' }, // blue
+  { r: 113, color: '#7C3AED' }, // violet — innermost
 ];
 
-const DOT_R    = 114; // yellow band — progress badge rides here
+const DOT_R    = 125; // progress badge rides on the arc
 const DOT_SIZE = 28;
 const SVG_H    = 160;
 
@@ -120,8 +121,8 @@ export function BudgetRing({
         </Animated.View>
 
         {/* Cloud endpoints */}
-        <Cloud left={CX - 138 - 20} />
-        <Cloud left={CX + 138 - 20} />
+        <Cloud left={CX - OUTER_R - 20} />
+        <Cloud left={CX + OUTER_R - 20} />
       </View>
 
       {/* Center info */}
