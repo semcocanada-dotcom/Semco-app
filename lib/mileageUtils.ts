@@ -80,6 +80,30 @@ export async function buildMileageProposal(
   };
 }
 
+/**
+ * Builds a mileage proposal from a destination address alone — used when the
+ * receipt's provider name can't be matched (e.g. low-quality OCR) but an
+ * address is present. What matters for mileage is where the trip went, not
+ * which staff member was seen.
+ */
+export async function buildMileageProposalFromAddress(
+  homeAddress:        string,
+  destinationAddress: string,
+  label:              string,
+): Promise<MileageProposal | null> {
+  const calc: MileageCalculation | null = await calculateMileage(homeAddress, destinationAddress);
+  if (!calc) return null;
+
+  return {
+    distanceKm:   calc.distanceKm,
+    ratePerKm:    calc.ratePerKm,
+    amount:       calc.amount,
+    isNorthern:   calc.isNorthern,
+    providerName: label,
+    destination:  destinationAddress,
+  };
+}
+
 // ─── Confidence threshold for auto-selecting a provider ──────────────────────
 
 /** Score >= this value → auto-select and auto-calculate mileage without asking */

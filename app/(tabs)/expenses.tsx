@@ -27,7 +27,7 @@ import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear, M
 import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
-import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
+import { analyseReceipt, buildMileageProposal, buildMileageProposalFromAddress, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
 import { inferCategoryFromText } from '@lib/ocr';
@@ -72,6 +72,14 @@ const STATUS_STYLE: Record<ExpenseStatus, { bg: string; text: string; label: str
   approved:  { bg: '#F0FDF4', text: '#15803D', label: 'Approved'  },
   rejected:  { bg: '#FFF1F2', text: '#BE123C', label: 'Rejected'  },
 };
+
+// In-person services worth a mileage trip. Excludes assistive_technology and
+// other (typically mail-order/retail, where a receipt address is a shipping
+// address, not somewhere you drove).
+const TRAVEL_CATEGORIES = new Set<ProviderCategory>([
+  'aba_ibi', 'speech_language', 'occupational_therapy', 'physical_therapy',
+  'psychology', 'swimming', 'social_skills', 'music_therapy', 'art_therapy', 'respite',
+]);
 
 const catEmoji = (cat: ProviderCategory) =>
   CATEGORY_CONFIG.find(c => c.value === cat)?.emoji ?? '📋';
@@ -260,22 +268,42 @@ function QuickAddModal({
     }, 250);
   }, []);
 
-  async function tryMileage(provider: Provider, ocrAddress?: string | null) {
+  function homeAddr(): string | null {
     const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
-    const addr  = parts.length > 0 ? parts.join(', ') : null;
+    return parts.length > 0 ? parts.join(', ') : null;
+  }
+
+  // Always save as round trip — SK ASD-IF mileage is claimed both ways.
+  function applyProposalAsRoundTrip(proposal: MileageProposal) {
+    setMileageProposal({
+      ...proposal,
+      distanceKm: Math.round(proposal.distanceKm * 2 * 10) / 10,
+      amount:     Math.round(proposal.distanceKm * 2 * proposal.ratePerKm * 100) / 100,
+    });
+    setIncludeMileage(true);
+  }
+
+  async function tryMileage(provider: Provider, ocrAddress?: string | null) {
+    const addr = homeAddr();
     if (!addr) return;
     setMileageLoading(true);
     try {
       const proposal = await buildMileageProposal(addr, provider, ocrAddress);
-      if (proposal) {
-        // Always save as round trip — SK ASD-IF mileage is claimed both ways
-        setMileageProposal({
-          ...proposal,
-          distanceKm: Math.round(proposal.distanceKm * 2 * 10) / 10,
-          amount:     Math.round(proposal.distanceKm * 2 * proposal.ratePerKm * 100) / 100,
-        });
-        setIncludeMileage(true);
-      }
+      if (proposal) applyProposalAsRoundTrip(proposal);
+    } catch { /* geocoding failed silently */ } finally {
+      setMileageLoading(false);
+    }
+  }
+
+  // Fallback when the provider name can't be matched but the receipt has an
+  // address — mileage depends on the destination, not on naming the therapist.
+  async function tryMileageFromAddress(destination: string, label: string) {
+    const addr = homeAddr();
+    if (!addr) return;
+    setMileageLoading(true);
+    try {
+      const proposal = await buildMileageProposalFromAddress(addr, destination, label);
+      if (proposal) applyProposalAsRoundTrip(proposal);
     } catch { /* geocoding failed silently */ } finally {
       setMileageLoading(false);
     }
@@ -304,12 +332,20 @@ function QuickAddModal({
       const inferred = inferCategoryFromText(analysis.ocrResult.rawText);
       if (inferred) setCategory(inferred);
       const top = analysis.topMatch;
+      const cat = inferred ?? category;
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);
         // Only let the matched provider set the category when the receipt text
         // gave us nothing more specific.
         if (!inferred) setCategory(top.provider.category);
         await tryMileage(top.provider, analysis.ocrResult.address);
+      } else if (analysis.ocrResult.address && TRAVEL_CATEGORIES.has(cat)) {
+        // No confident provider match, but the receipt is for an in-person
+        // service and carries an address — compute mileage from that address.
+        await tryMileageFromAddress(
+          analysis.ocrResult.address,
+          analysis.ocrResult.businessName ?? 'appointment',
+        );
       }
     } catch { /* OCR failed silently */ } finally {
       setOcrLoading(false);
