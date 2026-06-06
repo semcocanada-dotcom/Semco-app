@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
+import type { ProviderCategory } from '@lib/types';
 
 export interface OcrResult {
   businessName: string | null;
@@ -139,6 +140,38 @@ export function extractReceiptDate(text: string): string | null {
     if (iso) return iso;
   }
 
+  return null;
+}
+
+// ─── Category inference (read the service off the receipt) ───────────────────
+
+// Ordered most- to least-specific. The receipt text itself is a more reliable
+// signal of the service than a fuzzy provider-name match, so this drives the
+// category when a keyword is found.
+const CATEGORY_KEYWORDS: { category: ProviderCategory; patterns: RegExp[] }[] = [
+  { category: 'aba_ibi',              patterns: [/\baba\b/i, /\bibi\b/i, /applied behaviou?r/i, /behaviou?r (analyst|therap|interven|consult)/i, /\bbcba\b/i] },
+  { category: 'speech_language',      patterns: [/speech/i, /language path/i, /\bslp\b/i, /\bs-?lp\b/i] },
+  { category: 'occupational_therapy', patterns: [/occupational/i, /\boccupational therap/i, /\bot\b/i, /\bo\.?t\.?\b/i] },
+  { category: 'physical_therapy',     patterns: [/physiotherap/i, /physical therap/i, /\bphysio\b/i, /\bpt\b/i] },
+  { category: 'psychology',           patterns: [/psycholog/i, /\bpsych\b/i, /counsell?ing/i, /mental health/i] },
+  { category: 'music_therapy',        patterns: [/music therap/i] },
+  { category: 'art_therapy',          patterns: [/art therap/i] },
+  { category: 'social_skills',        patterns: [/social skill/i] },
+  { category: 'swimming',             patterns: [/swim/i, /aquatic/i] },
+  { category: 'respite',              patterns: [/respite/i] },
+  { category: 'assistive_technology', patterns: [/assistive tech/i, /\baac\b/i, /communication device/i] },
+];
+
+/**
+ * Guesses the funding category from the words on the receipt (e.g. "Speech
+ * Therapy", "Reg. SLP" → speech_language). Returns null when nothing matches so
+ * callers can fall back to a provider's category or the user's manual choice.
+ */
+export function inferCategoryFromText(text: string): ProviderCategory | null {
+  if (!text) return null;
+  for (const { category, patterns } of CATEGORY_KEYWORDS) {
+    if (patterns.some(p => p.test(text))) return category;
+  }
   return null;
 }
 

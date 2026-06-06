@@ -28,6 +28,7 @@ import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import { inferCategoryFromText } from '@lib/ocr';
 import { router, useLocalSearchParams } from 'expo-router';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -294,10 +295,16 @@ function QuickAddModal({
       if (analysis.ocrResult.date) {
         setDate(analysis.ocrResult.date);
       }
+      // The service printed on the receipt (e.g. "Speech Therapy", "Reg. SLP")
+      // is a more reliable category signal than a fuzzy provider-name match.
+      const inferred = inferCategoryFromText(analysis.ocrResult.rawText);
+      if (inferred) setCategory(inferred);
       const top = analysis.topMatch;
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);
-        setCategory(top.provider.category);
+        // Only let the matched provider set the category when the receipt text
+        // gave us nothing more specific.
+        if (!inferred) setCategory(top.provider.category);
         await tryMileage(top.provider, analysis.ocrResult.address);
       }
     } catch { /* OCR failed silently */ } finally {
@@ -677,7 +684,42 @@ function ExpenseDetailModal({
   expense: Expense | null; visible: boolean;
   onClose: () => void; onUpdated: () => void;
 }) {
-  const [saving, setSaving] = useState(false);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [receiptIsPdf, setReceiptIsPdf] = useState(false);
+  const [mileage, setMileage] = useState<MileageLog | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Load the signed receipt URL and any mileage trip filed on the same day.
+  useEffect(() => {
+    if (!visible || !expense) {
+      setReceiptUrl(null); setReceiptIsPdf(false); setMileage(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingDetail(true);
+      try {
+        const path = expense.receipt_urls?.[0];
+        if (path) {
+          setReceiptIsPdf(path.toLowerCase().endsWith('.pdf'));
+          // Bucket is private — mint a short-lived signed URL, never getPublicUrl.
+          const { data } = await supabase.storage.from('receipts').createSignedUrl(path, 3600);
+          if (!cancelled) setReceiptUrl(data?.signedUrl ?? null);
+        }
+        const { data: trips } = await supabase
+          .from('mileage_logs')
+          .select('*')
+          .eq('child_id', expense.child_id)
+          .eq('trip_date', expense.expense_date)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (!cancelled) setMileage((trips?.[0] as MileageLog) ?? null);
+      } finally {
+        if (!cancelled) setLoadingDetail(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [visible, expense]);
 
   if (!expense) return null;
 
@@ -708,14 +750,32 @@ function ExpenseDetailModal({
         </View>
         <ScrollView contentContainerStyle={s.mBody}>
           {/* Summary */}
-          <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+          <View style={{ alignItems: 'center', paddingVertical: 16 }}>
             <Text style={{ fontSize: 44, fontWeight: '800', color: Colors.textPrimary }}>{CAD(expense.amount)}</Text>
             <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 4 }}>
-              {prov?.name ?? catLabel(expense.category)} · {format(parseISO(expense.expense_date), 'MMM d, yyyy')}
+              {catEmoji(expense.category)} {catLabel(expense.category)} · {format(parseISO(expense.expense_date), 'MMM d, yyyy')}
             </Text>
             <View style={[s.statusPill, { backgroundColor: st.bg, marginTop: 10, paddingHorizontal: 14, paddingVertical: 6 }]}>
               <Text style={[s.statusText, { color: st.text, fontSize: 13 }]}>{st.label}</Text>
             </View>
+          </View>
+
+          {/* Provider */}
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Provider</Text>
+            <Text style={s.detailValue}>{prov?.name ?? 'Not linked'}</Text>
+          </View>
+
+          {/* Category */}
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Category</Text>
+            <Text style={s.detailValue}>{catEmoji(expense.category)} {catLabel(expense.category)}</Text>
+          </View>
+
+          {/* Date */}
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Date</Text>
+            <Text style={s.detailValue}>{format(parseISO(expense.expense_date), 'EEEE, MMMM d, yyyy')}</Text>
           </View>
 
           {expense.description && (
@@ -724,6 +784,43 @@ function ExpenseDetailModal({
               <Text style={s.detailValue}>{expense.description}</Text>
             </View>
           )}
+
+          {/* Linked mileage */}
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Mileage</Text>
+            {mileage ? (
+              <>
+                <Text style={s.detailValue}>
+                  {mileage.distance_km} km × ${Number(mileage.rate_per_km).toFixed(4)}/km
+                  {mileage.is_round_trip ? ' · round trip' : ''}
+                </Text>
+                <Text style={[s.detailValue, { color: '#15803D', fontWeight: '700', marginTop: 2 }]}>
+                  {CAD(Number(mileage.reimbursement_amount))} reimbursement
+                </Text>
+              </>
+            ) : (
+              <Text style={[s.detailValue, { color: Colors.textMuted }]}>No trip logged for this date</Text>
+            )}
+          </View>
+
+          {/* Receipt */}
+          <View style={[s.detailRow, { paddingBottom: 14 }]}>
+            <Text style={s.detailLabel}>Receipt</Text>
+            {loadingDetail ? (
+              <ActivityIndicator color={Colors.purple} style={{ marginTop: 10 }} />
+            ) : receiptUrl ? (
+              receiptIsPdf ? (
+                <View style={[s.pdfPreview, { marginTop: 8 }]}>
+                  <Text style={{ fontSize: 28 }}>📄</Text>
+                  <Text style={s.pdfName} numberOfLines={1}>Receipt PDF attached</Text>
+                </View>
+              ) : (
+                <Image source={{ uri: receiptUrl }} style={{ width: '100%', height: 240, borderRadius: 10, marginTop: 8 }} resizeMode="contain" />
+              )
+            ) : (
+              <Text style={[s.detailValue, { color: Colors.textMuted }]}>No receipt attached</Text>
+            )}
+          </View>
 
           <TouchableOpacity style={s.deleteRowBtn} onPress={deleteExpense}>
             <Text style={s.deleteRowBtnText}>Delete Expense</Text>
