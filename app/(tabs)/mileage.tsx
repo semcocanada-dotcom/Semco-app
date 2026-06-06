@@ -114,6 +114,7 @@ function AddTripModal({
         rate_per_km:     parseFloat(ratePerKm),
         trip_date:       date,
         is_round_trip:   isRoundTrip,
+        expense_id:      null,
       });
       onSaved(); onClose();
     } catch (e: any) {
@@ -246,11 +247,11 @@ function tripStyle(desc: string): { icon: keyof typeof Ionicons.glyphMap; color:
   return { icon: 'person', color: '#16A34A', bg: '#DCFCE7' };
 }
 
-function TripRow({ log }: { log: MileageLog }) {
+function TripRow({ log, onPress }: { log: MileageLog; onPress: () => void }) {
   const desc = log.description ?? 'Mileage trip';
   const t = tripStyle(desc);
   return (
-    <View style={s.tripRow}>
+    <TouchableOpacity style={s.tripRow} onPress={onPress} activeOpacity={0.7}>
       <View style={[s.tripIcon, { backgroundColor: t.bg, borderColor: t.bg }]}>
         <Ionicons name={t.icon} size={20} color={t.color} />
       </View>
@@ -260,7 +261,83 @@ function TripRow({ log }: { log: MileageLog }) {
       </View>
       <Text style={s.tripAmount}>{CAD(Number(log.reimbursement_amount))}</Text>
       <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} style={{ marginLeft: 6 }} />
-    </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── TripDetailModal ───────────────────────────────────────────────────────────
+
+function TripDetailModal({
+  log, visible, onClose, onDeleted,
+}: {
+  log: MileageLog | null; visible: boolean;
+  onClose: () => void; onDeleted: () => void;
+}) {
+  if (!log) return null;
+
+  function confirmDelete() {
+    Alert.alert('Delete this trip?', 'This removes the mileage trip permanently.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete', style: 'destructive',
+        onPress: async () => {
+          await supabase.from('mileage_logs').delete().eq('id', log!.id);
+          onDeleted(); onClose();
+        },
+      },
+    ]);
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }} edges={['top']}>
+        <View style={s.mHeader}>
+          <Text style={s.mTitle}>Trip Detail</Text>
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={{ fontSize: 16, color: Colors.purple, fontWeight: '500' }}>Close</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView contentContainerStyle={s.mBody}>
+          <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+            <Text style={{ fontSize: 40, fontWeight: '800', color: '#15803D' }}>
+              {CAD(Number(log.reimbursement_amount))}
+            </Text>
+            <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 4 }}>reimbursement</Text>
+          </View>
+
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Purpose</Text>
+            <Text style={s.detailValue}>{log.description ?? 'Mileage trip'}</Text>
+          </View>
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Date</Text>
+            <Text style={s.detailValue}>{format(parseISO(log.trip_date), 'EEEE, MMMM d, yyyy')}</Text>
+          </View>
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Distance</Text>
+            <Text style={s.detailValue}>
+              {Number(log.distance_km).toFixed(1)} km{log.is_round_trip ? ' · round trip' : ''}
+            </Text>
+          </View>
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Rate</Text>
+            <Text style={s.detailValue}>${Number(log.rate_per_km).toFixed(4)} / km</Text>
+          </View>
+          <View style={s.detailRow}>
+            <Text style={s.detailLabel}>Linked expense</Text>
+            <Text style={s.detailValue}>
+              {log.expense_id
+                ? 'Auto-logged from an expense — deleting that expense also removes this trip.'
+                : 'Added manually.'}
+            </Text>
+          </View>
+
+          <TouchableOpacity style={s.deleteBtn} onPress={confirmDelete}>
+            <Text style={s.deleteBtnText}>Delete Trip</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
   );
 }
 
@@ -302,6 +379,7 @@ export default function MileageScreen() {
   const [monthOffset, setMonthOffset]       = useState(0);
   const [showAdd,     setShowAdd]           = useState(false);
   const [exporting,   setExporting]         = useState(false);
+  const [detailLog,   setDetailLog]         = useState<MileageLog | null>(null);
 
   const now = new Date();
   const selected  = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
@@ -472,7 +550,7 @@ export default function MileageScreen() {
         )}
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 16 }}>
-            <TripRow log={item} />
+            <TripRow log={item} onPress={() => setDetailLog(item)} />
             <View style={{ height: 1, backgroundColor: Colors.border }} />
           </View>
         )}
@@ -504,6 +582,13 @@ export default function MileageScreen() {
           onSaved={fetchLogs}
         />
       )}
+
+      <TripDetailModal
+        log={detailLog}
+        visible={!!detailLog}
+        onClose={() => setDetailLog(null)}
+        onDeleted={fetchLogs}
+      />
     </SafeAreaView>
   );
 }
@@ -580,4 +665,11 @@ const s = StyleSheet.create({
   calcText:   { fontSize: 15, color: '#166534' },
   saveBtn:    { borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   saveBtnText:{ fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.2 },
+
+  // Trip detail
+  detailRow:    { backgroundColor: Colors.surfaceAlt, borderRadius: 12, padding: 12, marginTop: 10 },
+  detailLabel:  { fontSize: 11, fontWeight: '600', color: Colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
+  detailValue:  { fontSize: 14, color: Colors.textPrimary, marginTop: 4 },
+  deleteBtn:    { marginTop: 20, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#FECDD3', alignItems: 'center' },
+  deleteBtnText:{ color: '#BE123C', fontWeight: '600', fontSize: 14 },
 });

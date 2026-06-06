@@ -420,6 +420,7 @@ function QuickAddModal({
           rate_per_km:     mileageProposal.ratePerKm,
           trip_date:       date,
           is_round_trip:   true,
+          expense_id:      row.id,   // deleting the expense removes this trip
         });
       }
 
@@ -1005,6 +1006,7 @@ function MileageOnlyModal({
         rate_per_km:     rate,
         trip_date:       date,
         is_round_trip:   isRoundTrip,
+        expense_id:      null,
       });
       onSaved(); onClose();
     } catch (err: any) {

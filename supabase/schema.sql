@@ -219,11 +219,13 @@ CREATE TABLE mileage_logs (
   reimbursement_amount  NUMERIC(10,2) GENERATED ALWAYS AS (ROUND(distance_km * rate_per_km, 2)) STORED,
   trip_date             DATE NOT NULL DEFAULT CURRENT_DATE,
   is_round_trip         BOOLEAN NOT NULL DEFAULT false,
+  expense_id            UUID REFERENCES expenses(id) ON DELETE CASCADE,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_mileage_child_year ON mileage_logs(child_id, funding_year_id);
 CREATE INDEX idx_mileage_child_date ON mileage_logs(child_id, trip_date DESC);
+CREATE INDEX idx_mileage_expense ON mileage_logs(expense_id);
 
 ALTER TABLE mileage_logs ENABLE ROW LEVEL SECURITY;
 

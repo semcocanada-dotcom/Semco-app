@@ -106,6 +106,7 @@ export interface MileageLog {
   reimbursement_amount: number;
   trip_date: string;
   is_round_trip: boolean;
+  expense_id: string | null;
   created_at: string;
 }
 
