@@ -779,15 +779,21 @@ function ExpenseDetailModal({
   expense: Expense | null; visible: boolean;
   onClose: () => void; onUpdated: () => void;
 }) {
+  const { profile } = useAuth();
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [receiptIsPdf, setReceiptIsPdf] = useState(false);
   const [mileage, setMileage] = useState<MileageLog | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [addingMileage, setAddingMileage] = useState(false);
+  const [mProvQuery, setMProvQuery] = useState('');
+  const [mProvResults, setMProvResults] = useState<Provider[]>([]);
+  const [savingMileage, setSavingMileage] = useState(false);
 
   // Load the signed receipt URL and any mileage trip filed on the same day.
   useEffect(() => {
     if (!visible || !expense) {
       setReceiptUrl(null); setReceiptIsPdf(false); setMileage(null);
+      setAddingMileage(false); setMProvQuery(''); setMProvResults([]);
       return;
     }
     let cancelled = false;
@@ -829,6 +835,53 @@ function ExpenseDetailModal({
         },
       },
     ]);
+  }
+
+  async function searchMileageProviders(q: string) {
+    if (!q.trim()) { setMProvResults([]); return; }
+    const { data } = await supabase
+      .from('providers')
+      .select('id, name, category, city, organization, address, lat, lng')
+      .or(`name.ilike.%${q}%,organization.ilike.%${q}%`)
+      .limit(6);
+    setMProvResults((data ?? []) as Provider[]);
+  }
+
+  // Calculate and save a round-trip mileage log linked to this expense.
+  async function addMileageForProvider(p: Provider) {
+    const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
+    if (!parts.length) {
+      Alert.alert('Add your home address', 'Set your home address in the Profile tab so trips can be calculated.');
+      return;
+    }
+    setSavingMileage(true);
+    try {
+      const proposal = await buildMileageProposal(parts.join(', '), p);
+      if (!proposal) {
+        Alert.alert('Could not calculate', 'Distance lookup failed. Please try again.');
+        return;
+      }
+      const km = Math.round(proposal.distanceKm * 2 * 10) / 10; // round trip
+      const { error } = await supabase.from('mileage_logs').insert({
+        child_id:        expense!.child_id,
+        funding_year_id: expense!.funding_year_id,
+        description:     `Round trip to ${p.name}`,
+        distance_km:     km,
+        rate_per_km:     proposal.ratePerKm,
+        trip_date:       expense!.expense_date,
+        is_round_trip:   true,
+        expense_id:      expense!.id,
+      });
+      if (error) { Alert.alert('Save failed', error.message); return; }
+      const { data } = await supabase
+        .from('mileage_logs').select('*').eq('expense_id', expense!.id)
+        .order('created_at', { ascending: false }).limit(1);
+      setMileage((data?.[0] as MileageLog) ?? null);
+      setAddingMileage(false); setMProvQuery(''); setMProvResults([]);
+      onUpdated();
+    } finally {
+      setSavingMileage(false);
+    }
   }
 
   const st   = STATUS_STYLE[expense.status];
@@ -893,8 +946,43 @@ function ExpenseDetailModal({
                   {CAD(Number(mileage.reimbursement_amount))} reimbursement
                 </Text>
               </>
+            ) : addingMileage ? (
+              <View style={{ marginTop: 8 }}>
+                <View style={s.searchBox}>
+                  <Text style={{ fontSize: 14 }}>🔍</Text>
+                  <TextInput
+                    style={s.searchInput}
+                    placeholder="Search the provider you drove to…"
+                    placeholderTextColor={Colors.textMuted}
+                    value={mProvQuery}
+                    onChangeText={q => { setMProvQuery(q); searchMileageProviders(q); }}
+                    autoCorrect={false}
+                    autoFocus
+                  />
+                </View>
+                {savingMileage && <ActivityIndicator color={Colors.purple} style={{ marginTop: 10 }} />}
+                {!savingMileage && mProvResults.length > 0 && (
+                  <View style={[s.dropdown, { marginTop: 6 }]}>
+                    {mProvResults.map((p, i) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={[s.dropItem, i < mProvResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]}
+                        onPress={() => addMileageForProvider(p)}
+                      >
+                        <Text style={s.dropName}>{p.name}</Text>
+                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.organization ?? p.city}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
             ) : (
-              <Text style={[s.detailValue, { color: Colors.textMuted }]}>No trip logged for this date</Text>
+              <>
+                <Text style={[s.detailValue, { color: Colors.textMuted }]}>No trip logged for this date</Text>
+                <TouchableOpacity onPress={() => setAddingMileage(true)} style={s.addMileageBtn}>
+                  <Text style={s.addMileageBtnText}>+ Add mileage</Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
 
@@ -1420,6 +1508,8 @@ const s = StyleSheet.create({
   detailValue:    { fontSize: 14, color: Colors.textPrimary, marginTop: 4 },
   deleteRowBtn:   { marginTop: 20, padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#FECDD3', alignItems: 'center' },
   deleteRowBtnText:{ color: '#BE123C', fontWeight: '600', fontSize: 14 },
+  addMileageBtn:    { marginTop: 10, alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#86EFAC' },
+  addMileageBtnText:{ color: '#15803D', fontWeight: '700', fontSize: 13 },
 
   // Mileage-only
   checkbox:    { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
