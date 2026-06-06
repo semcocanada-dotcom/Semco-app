@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, G } from 'react-native-svg';
 
 interface AppLogoProps {
   size?: number;
@@ -9,41 +9,48 @@ interface AppLogoProps {
 
 const NAVY = '#1C2E5E';
 
-// Rainbow arch forms the crossbar of the A: peaks upward, spans between the legs.
-// Outermost (largest radius) band is red, sitting on top of the arch.
-const ARC_CX = 50;
-const ARC_CY = 67;   // baseline the arch springs from
-const RAINBOW = [
-  { r: 22.0, color: '#EF4444' }, // red    — outermost / top
-  { r: 18.4, color: '#F97316' }, // orange
-  { r: 14.8, color: '#FACC15' }, // yellow
-  { r: 11.2, color: '#22C55E' }, // green
-  { r:  7.6, color: '#3B82F6' }, // blue   — innermost
-];
+// Rainbow is a slice of a large circle centred low at (CX,CY): it sweeps up
+// from the lower-left and tucks behind the right leg of the A — matching the
+// brand mark. Red is the outer band, violet the inner.
+const CX = 47;
+const CY = 84;
+const R_OUTER = 36;
+const A1 = -167; // left foot angle (degrees, screen y-down)
+const A2 = -73;  // right end angle, high up against the right leg
+const GAP = 2.9;
+const BANDS = ['#EF4444', '#F97316', '#FACC15', '#22C55E', '#22D3EE', '#3B82F6', '#8B5CF6'];
 
-function arc(r: number) {
-  return `M ${ARC_CX - r},${ARC_CY} A ${r},${r} 0 0,1 ${ARC_CX + r},${ARC_CY}`;
+function bandArc(r: number): string {
+  const p1x = CX + r * Math.cos((A1 * Math.PI) / 180);
+  const p1y = CY + r * Math.sin((A1 * Math.PI) / 180);
+  const p2x = CX + r * Math.cos((A2 * Math.PI) / 180);
+  const p2y = CY + r * Math.sin((A2 * Math.PI) / 180);
+  return `M ${p1x.toFixed(2)},${p1y.toFixed(2)} A ${r},${r} 0 0,1 ${p2x.toFixed(2)},${p2y.toFixed(2)}`;
 }
 
 export function AppLogo({ size = 40, variant = 'dark' }: AppLogoProps) {
   const aColor = variant === 'light' ? '#FFFFFF' : NAVY;
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
-      {/* A — two legs meeting at a sharp apex, rounded feet, no straight bar */}
-      <Path d="M50 14 L16 90" stroke={aColor} strokeWidth="13" strokeLinecap="round" fill="none" />
-      <Path d="M50 14 L84 90" stroke={aColor} strokeWidth="13" strokeLinecap="round" fill="none" />
+      {/* Left leg (behind the rainbow) */}
+      <Path d="M50 15 L18 88" stroke={aColor} strokeWidth="12.5" strokeLinecap="round" fill="none" />
 
-      {/* Rainbow arch across the lower half of the A */}
-      {RAINBOW.map(b => (
-        <Path
-          key={b.r}
-          d={arc(b.r)}
-          stroke={b.color}
-          strokeWidth={3.4}
-          strokeLinecap="round"
-          fill="none"
-        />
-      ))}
+      {/* Rainbow arch sweeping up from the lower-left */}
+      <G>
+        {BANDS.map((c, i) => (
+          <Path
+            key={c}
+            d={bandArc(R_OUTER - i * GAP)}
+            stroke={c}
+            strokeWidth={2.8}
+            strokeLinecap="round"
+            fill="none"
+          />
+        ))}
+      </G>
+
+      {/* Right leg (on top — the rainbow tucks behind it) */}
+      <Path d="M50 15 L82 88" stroke={aColor} strokeWidth="12.5" strokeLinecap="round" fill="none" />
     </Svg>
   );
 }
