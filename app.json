@@ -27,6 +27,7 @@
       "bundleIdentifier": "ca.semco.app",
       "appleTeamId": "9M779XQXAW",
       "buildNumber": "1",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -47,6 +48,7 @@
       "expo-router",
       "expo-updates",
       "expo-font",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {
