@@ -19,3 +19,4 @@
 2026-06-06T15:00:00Z — rebuild: use supplied brand image directly for icon/splash/in-app logo
 
 2026-06-07T02:00:00Z — rebuild: Sign in with Apple, calendar date pickers, edit expense, receipt fixes, duplicate detection, address-based mileage, multi-page PDF export, grant-year mileage totals
+2026-06-07T03:15:00Z — rebuild: temporarily remove Sign in with Apple (capability not yet enabled on Apple portal); ship the other 12 fixes for testing
