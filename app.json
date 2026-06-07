@@ -26,7 +26,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "ca.semco.app",
       "appleTeamId": "9M779XQXAW",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
