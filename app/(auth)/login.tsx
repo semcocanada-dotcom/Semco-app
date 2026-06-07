@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,9 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
-  StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '@lib/supabase';
 import { Colors } from '@constants/colors';
 import { AppLogo } from '@components/AppLogo';
@@ -23,16 +20,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [appleAvailable, setAppleAvailable] = useState(false);
-
-  useEffect(() => {
-    // Only show the Apple button when the native module is present and the
-    // device supports it (iOS 13+). Guards against crashes on builds without
-    // the module compiled in.
-    AppleAuthentication.isAvailableAsync()
-      .then(setAppleAvailable)
-      .catch(() => setAppleAvailable(false));
-  }, []);
 
   async function handleSignIn() {
     if (!email || !password) { setError('Please enter your email and password.'); return; }
@@ -49,47 +36,6 @@ export default function LoginScreen() {
     if (authError) setError(authError.message);
     else setError('Check your email to confirm your account.');
     setLoading(false);
-  }
-
-  async function handleGoogleSignIn() {
-    setError(null); setLoading(true);
-    try {
-      const { data, error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: 'autismfundtracker://', skipBrowserRedirect: true },
-      });
-      if (authError) throw authError;
-      if (data.url) await WebBrowser.openAuthSessionAsync(data.url, 'autismfundtracker://');
-    } catch (e: any) {
-      setError(e.message ?? 'Google sign-in failed. Try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleAppleSignIn() {
-    setError(null); setLoading(true);
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      if (!credential.identityToken) throw new Error('No identity token returned by Apple.');
-      const { error: authError } = await supabase.auth.signInWithIdToken({
-        provider: 'apple',
-        token: credential.identityToken,
-      });
-      if (authError) throw authError;
-    } catch (e: any) {
-      // The user cancelling the native sheet is not an error worth showing.
-      if (e?.code !== 'ERR_REQUEST_CANCELED') {
-        setError(e.message ?? 'Apple sign-in failed. Try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -231,46 +177,9 @@ export default function LoginScreen() {
                 Don't have an account? Create one
               </Text>
             </Pressable>
-
-            {/* ── OAuth divider ── */}
-            <View style={ls.dividerRow}>
-              <View style={ls.dividerLine} />
-              <Text style={ls.dividerText}>or continue with</Text>
-              <View style={ls.dividerLine} />
-            </View>
-
-            {/* Apple — iOS only; required by App Store when other social logins exist */}
-            {Platform.OS === 'ios' && appleAvailable && (
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                cornerRadius={14}
-                style={{ height: 48, marginBottom: 12 }}
-                onPress={handleAppleSignIn}
-              />
-            )}
-
-            {/* Google */}
-            <Pressable onPress={handleGoogleSignIn} disabled={loading} style={ls.oauthBtn}>
-              <Text style={ls.oauthBtnIcon}>G</Text>
-              <Text style={ls.oauthBtnText}>Sign in with Google</Text>
-            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const ls = StyleSheet.create({
-  dividerRow:   { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
-  dividerLine:  { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText:  { fontSize: 12, color: Colors.textMuted, fontWeight: '600' },
-  oauthBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.border,
-    borderRadius: 14, paddingVertical: 13, gap: 10,
-  },
-  oauthBtnIcon: { fontSize: 18, fontWeight: '700', color: '#4285F4' },
-  oauthBtnText: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
-});
