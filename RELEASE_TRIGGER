@@ -7,3 +7,4 @@ Production release triggers — add a line below and push to build + submit to A
 2026-06-08T01:30:00Z — release v1.0 retry: set Apple team type INDIVIDUAL
 2026-06-08T01:35:00Z — release v1.0 retry: normalize ASC .p8 PEM formatting
 2026-06-08T02:00:00Z — release v1.0: iPhone-only (disable iPad support)
+2026-06-08T03:55:00Z — release v1.0: increment buildNumber to 3 (avoid duplicate ASC submission)
