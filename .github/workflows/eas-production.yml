@@ -4,10 +4,12 @@ name: EAS — Production Build & Submit
 # Connect automatically. Runs only when RELEASE_TRIGGER changes, so it never
 # fires by accident (production builds use paid build credits).
 #
-# Credentials: the App Store Connect API key must be uploaded once to the
-# Expo project (expo.dev → project → Credentials → App Store Connect API Key).
-# With it in place, EAS can create the distribution certificate and App Store
-# provisioning profile and submit — all non-interactively.
+# Credentials: in non-interactive CI, EAS needs an App Store Connect API key
+# to create the distribution certificate and App Store provisioning profile.
+# Provide it via repository secrets:
+#   ASC_KEY_P8     – the full contents of the AuthKey_XXXX.p8 file
+#   ASC_KEY_ID     – the key's Key ID
+#   ASC_ISSUER_ID  – the Issuer ID (App Store Connect → Integrations)
 
 on:
   push:
@@ -36,7 +38,14 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli@18.13.0
 
+      - name: Write App Store Connect API key
+        run: printf '%s' "${{ secrets.ASC_KEY_P8 }}" > "$RUNNER_TEMP/asc-key.p8"
+
       - name: Build iOS production and submit to App Store Connect
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_ASC_API_KEY_PATH: ${{ runner.temp }}/asc-key.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: '9M779XQXAW'
         run: eas build --platform ios --profile production --non-interactive --auto-submit
