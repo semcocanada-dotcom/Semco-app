@@ -39,7 +39,22 @@ jobs:
         run: npm install -g eas-cli@18.13.0
 
       - name: Write App Store Connect API key
-        run: printf '%s' "${{ secrets.ASC_KEY_P8 }}" > "$RUNNER_TEMP/asc-key.p8"
+        # Rebuild a clean PKCS#8 PEM from the secret, tolerant of pasted keys
+        # whose line breaks were flattened (common when copying on a phone).
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          BODY=$(printf '%s' "$ASC_KEY_P8" \
+            | sed -e 's/-----BEGIN PRIVATE KEY-----//' \
+                  -e 's/-----END PRIVATE KEY-----//' \
+            | tr -d '[:space:]')
+          {
+            echo "-----BEGIN PRIVATE KEY-----"
+            printf '%s' "$BODY" | fold -w 64
+            echo
+            echo "-----END PRIVATE KEY-----"
+          } > "$RUNNER_TEMP/asc-key.p8"
+          echo "Wrote $(wc -l < "$RUNNER_TEMP/asc-key.p8") lines"
 
       - name: Build iOS production and submit to App Store Connect
         env:
