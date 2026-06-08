@@ -48,4 +48,5 @@ jobs:
           EXPO_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           EXPO_APPLE_TEAM_ID: '9M779XQXAW'
+          EXPO_APPLE_TEAM_TYPE: 'INDIVIDUAL'
         run: eas build --platform ios --profile production --non-interactive --auto-submit
