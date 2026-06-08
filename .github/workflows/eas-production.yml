@@ -1,0 +1,42 @@
+name: EAS — Production Build & Submit
+
+# Builds the App Store (production) binary and submits it to App Store
+# Connect automatically. Runs only when RELEASE_TRIGGER changes, so it never
+# fires by accident (production builds use paid build credits).
+#
+# Credentials: the App Store Connect API key must be uploaded once to the
+# Expo project (expo.dev → project → Credentials → App Store Connect API Key).
+# With it in place, EAS can create the distribution certificate and App Store
+# provisioning profile and submit — all non-interactively.
+
+on:
+  push:
+    branches:
+      - claude/autism-grant-app-eUE6R
+    paths:
+      - 'RELEASE_TRIGGER'
+
+jobs:
+  build-and-submit:
+    name: Build iOS Production & Submit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@18.13.0
+
+      - name: Build iOS production and submit to App Store Connect
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform ios --profile production --non-interactive --auto-submit

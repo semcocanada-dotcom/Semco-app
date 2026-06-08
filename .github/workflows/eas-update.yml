@@ -6,6 +6,7 @@ on:
       - claude/autism-grant-app-eUE6R
     paths-ignore:
       - 'BUILD_TRIGGER'
+      - 'RELEASE_TRIGGER'
       - '**.md'
       - '.github/**'
 
