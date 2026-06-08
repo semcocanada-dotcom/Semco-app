@@ -23,7 +23,7 @@
       "backgroundColor": "#FAF8FF"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "ca.semco.app",
       "appleTeamId": "9M779XQXAW",
       "buildNumber": "1",

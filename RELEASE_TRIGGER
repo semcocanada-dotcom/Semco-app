@@ -6,3 +6,4 @@ Production release triggers — add a line below and push to build + submit to A
 2026-06-08T01:15:00Z — release v1.0 retry: ASC API key secrets configured
 2026-06-08T01:30:00Z — release v1.0 retry: set Apple team type INDIVIDUAL
 2026-06-08T01:35:00Z — release v1.0 retry: normalize ASC .p8 PEM formatting
+2026-06-08T02:00:00Z — release v1.0: iPhone-only (disable iPad support)
