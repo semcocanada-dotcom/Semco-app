@@ -5,7 +5,6 @@ import {
   ScrollView,
   RefreshControl,
   Pressable,
-  Modal,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
@@ -33,9 +32,11 @@ function LocationPermissionModal({ onDone }: { onDone: () => void }) {
     await Location.requestForegroundPermissionsAsync();
   };
   return (
-    <Modal transparent animationType="fade" visible>
-      <View style={ls.overlay}>
-        <View style={ls.sheet}>
+    // In-tree absolute overlay (not a native <Modal>) so it never triggers a
+    // UIViewController presentation — that presentation path was implicated in
+    // the iPad launch crash. Visually identical to the previous sheet.
+    <View style={ls.overlay} pointerEvents="auto">
+      <View style={ls.sheet}>
           <Text style={ls.icon}>📍</Text>
           <Text style={ls.title}>Allow Location Access</Text>
           <Text style={ls.body}>
@@ -64,12 +65,11 @@ function LocationPermissionModal({ onDone }: { onDone: () => void }) {
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
   );
 }
 
 const ls = StyleSheet.create({
-  overlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  overlay:      { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
   sheet:        { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 28, paddingBottom: 40, gap: 12 },
   icon:         { fontSize: 44, textAlign: 'center' },
   title:        { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },

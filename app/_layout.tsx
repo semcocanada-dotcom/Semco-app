@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus, Linking } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import { AuthProvider, useAuth } from '@context/AuthContext';
@@ -10,32 +10,24 @@ import { supabase } from '@lib/supabase';
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const { loading } = useAuth();
 
-  // Fallback: if loading hangs for >5s, force-hide splash and go to login
-  useEffect(() => {
-    if (loading) {
-      const t = setTimeout(async () => {
-        try { await SplashScreen.hideAsync(); } catch (_) {}
-        router.replace('/(auth)/login');
-      }, 5000);
-      return () => clearTimeout(t);
-    }
-  }, [loading]);
-
+  // Hide the native splash once auth has resolved (or after a 5s safety cap).
+  // Routing is handled declaratively by app/index.tsx via <Redirect>, so we
+  // never call navigation imperatively before the root layout is mounted —
+  // that race was crashing the production build on launch.
   useEffect(() => {
     if (!loading) {
-      (async () => {
-        try { await SplashScreen.hideAsync(); } catch (_) {}
-        try {
-          router.replace(session ? '/(tabs)' : '/(auth)/login');
-        } catch (_) {}
-      })();
+      SplashScreen.hideAsync().catch(() => {});
+      return;
     }
-  }, [session, loading]);
+    const t = setTimeout(() => { SplashScreen.hideAsync().catch(() => {}); }, 5000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
     </Stack>
