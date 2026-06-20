@@ -18,14 +18,29 @@ import { useAssistant } from '@/hooks/useAssistant';
 import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
+import { SavedChatsSheet } from '@/components/assistant/SavedChatsSheet';
 import { getConfiguredProviderStatus } from '@/services/ai/providers';
 import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 export default function AssistantScreen() {
   const router = useRouter();
-  const { messages, isLoading, error, send, clearHistory, isOnline } = useAssistant();
+  const {
+    messages,
+    savedChats,
+    conversationId,
+    conversationTitle,
+    isLoading,
+    error,
+    send,
+    clearHistory,
+    startNewChat,
+    selectChat,
+    deleteChat,
+    isOnline,
+  } = useAssistant();
   const [inputText, setInputText] = React.useState('');
+  const [isChatSheetOpen, setChatSheetOpen] = React.useState(false);
   const listRef = useRef<FlatList<ConversationMessage>>(null);
   const providerStatus = getConfiguredProviderStatus();
 
@@ -43,6 +58,11 @@ export default function AssistantScreen() {
     } else {
       router.push('/library' as any);
     }
+  };
+
+  const handleStartNewChat = async () => {
+    Keyboard.dismiss();
+    await startNewChat();
   };
 
   const handleClearHistory = () => {
@@ -82,11 +102,33 @@ export default function AssistantScreen() {
               <Text style={styles.badgeText}>{isOnline ? 'INSTALL HELP' : 'LOCAL'}</Text>
             </View>
           </View>
+          <Text style={styles.chatTitle} numberOfLines={1}>
+            {conversationTitle}
+          </Text>
           <Text style={styles.subtitle}>
             Ask install, prep, product, and warranty questions.
           </Text>
         </View>
         <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={() => {
+              Keyboard.dismiss();
+              setChatSheetOpen(true);
+            }}
+            style={styles.iconBtn}
+            accessibilityLabel="Open saved chats"
+            accessibilityRole="button"
+          >
+            <Ionicons name="chatbubbles-outline" size={20} color={Colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleStartNewChat}
+            style={styles.iconBtn}
+            accessibilityLabel="Start new chat"
+            accessibilityRole="button"
+          >
+            <Ionicons name="add-circle-outline" size={22} color={Colors.semcoOrange} />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => router.push('/assistant/debug' as any)}
             style={styles.iconBtn}
@@ -166,6 +208,16 @@ export default function AssistantScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <SavedChatsSheet
+        visible={isChatSheetOpen}
+        chats={savedChats}
+        activeChatId={conversationId}
+        onClose={() => setChatSheetOpen(false)}
+        onNewChat={startNewChat}
+        onSelectChat={selectChat}
+        onDeleteChat={deleteChat}
+      />
     </SafeAreaView>
   );
 }
@@ -203,6 +255,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   title: { color: Colors.navy, fontSize: Typography.size.xl, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },
+  chatTitle: {
+    color: Colors.primary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+    marginBottom: 2,
+  },
   subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular, lineHeight: Typography.size.sm * 1.4 },
   badge: {
     paddingHorizontal: Spacing.sm,
