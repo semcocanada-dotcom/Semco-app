@@ -24,7 +24,6 @@ export async function retrieveRelevantChunks(
   );
 
   if (error) {
-    console.error('[rag] edge function error:', error);
     return [];
   }
 

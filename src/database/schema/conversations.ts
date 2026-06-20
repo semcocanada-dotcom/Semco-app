@@ -1,7 +1,25 @@
 import { sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 
 export type MessageRole = 'user' | 'assistant';
-export type MessageSource = 'claude' | 'offline_fts' | 'product_library' | 'sip_manual' | 'technical_docs';
+export type MessageSource =
+  | 'claude'
+  | 'offline_fts'
+  | 'product_library'
+  | 'sip_manual'
+  | 'technical_docs'
+  | 'gemini'
+  | 'ai_cache'
+  | 'ai_fallback';
+
+export interface AssistantCitation {
+  id: string;
+  documentName: string;
+  title?: string;
+  pageNumber?: number;
+  docId?: string;
+  score?: number;
+  retrieval?: 'semantic' | 'local';
+}
 
 export interface ConversationMessage {
   id: string;
@@ -9,6 +27,9 @@ export interface ConversationMessage {
   content: string;
   source: MessageSource;
   timestamp: string;
+  citations?: AssistantCitation[];
+  debugId?: string;
+  provider?: string;
 }
 
 export const conversations = sqliteTable(

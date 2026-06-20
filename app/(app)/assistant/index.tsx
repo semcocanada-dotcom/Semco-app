@@ -18,6 +18,7 @@ import { useAssistant } from '@/hooks/useAssistant';
 import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
+import { getConfiguredProviderStatus } from '@/services/ai/providers';
 import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
@@ -26,6 +27,7 @@ export default function AssistantScreen() {
   const { messages, isLoading, error, send, clearHistory, isOnline } = useAssistant();
   const [inputText, setInputText] = React.useState('');
   const listRef = useRef<FlatList<ConversationMessage>>(null);
+  const providerStatus = getConfiguredProviderStatus();
 
   const handleSend = () => {
     const text = inputText.trim();
@@ -84,15 +86,25 @@ export default function AssistantScreen() {
             Ask install, prep, product, and warranty questions.
           </Text>
         </View>
-        {messages.length > 0 && (
+        <View style={styles.headerActions}>
           <TouchableOpacity
-            onPress={handleClearHistory}
-            style={styles.clearBtn}
-            accessibilityLabel="Clear conversation history"
+            onPress={() => router.push('/assistant/debug' as any)}
+            style={styles.iconBtn}
+            accessibilityLabel="Open assistant debug"
+            accessibilityRole="button"
           >
-            <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+            <Ionicons name="analytics-outline" size={20} color={Colors.primary} />
           </TouchableOpacity>
-        )}
+          {messages.length > 0 && (
+            <TouchableOpacity
+              onPress={handleClearHistory}
+              style={styles.iconBtn}
+              accessibilityLabel="Clear conversation history"
+            >
+              <Ionicons name="trash-outline" size={20} color={Colors.danger} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {messages.length === 0 ? (
@@ -101,7 +113,7 @@ export default function AssistantScreen() {
             <Ionicons name="document-text-outline" size={34} color={Colors.primary} />
             <Text style={styles.emptyTitle}>Ask a Semco install question</Text>
             <Text style={styles.emptyBody}>
-              Type the exact jobsite question. The assistant will answer directly when it has a confirmed Semco rule.
+              Type the exact jobsite question. The assistant uses approved Semco documents first{providerStatus.configured ? ', then AI generation.' : '.'}
             </Text>
           </View>
         </View>
@@ -206,12 +218,16 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
     letterSpacing: 0.8,
   },
-  clearBtn: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  iconBtn: {
     width: TAP_TARGET_MIN,
     height: TAP_TARGET_MIN,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: Spacing.sm,
   },
   messageList: {
     width: '100%',

@@ -9,7 +9,7 @@ export function OfflineBanner() {
       <View style={styles.iconWrap}>
         <Ionicons name="cloud-offline-outline" size={16} color={Colors.offlineAmber} />
       </View>
-      <Text style={styles.text}>Offline mode · answers from the SIP manual</Text>
+      <Text style={styles.text}>Offline mode - answers from local Semco docs</Text>
     </View>
   );
 }

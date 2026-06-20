@@ -70,11 +70,11 @@ export default function ProductsScreen() {
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            onPress={() => router.push('/assistant' as any)}
+            onPress={() => router.push(`/products/${item.id}` as any)}
             style={styles.row}
             accessibilityRole="button"
             accessibilityLabel={item.title}
-            accessibilityHint="Opens Ask Semco to ask about this document"
+            accessibilityHint="Opens the loaded Semco document text"
           >
             <View style={styles.rowLeft}>
               <View style={styles.badgeRow}>

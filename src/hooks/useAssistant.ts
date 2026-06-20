@@ -125,6 +125,9 @@ export function useAssistant() {
           content: response.content,
           source: response.source,
           timestamp: new Date().toISOString(),
+          citations: response.citations,
+          debugId: response.debugId,
+          provider: response.provider,
         };
 
         setMessages((prev) => [...prev, assistantMsg]);

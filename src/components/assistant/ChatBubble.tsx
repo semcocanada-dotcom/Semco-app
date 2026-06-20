@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
@@ -51,7 +53,17 @@ interface ChatBubbleProps {
 }
 
 export function ChatBubble({ message }: ChatBubbleProps) {
+  const router = useRouter();
   const isUser = message.role === 'user';
+  const citations = !isUser ? message.citations?.slice(0, 4) ?? [] : [];
+
+  const openCitation = (docId?: string) => {
+    if (docId) {
+      router.push(`/products/${docId}` as any);
+      return;
+    }
+    router.push('/products' as any);
+  };
 
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
@@ -59,7 +71,29 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         {isUser ? (
           <Text style={[styles.text, styles.textUser]}>{message.content}</Text>
         ) : (
-          <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
+          <>
+            <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
+            {citations.length > 0 && (
+              <View style={styles.sources}>
+                {citations.map((citation) => (
+                  <TouchableOpacity
+                    key={citation.id}
+                    onPress={() => openCitation(citation.docId)}
+                    activeOpacity={0.78}
+                    style={styles.sourceChip}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${citation.documentName}`}
+                  >
+                    <Ionicons name="document-text-outline" size={14} color={Colors.primary} />
+                    <Text style={styles.sourceText} numberOfLines={1}>
+                      {citation.title ?? citation.documentName}
+                      {citation.pageNumber ? ` p. ${citation.pageNumber}` : ''}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </>
         )}
       </View>
     </View>
@@ -88,4 +122,29 @@ const styles = StyleSheet.create({
   text: { fontSize: Typography.size.base, fontFamily: Fonts.regular, lineHeight: Typography.size.base * 1.5 },
   textUser: { color: Colors.white },
   textAssistant: { color: Colors.navy },
+  sources: {
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  sourceChip: {
+    minHeight: 34,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    paddingHorizontal: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  sourceText: {
+    flex: 1,
+    color: Colors.primary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+  },
 });
