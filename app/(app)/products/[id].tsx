@@ -14,7 +14,7 @@ import { db } from '@/database/client';
 import { products } from '@/database/schema/products';
 import type { Product } from '@/database/schema/products';
 import { Card, Badge } from '@/components/ui';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -85,7 +85,14 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    gap: Spacing.md,
+    paddingBottom: Spacing.xxxl,
+  },
   back: { marginBottom: Spacing.sm },
   name: {
     color: Colors.textPrimary,

@@ -101,16 +101,10 @@ export function formatSipManualResponse(hits: ManualKnowledgeHit[]): string {
   }
 
   const topHit = hits[0];
-  const extraHits = hits.slice(1).map((hit) => `- ${hit.title}, p. ${hit.pageNumber}`);
 
   return [
-    'Answer: I found the closest Semco doc match.',
-    '',
-    `Best match: ${topHit.title}, p. ${topHit.pageNumber}`,
+    'Answer:',
     summarizeExcerpt(topHit.excerpt),
-    '',
-    `Source: ${topHit.sourceDocument}`,
-    ...(extraHits.length ? ['', 'Also relevant:', ...extraHits] : []),
   ].join('\n');
 }
 

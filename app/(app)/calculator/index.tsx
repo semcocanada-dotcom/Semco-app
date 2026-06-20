@@ -7,7 +7,7 @@ import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdown
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
 import { SEALER_OPTIONS, XBOND_FINISH_OPTIONS } from '@/constants/product-coverage';
-import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 const ESTIMATOR_POINTS = [
   'X-Bond Stone plus required X-Bond Liquid',
@@ -37,108 +37,110 @@ export default function CalculatorScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <AppHeader title="Calculator" subtitle="Fast field material estimating." rightIcon="calculator-outline" />
+          <View style={styles.content}>
+            <AppHeader title="Calculator" subtitle="Fast field material estimating." rightIcon="calculator-outline" />
 
-          <Card style={styles.infoCard}>
-            <View style={styles.calculatorRow}>
-              <View style={styles.calculatorIcon}>
-                <Ionicons name="calculator-outline" size={24} color={Colors.white} />
-              </View>
-              <View style={styles.calculatorCopy}>
-                <Text style={styles.calculatorTitle}>Coverage estimator</Text>
-                <Text style={styles.calculatorBody}>Enter square footage, choose the common substrate, then review what to stage and what to buy.</Text>
-              </View>
-            </View>
-            <View style={styles.pointList}>
-              {ESTIMATOR_POINTS.map((point) => (
-                <View key={point} style={styles.pointRow}>
-                  <Ionicons name="checkmark-circle-outline" size={16} color={Colors.primary} />
-                  <Text style={styles.pointText}>{point}</Text>
+            <Card style={styles.infoCard}>
+              <View style={styles.calculatorRow}>
+                <View style={styles.calculatorIcon}>
+                  <Ionicons name="calculator-outline" size={24} color={Colors.white} />
                 </View>
-              ))}
-            </View>
-          </Card>
-
-          <Card style={styles.formCard}>
-            <Text style={styles.heading}>Coverage Calculator</Text>
-            <Text style={styles.subheading}>
-              Input area and scope to estimate prep items, X-Bond Stone, X-Bond Liquid, Liquid Membrane, MicroBond, and sealer.
-            </Text>
-
-            <Input
-              label="Area"
-              value={form.areaSqft}
-              onChangeText={setAreaSqft}
-              keyboardType="decimal-pad"
-              placeholder="e.g. 500"
-              suffix="sq ft"
-              error={error && error.includes('area') ? error : undefined}
-            />
-
-            <SubstratePicker selected={form.substrateType} onSelect={setSubstrate} />
-
-            <View style={styles.section}>
-              <Text style={styles.label}>X-Bond Finish</Text>
-              <View style={styles.optionGrid}>
-                {XBOND_FINISH_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt.sku}
-                    label={opt.label}
-                    onPress={() => setFinishSku(opt.sku)}
-                    variant={form.finishSku === opt.sku ? 'primary' : 'secondary'}
-                    size="sm"
-                    style={styles.optionBtn}
-                    textStyle={styles.optionText}
-                  />
+                <View style={styles.calculatorCopy}>
+                  <Text style={styles.calculatorTitle}>Coverage estimator</Text>
+                  <Text style={styles.calculatorBody}>Enter square footage, choose the common substrate, then review what to stage and what to buy.</Text>
+                </View>
+              </View>
+              <View style={styles.pointList}>
+                {ESTIMATOR_POINTS.map((point) => (
+                  <View key={point} style={styles.pointRow}>
+                    <Ionicons name="checkmark-circle-outline" size={16} color={Colors.primary} />
+                    <Text style={styles.pointText}>{point}</Text>
+                  </View>
                 ))}
               </View>
-            </View>
+            </Card>
 
-            <View style={styles.systemNote}>
-              <View style={styles.systemNoteIcon}>
-                <Ionicons name="water-outline" size={18} color={Colors.darkTeal} />
-              </View>
-              <Text style={styles.systemNoteText}>
-                Liquid Membrane is included by default. Pool uses the wet-area rate automatically.
+            <Card style={styles.formCard}>
+              <Text style={styles.heading}>Coverage Calculator</Text>
+              <Text style={styles.subheading}>
+                Input area and scope to estimate prep items, X-Bond Stone, X-Bond Liquid, Liquid Membrane, MicroBond, and sealer.
               </Text>
-            </View>
 
-            <View style={styles.section}>
-              <Text style={styles.label}>Sealer Finish</Text>
-              <View style={styles.sealerRow}>
-                {SEALER_OPTIONS.map((opt) => (
-                  <Button
-                    key={opt.sku}
-                    label={opt.label}
-                    onPress={() => setSealerSku(opt.sku)}
-                    variant={form.sealerSku === opt.sku ? 'primary' : 'secondary'}
-                    size="sm"
-                    style={styles.sealerBtn}
-                  />
-                ))}
+              <Input
+                label="Area"
+                value={form.areaSqft}
+                onChangeText={setAreaSqft}
+                keyboardType="decimal-pad"
+                placeholder="e.g. 500"
+                suffix="sq ft"
+                error={error && error.includes('area') ? error : undefined}
+              />
+
+              <SubstratePicker selected={form.substrateType} onSelect={setSubstrate} />
+
+              <View style={styles.section}>
+                <Text style={styles.label}>X-Bond Finish</Text>
+                <View style={styles.optionGrid}>
+                  {XBOND_FINISH_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.sku}
+                      label={opt.label}
+                      onPress={() => setFinishSku(opt.sku)}
+                      variant={form.finishSku === opt.sku ? 'primary' : 'secondary'}
+                      size="sm"
+                      style={styles.optionBtn}
+                      textStyle={styles.optionText}
+                    />
+                  ))}
+                </View>
               </View>
-            </View>
 
-            <WasteToggle value={form.wastePct} onChange={setWastePct} />
+              <View style={styles.systemNote}>
+                <View style={styles.systemNoteIcon}>
+                  <Ionicons name="water-outline" size={18} color={Colors.darkTeal} />
+                </View>
+                <Text style={styles.systemNoteText}>
+                  Liquid Membrane is included by default. Pool uses the wet-area rate automatically.
+                </Text>
+              </View>
 
-            {error && !error.includes('area') ? (
-              <Text style={styles.error}>{error}</Text>
+              <View style={styles.section}>
+                <Text style={styles.label}>Sealer Finish</Text>
+                <View style={styles.sealerRow}>
+                  {SEALER_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.sku}
+                      label={opt.label}
+                      onPress={() => setSealerSku(opt.sku)}
+                      variant={form.sealerSku === opt.sku ? 'primary' : 'secondary'}
+                      size="sm"
+                      style={styles.sealerBtn}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              <WasteToggle value={form.wastePct} onChange={setWastePct} />
+
+              {error && !error.includes('area') ? (
+                <Text style={styles.error}>{error}</Text>
+              ) : null}
+
+              <Button
+                label="Calculate"
+                onPress={runCalculation}
+                fullWidth
+                size="lg"
+              />
+            </Card>
+
+            {result ? (
+              <View style={styles.resultSection}>
+                <MaterialBreakdownCard result={result} />
+                <Button label="Reset" onPress={reset} variant="ghost" fullWidth />
+              </View>
             ) : null}
-
-            <Button
-              label="Calculate"
-              onPress={runCalculation}
-              fullWidth
-              size="lg"
-            />
-          </Card>
-
-          {result ? (
-            <View style={styles.resultSection}>
-              <MaterialBreakdownCard result={result} />
-              <Button label="Reset" onPress={reset} variant="ghost" fullWidth />
-            </View>
-          ) : null}
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -149,6 +151,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
   flex: { flex: 1 },
   scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl + 44 },
+  content: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    gap: Spacing.md,
+  },
   infoCard: { gap: Spacing.md },
   calculatorRow: {
     flexDirection: 'row',

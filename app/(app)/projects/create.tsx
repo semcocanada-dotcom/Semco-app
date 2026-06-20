@@ -16,7 +16,7 @@ import { projects } from '@/database/schema/projects';
 import type { SubstrateId } from '@/constants/substrates';
 import { useAuthStore } from '@/store/auth';
 import { sqftToSqm } from '@/utils/area';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
 
 const FINISH_OPTIONS: { id: string; label: string }[] = [
   { id: 'matte', label: 'Matte' },
@@ -111,7 +111,14 @@ export default function CreateProjectScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    gap: Spacing.md,
+    paddingBottom: Spacing.xxxl,
+  },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.md, marginBottom: Spacing.sm },
   title: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },
   sectionLabel: {

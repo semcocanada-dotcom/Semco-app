@@ -11,7 +11,7 @@ import {
   getDocBadgeVariant,
 } from '@/knowledge/doc-catalog';
 import type { DocGroupId } from '@/knowledge/doc-catalog';
-import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
 function isDocGroupId(value: unknown): value is DocGroupId {
   return typeof value === 'string' && DOC_GROUPS.some((group) => group.id === value);
@@ -99,7 +99,13 @@ export default function ProductsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  header: { padding: Spacing.base, gap: Spacing.md },
+  header: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    gap: Spacing.md,
+  },
   groupRow: { gap: Spacing.sm, paddingRight: Spacing.base },
   groupChip: {
     minHeight: 40,
@@ -130,7 +136,13 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   groupCountActive: { color: Colors.white },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xxxl + 44 },
+  list: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.xxxl + 44,
+  },
   groupSummary: { gap: Spacing.xs, marginBottom: Spacing.md, backgroundColor: Colors.primaryMuted },
   groupSummaryTop: {
     flexDirection: 'row',

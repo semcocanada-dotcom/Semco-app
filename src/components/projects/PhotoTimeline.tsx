@@ -12,7 +12,7 @@ interface PhotoTimelineProps {
 }
 
 export function PhotoTimeline({ photos, onAddPhoto }: PhotoTimelineProps) {
-  const [selectedStage, setSelectedStage] = useState<PhotoStage>('base_coat');
+  const [selectedStage, setSelectedStage] = useState<PhotoStage>('substrate');
   const { width } = useWindowDimensions();
   const tileSize = Math.max(130, Math.floor((Math.min(width, 430) - Spacing.base * 2 - Spacing.sm) / 2));
 
@@ -70,9 +70,10 @@ export function PhotoTimeline({ photos, onAddPhoto }: PhotoTimelineProps) {
 function shortStageLabel(label: string) {
   return label
     .replace('Substrate / Prep', 'Prep')
-    .replace('Primer Applied', 'Primer')
-    .replace('Base Coat', 'Base')
+    .replace('Liquid Membrane / Primer', 'Membrane')
+    .replace('Scratch / Base Coat', 'Base')
     .replace('Finish Coat', 'Finish')
+    .replace('Sealer Applied', 'Sealer')
     .replace('Final / Handover', 'Final');
 }
 

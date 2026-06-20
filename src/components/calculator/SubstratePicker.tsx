@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SUBSTRATE_MAP, VISIBLE_SUBSTRATES, SubstrateId } from '@/constants/substrates';
 import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 
@@ -12,7 +12,7 @@ export function SubstratePicker({ selected, onSelect }: SubstratePickerProps) {
   return (
     <View>
       <Text style={styles.label}>Substrate Type</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+      <View style={styles.grid}>
         {VISIBLE_SUBSTRATES.map((sub) => {
           const isSelected = selected === sub.id;
           return (
@@ -30,7 +30,7 @@ export function SubstratePicker({ selected, onSelect }: SubstratePickerProps) {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
       {selected && SUBSTRATE_MAP[selected]?.notes ? (
         <Text style={styles.note}>
           Note: {SUBSTRATE_MAP[selected].notes}
@@ -50,9 +50,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
     marginBottom: Spacing.sm,
   },
-  scroll: { gap: Spacing.sm, paddingBottom: Spacing.xs },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
   chip: {
     minHeight: TAP_TARGET_MIN,
+    flexGrow: 1,
+    flexBasis: '30%',
     paddingHorizontal: Spacing.md,
     borderRadius: Radius.md,
     backgroundColor: Colors.primaryMuted,

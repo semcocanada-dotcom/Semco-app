@@ -4,7 +4,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Fonts, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Layout, TAP_TARGET_MIN } from '@/constants/theme';
 
 type RouteName = 'dashboard' | 'projects' | 'add' | 'library' | 'more';
 
@@ -46,69 +46,68 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
   const activeRoute = getActiveTab(pathname);
 
   return (
-    <View style={[styles.shell, { paddingBottom: Math.max(insets.bottom, 10) }]}>
-      {TABS.map((tab) => {
-        const match = routeByName.get(tab.name);
-        const route = match?.route;
-        const isFocused = activeRoute === tab.name;
-        const isAdd = tab.name === 'add';
-        const descriptor = route ? descriptors[route.key] : undefined;
-        const title = descriptor?.options.title ?? tab.label;
+    <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
+      <View style={styles.shell}>
+        {TABS.map((tab) => {
+          const match = routeByName.get(tab.name);
+          const route = match?.route;
+          const isFocused = activeRoute === tab.name;
+          const isAdd = tab.name === 'add';
+          const descriptor = route ? descriptors[route.key] : undefined;
+          const title = descriptor?.options.title ?? tab.label;
 
-        const onPress = () => {
-          const event = route
-            ? navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
-            : { defaultPrevented: false };
+          const onPress = () => {
+            const event = route
+              ? navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
+              : { defaultPrevented: false };
 
-          if (event.defaultPrevented) return;
+            if (event.defaultPrevented) return;
 
-          if (route) {
-            navigation.navigate(route.name as never);
-          } else {
-            router.replace(tab.href as any);
-          }
-        };
+            if (route) {
+              navigation.navigate(route.name as never);
+            } else {
+              router.replace(tab.href as any);
+            }
+          };
 
-        return (
-          <TouchableOpacity
-            key={tab.name}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={title}
-            onPress={onPress}
-            style={[styles.item, isAdd && styles.addItem]}
-            activeOpacity={0.82}
-          >
-            {isAdd ? (
-              <View style={styles.addWrap}>
-                <View style={[styles.addButton, isFocused && styles.addButtonActive]}>
-                  <Ionicons name={tab.active} size={34} color={Colors.white} />
+          return (
+            <TouchableOpacity
+              key={tab.name}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={title}
+              onPress={onPress}
+              style={[styles.item, isAdd && styles.addItem]}
+              activeOpacity={0.82}
+            >
+              {isAdd ? (
+                <View style={styles.addWrap}>
+                  <View style={[styles.addButton, isFocused && styles.addButtonActive]}>
+                    <Ionicons name={tab.active} size={34} color={Colors.white} />
+                  </View>
                 </View>
-              </View>
-            ) : (
-              <View style={styles.tabWrap}>
-                <Ionicons
-                  name={isFocused ? tab.active : tab.inactive}
-                  size={24}
-                  color={isFocused ? Colors.semcoOrange : Colors.navy}
-                />
-                <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
-                  {tab.label}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
+              ) : (
+                <View style={styles.tabWrap}>
+                  <Ionicons
+                    name={isFocused ? tab.active : tab.inactive}
+                    size={24}
+                    color={isFocused ? Colors.semcoOrange : Colors.navy}
+                  />
+                  <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
+                    {tab.label}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  shell: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
+  bar: {
     backgroundColor: Colors.white,
     borderTopColor: Colors.border,
     borderTopWidth: 1,
@@ -121,6 +120,14 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     shadowOffset: { width: 0, height: -8 },
     elevation: 10,
+  },
+  shell: {
+    width: '100%',
+    maxWidth: Layout.tabBarMaxWidth,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
   item: {
     flex: 1,

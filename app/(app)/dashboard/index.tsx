@@ -10,7 +10,7 @@ import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
-import { Colors, Fonts, Spacing, Typography } from '@/constants/theme';
+import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
 
 type LoadState = {
   projects: Project[];
@@ -51,50 +51,52 @@ export default function DashboardScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.tealHeader}>
-          <View style={styles.logoRow}>
-            <View style={styles.logoCard}>
-              <Image
-                source={require('../../../assets/images/semco-surfaces-logo.png')}
-                style={styles.logoImage}
-                contentFit="contain"
-              />
+          <View style={styles.headerInner}>
+            <View style={styles.logoRow}>
+              <View style={styles.logoCard}>
+                <Image
+                  source={require('../../../assets/images/semco-surfaces-logo.png')}
+                  style={styles.logoImage}
+                  contentFit="contain"
+                />
+              </View>
+              <TouchableOpacity style={styles.notificationButton} accessibilityLabel="Notifications">
+                <Ionicons name="notifications-outline" size={22} color={Colors.navy} />
+                <View style={styles.notificationDot} />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.notificationButton} accessibilityLabel="Notifications">
-              <Ionicons name="notifications-outline" size={22} color={Colors.navy} />
-              <View style={styles.notificationDot} />
-            </TouchableOpacity>
-          </View>
 
-          <View style={styles.greetingBlock}>
-            <Text style={styles.greeting}>Good morning,</Text>
-            <Text style={styles.installerName}>Dieter</Text>
-            <View style={styles.buildBadgeRow}>
-              <Badge label={BUILD_LABEL} variant="accent" />
-              <Badge label={BUILD_NOTE} variant="primary" />
+            <View style={styles.greetingBlock}>
+              <Text style={styles.greeting}>Good morning,</Text>
+              <Text style={styles.installerName}>Dieter</Text>
+              <View style={styles.buildBadgeRow}>
+                <Badge label={BUILD_LABEL} variant="accent" />
+                <Badge label={BUILD_NOTE} variant="primary" />
+              </View>
             </View>
-          </View>
 
-          <SearchBar
-            placeholder="Ask a question or search..."
-            showMic
-            editable={false}
-            onPressIn={() => push('/(app)/assistant')}
-            containerStyle={styles.askBar}
-          />
+            <SearchBar
+              placeholder="Ask a question or search..."
+              showMic
+              editable={false}
+              onPressIn={() => push('/(app)/assistant')}
+              containerStyle={styles.askBar}
+            />
 
-          <View style={styles.featureGrid}>
-            {FEATURE_CARDS.map((card) => (
-              <ActionCard
-                key={card.title}
-                title={card.title}
-                description={card.description}
-                icon={card.icon}
-                tone={card.tone}
-                onPress={() => push(card.route)}
-                compact
-                style={styles.featureCard}
-              />
-            ))}
+            <View style={styles.featureGrid}>
+              {FEATURE_CARDS.map((card) => (
+                <ActionCard
+                  key={card.title}
+                  title={card.title}
+                  description={card.description}
+                  icon={card.icon}
+                  tone={card.tone}
+                  onPress={() => push(card.route)}
+                  compact
+                  style={styles.featureCard}
+                />
+              ))}
+            </View>
           </View>
         </View>
 
@@ -144,8 +146,9 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.darkTeal },
+  safe: { flex: 1, backgroundColor: Colors.appBackground },
   scroll: {
+    flexGrow: 1,
     paddingBottom: Spacing.xxxl + 44,
     backgroundColor: Colors.appBackground,
   },
@@ -157,6 +160,12 @@ const styles = StyleSheet.create({
     gap: Spacing.base,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+  },
+  headerInner: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    gap: Spacing.base,
   },
   logoRow: {
     flexDirection: 'row',
@@ -236,6 +245,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   content: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
     padding: Spacing.base,
     gap: Spacing.lg,
   },

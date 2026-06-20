@@ -82,9 +82,10 @@ export function formatOfflineResponse(results: OfflineSearchResult[]): string {
     return 'No matching product information found in the local database for that query.';
   }
 
+  const first = results[0];
   return [
-    'Offline product match:',
+    `Answer: For ${first.name}, this is the relevant Semco information.`,
     '',
-    ...results.map((r) => `- ${r.name} (${r.sku}): ${r.relevantExcerpt}`),
+    first.relevantExcerpt,
   ].join('\n');
 }

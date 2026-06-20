@@ -10,11 +10,13 @@ import { projects, projects_photos } from '@/database/schema/projects';
 import type { BatchLog } from '@/database/schema/batches';
 import type { PhotoStage, Project, ProjectPhoto } from '@/database/schema/projects';
 import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
+import { WarrantyPhotoChecklist } from '@/components/projects/WarrantyPhotoChecklist';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
+import { getWarrantyPhotoStatus, getWarrantySummaryText } from '@/services/warranty';
 import { useAuthStore } from '@/store/auth';
 import { Badge, BatchCard, Button, Card, EmptyState, TabControl } from '@/components/ui';
 import { formatSqftFromSqm } from '@/utils/area';
-import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 type DetailTab = 'overview' | 'photos' | 'batches' | 'warranty';
 
@@ -81,10 +83,21 @@ export default function ProjectDetailScreen() {
 
   const handleMarkComplete = () => {
     if (!id) return;
-    Alert.alert('Mark Complete', 'Mark this project as complete?', [
+    const missingLabels = warrantyPhotoStatus.missingStages.map((stage) => stage.label).join(', ');
+    const message = warrantyPhotoStatus.isQualified
+      ? 'Mark this project as complete? Warranty photo record is complete.'
+      : `Mark this project as complete? Warranty review is not qualified yet. Missing: ${missingLabels}.`;
+
+    Alert.alert('Mark Complete', message, [
       { text: 'Cancel', style: 'cancel' },
+      ...(warrantyPhotoStatus.isQualified
+        ? []
+        : [{
+            text: 'Add Photos',
+            onPress: () => setTab('photos'),
+          }]),
       {
-        text: 'Complete',
+        text: warrantyPhotoStatus.isQualified ? 'Complete' : 'Complete Anyway',
         onPress: async () => {
           await db.update(projects)
             .set({ status: 'complete', updatedAt: new Date().toISOString() })
@@ -102,6 +115,8 @@ export default function ProjectDetailScreen() {
     const kg = batches.reduce((sum, batch) => sum + (batch.quantityKg ?? 0), 0);
     return { count: batches.length, kg };
   }, [batches]);
+  const warrantyPhotoStatus = useMemo(() => getWarrantyPhotoStatus(photos), [photos]);
+  const warrantySummary = useMemo(() => getWarrantySummaryText(warrantyPhotoStatus), [warrantyPhotoStatus]);
 
   if (!project) {
     return (
@@ -151,6 +166,11 @@ export default function ProjectDetailScreen() {
               <InfoRow icon="shield-checkmark-outline" label="Sealer" value={project.sealerProductId ?? 'Not set'} />
               <InfoRow icon="calendar-outline" label="Start Date" value={new Date(project.createdAt).toLocaleDateString()} />
               <InfoRow icon="pulse-outline" label="Status" value={status.label} />
+              <InfoRow
+                icon="camera-outline"
+                label="Warranty Photos"
+                value={`${warrantyPhotoStatus.completedCount}/${warrantyPhotoStatus.requiredCount} stages`}
+              />
             </Card>
 
             <View style={styles.quickActions}>
@@ -165,7 +185,12 @@ export default function ProjectDetailScreen() {
           </>
         ) : null}
 
-        {tab === 'photos' ? <PhotoTimeline photos={photos} onAddPhoto={handleAddPhoto} /> : null}
+        {tab === 'photos' ? (
+          <View style={styles.section}>
+            <WarrantyPhotoChecklist photos={photos} onAddPhoto={handleAddPhoto} compact />
+            <PhotoTimeline photos={photos} onAddPhoto={handleAddPhoto} />
+          </View>
+        ) : null}
 
         {tab === 'batches' ? (
           <View style={styles.section}>
@@ -190,12 +215,29 @@ export default function ProjectDetailScreen() {
         ) : null}
 
         {tab === 'warranty' ? (
-          <Card style={styles.infoCard}>
-            <InfoRow icon="shield-outline" label="Warranty Issued" value={project.warrantyIssued ? 'Yes' : 'No'} />
-            <InfoRow icon="calendar-outline" label="Completion Date" value={project.completionDate ?? 'Not complete yet'} />
-            <InfoRow icon="document-text-outline" label="Notes" value={project.notes ?? 'No notes yet'} />
-            <Button label="Open Order Review" variant="secondary" onPress={() => router.push({ pathname: '/orders', params: { projectId: project.id } } as any)} fullWidth />
-          </Card>
+          <View style={styles.section}>
+            <WarrantyPhotoChecklist photos={photos} onAddPhoto={handleAddPhoto} />
+            <Card style={styles.infoCard}>
+              <InfoRow icon="shield-outline" label="Warranty Issued" value={project.warrantyIssued ? 'Yes' : 'No'} />
+              <InfoRow
+                icon="shield-checkmark-outline"
+                label="Photo Qualification"
+                value={warrantyPhotoStatus.isQualified ? 'Ready for review' : 'Not qualified'}
+              />
+              <InfoRow
+                icon="camera-outline"
+                label="Required Photos"
+                value={`${warrantyPhotoStatus.completedCount}/${warrantyPhotoStatus.requiredCount} complete`}
+              />
+              <Text style={styles.warrantyNote}>{warrantySummary}</Text>
+              <InfoRow icon="calendar-outline" label="Completion Date" value={project.completionDate ?? 'Not complete yet'} />
+              <InfoRow icon="document-text-outline" label="Notes" value={project.notes ?? 'No notes yet'} />
+              {!warrantyPhotoStatus.isQualified ? (
+                <Button label="Add Missing Photos" variant="primary" onPress={() => setTab('photos')} fullWidth />
+              ) : null}
+              <Button label="Open Order Review" variant="secondary" onPress={() => router.push({ pathname: '/orders', params: { projectId: project.id } } as any)} fullWidth />
+            </Card>
+          </View>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -234,7 +276,14 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl + 44 },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    gap: Spacing.md,
+    paddingBottom: Spacing.xxxl + 44,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -310,6 +359,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semibold,
     textAlign: 'right',
     flex: 1,
+  },
+  warrantyNote: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.sm * 1.45,
   },
   quickActions: {
     flexDirection: 'row',

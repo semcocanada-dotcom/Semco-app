@@ -77,3 +77,10 @@ export const Radius = {
 } as const;
 
 export const TAP_TARGET_MIN = 48;
+
+export const Layout = {
+  screenMaxWidth: 760,
+  tabBarMaxWidth: 640,
+  colorGridMaxWidth: 560,
+  colorTileMax: 68,
+} as const;

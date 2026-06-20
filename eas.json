@@ -31,7 +31,7 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://hriocefqjedalnaebeiw.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbG...JEQA"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyaW9jZWZxamVkYWxuYWViZWl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1MjIyNjgsImV4cCI6MjA5MjA5ODI2OH0.FamynR1CMIPOvBvYOBgmuigAsHGcgXUE9UCMjhEJEQA"
       }
     },
     "production": {

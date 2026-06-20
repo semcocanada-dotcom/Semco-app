@@ -50,18 +50,8 @@ interface ChatBubbleProps {
   message: ConversationMessage;
 }
 
-const SOURCE_LABELS: Record<string, string> = {
-  claude: 'Ask Semco AI',
-  offline_fts: 'Product library',
-  product_library: 'Product library',
-  sip_manual: 'Tech docs',
-  technical_docs: 'Tech docs',
-};
-
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === 'user';
-  const sourceLabel = SOURCE_LABELS[message.source];
-  const showSource = !isUser && sourceLabel;
 
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
@@ -71,11 +61,6 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         ) : (
           <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
         )}
-        {showSource ? (
-          <View style={styles.sourceRow}>
-            <Text style={styles.sourceTag}>{sourceLabel}</Text>
-          </View>
-        ) : null}
       </View>
     </View>
   );
@@ -103,22 +88,4 @@ const styles = StyleSheet.create({
   text: { fontSize: Typography.size.base, fontFamily: Fonts.regular, lineHeight: Typography.size.base * 1.5 },
   textUser: { color: Colors.white },
   textAssistant: { color: Colors.navy },
-  sourceRow: {
-    marginTop: Spacing.sm,
-    alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.accentMuted,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  sourceTag: {
-    color: Colors.offlineAmber,
-    fontSize: Typography.size.xs,
-    fontFamily: Fonts.medium,
-    fontWeight: Typography.weight.medium,
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-  },
 });

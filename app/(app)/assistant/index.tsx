@@ -18,7 +18,7 @@ import { useAssistant } from '@/hooks/useAssistant';
 import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
-import { Colors, Fonts, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
+import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 export default function AssistantScreen() {
@@ -77,11 +77,11 @@ export default function AssistantScreen() {
           <View style={styles.titleRow}>
             <Text style={styles.title}>Ask Semco</Text>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{isOnline ? 'SOURCE-BASED' : 'LOCAL'}</Text>
+              <Text style={styles.badgeText}>{isOnline ? 'INSTALL HELP' : 'LOCAL'}</Text>
             </View>
           </View>
           <Text style={styles.subtitle}>
-            Direct answers from Semco docs, with source labels when available.
+            Ask install, prep, product, and warranty questions.
           </Text>
         </View>
         {messages.length > 0 && (
@@ -101,7 +101,7 @@ export default function AssistantScreen() {
             <Ionicons name="document-text-outline" size={34} color={Colors.primary} />
             <Text style={styles.emptyTitle}>Ask a Semco install question</Text>
             <Text style={styles.emptyBody}>
-              Type the exact jobsite question. The assistant will answer directly and cite the closest source when it has one.
+              Type the exact jobsite question. The assistant will answer directly when it has a confirmed Semco rule.
             </Text>
           </View>
         </View>
@@ -161,6 +161,9 @@ export default function AssistantScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
   header: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
@@ -210,8 +213,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: Spacing.sm,
   },
-  messageList: { paddingVertical: Spacing.sm, paddingBottom: Spacing.md },
+  messageList: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    paddingVertical: Spacing.sm,
+    paddingBottom: Spacing.md,
+  },
   emptyState: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
     flex: 1,
     justifyContent: 'center',
     padding: Spacing.base,
@@ -236,12 +248,18 @@ const styles = StyleSheet.create({
     lineHeight: Typography.size.base * 1.5,
   },
   error: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
     color: Colors.danger,
     fontSize: Typography.size.sm,
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.xs,
   },
   inputBar: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: Spacing.sm,

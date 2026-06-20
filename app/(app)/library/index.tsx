@@ -19,7 +19,7 @@ import {
 import type { DocGroupId } from '@/knowledge/doc-catalog';
 import { TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
 import { INSTALLATION_GUIDES } from '@/knowledge/installation-guides';
-import { Colors, Fonts, Radius, Typography, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 
 const HUB_CARDS = [
   { title: 'System Diagrams', description: 'Layers + process', icon: 'layers-outline' as const, route: '/library/guides' },
@@ -222,7 +222,14 @@ export default function LibraryScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 44, gap: Spacing.lg },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    paddingBottom: Spacing.xxxl + 44,
+    gap: Spacing.lg,
+  },
   heroCard: { gap: Spacing.md, borderColor: Colors.primaryMuted, backgroundColor: Colors.surfaceElevated },
   heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md },
   heroTitle: {

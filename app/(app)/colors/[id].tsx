@@ -18,7 +18,7 @@ import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
 import { Button, Card, Badge, EmptyState } from '@/components/ui';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
-import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Fonts, Layout, Typography, Spacing, Radius } from '@/constants/theme';
 
 const STANDARD_COLORS = colorsData as Color[];
 
@@ -144,9 +144,24 @@ export default function ColorDetailScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, gap: Spacing.md, paddingBottom: Spacing.xxxl + 64 },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    gap: Spacing.md,
+    paddingBottom: Spacing.xxxl + 64,
+  },
   back: { marginBottom: Spacing.sm },
-  emptyWrap: { flex: 1, padding: Spacing.base, justifyContent: 'center', gap: Spacing.md },
+  emptyWrap: {
+    flex: 1,
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    justifyContent: 'center',
+    gap: Spacing.md,
+  },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   titleLeft: { flex: 1 },
   name: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontWeight: Typography.weight.bold },

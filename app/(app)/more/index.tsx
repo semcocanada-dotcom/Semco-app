@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, SectionHeader, Badge, ActionCard } from '@/components/ui';
 import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
 
 const SETTINGS = [
   { title: 'Offline manual', description: 'Local answers stay available when the network drops.', icon: 'cloud-offline-outline' as const, tone: 'primary' as const },
@@ -79,7 +79,14 @@ export default function MoreScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 16, gap: Spacing.lg },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    paddingBottom: Spacing.xxxl + 16,
+    gap: Spacing.lg,
+  },
   heroCard: { gap: Spacing.md, borderColor: Colors.accentMuted, backgroundColor: Colors.surfaceElevated },
   heroBadgeRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   heroTitle: { color: Colors.textPrimary, fontSize: Typography.size.xxl, lineHeight: Typography.size.xxl * 1.05, fontWeight: Typography.weight.bold },

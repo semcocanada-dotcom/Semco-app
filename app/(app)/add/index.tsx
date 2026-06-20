@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, ActionCard, Badge } from '@/components/ui';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
 
 const ACTIONS = [
   { title: 'New project', description: 'Create a fresh install workspace.', icon: 'folder-open-outline' as const, route: '/(app)/projects/create' },
@@ -66,7 +66,14 @@ export default function AddScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 16, gap: Spacing.lg },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    paddingBottom: Spacing.xxxl + 16,
+    gap: Spacing.lg,
+  },
   heroCard: { gap: Spacing.md, borderColor: Colors.accentMuted, backgroundColor: Colors.surfaceElevated },
   heroBadgeRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
   heroTitle: { color: Colors.textPrimary, fontSize: Typography.size.xxl, lineHeight: Typography.size.xxl * 1.05, fontWeight: Typography.weight.bold },

@@ -13,7 +13,7 @@ import type { OrderRequest } from '@/database/schema/workflow';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { Button, Card, Badge, SectionHeader } from '@/components/ui';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
   draft: 'primary',
@@ -170,7 +170,14 @@ export default function OrdersScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 16, gap: Spacing.lg },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    paddingBottom: Spacing.xxxl + 16,
+    gap: Spacing.lg,
+  },
   heroCard: { gap: Spacing.md, borderColor: Colors.accentMuted, backgroundColor: Colors.surfaceElevated },
   title: { color: Colors.textPrimary, fontSize: Typography.size.xl, lineHeight: Typography.size.xl * 1.1, fontWeight: Typography.weight.bold },
   body: { color: Colors.textSecondary, fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },

@@ -59,9 +59,9 @@ export type PhotoStage = 'substrate' | 'primer' | 'base_coat' | 'finish_coat' | 
 
 export const PHOTO_STAGES: { id: PhotoStage; label: string }[] = [
   { id: 'substrate', label: 'Substrate / Prep' },
-  { id: 'primer', label: 'Primer Applied' },
-  { id: 'base_coat', label: 'Base Coat' },
+  { id: 'primer', label: 'Liquid Membrane / Primer' },
+  { id: 'base_coat', label: 'Scratch / Base Coat' },
   { id: 'finish_coat', label: 'Finish Coat' },
-  { id: 'sealed', label: 'Sealed' },
+  { id: 'sealed', label: 'Sealer Applied' },
   { id: 'final', label: 'Final / Handover' },
 ];

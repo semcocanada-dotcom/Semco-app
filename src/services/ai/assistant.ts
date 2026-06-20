@@ -1,14 +1,6 @@
-import { retrieveRelevantChunks, buildContextBlock } from './rag';
-import { askClaude } from './claude';
 import { searchProductsOffline, formatOfflineResponse } from './offline-search';
-import { searchSipManual, buildSipManualContext, formatSipManualResponse } from './manual-knowledge';
-import { buildContextFieldNotes, buildFieldAnswer } from './field-answer';
-import {
-  extractTopicFromMessage,
-  fetchUserProgress,
-  recordTopicAsked,
-  buildProgressContext,
-} from './user-progress';
+import { searchSipManual, formatSipManualResponse } from './manual-knowledge';
+import { buildReasoningProfile } from './reasoning';
 import type { ConversationMessage, MessageSource } from '@/database/schema/conversations';
 
 export interface AssistantResponse {
@@ -18,81 +10,26 @@ export interface AssistantResponse {
 }
 
 /**
- * Routes a user message to Claude+RAG (online) or FTS5 search (offline).
- * When online, fetches installer progress to build an adaptive system prompt.
- * Records the topic after each response to power future adaptations.
+ * Ask Semco is a coded knowledge assistant, not a free-form AI estimator.
+ * It answers from Semco manuals, loaded product docs, and approved field rules.
+ * Material quantities stay inside the deterministic Calculator formulas.
  */
 export async function sendMessage(
   userMessage: string,
-  history: ConversationMessage[],
-  isOnline: boolean,
-  installerId?: string,
+  _history: ConversationMessage[],
+  _isOnline: boolean,
+  _installerId?: string,
 ): Promise<AssistantResponse> {
-  if (!isOnline) {
-    return handleOffline(userMessage);
-  }
-
-  try {
-    return await handleOnline(userMessage, history, installerId);
-  } catch (err) {
-    console.warn('[assistant] online request failed, falling back to offline:', err);
-    return handleOffline(userMessage);
-  }
+  return handleKnowledgeAssistant(userMessage);
 }
 
-async function handleOnline(
-  userMessage: string,
-  history: ConversationMessage[],
-  installerId?: string,
-): Promise<AssistantResponse> {
-  const topic = extractTopicFromMessage(userMessage);
+async function handleKnowledgeAssistant(userMessage: string): Promise<AssistantResponse> {
+  const manualHits = searchSipManual(userMessage, 5);
+  const reasoningProfile = buildReasoningProfile(userMessage, manualHits);
 
-  // Fetch adaptive context and knowledge-manual context in parallel
-  const [manualHits, chunks, progress] = await Promise.all([
-    Promise.resolve(searchSipManual(userMessage)),
-    retrieveRelevantChunks(userMessage),
-    installerId ? fetchUserProgress(installerId) : Promise.resolve([]),
-  ]);
-
-  const fieldAnswer = buildFieldAnswer(userMessage, manualHits);
-  if (fieldAnswer?.confidence === 'high') {
-    if (installerId) {
-      recordTopicAsked(installerId, topic, 5).catch(() => {});
-    }
-
+  if (reasoningProfile.localAnswer) {
     return {
-      content: fieldAnswer.content,
-      source: 'technical_docs',
-      isOffline: false,
-    };
-  }
-
-  const fieldContext = buildContextFieldNotes(userMessage, manualHits);
-  const manualContext = buildSipManualContext(manualHits);
-  const ragContext = buildContextBlock(chunks);
-  const contextBlock = [fieldContext, manualContext, ragContext].filter(Boolean).join('\n\n---\n\n');
-  const progressContext = buildProgressContext(progress);
-
-  const response = await askClaude(userMessage, contextBlock, history, progressContext || undefined);
-
-  // Record this topic asynchronously; do not block the response.
-  if (installerId) {
-    recordTopicAsked(installerId, topic, 5).catch(() => {});
-  }
-
-  return {
-    content: response.content,
-    source: 'claude',
-    isOffline: false,
-  };
-}
-
-async function handleOffline(userMessage: string): Promise<AssistantResponse> {
-  const manualHits = searchSipManual(userMessage);
-  const fieldAnswer = buildFieldAnswer(userMessage, manualHits);
-  if (fieldAnswer) {
-    return {
-      content: fieldAnswer.content,
+      content: reasoningProfile.localAnswer,
       source: 'technical_docs',
       isOffline: true,
     };
@@ -107,11 +44,23 @@ async function handleOffline(userMessage: string): Promise<AssistantResponse> {
   }
 
   const results = await searchProductsOffline(userMessage);
+  if (results.length === 0) {
+    return {
+      content: [
+        'Answer: I do not have a confirmed Semco answer for that yet.',
+        '',
+        'Use Semco review before making that call.',
+      ].join('\n'),
+      source: 'product_library',
+      isOffline: true,
+    };
+  }
+
   const content = formatOfflineResponse(results);
 
   return {
     content,
-    source: results.length > 0 ? 'offline_fts' : 'product_library',
+    source: 'offline_fts',
     isOffline: true,
   };
 }

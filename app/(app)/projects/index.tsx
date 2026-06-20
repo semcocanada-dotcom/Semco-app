@@ -12,7 +12,7 @@ import { desc } from 'drizzle-orm';
 import type { Project } from '@/database/schema/projects';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { AppHeader, Button, EmptyState, SearchBar, TabControl } from '@/components/ui';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Layout, Spacing } from '@/constants/theme';
 
 type ProjectFilter = 'all' | 'active' | 'on_hold' | 'complete';
 
@@ -78,6 +78,18 @@ export default function ProjectsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  header: { padding: Spacing.base, gap: Spacing.md },
-  list: { paddingHorizontal: Spacing.base, paddingBottom: Spacing.xxxl + 44 },
+  header: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    gap: Spacing.md,
+  },
+  list: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.xxxl + 44,
+  },
 });

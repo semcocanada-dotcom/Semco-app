@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppHeader, Badge, SectionHeader } from '@/components/ui';
 import { SystemGuideCard } from '@/components/library/SystemGuideCard';
 import { INSTALLATION_GUIDES } from '@/knowledge/installation-guides';
-import { Colors, Fonts, Spacing, Typography } from '@/constants/theme';
+import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
 
 export default function InstallationGuidesScreen() {
   const router = useRouter();
@@ -52,7 +52,14 @@ export default function InstallationGuidesScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
-  scroll: { padding: Spacing.base, paddingBottom: Spacing.xxxl + 44, gap: Spacing.lg },
+  scroll: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    padding: Spacing.base,
+    paddingBottom: Spacing.xxxl + 44,
+    gap: Spacing.lg,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
