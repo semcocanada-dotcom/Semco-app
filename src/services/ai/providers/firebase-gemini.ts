@@ -14,7 +14,7 @@ interface FirebaseExtraConfig extends FirebaseOptions {
 
 const FIREBASE_APP_NAME = 'semco-pro-ai';
 const DEFAULT_MODEL = 'gemini-3.5-flash';
-const MAX_OUTPUT_TOKENS = 2200;
+const MAX_OUTPUT_TOKENS = 2800;
 
 function getExtraFirebaseConfig(): FirebaseExtraConfig {
   const extra = Constants.expoConfig?.extra as Record<string, unknown> | undefined;
