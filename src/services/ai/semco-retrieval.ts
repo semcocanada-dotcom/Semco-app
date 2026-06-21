@@ -464,9 +464,16 @@ export function citationsFromChunks(chunks: RetrievedSemcoChunk[]): AssistantCit
   }));
 }
 
-export function formatLocalGroundedAnswer(chunks: RetrievedSemcoChunk[], reason?: string): string {
+export function formatLocalGroundedAnswer(
+  chunks: RetrievedSemcoChunk[],
+  reason?: string,
+  reasonedAnswer?: string,
+  options: { includeClosestSource?: boolean } = {},
+): string {
   if (chunks.length === 0) {
-    return 'I cannot confirm that from the approved Semco technical documents.';
+    return reasonedAnswer
+      ? `${reasonedAnswer}\n\nI cannot confirm more detail from the approved Semco technical documents.`
+      : 'I cannot confirm that from the approved Semco technical documents.';
   }
 
   const primary = chunks[0];
@@ -474,6 +481,28 @@ export function formatLocalGroundedAnswer(chunks: RetrievedSemcoChunk[], reason?
   const intro = reason
     ? `${reason} Showing the closest confirmed Semco document result instead.`
     : 'AI answer generation is not available right now. Showing the closest confirmed Semco document result instead.';
+  const reasonOnly = reason ?? 'AI answer generation is not available right now.';
+
+  if (reasonedAnswer) {
+    if (options.includeClosestSource === false) {
+      return [
+        reasonOnly,
+        '',
+        reasonedAnswer,
+      ].join('\n');
+    }
+
+    return [
+      intro,
+      '',
+      reasonedAnswer,
+      '',
+      'Closest confirmed source:',
+      cleanText(primary.text, 520),
+      '',
+      `Source: ${sourceLabel}`,
+    ].join('\n');
+  }
 
   return [
     intro,

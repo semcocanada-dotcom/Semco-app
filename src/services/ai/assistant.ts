@@ -16,6 +16,7 @@ import {
   type AssistantDebugLog,
 } from './assistant-cache';
 import { getAssistantGenerationProvider } from './providers';
+import { buildReasoningProfile, formatReasoningContext } from './reasoning';
 import type { AssistantCitation, ConversationMessage, MessageSource } from '@/database/schema/conversations';
 
 export interface AssistantResponse {
@@ -50,6 +51,9 @@ async function handleKnowledgeAssistant(
   const debugId = `ai-debug-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const retrieval = await retrieveSemcoChunks(userMessage, isOnline);
   const citations = citationsFromChunks(retrieval.chunks);
+  const reasoningProfile = buildReasoningProfile(userMessage);
+  const reasoningContext = formatReasoningContext(reasoningProfile);
+  const fallbackOptions = { includeClosestSource: reasoningProfile.intent !== 'document_gap' };
 
   if (retrieval.confidence !== 'high') {
     if (retrieval.chunks.length === 0) {
@@ -62,6 +66,8 @@ async function handleKnowledgeAssistant(
       retrieval.confidence === 'none'
         ? 'I cannot confirm that from the approved Semco technical documents.'
         : 'I cannot fully confirm that from the approved Semco technical documents.',
+      reasoningProfile.localAnswer,
+      fallbackOptions,
     );
     await writeDebugLog(debugId, {
       question: userMessage,
@@ -121,7 +127,7 @@ async function handleKnowledgeAssistant(
     const reason = !isOnline
       ? 'The AI model is unavailable offline.'
       : 'Firebase AI Logic is not configured in this build.';
-    const content = formatLocalGroundedAnswer(retrieval.chunks, reason);
+    const content = formatLocalGroundedAnswer(retrieval.chunks, reason, reasoningProfile.localAnswer, fallbackOptions);
     await writeDebugLog(debugId, {
       question: userMessage,
       provider: provider?.name ?? 'not-configured',
@@ -148,6 +154,8 @@ async function handleKnowledgeAssistant(
     const content = formatLocalGroundedAnswer(
       retrieval.chunks,
       `Daily AI limit reached (${DAILY_AI_LIMIT}).`,
+      reasoningProfile.localAnswer,
+      fallbackOptions,
     );
     await writeDebugLog(debugId, {
       question: userMessage,
@@ -171,7 +179,7 @@ async function handleKnowledgeAssistant(
   }
 
   try {
-    const prompt = buildGroundedPrompt(userMessage, retrieval.chunks, history);
+    const prompt = buildGroundedPrompt(userMessage, retrieval.chunks, history, reasoningContext);
     const result = await provider.generate({
       prompt,
       systemInstruction: SEMCO_ASSISTANT_SYSTEM_INSTRUCTION,
@@ -208,6 +216,8 @@ async function handleKnowledgeAssistant(
     const content = formatLocalGroundedAnswer(
       retrieval.chunks,
       'Gemini is unavailable right now.',
+      reasoningProfile.localAnswer,
+      fallbackOptions,
     );
     await writeDebugLog(debugId, {
       question: userMessage,

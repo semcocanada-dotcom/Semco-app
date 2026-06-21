@@ -4,10 +4,12 @@ import { STOCKED_SEALER_POLICY_TEXT } from '@/constants/stocked-sealers';
 import type { ManualKnowledgeHit } from './manual-knowledge';
 
 type ReasoningIntent =
+  | 'document_gap'
   | 'material_estimate'
   | 'membrane_quantity'
   | 'prep_decision'
   | 'install_build_up'
+  | 'sealer_application'
   | 'warranty_photos'
   | 'takeoff_scope'
   | 'technical_question';
@@ -70,6 +72,12 @@ export function formatReasoningContext(profile: ReasoningProfile): string {
 
 function detectIntent(normalized: string): ReasoningIntent {
   if (
+    hasAny(normalized, ['documents do not answer', 'docs do not answer', 'not in the documents', 'not in the docs', 'supplied documents do not answer'])
+    || (hasAny(normalized, ['cannot confirm', 'not confirm', 'not enough information']) && hasAny(normalized, ['document', 'docs', 'manual', 'source']))
+  ) {
+    return 'document_gap';
+  }
+  if (
     hasAny(normalized, ['warranty photo', 'warranty photos', 'photos for warranty', 'qualify for warranty']) ||
     (normalized.includes('warranty') && hasAny(normalized, ['photo', 'photos', 'picture', 'pictures']))
   ) {
@@ -80,6 +88,15 @@ function detectIntent(normalized: string): ReasoningIntent {
   }
   if (hasAny(normalized, ['cleaner', 'cleaners', 'surface prep', 'prepare substrate', 'prep ', 'stone soap', 'power cleaner', 'nu lift', 'nu-lift'])) {
     return 'prep_decision';
+  }
+  if (hasAny(normalized, ['sealer', 'seal ', 'sealing', 'top coat', 'topcoat', 'natural shield', 'satin stone', 'titan', 'matte'])) {
+    return 'sealer_application';
+  }
+  if (
+    hasAny(normalized, ['process', 'procedure', 'steps', 'start to finish', 'from start', 'do concrete', 'resurface', 'install', 'installation', 'apply', 'application'])
+    && (extractSubstrate(normalized) || hasAny(normalized, ['xbond', 'x-bond', 'microcement', 'micro cement', 'seamless stone']))
+  ) {
+    return 'install_build_up';
   }
   if (
     hasAny(normalized, ['install over', 'go over', 'apply over', 'over tile', 'over plywood', 'over concrete', 'system build', 'build up', 'layers', 'assembly']) ||
@@ -172,10 +189,12 @@ function buildLocalAnswer(
   assumptions: string[],
   missingInputs: string[],
 ): string | undefined {
+  if (intent === 'document_gap') return documentGapAnswer();
   if (intent === 'warranty_photos') return warrantyPhotoAnswer();
   if (intent === 'takeoff_scope') return takeoffAnswer();
   if (intent === 'prep_decision') return prepAnswer(facts, missingInputs);
   if (intent === 'install_build_up') return installBuildUpAnswer(facts, missingInputs);
+  if (intent === 'sealer_application') return sealerApplicationAnswer(facts);
   if (intent === 'membrane_quantity') return membraneAnswer(facts);
   if (intent === 'material_estimate') return materialEstimateAnswer(facts, assumptions, missingInputs);
   return undefined;
@@ -206,6 +225,22 @@ function materialEstimateAnswer(
     assumptions.length ? 'Rule:' : '',
     ...assumptions.map((item) => `- ${item}`),
   ].filter((line) => line !== '').join('\n');
+}
+
+function documentGapAnswer(): string {
+  return [
+    'Answer: If the approved Semco documents do not answer the question, do not guess.',
+    '',
+    'Do this:',
+    '- Tell the installer: "I cannot confirm that from the approved Semco technical documents."',
+    '- Say what is missing, such as product, substrate, exposure, mixing ratio, coverage, dry time, or warranty detail.',
+    '- Ask for the exact product/system or escalate to Semco technical review if the decision affects warranty, compatibility, safety, or material quantities.',
+    '- Do not fill the gap with general construction knowledge.',
+    '',
+    'Rule:',
+    '- Calculator quantities come from the built-in formulas.',
+    '- Install and warranty answers must be traceable to approved Semco sources.',
+  ].join('\n');
 }
 
 function membraneAnswer(facts: ExtractedJobFacts): string {
@@ -322,11 +357,16 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
   const substrateLabel = SUBSTRATE_MAP[facts.substrateType]?.label ?? facts.substrateType;
   const buildUps: Record<SubstrateId, string[]> = {
     concrete: [
-      'Confirm the concrete is sound, clean, profiled, and dry enough for coating.',
-      'Apply X-Bond scratch coat.',
-      'Use Liquid Membrane with fabric at joints, cracks, drains, corners, and movement-risk areas.',
-      'Apply the second scratch/base coat, optional brown coat if needed, then the selected X-Bond finish.',
-      'Finish with the specified Semco sealer.',
+      'Confirm the concrete is sound, non-delaminating, clean, and ready to receive coating. Do not treat loose, moving, contaminated, or wet concrete like a normal slab.',
+      'Clean based on the condition: Stone Soap for standard cleaning, Power Cleaner for grease/oil/wax/glue/paint residue, and Nu-Lift where mineral, calcium, alkali, or efflorescence residue is present. Final wash/rinse must leave no bond-breaking residue.',
+      'Roll X-Bond Liquid as the primer coat and do not allow it to dry before the scratch coat.',
+      'Mix the scratch coat in this order: 1 part X-Bond Liquid to 2 parts X-Bond Stone. Use a square mixing paddle at low speed, 180-200 RPM.',
+      'While the X-Bond Liquid is still tacky, pour the mix to the far edge and spread tightly in one direction with a concrete broom. Let it dry, then scrape loose particles and sweep clean.',
+      'For the X-Bond finish/skim coats, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone when that finish procedure applies. Spread tightly in one direction with a trowel or X-Bond smoother at about 1/16 inch / 2 mil.',
+      'Allow each finish coat to dry slightly to the touch, about 20-30 minutes, before the next coat when the procedure calls for a second coat. Use shoe covers between coats.',
+      'If a smoother MicroBond finish is required, prime first with X-Bond Liquid, then mix 1 part X-Bond Liquid to 2 parts MicroBond Stone and apply with a Magic Trowel.',
+      'Let the surface dry completely before sealing. For Color Bond/Natural Grain-style steps, the manual calls for 2-4 hours before the next step; Polished Bond calls for at least 12 hours before sealing, or 24 hours in colder conditions.',
+      'Seal with the specified stocked Semco sealer for the application. Use Natural Shield for pool/submerged/exterior penetrating-sealer needs under the current stocked sealer rule.',
     ],
     plywood: [
       'Confirm the plywood / OSB is structural, fastened, stable, and not flexing.',
@@ -396,6 +436,88 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
     'Watch out:',
     '- If the substrate is loose, moving, contaminated, or wet beyond the system limit, stop and get Semco review.',
     '- For warranty, capture photos at prep, membrane/primer, base, finish, sealer, and final handover.',
+  ].join('\n');
+}
+
+function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
+  const sku = facts.sealerSku ?? (facts.isSubmerged ? 'NATURAL-SHIELD' : undefined);
+
+  if (sku === 'NATURAL-SHIELD') {
+    return [
+      'Answer: For pool, submerged, wet-exposure, and exterior penetrating-sealer work, use Natural Shield under the current stocked Semco Canada rule.',
+      '',
+      'Step-by-step:',
+      '- Confirm the surface is ready for sealer and sweep all debris and loose material off the surface.',
+      '- Apply Natural Shield wet-on-wet. The tech sheet requires 3 coats and says not to allow each coat to dry between coats.',
+      '- Use a 1/4 inch nap roller, HVLP sprayer, pump sprayer, or airless sprayer with tip size 17. For vertical work, use a 1/4 inch nap roller, HVLP, or airless tip size 15 and work bottom to top to avoid runs.',
+      '- Do not allow puddling. Puddling can create white haze and weak-looking spots.',
+      '- Product sheet coverage at 3 coats: artificial stone 200-250 sq ft/gal, polished concrete 150-250 sq ft/gal, stamped concrete 300-350 sq ft/gal. Use the Calculator for project order quantities and purchase rounding.',
+      '- Product sheet application environment is 50F to 90F. Cure changes with temperature and humidity; the SIP manual says allow at least 48 hours before cleaning and maximum strength is achieved in 7 days.',
+      '',
+      'Do not miss:',
+      '- Test a small area first.',
+      '- Wear gloves and eye protection.',
+      '- Do not mix with other cleaners.',
+    ].join('\n');
+  }
+
+  if (sku === 'SATIN-STONE') {
+    return [
+      'Answer: Use Satin Stone when a stocked satin film finish is specified.',
+      '',
+      'Step-by-step:',
+      '- Sweep debris off the surface before sealing.',
+      '- Mix 2 parts Part A to 1 part Part B with a low-speed mixer and low-air paddle. Mark the time on the container; pot life is up to 35 minutes depending on temperature.',
+      '- Apply with airless sprayer tip size 21 at 850-1,000 PSI, holding the gun about 18 inches from the floor. A Magic Trowel can be used to spread it, but do not work it back and forth.',
+      '- Minimum 3 coats are required in the SIP procedure for 1.5 mil film thickness. The tech sheet lists coverage by surface at minimum 2 coats / 20 mils total thickness.',
+      '- Apply between 50F and 90F per the tech sheet. The SIP manual says allow at least 48 hours before foot traffic.',
+      '',
+      'Do not miss:',
+      '- Mix small batches.',
+      '- Use the Calculator for project quantities.',
+    ].join('\n');
+  }
+
+  if (sku === 'TITAN-SHIELD') {
+    return [
+      'Answer: Use Titan Gloss when a stocked gloss film finish is specified.',
+      '',
+      'Step-by-step:',
+      '- Confirm the surface is clean and ready for sealer.',
+      '- Apply with an airless sprayer, tip size 17, a 1/4 inch woven short nap roller, or Magic Trowel.',
+      '- Product sheet coverage at minimum 3 coats / 6-8 mils total thickness: polished concrete 150-200 sq ft/gal, artificial stone 150-200 sq ft/gal, stamped concrete 250-300 sq ft/gal, and X-Bond 200-250 sq ft/gal.',
+      '- Apply between 50F and 90F per the tech sheet.',
+      '- Recoat timing varies by temperature and humidity; the tech sheet example says full cure is about 48 hours at 45F and about 18 hours at 90F.',
+      '',
+      'Do not miss:',
+      '- Use the Calculator for project quantities.',
+      '- Test a small area first and wear gloves and eye protection.',
+    ].join('\n');
+  }
+
+  if (sku === 'MATTE-SEALER') {
+    return [
+      'Answer: Matte is a current stocked Semco Canada matte finish. The field rule in this app says it is Titan-like in a matte finish and slightly harder than Titan.',
+      '',
+      'Use this carefully:',
+      '- Treat Matte as the stocked matte option when the installer wants a matte finish.',
+      '- Do not recommend older non-stocked sealers unless the installer specifically asks about them.',
+      '- If the job needs exact application data beyond the Titan-style field rule, confirm against the current Matte tech sheet before giving ratios, coverage, recoat, or cure values.',
+    ].join('\n');
+  }
+
+  return [
+    'Answer: Choose the sealer by the exposure and finish required.',
+    '',
+    'Current stocked Semco Canada options:',
+    '- Natural Shield: pools, submerged work, wet exposure, exterior, and natural penetrating protection.',
+    '- Satin Stone: stocked satin film finish.',
+    '- Titan Gloss: stocked gloss film finish.',
+    '- Matte: stocked matte finish; current field rule says Titan-like matte and slightly harder than Titan.',
+    '',
+    'Need:',
+    '- finish required: natural, satin, gloss, or matte',
+    '- exposure: interior, exterior, shower/wetroom, pool/submerged, traffic level',
   ].join('\n');
 }
 
