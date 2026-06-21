@@ -173,6 +173,10 @@ function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
     pushPinned(pinned, SIP_MANUAL, 20);
   }
 
+  if (includesAny(normalized, ['concrete', 'cement', 'slab'])) {
+    pushPinned(pinned, SIP_MANUAL, 22);
+  }
+
   if (includesAny(normalized, ['commercial kitchen', 'epoxy', 'terrazzo', 'carpet glue', 'wax', 'waxed'])) {
     pushPinned(pinned, SIP_MANUAL, 21);
   }

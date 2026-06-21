@@ -281,7 +281,7 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
       'Answer: Prep depends on substrate and contamination, not just square footage.',
       '',
       'Decision rule:',
-      '- Clean concrete/drywall: Stone Soap standard wash.',
+      '- Concrete: preferred field prep is Nu-Lift first, then Stone Soap final wash.',
       '- Grease, oil, wax, glue, paint, or coating residue: add Power Cleaner.',
       '- Tile, pool residue, calcium, mineral, alkali, or efflorescence: Nu-Lift, then Stone Soap final wash.',
       '- Wood / plywood / OSB: secure the surface, then Liquid Membrane and fabric before X-Bond.',
@@ -296,11 +296,14 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
     concrete: [
       'Sweep all debris off the concrete so the next coat can bond directly to the substrate.',
       'Dampen the surface with water first so the cleaner does not dive too deep into the pores.',
-      'For normal unsealed/non-waxed concrete, apply Stone Soap solution lightly with a pump sprayer and let it sit 2-3 minutes. Ratio: 1 part Stone Soap to 4 parts water.',
-      'Scrub/agitate with a scrub machine and concrete nylon brush, or a hand scrub brush in tight areas.',
-      'Rinse the surface. For interiors, use a wet vacuum to remove residue.',
+      'Preferred Semco Canada field prep: use Nu-Lift first as the pH/mineral reset step, then finish with Stone Soap final wash before coating.',
+      'Apply Nu-Lift solution lightly with a pump sprayer and let it sit 2-3 minutes. For concrete exterior/stamped/unknown-condition prep, the SIP stronger prep path lists Nu-Lift at 1 part Nu-Lift to 1 part water.',
+      'Scrub/agitate with a scrub machine and concrete nylon brush, or a hand scrub brush in tight areas, then rinse. For interiors, use a wet vacuum to remove residue.',
+      'Follow with Stone Soap solution as the final wash and let it sit 2-3 minutes. Ratio: 1 part Stone Soap to 4 parts water.',
+      'Scrub/agitate again, rinse, and wet-vac residue on interiors.',
       'Repeat rinse/vacuum if particles or residue remain, then allow the surface to dry before the next step so bubbles do not show up in the coating.',
-      'If the concrete has grease, wax, glue, paint, sealer, epoxy, terrazzo, or non-permanent topical coating residue, use Power Cleaner first at 1 part Power Cleaner to 4 parts water, then repeat with Stone Soap to clean chemical residue.',
+      'If the concrete has grease, wax, glue, paint, sealer, epoxy, terrazzo, or non-permanent topical coating residue, use Power Cleaner first at 1 part Power Cleaner to 4 parts water, rinse/vacuum, then continue with Nu-Lift and Stone Soap final wash.',
+      'If the concrete is exterior, stamped, unknown-condition, or has heavier mineral/alkali/efflorescence risk, the SIP stronger prep path is Power Cleaner 1:4, rinse/vacuum, Nu-Lift 1:1, rinse/vacuum, then Power Cleaner 1:9, rinse/vacuum, and dry.',
     ],
     plywood: [
       'Sweep debris off the wood surface first.',
@@ -391,7 +394,7 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
   const buildUps: Record<SubstrateId, string[]> = {
     concrete: [
       'Confirm the concrete is sound, non-delaminating, clean, and ready to receive coating. Do not treat loose, moving, contaminated, or wet concrete like a normal slab.',
-      'Clean based on the condition: Stone Soap for standard cleaning, Power Cleaner for grease/oil/wax/glue/paint residue, and Nu-Lift where mineral, calcium, alkali, or efflorescence residue is present. Final wash/rinse must leave no bond-breaking residue.',
+      'Prep concrete with the preferred Semco Canada field path: Nu-Lift first as the pH/mineral reset step, then Stone Soap final wash before coating. Add Power Cleaner first when grease, wax, glue, paint, sealer, epoxy, or other topical residue is present. Final wash/rinse must leave no bond-breaking residue.',
       'Roll X-Bond Liquid as the primer coat and do not allow it to dry before the scratch coat.',
       'Mix the scratch coat in this order: 1 part X-Bond Liquid to 2 parts X-Bond Stone. Use a square mixing paddle at low speed, 180-200 RPM.',
       'While the X-Bond Liquid is still tacky, pour the mix to the far edge and spread tightly in one direction with a concrete broom. Let it dry, then scrape loose particles and sweep clean.',
