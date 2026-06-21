@@ -2,8 +2,10 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '@/components/ui/Badge';
+import { DocumentPagePreview } from '@/components/library/DocumentPagePreview';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import type { InstallationGuide } from '@/knowledge/installation-guides';
+import { getDocumentPageAsset } from '@/knowledge/document-page-assets';
 
 type SystemGuideCardProps = {
   guide: InstallationGuide;
@@ -14,6 +16,7 @@ type SystemGuideCardProps = {
 };
 
 export function SystemGuideCard({ guide, compact = false, onPress, onAsk, style }: SystemGuideCardProps) {
+  const hasDocumentPreview = Boolean(getDocumentPageAsset(guide.sourceDocument));
   const body = (
     <>
       <View style={styles.topRow}>
@@ -27,7 +30,11 @@ export function SystemGuideCard({ guide, compact = false, onPress, onAsk, style 
         <Badge label={guide.category} variant="accent" />
       </View>
 
-      <LayerDiagram guide={guide} compact={compact} />
+      {hasDocumentPreview ? (
+        <DocumentPagePreview sourceDocument={guide.sourceDocument} compact={compact} />
+      ) : (
+        <LayerDiagram guide={guide} compact={compact} />
+      )}
 
       {!compact ? (
         <>

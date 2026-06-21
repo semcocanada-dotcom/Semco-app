@@ -22,21 +22,21 @@ export default function InstallationGuidesScreen() {
           >
             <Ionicons name="chevron-back" size={22} color={Colors.semcoOrange} />
           </TouchableOpacity>
-          <AppHeader title="System Diagrams" subtitle="Layer stacks and install sequence." rightIcon="layers-outline" />
+          <AppHeader title="System Diagrams" subtitle="Official detail drawings and install sequence." rightIcon="layers-outline" />
         </View>
 
         <View style={styles.summaryBand}>
           <View style={styles.summaryCopy}>
             <Text style={styles.summaryTitle}>Install guides</Text>
             <Text style={styles.summaryBody}>
-              Visual layer diagrams are separated from project photos, so training references stay clean and job photos stay inside projects.
+              Official Semco diagrams stay here for field reference. Job photos still stay inside each project for warranty records.
             </Text>
           </View>
           <Badge label={`${INSTALLATION_GUIDES.length} guides`} variant="primary" />
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Layer diagrams" subtitle="Tap Ask Semco from a guide when you want a direct answer about that system." />
+          <SectionHeader title="Official diagrams" subtitle="Tap Ask Semco from a guide when you want a direct answer about that system." />
           {INSTALLATION_GUIDES.map((guide) => (
             <SystemGuideCard
               key={guide.id}

@@ -4,9 +4,8 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { desc } from 'drizzle-orm';
-import { ActionCard, Badge, EmptyState, SearchBar, StatCard } from '@/components/ui';
+import { ActionCard, EmptyState, SearchBar, StatCard } from '@/components/ui';
 import { ProjectCard } from '@/components/projects/ProjectCard';
-import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
@@ -69,10 +68,6 @@ export default function DashboardScreen() {
             <View style={styles.greetingBlock}>
               <Text style={styles.greeting}>Good morning,</Text>
               <Text style={styles.installerName}>Dieter</Text>
-              <View style={styles.buildBadgeRow}>
-                <Badge label={BUILD_LABEL} variant="accent" />
-                <Badge label={BUILD_NOTE} variant="primary" />
-              </View>
             </View>
 
             <SearchBar
@@ -208,12 +203,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.semcoOrange,
   },
   greetingBlock: { gap: 2 },
-  buildBadgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
   greeting: {
     color: Colors.white,
     fontFamily: Fonts.medium,

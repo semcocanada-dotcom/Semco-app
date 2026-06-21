@@ -2,6 +2,9 @@ node_modules/
 .expo/
 dist/
 web-build/
+tmp/
+verification-screenshots/
+expo-doc-previews-*.log
 .DS_Store
 *.jks
 *.p8

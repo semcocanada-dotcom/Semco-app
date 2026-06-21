@@ -1,77 +1,87 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, SectionHeader, Badge, ActionCard } from '@/components/ui';
-import { BUILD_LABEL, BUILD_NOTE } from '@/constants/build';
-import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
+import { Card, SectionHeader, Badge } from '@/components/ui';
+import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 
-const SETTINGS = [
-  { title: 'Offline manual', description: 'Local answers stay available when the network drops.', icon: 'cloud-offline-outline' as const, tone: 'primary' as const },
-  { title: 'Review mode', description: 'Project approvals stay visible before any next step is taken.', icon: 'eye-outline' as const, tone: 'accent' as const },
-  { title: 'Design system', description: 'The shell uses the same dark premium language across every screen.', icon: 'color-wand-outline' as const, tone: 'primary' as const },
-  { title: 'Support', description: 'Use the existing assistant and project routes as your workbench.', icon: 'help-circle-outline' as const, tone: 'accent' as const },
+const MORE_ACTIONS = [
+  {
+    title: 'Ask Semco',
+    description: 'Technical install questions and saved chats.',
+    icon: 'chatbubble-ellipses-outline' as const,
+    route: '/assistant',
+    tone: 'primary' as const,
+  },
+  {
+    title: 'System diagrams',
+    description: 'Official layer and process drawings.',
+    icon: 'layers-outline' as const,
+    route: '/library/guides',
+    tone: 'accent' as const,
+  },
+  {
+    title: 'Product documents',
+    description: 'Grouped sheets, details, and source PDFs.',
+    icon: 'document-text-outline' as const,
+    route: '/products',
+    tone: 'primary' as const,
+  },
+  {
+    title: 'Project warranty records',
+    description: 'Review jobs and required stage photos.',
+    icon: 'shield-checkmark-outline' as const,
+    route: '/projects',
+    tone: 'accent' as const,
+  },
 ] as const;
 
 export default function MoreScreen() {
   const router = useRouter();
 
-  const OPEN_ROUTES = [
-    '/assistant',
-    '/projects',
-    '/library',
-    '/assistant',
-  ];
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card elevated style={styles.heroCard}>
           <View style={styles.heroBadgeRow}>
             <Badge label="More" variant="accent" />
-            <Badge label="Settings" variant="neutral" />
+            <Badge label="Support" variant="neutral" />
           </View>
-          <Text style={styles.heroTitle}>The overflow drawer keeps the build quiet and focused.</Text>
+          <Text style={styles.heroTitle}>More tools</Text>
           <Text style={styles.heroBody}>
-            This is where the secondary tools, review surfaces and app preferences can live without cluttering the main nav.
+            Support, documents, and warranty records.
           </Text>
         </Card>
 
         <View style={styles.section}>
-          <SectionHeader title="Workspace settings" subtitle="These are the durable system controls for now." />
-          <View style={styles.cardsGrid}>
-            {SETTINGS.map((item, index) => (
-              <ActionCard
+          <SectionHeader title="Open" subtitle="Secondary surfaces that are useful in the field." />
+          <View style={styles.actionList}>
+            {MORE_ACTIONS.map((item) => (
+              <TouchableOpacity
                 key={item.title}
-                title={item.title}
-                description={item.description}
-                icon={item.icon}
-                tone={item.tone}
-                onPress={() => router.push(OPEN_ROUTES[index] as any)}
-                style={styles.settingCard}
-              />
+                onPress={() => router.push(item.route as any)}
+                activeOpacity={0.78}
+                style={styles.actionRow}
+                accessibilityRole="button"
+                accessibilityLabel={item.title}
+              >
+                <View style={[styles.actionIcon, item.tone === 'accent' && styles.actionIconAccent]}>
+                  <Ionicons
+                    name={item.icon}
+                    size={20}
+                    color={item.tone === 'accent' ? Colors.semcoOrange : Colors.primary}
+                  />
+                </View>
+                <View style={styles.actionCopy}>
+                  <Text style={styles.actionTitle}>{item.title}</Text>
+                  <Text style={styles.actionBody}>{item.description}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={Colors.textDisabled} />
+              </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        <View style={styles.section}>
-          <SectionHeader title="Release status" subtitle="A small set of guardrails for the preview build." />
-          <Card style={styles.statusCard}>
-            <View style={styles.statusRow}>
-              <Ionicons name="shield-checkmark-outline" size={18} color={Colors.primary} />
-              <Text style={styles.statusTitle}>{BUILD_LABEL}</Text>
-            </View>
-            <Text style={styles.statusBody}>
-              {BUILD_NOTE}. If this marker is visible, the device is running the latest Semco preview build from GitHub.
-            </Text>
-          </Card>
-        </View>
-
-        <Card style={styles.footerCard}>
-          <Text style={styles.footerTitle}>No extra noise.</Text>
-          <Text style={styles.footerBody}>
-            This space stays intentionally sparse so the main build stays fast on phone and preview.
-          </Text>
-        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -89,16 +99,57 @@ const styles = StyleSheet.create({
   },
   heroCard: { gap: Spacing.md, borderColor: Colors.accentMuted, backgroundColor: Colors.surfaceElevated },
   heroBadgeRow: { flexDirection: 'row', gap: Spacing.sm, flexWrap: 'wrap' },
-  heroTitle: { color: Colors.textPrimary, fontSize: Typography.size.xxl, lineHeight: Typography.size.xxl * 1.05, fontWeight: Typography.weight.bold },
-  heroBody: { color: Colors.textSecondary, fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },
+  heroTitle: {
+    color: Colors.textPrimary,
+    fontSize: Typography.size.xl,
+    lineHeight: Typography.size.xl * 1.12,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  heroBody: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.5,
+    fontFamily: Fonts.regular,
+  },
   section: { gap: Spacing.md },
-  cardsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  settingCard: { width: '48%' },
-  statusCard: { gap: 8 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  statusTitle: { color: Colors.textPrimary, fontSize: Typography.size.base, fontWeight: Typography.weight.bold },
-  statusBody: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.45 },
-  footerCard: { borderColor: Colors.border, gap: 6 },
-  footerTitle: { color: Colors.textPrimary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
-  footerBody: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.45 },
+  actionList: { gap: Spacing.sm },
+  actionRow: {
+    minHeight: 74,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  actionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionIconAccent: {
+    backgroundColor: Colors.accentMuted,
+    borderColor: '#F5CBBB',
+  },
+  actionCopy: { flex: 1, gap: 2 },
+  actionTitle: {
+    color: Colors.navy,
+    fontSize: Typography.size.base,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  actionBody: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
+    fontFamily: Fonts.regular,
+  },
 });

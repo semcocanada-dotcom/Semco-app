@@ -13,7 +13,8 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { products } from '@/database/schema/products';
 import type { Product } from '@/database/schema/products';
-import { TECHNICAL_DOCS, TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
+import { TECHNICAL_DOCS } from '@/knowledge/technical-docs';
+import { getPrimaryDocGroup } from '@/knowledge/doc-catalog';
 import { Card, Badge } from '@/components/ui';
 import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
 
@@ -22,9 +23,11 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const doc = TECHNICAL_DOCS.find((item) => item.id === id);
-  const docPages = doc
-    ? TECHNICAL_DOC_PAGES.filter((page) => page.docId === doc.id).sort((a, b) => a.pageNumber - b.pageNumber)
-    : [];
+
+  useEffect(() => {
+    if (!doc) return;
+    router.replace({ pathname: '/products', params: { group: getPrimaryDocGroup(doc) } } as any);
+  }, [doc, router]);
 
   useEffect(() => {
     if (!id || doc) return;
@@ -36,27 +39,7 @@ export default function ProductDetailScreen() {
   if (doc) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-          </TouchableOpacity>
-
-          <Badge label={doc.category} variant="neutral" />
-          <Text style={styles.name}>{doc.title}</Text>
-          <Text style={styles.sku}>{doc.sourceDocument}</Text>
-
-          <View style={styles.statsGrid}>
-            <StatCard label="Pages" value={`${doc.pageCount}`} />
-            <StatCard label="Loaded Pages" value={`${docPages.length}`} />
-          </View>
-
-          {docPages.map((page) => (
-            <Card key={page.id} style={styles.tdsCard}>
-              <Text style={styles.tdsLabel}>Page {page.pageNumber}</Text>
-              <Text style={styles.tdsContent}>{page.text}</Text>
-            </Card>
-          ))}
-        </ScrollView>
+        <Text style={styles.loading}>Opening Product Docs...</Text>
       </SafeAreaView>
     );
   }

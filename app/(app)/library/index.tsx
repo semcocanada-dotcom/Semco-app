@@ -26,7 +26,6 @@ const HUB_CARDS = [
   { title: 'Product Docs', description: 'Grouped sheets', icon: 'document-text-outline' as const, route: '/products' },
   { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, route: '/colors' },
   { title: 'Calculator', description: 'Tech coverage', icon: 'calculator-outline' as const, route: '/calculator' },
-  { title: 'Ask Semco', description: 'Source answers', icon: 'chatbubble-ellipses-outline' as const, route: '/assistant' },
 ] as const;
 
 const DOC_GROUP_ICONS: Record<DocGroupId, React.ComponentProps<typeof Ionicons>['name']> = {
@@ -96,7 +95,6 @@ export default function LibraryScreen() {
         <Card elevated style={styles.heroCard}>
           <View style={styles.heroTop}>
             <BrandMark />
-            <Badge label="Library" variant="primary" />
           </View>
           <Text style={styles.heroTitle}>Semco field knowledge, grouped by job task.</Text>
           <Text style={styles.heroBody}>
@@ -120,13 +118,23 @@ export default function LibraryScreen() {
               />
             ))}
           </View>
+          <TouchableOpacity onPress={() => push('/assistant')} activeOpacity={0.78} style={styles.askBand}>
+            <View style={styles.askIcon}>
+              <Ionicons name="chatbubble-ellipses-outline" size={20} color={Colors.primary} />
+            </View>
+            <View style={styles.askCopy}>
+              <Text style={styles.askTitle}>Ask Semco</Text>
+              <Text style={styles.askBody}>Get an installer answer from the loaded Semco docs.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.semcoOrange} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <SectionHeader
-            title="Installation diagrams"
-            subtitle="Layer stacks and process cards for field reference."
-            actionLabel="View all"
+            title="Official diagrams"
+            subtitle="Source drawings from Semco documentation."
+            actionLabel="All"
             onActionPress={() => push('/library/guides')}
           />
           <View style={styles.guidePreviewList}>
@@ -248,6 +256,40 @@ const styles = StyleSheet.create({
   section: { gap: Spacing.md },
   cardsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   hubCard: { width: '48.5%', flexBasis: '48.5%', flexGrow: 0 },
+  askBand: {
+    minHeight: 72,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.primaryMuted,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  askIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  askCopy: { flex: 1, gap: 2 },
+  askTitle: {
+    color: Colors.navy,
+    fontSize: Typography.size.base,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  askBody: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
+    fontFamily: Fonts.regular,
+  },
   guidePreviewList: { gap: Spacing.sm },
   groupGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   groupCard: {

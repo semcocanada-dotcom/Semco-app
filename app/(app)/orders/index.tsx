@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { desc, eq } from 'drizzle-orm';
@@ -11,9 +11,11 @@ import type { Project } from '@/database/schema/projects';
 import type { Calculation, CalculationResult } from '@/database/schema/calculations';
 import type { OrderRequest } from '@/database/schema/workflow';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
+import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialRetailEstimateCard';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { Button, Card, Badge, SectionHeader } from '@/components/ui';
-import { Colors, Layout, Typography, Spacing } from '@/constants/theme';
+import { clearPendingMaterialRequest, getPendingMaterialRequest } from '@/services/pending-material-request';
+import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
   draft: 'primary',
@@ -24,18 +26,23 @@ const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning
 
 export default function OrdersScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ projectId?: string }>();
+  const params = useLocalSearchParams<{ projectId?: string; source?: string }>();
   const projectId = typeof params.projectId === 'string' ? params.projectId : undefined;
 
   const [project, setProject] = useState<Project | null>(null);
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [calculation, setCalculation] = useState<Calculation | null>(null);
   const [orderRequest, setOrderRequest] = useState<OrderRequest | null>(null);
+  const [pendingResult, setPendingResult] = useState<CalculationResult | null>(null);
   const [savingStatus, setSavingStatus] = useState<OrderRequestStatus | null>(null);
 
   useEffect(() => {
     db.select().from(projects).orderBy(desc(projects.updatedAt)).limit(3).then(setRecentProjects).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    getPendingMaterialRequest().then(setPendingResult).catch(console.error);
+  }, [params.source]);
 
   useEffect(() => {
     if (!projectId) {
@@ -58,23 +65,54 @@ export default function OrdersScreen() {
       .catch(console.error);
   }, [projectId]);
 
-  const result = useMemo(() => calculation?.result as CalculationResult | undefined, [calculation]);
+  const result = useMemo(
+    () => pendingResult ?? calculation?.result as CalculationResult | undefined,
+    [calculation, pendingResult],
+  );
 
-  const ensureRequest = async (status: OrderRequestStatus) => {
+  const projectTitle = useMemo(() => {
+    if (!project) return 'Pick a project for this material request';
+    return project.clientName ?? project.siteAddress ?? 'Unnamed project';
+  }, [project]);
+
+  async function savePendingCalculation(now: string): Promise<string | null> {
+    if (!project) return null;
+    if (!pendingResult) return calculation?.id ?? null;
+
+    const created: Calculation = {
+      id: `calc-${Date.now()}`,
+      projectId: project.id,
+      installerId: project.installerId,
+      areaSqm: pendingResult.areaSqm,
+      substrateType: project.substrateType ?? 'material_request',
+      wastePct: pendingResult.wastePct,
+      result: pendingResult,
+      createdAt: now,
+    };
+
+    await db.insert(calculations).values(created);
+    setCalculation(created);
+    setPendingResult(null);
+    await clearPendingMaterialRequest();
+    return created.id;
+  }
+
+  async function ensureRequest(status: OrderRequestStatus) {
     if (!project) return;
     setSavingStatus(status);
+
     try {
       const now = new Date().toISOString();
-      const latestCalcId = calculation?.id ?? null;
+      const latestCalcId = await savePendingCalculation(now);
+
       if (orderRequest) {
         await db.update(orderRequests)
           .set({ status, calculationId: latestCalcId, updatedAt: now })
           .where(eq(orderRequests.id, orderRequest.id));
         setOrderRequest({ ...orderRequest, status, calculationId: latestCalcId, updatedAt: now });
       } else {
-        const id = `order-${Date.now()}`;
         const created = {
-          id,
+          id: `order-${Date.now()}`,
           projectId: project.id,
           calculationId: latestCalcId,
           status,
@@ -88,21 +126,20 @@ export default function OrdersScreen() {
     } finally {
       setSavingStatus(null);
     }
-  };
-
-  const projectTitle = useMemo(() => {
-    if (!project) return 'Pick a project to review the request';
-    return project.clientName ?? project.siteAddress ?? 'Unnamed project';
-  }, [project]);
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card elevated style={styles.heroCard}>
-          <Badge label="Order materials" variant="accent" />
-          <Text style={styles.title}>{project ? `${projectTitle} · Order review` : 'Pick a project to review the request'}</Text>
+          <Badge label="Material request" variant="accent" />
+          <Text style={styles.title}>
+            {project ? `${projectTitle} - Material request` : pendingResult ? 'Pick a project' : 'Create material request'}
+          </Text>
           <Text style={styles.body}>
-            The order flow stays review-first. It can link to a saved calculator estimate and stops short of auto-ordering.
+            {pendingResult
+              ? 'Calculator quantities are loaded. Choose a project and submit for internal review.'
+              : 'No manual entry. Nothing is ordered externally.'}
           </Text>
           <View style={styles.iconWrap}>
             <Ionicons name="cart-outline" size={26} color={Colors.accent} />
@@ -112,7 +149,7 @@ export default function OrdersScreen() {
         {project ? (
           <>
             <View style={styles.section}>
-              <SectionHeader title="Current request" subtitle="The request can move through review states without placing an order." />
+              <SectionHeader title="Current request" subtitle="Internal review state only. Nothing is sent outside the app automatically." />
               <Card style={styles.statusCard}>
                 <View style={styles.statusRow}>
                   <View style={styles.statusCopy}>
@@ -125,46 +162,57 @@ export default function OrdersScreen() {
                   />
                 </View>
                 <Text style={styles.bodySmall}>
-                  Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? 'none yet'}
+                  Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? (pendingResult ? 'pending calculator result' : 'none yet')}
                 </Text>
               </Card>
             </View>
 
-            {result ? <MaterialBreakdownCard result={result} /> : null}
+            {result ? <MaterialBreakdownCard result={result} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
+            {result ? <MaterialRetailEstimateCard result={result} /> : null}
 
             <View style={styles.section}>
-              <SectionHeader title="Status controls" subtitle="Update the internal review state only — nothing is sent automatically." />
+              <SectionHeader title="Status controls" subtitle="Save the request or move it to internal review." />
               <View style={styles.buttonGrid}>
-                <Button label="Draft" variant="secondary" onPress={() => ensureRequest('draft')} disabled={savingStatus !== null} style={styles.button} />
-                <Button label="In review" variant="accent" onPress={() => ensureRequest('in_review')} disabled={savingStatus !== null} style={styles.button} />
-                <Button label="Needs revision" variant="secondary" onPress={() => ensureRequest('needs_revision')} disabled={savingStatus !== null} style={styles.button} />
-                <Button label="Approved" variant="primary" onPress={() => ensureRequest('approved')} disabled={savingStatus !== null} style={styles.button} />
+                <Button label="Draft" variant="secondary" onPress={() => ensureRequest('draft')} disabled={savingStatus !== null || !result} style={styles.button} />
+                <Button label="Submit for Review" variant="accent" onPress={() => ensureRequest('in_review')} disabled={savingStatus !== null || !result} style={styles.button} />
+                <Button label="Needs Revision" variant="secondary" onPress={() => ensureRequest('needs_revision')} disabled={savingStatus !== null || !result} style={styles.button} />
+                <Button label="Approved" variant="primary" onPress={() => ensureRequest('approved')} disabled={savingStatus !== null || !result} style={styles.button} />
               </View>
             </View>
           </>
         ) : (
           <View style={styles.section}>
-            <SectionHeader title="Recent projects" subtitle="Choose a project to open the request review." />
+            {pendingResult ? <MaterialRetailEstimateCard result={pendingResult} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
+            <SectionHeader title="Recent projects" subtitle="Choose a project to attach this request." />
             <View style={styles.projectList}>
               {recentProjects.map((item) => (
-                <TouchableOpacity
+                <ProjectCard
                   key={item.id}
-                  activeOpacity={0.8}
-                  onPress={() => router.push({ pathname: '/orders', params: { projectId: item.id } } as any)}
-                >
-                  <ProjectCard project={item} onPress={() => router.push({ pathname: '/orders', params: { projectId: item.id } } as any)} />
-                </TouchableOpacity>
+                  project={item}
+                  onPress={() => router.push({ pathname: '/orders', params: { projectId: item.id, source: pendingResult ? 'calculator' : undefined } } as any)}
+                />
               ))}
             </View>
           </View>
         )}
 
-        <View style={styles.buttonRow}>
-          <Button label="Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} style={styles.button} />
-          <Button label="Dashboard" variant="secondary" onPress={() => router.push('/dashboard' as any)} style={styles.button} />
-        </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function NoEstimateCard({ onOpenCalculator }: { onOpenCalculator: () => void }) {
+  return (
+    <Card style={styles.noEstimateCard}>
+      <View style={styles.noEstimateIcon}>
+        <Ionicons name="calculator-outline" size={20} color={Colors.primary} />
+      </View>
+      <View style={styles.noEstimateCopy}>
+        <Text style={styles.noEstimateTitle}>No calculator estimate attached</Text>
+        <Text style={styles.noEstimateBody}>Run the calculator first, then create the request from the result.</Text>
+      </View>
+      <Button label="Open Calculator" variant="secondary" onPress={onOpenCalculator} fullWidth />
+    </Card>
   );
 }
 
@@ -191,6 +239,31 @@ const styles = StyleSheet.create({
   statusValue: { color: Colors.textPrimary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
   buttonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   button: { width: '48%' },
-  buttonRow: { flexDirection: 'row', gap: Spacing.sm },
   projectList: { gap: Spacing.sm },
+  noEstimateCard: {
+    alignItems: 'stretch',
+    gap: Spacing.sm,
+    borderColor: Colors.primaryMuted,
+  },
+  noEstimateIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noEstimateCopy: { flex: 1, gap: 2 },
+  noEstimateTitle: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.bold,
+  },
+  noEstimateBody: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
+  },
 });
