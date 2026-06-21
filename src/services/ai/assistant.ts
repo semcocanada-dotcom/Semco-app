@@ -344,7 +344,7 @@ function shouldAskForRequiredInputs(
 function shouldUseLocalFieldAnswer(
   profile: ReturnType<typeof buildReasoningProfile>,
 ): boolean {
-  return profile.intent === 'prep_decision' && Boolean(profile.localAnswer);
+  return ['prep_decision', 'install_build_up'].includes(profile.intent) && Boolean(profile.localAnswer);
 }
 
 async function searchOfflineProducts(
