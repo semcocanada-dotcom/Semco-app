@@ -15,11 +15,12 @@ export interface RetrievalResult {
   retrievalNotes: string[];
 }
 
-const MAX_CHUNKS = 10;
+const MAX_CHUNKS = 16;
 const LOCAL_CONTEXT_CHARS = 1800;
 const NEIGHBOR_CONTEXT_CHARS = 520;
 const SEMANTIC_TIMEOUT_MS = 4500;
-const PROCESS_CONTEXT_SCORE = 80;
+const PROCESS_CONTEXT_SCORE = 120;
+const SIP_MANUAL = 'Open SIP manual - master copy v2019-3 2.pdf';
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
@@ -39,6 +40,10 @@ function normalizeQuery(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function includesAny(text: string, terms: string[]): boolean {
+  return terms.some((term) => text.includes(term));
+}
+
 function findDocId(sourceDocument?: string, title?: string): string | undefined {
   const source = sourceDocument?.toLowerCase();
   const label = title?.toLowerCase();
@@ -56,7 +61,7 @@ function findPage(sourceDocument: string, pageNumber: number) {
 
 function isProcessQuestion(query: string): boolean {
   const normalized = normalizeQuery(query);
-  return /\b(process|procedure|steps?|start|finish|install|installation|apply|application|how|do|resurface)\b/.test(normalized);
+  return /\b(process|procedure|steps?|start|finish|install|installation|apply|application|how|do|resurface|clean|cleaning|prep|preparation|substrate|sealer|seal|mix|mixing|speed)\b/.test(normalized);
 }
 
 function isConcreteQuestion(query: string): boolean {
@@ -72,10 +77,11 @@ function processSearchQuery(query: string): string {
 
   const contextTerms = [
     query,
+    'surface preparation cleaning substrate Stone Soap Power Cleaner Nu-Lift Cleaner',
     'X-Bond Seamless Stone over concrete floor detail',
     'surface preparation scratch coat liquid membrane fabric reinforcement brown coat',
-    'Color Bond Polished Bond ADA Safety Floor Satin Stone sealer',
-    'coverage drying recoat time',
+    'Color Bond Polished Bond ADA Safety Floor Satin Stone sealer Crystal Coat X-Crete 400 Xtreme Gloss',
+    'coverage drying recoat time low speed mixer square mixing paddle 180-200 RPM',
   ];
 
   return contextTerms.join(' ');
@@ -139,34 +145,161 @@ function pinnedPageChunk(sourceDocument: string, pageNumber: number, score: numb
   };
 }
 
-function getPinnedProcessChunks(query: string): RetrievedSemcoChunk[] {
-  if (!isProcessQuestion(query)) return [];
+function pushPinned(pinned: Array<[string, number]>, sourceDocument: string, pageNumber: number) {
+  if (!pinned.some(([source, page]) => source === sourceDocument && page === pageNumber)) {
+    pinned.push([sourceDocument, pageNumber]);
+  }
+}
 
+function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
+  const normalized = normalizeQuery(query);
+  const asksAllPrep = (
+    includesAny(normalized, ['each type substrate', 'each substrate', 'all substrate', 'all prep', 'prep procedures', 'cleaning procedures'])
+    || (normalized.includes('substrate') && includesAny(normalized, ['clean', 'prep', 'preparation']))
+  );
+
+  if (asksAllPrep) {
+    [20, 21, 22, 23, 24].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+    return;
+  }
+
+  if (includesAny(normalized, ['concrete', 'cement', 'slab', 'natural stone', 'vinyl', 'vct', 'metal', 'formica', 'glass'])) {
+    pushPinned(pinned, SIP_MANUAL, 20);
+  }
+
+  if (includesAny(normalized, ['commercial kitchen', 'epoxy', 'terrazzo', 'carpet glue', 'wax', 'waxed'])) {
+    pushPinned(pinned, SIP_MANUAL, 21);
+  }
+
+  if (includesAny(normalized, ['unsure', 'unknown', 'stamped concrete', 'stamped', 'exterior'])) {
+    pushPinned(pinned, SIP_MANUAL, 22);
+  }
+
+  if (includesAny(normalized, ['block', 'stucco', 'below grade plaster', 'plaster', 'tile', 'magnesium', 'efflorescence', 'efflorescent'])) {
+    pushPinned(pinned, SIP_MANUAL, 23);
+  }
+
+  if (includesAny(normalized, ['wood', 'plywood', 'osb', 'deck', 'decks'])) {
+    pushPinned(pinned, SIP_MANUAL, 24);
+  }
+}
+
+function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) {
   const normalized = normalizeQuery(query);
   const concrete = isConcreteQuestion(query);
   const xbond = isXBondQuestion(query);
+  const asksInstallProcess = isProcessQuestion(query);
 
-  if (!concrete && !xbond) return [];
+  if (!asksInstallProcess || (!concrete && !xbond)) return;
 
-  const pinned: Array<[string, number]> = [
-    ['Open SIP manual - master copy v2019-3 2.pdf', 20],
-    ['X-BondoverConcreteFloorDetail-2025.pdf', 1],
-    ['Open SIP manual - master copy v2019-3 2.pdf', 27],
-    ['Open SIP manual - master copy v2019-3 2.pdf', 28],
-    ['Open SIP manual - master copy v2019-3 2.pdf', 29],
-    ['Open SIP manual - master copy v2019-3 2.pdf', 30],
-    ['Tech_Sheet_X-Bond-2024-v3.pdf', 1],
-    ['Tech_Sheet_X-Bond-2024-v3.pdf', 2],
-  ];
+  pushPinned(pinned, 'X-BondoverConcreteFloorDetail-2025.pdf', 1);
+  [27, 28, 29, 30].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+  pushPinned(pinned, 'Tech_Sheet_X-Bond-2024-v3.pdf', 1);
+  pushPinned(pinned, 'Tech_Sheet_X-Bond-2024-v3.pdf', 2);
 
   if (normalized.includes('shower')) {
-    pinned.splice(1, 1, ['Shower-Detail-Concrete.pdf', 1]);
+    pushPinned(pinned, 'Shower-Detail-Concrete.pdf', 1);
   }
 
-  if (/\b(color bond|colour bond|finish|start to finish|xbond|x-bond)\b/.test(normalized)) {
-    pinned.push(['Open SIP manual - master copy v2019-3 2.pdf', 33]);
-    pinned.push(['Open SIP manual - master copy v2019-3 2.pdf', 45]);
+  if (includesAny(normalized, ['polished bond', 'polished'])) {
+    pushPinned(pinned, SIP_MANUAL, 31);
   }
+
+  if (includesAny(normalized, ['natural grain', 'grain'])) {
+    pushPinned(pinned, SIP_MANUAL, 32);
+  }
+
+  if (includesAny(normalized, ['color bond', 'colour bond', 'finish', 'start to finish', 'xbond', 'x-bond'])) {
+    pushPinned(pinned, SIP_MANUAL, 33);
+  }
+
+  if (includesAny(normalized, ['ada', 'safety floor', 'broadcast'])) {
+    pushPinned(pinned, SIP_MANUAL, 34);
+  }
+
+  if (includesAny(normalized, ['wall', 'walls', 'vertical'])) {
+    pushPinned(pinned, SIP_MANUAL, 35);
+  }
+}
+
+function addSealerPages(query: string, pinned: Array<[string, number]>) {
+  const normalized = normalizeQuery(query);
+  const asksSealer = includesAny(normalized, [
+    'sealer',
+    'seal ',
+    'sealing',
+    'finish coat',
+    'top coat',
+    'topcoat',
+    'satin stone',
+    'natural shield',
+    'x-crete',
+    'xcrete',
+    'x-tra',
+    'xtra',
+    'xtreme',
+    'crystal coat',
+    'colour coat',
+    'color coat',
+    'color gloss',
+  ]);
+  const broadXBondProcess = isXBondQuestion(query) && includesAny(normalized, ['start to finish', 'process', 'steps', 'finish']);
+
+  if (!asksSealer && !broadXBondProcess) return;
+
+  if (!asksSealer && broadXBondProcess) {
+    pushPinned(pinned, SIP_MANUAL, 45);
+    return;
+  }
+
+  if (includesAny(normalized, ['natural shield', 'flat finish', 'flat sealer'])) {
+    pushPinned(pinned, SIP_MANUAL, 40);
+  }
+
+  if (includesAny(normalized, ['x-crete 500', 'xcrete 500', 'water containment', 'pool', 'fountain', 'anti-graffiti'])) {
+    pushPinned(pinned, SIP_MANUAL, 41);
+  }
+
+  if (includesAny(normalized, ['x-crete 400', 'xcrete 400', 'matte', 'gloss', 'non-skid', 'non skid'])) {
+    pushPinned(pinned, SIP_MANUAL, 42);
+  }
+
+  if (includesAny(normalized, ['x-tra', 'xtra', 'high gloss'])) {
+    pushPinned(pinned, SIP_MANUAL, 43);
+  }
+
+  if (includesAny(normalized, ['xtreme', 'extreme', 'deep gloss'])) {
+    pushPinned(pinned, SIP_MANUAL, 44);
+  }
+
+  if (includesAny(normalized, ['satin stone', 'satin'])) {
+    pushPinned(pinned, SIP_MANUAL, 45);
+  }
+
+  if (includesAny(normalized, ['colour coat', 'color coat', 'color gloss', 'colour gloss'])) {
+    pushPinned(pinned, SIP_MANUAL, 48);
+  }
+
+  if (includesAny(normalized, ['crystal coat', 'maintenance coat'])) {
+    pushPinned(pinned, SIP_MANUAL, 49);
+  }
+
+  if (!pinned.some(([source, page]) => source === SIP_MANUAL && page >= 40 && page <= 49)) {
+    [40, 42, 43, 44, 45, 48, 49].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+  }
+}
+
+function getPinnedProcessChunks(query: string): RetrievedSemcoChunk[] {
+  if (!isProcessQuestion(query)) return [];
+
+  const pinned: Array<[string, number]> = [];
+  addSubstratePrepPages(query, pinned);
+  const hasPrepPage = pinned.some(([source, page]) => source === SIP_MANUAL && page >= 20 && page <= 24);
+  if (!hasPrepPage && isXBondQuestion(query)) {
+    [20, 21, 22, 23, 24].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+  }
+  addXBondProcedurePages(query, pinned);
+  addSealerPages(query, pinned);
 
   return pinned
     .map(([sourceDocument, pageNumber], index) => (
