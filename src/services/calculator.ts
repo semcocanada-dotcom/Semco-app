@@ -90,15 +90,47 @@ function getPrepLayers(substrateType: SubstrateId): MaterialLayer[] {
     return base;
   }
 
+  if (substrateType === 'concrete') {
+    base.push(
+      createPrepLayer({
+        sku: 'NU-LIFT',
+        name: 'SEMCO Nu-Lift Cleaner',
+        label: 'Concrete pH / mineral reset',
+        note: 'Semco Canada field rule stages Nu-Lift before Stone Soap on concrete. SIP prep uses Nu-Lift for mineral, alkali, magnesium, and efflorescence conditions.',
+        sourcePage: 23,
+        purchaseLabel: 'Stage Nu-Lift before Stone Soap for concrete prep',
+      }),
+      createPrepLayer({
+        sku: 'STONE-SOAP',
+        name: 'SEMCO Stone Soap',
+        label: 'Final wash before coating',
+        note: 'SIP Type A and Type D use Stone Soap solution 1:4. On concrete, use it as the final wash after Nu-Lift before coating.',
+        sourcePage: 20,
+        purchaseLabel: 'Stage Stone Soap for final wash',
+      }),
+    );
+    return base;
+  }
+
   if (substrateType === 'metal') {
-    base.push(createPrepLayer({
-      sku: 'POWER-CLEANER',
-      name: 'SEMCO Power Cleaner',
-      label: 'Degrease metal before adhesion test',
-      note: 'Use when oil, wax, grease, or other bond-breaking residue is present. Confirm metal profile and adhesion before coating.',
-      sourcePage: 14,
-      purchaseLabel: 'Stage if surface has oil, grease, or shop residue',
-    }));
+    base.push(
+      createPrepLayer({
+        sku: 'STONE-SOAP',
+        name: 'SEMCO Stone Soap',
+        label: 'Standard wash for clean metal',
+        note: 'SIP Type A includes metal and uses Stone Soap solution 1:4 for clean, non-waxed surfaces.',
+        sourcePage: 20,
+        purchaseLabel: 'Stage Stone Soap for standard wash',
+      }),
+      createPrepLayer({
+        sku: 'POWER-CLEANER',
+        name: 'SEMCO Power Cleaner',
+        label: 'Use if oil / grease is present',
+        note: 'Use when oil, wax, grease, sealer, paint, or other bond-breaking residue is present. Confirm metal profile and adhesion before coating.',
+        sourcePage: 21,
+        purchaseLabel: 'Stage only if surface has oil, grease, coating, or shop residue',
+      }),
+    );
     return base;
   }
 
@@ -124,6 +156,50 @@ function getPrepLayers(substrateType: SubstrateId): MaterialLayer[] {
     return base;
   }
 
+  if (substrateType === 'concrete_block') {
+    base.push(
+      createPrepLayer({
+        sku: 'NU-LIFT',
+        name: 'SEMCO Nu-Lift Cleaner',
+        label: 'Mineral / efflorescence prep',
+        note: 'SIP Type D uses non-diluted Nu-Lift for exterior block wall, stucco, below-grade plaster, tile, magnesium, and efflorescence contaminated surfaces.',
+        sourcePage: 23,
+        purchaseLabel: 'Stage Nu-Lift for block, stucco, plaster, or mineral residue',
+      }),
+      createPrepLayer({
+        sku: 'STONE-SOAP',
+        name: 'SEMCO Stone Soap',
+        label: 'Final clean after Nu-Lift',
+        note: 'SIP Type D follows Nu-Lift with Stone Soap solution 1:4 to clean chemical residue and pH-balance the surface.',
+        sourcePage: 23,
+        purchaseLabel: 'Stage Stone Soap for final wash',
+      }),
+    );
+    return base;
+  }
+
+  if (substrateType === 'existing_paint') {
+    base.push(
+      createPrepLayer({
+        sku: 'POWER-CLEANER',
+        name: 'SEMCO Power Cleaner',
+        label: 'Coating / residue prep',
+        note: 'SIP Type B uses Power Cleaner solution 1:4 for epoxy, terrazzo, carpet glue, waxed surfaces, water-based glue, paint, sealers, and non-permanent topical coatings.',
+        sourcePage: 21,
+        purchaseLabel: 'Stage Power Cleaner for coating residue',
+      }),
+      createPrepLayer({
+        sku: 'STONE-SOAP',
+        name: 'SEMCO Stone Soap',
+        label: 'Final clean after Power Cleaner',
+        note: 'SIP Type B follows Power Cleaner with Stone Soap solution 1:4 to clean chemical residue and pH-balance the surface.',
+        sourcePage: 21,
+        purchaseLabel: 'Stage Stone Soap for final wash',
+      }),
+    );
+    return base;
+  }
+
   if (substrateType === 'icf') {
     base.push(
       createPrepLayer({
@@ -143,6 +219,30 @@ function getPrepLayers(substrateType: SubstrateId): MaterialLayer[] {
         purchaseLabel: 'Add only if mineral contamination is visible',
       }),
     );
+    return base;
+  }
+
+  if (substrateType === 'cement_board' || substrateType === 'gypsum_board') {
+    base.push(createPrepLayer({
+      sku: 'PREP-WALL-BOARD',
+      name: substrateType === 'gypsum_board' ? 'Drywall substrate check' : 'Cement board substrate check',
+      label: 'Fastened, dry, stable board',
+      note: 'Wall board prep depends on the surface and exposure. Wet-area joints, corners, and seams require Liquid Membrane/fabric detail before X-Bond. Drywall is walls only.',
+      sourcePage: 35,
+      purchaseLabel: 'No cleaner quantity; verify board stability and wet-area detail',
+    }));
+    return base;
+  }
+
+  if (substrateType === 'heated_floor') {
+    base.push(createPrepLayer({
+      sku: 'PREP-HEATED-FLOOR',
+      name: 'Heated floor prep check',
+      label: 'Prep actual top surface',
+      note: 'Heated floors must be prepped by the actual top surface. Keep heat off during application and cure; do not thermal-cycle while the system is bonding.',
+      sourcePage: 28,
+      purchaseLabel: 'No cleaner quantity; choose prep by actual top surface',
+    }));
     return base;
   }
 

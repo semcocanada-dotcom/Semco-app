@@ -160,16 +160,16 @@ function pushPinned(pinned: Array<[string, number]>, sourceDocument: string, pag
 function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
   const normalized = normalizeQuery(query);
   const asksAllPrep = (
-    includesAny(normalized, ['each type substrate', 'each substrate', 'all substrate', 'all prep', 'prep procedures', 'cleaning procedures'])
+    includesAny(normalized, ['all types of surfaces', 'all types surfaces', 'each type surface', 'each type substrate', 'each substrate', 'all substrate', 'all surface', 'all surfaces', 'every surface', 'every substrate', 'surface types', 'substrate types', 'all prep', 'prep procedures', 'cleaning procedures'])
     || (normalized.includes('substrate') && includesAny(normalized, ['clean', 'prep', 'preparation']))
   );
 
   if (asksAllPrep) {
-    [20, 21, 22, 23, 24].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+    [15, 20, 21, 22, 23, 24, 27, 28, 29, 30, 35].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
     return;
   }
 
-  if (includesAny(normalized, ['concrete', 'cement', 'slab', 'natural stone', 'vinyl', 'vct', 'metal', 'formica', 'glass'])) {
+  if (includesAny(normalized, ['concrete', 'cement', 'slab', 'natural stone', 'vinyl', 'vct', 'metal', 'steel', 'aluminum', 'aluminium', 'formica', 'glass', 'plexiglass'])) {
     pushPinned(pinned, SIP_MANUAL, 20);
   }
 
@@ -177,20 +177,24 @@ function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
     pushPinned(pinned, SIP_MANUAL, 22);
   }
 
-  if (includesAny(normalized, ['commercial kitchen', 'epoxy', 'terrazzo', 'carpet glue', 'wax', 'waxed'])) {
+  if (includesAny(normalized, ['commercial kitchen', 'epoxy', 'terrazzo', 'carpet glue', 'wax', 'waxed', 'paint', 'painted', 'coating', 'coated', 'sealer residue', 'oil', 'grease', 'glue'])) {
     pushPinned(pinned, SIP_MANUAL, 21);
   }
 
-  if (includesAny(normalized, ['unsure', 'unknown', 'stamped concrete', 'stamped', 'exterior'])) {
+  if (includesAny(normalized, ['unsure', 'unknown', 'stamped concrete', 'stamped', 'exterior', 'outside'])) {
     pushPinned(pinned, SIP_MANUAL, 22);
   }
 
-  if (includesAny(normalized, ['block', 'stucco', 'below grade plaster', 'plaster', 'tile', 'magnesium', 'efflorescence', 'efflorescent'])) {
+  if (includesAny(normalized, ['block', 'cmu', 'stucco', 'masonry', 'below grade plaster', 'plaster', 'tile', 'ceramic', 'porcelain', 'grout', 'pool', 'jacuzzi', 'magnesium', 'efflorescence', 'efflorescent', 'calcium', 'mineral', 'alkali'])) {
     pushPinned(pinned, SIP_MANUAL, 23);
   }
 
   if (includesAny(normalized, ['wood', 'plywood', 'osb', 'deck', 'decks'])) {
     pushPinned(pinned, SIP_MANUAL, 24);
+  }
+
+  if (includesAny(normalized, ['drywall', 'gypsum', 'wallboard', 'cement board', 'backer board', 'concrete board', 'concrete panel', 'icf', 'insulated concrete form', 'wall', 'walls', 'vertical'])) {
+    pushPinned(pinned, SIP_MANUAL, 35);
   }
 }
 
@@ -199,13 +203,64 @@ function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) 
   const concrete = isConcreteQuestion(query);
   const xbond = isXBondQuestion(query);
   const asksInstallProcess = isProcessQuestion(query);
+  const substrateProcess = includesAny(normalized, [
+    'tile',
+    'ceramic',
+    'porcelain',
+    'wood',
+    'plywood',
+    'osb',
+    'deck',
+    'metal',
+    'steel',
+    'aluminum',
+    'aluminium',
+    'vinyl',
+    'vct',
+    'natural stone',
+    'formica',
+    'glass',
+    'plexiglass',
+    'paint',
+    'coating',
+    'epoxy',
+    'terrazzo',
+    'pool',
+    'jacuzzi',
+    'submerged',
+    'drywall',
+    'gypsum',
+    'cement board',
+    'backer board',
+    'concrete board',
+    'block',
+    'cmu',
+    'stucco',
+    'icf',
+    'heated floor',
+    'radiant floor',
+  ]);
 
-  if (!asksInstallProcess || (!concrete && !xbond)) return;
+  if (!asksInstallProcess || (!concrete && !xbond && !substrateProcess)) return;
 
   pushPinned(pinned, 'X-BondoverConcreteFloorDetail-2025.pdf', 1);
   [27, 28, 29, 30].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
   pushPinned(pinned, 'Tech_Sheet_X-Bond-2024-v3.pdf', 1);
   pushPinned(pinned, 'Tech_Sheet_X-Bond-2024-v3.pdf', 2);
+
+  if (includesAny(normalized, ['tile', 'ceramic', 'porcelain', 'grout'])) {
+    pushPinned(pinned, 'X-Bond-Over-Tile-Detail.pdf', 1);
+  }
+
+  if (includesAny(normalized, ['wood', 'plywood', 'osb', 'deck', 'decks'])) {
+    pushPinned(pinned, 'Wood-Detail.pdf', 1);
+    pushPinned(pinned, 'Cove-Base-Detail-Plywood.pdf', 1);
+  }
+
+  if (includesAny(normalized, ['pool', 'jacuzzi', 'submerged', 'wet room', 'wetroom'])) {
+    pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 1);
+    pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 2);
+  }
 
   if (normalized.includes('shower')) {
     pushPinned(pinned, 'Shower-Detail-Concrete.pdf', 1);
