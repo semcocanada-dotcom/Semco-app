@@ -296,40 +296,39 @@ function materialEstimateAnswer(
   missingInputs: string[],
 ): string {
   return [
-    'Answer: Use the Calculator for material quantities. Ask Semco should help with install decisions, prep, troubleshooting, warranty photos, and product-use questions.',
+    'Answer:',
+    'Use the Calculator for material quantities. Ask Semco should help the installer understand the install decision, but it should not freestyle material counts.',
     '',
-    'Why:',
-    '- Material counts must come from the built-in formulas so every installer gets the same result.',
-    '- The AI should not guess quantities or override the Calculator.',
+    'Why this matters:',
+    'Material counts must come from the built-in formulas so every installer gets the same result. The AI should not guess quantities or override the Calculator.',
     '',
     'For the Calculator, enter:',
-    '- area in sq ft',
-    '- substrate',
-    '- sealer',
-    '- standard X-Bond or MicroBond smooth finish',
-    '- pool/submerged if applicable',
+    '1. area in sq ft',
+    '2. substrate',
+    '3. sealer',
+    '4. standard X-Bond or MicroBond smooth finish',
+    '5. pool/submerged if applicable',
     missingInputs.length ? '' : '',
     missingInputs.length ? 'Still needed:' : '',
-    ...missingInputs.map((item) => `- ${item}`),
+    ...numberedSteps(missingInputs),
     assumptions.length ? '' : '',
     assumptions.length ? 'Rule:' : '',
-    ...assumptions.map((item) => `- ${item}`),
+    ...assumptions,
   ].filter((line) => line !== '').join('\n');
 }
 
 function documentGapAnswer(): string {
   return [
-    'Answer: If the approved Semco documents do not answer the question, do not guess.',
+    'Answer:',
+    'If the approved Semco documents do not answer the question, do not guess. Say that clearly and keep the installer out of unsupported decisions.',
     '',
-    'Do this:',
-    '- Tell the installer: "I cannot confirm that from the approved Semco technical documents."',
-    '- Say what is missing, such as product, substrate, exposure, mixing ratio, coverage, dry time, or warranty detail.',
-    '- Ask for the exact product/system or escalate to Semco technical review if the decision affects warranty, compatibility, safety, or material quantities.',
-    '- Do not fill the gap with general construction knowledge.',
+    'Use this response:',
+    '"I cannot confirm that from the approved Semco technical documents."',
     '',
-    'Rule:',
-    '- Calculator quantities come from the built-in formulas.',
-    '- Install and warranty answers must be traceable to approved Semco sources.',
+    'Then say what is missing: product, substrate, exposure, mixing ratio, coverage, dry time, warranty detail, or compatibility. If the decision affects warranty, safety, compatibility, or material quantity, escalate to Semco technical review.',
+    '',
+    'Field rule:',
+    'Do not fill the gap with general construction knowledge. Calculator quantities come from formulas, and install/warranty answers must trace back to approved Semco sources.',
   ].join('\n');
 }
 
@@ -340,28 +339,26 @@ function membraneAnswer(facts: ExtractedJobFacts): string {
 
   if (!facts.areaSqft) {
     return [
-      'Answer: Use the Calculator for Liquid Membrane quantity.',
+      'Answer:',
+      'Use the Calculator for Liquid Membrane quantity. Ask Semco can explain where membrane belongs, but ordering quantity should come from the formula so purchase rounding is consistent.',
       '',
-      'Install rule:',
-      '- Normal work and pool/submerged work use different membrane assumptions.',
-      '- Pool/submerged work must be selected as the substrate/condition.',
-      '- The app formula handles the quantity and purchase rounding.',
+      'Field rule:',
+      'Normal work and pool/submerged work use different membrane assumptions. If the project is pool or submerged, choose that condition in the Calculator.',
       '',
       'Need:',
-      '- area in sq ft',
-      '- whether it is normal work or pool/submerged',
+      '1. area in sq ft',
+      '2. whether it is normal work or pool/submerged',
     ].join('\n');
   }
 
   return [
-    'Answer: Use the Calculator for Liquid Membrane quantity.',
+    'Answer:',
+    'Use the Calculator for Liquid Membrane quantity. The material count should come from the built-in formula, not an AI guess.',
     '',
     areaLine,
     '',
-    'Install rule:',
-    '- Normal work and pool/submerged work use different membrane assumptions.',
-    '- Pool/submerged work must be selected as the substrate/condition.',
-    '- Ask Semco can explain where membrane is needed, but quantities come from the Calculator.',
+    'Field rule:',
+    'Normal work and pool/submerged work use different membrane assumptions. Ask Semco can explain where membrane is needed, but quantities come from the Calculator.',
   ].join('\n');
 }
 
@@ -444,18 +441,19 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
 
   if (missingInputs.length > 0 || (!facts.substrateType && !facts.prepSurfaceGroup)) {
     return [
-      'Answer: Prep depends on substrate and contamination, not just square footage.',
+      'Answer:',
+      'Prep depends on two things: what the surface is, and what is on it. I need those before I can choose the right Semco cleaning path.',
       '',
-      'Decision rule:',
-      '- Clean non-waxed concrete, natural stone, vinyl/VCT, metal, Formica, or glass: Stone Soap 1:4.',
-      '- Grease, oil, wax, glue, paint, sealer, epoxy, terrazzo, or topical coating residue: Power Cleaner 1:4, then Stone Soap 1:4.',
-      '- Unknown, stamped, or exterior conditions: Power Cleaner 1:4, Nu-Lift 1:1, then Power Cleaner 1:9.',
-      '- Tile, block, stucco, below-grade plaster, pool residue, calcium, mineral, alkali, or efflorescence: Nu-Lift, then Stone Soap 1:4.',
-      '- Wood / plywood / OSB: secure the surface, then Liquid Membrane and fabric before X-Bond.',
+      'Quick decision tree:',
+      'Clean non-waxed hard surface: Stone Soap 1:4.',
+      'Grease, oil, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue: Power Cleaner 1:4, then Stone Soap 1:4.',
+      'Unknown, stamped, or exterior condition: Power Cleaner 1:4, Nu-Lift 1:1, then Power Cleaner 1:9.',
+      'Tile, block, stucco, below-grade plaster, pool residue, calcium, mineral, alkali, or efflorescence: Nu-Lift, then Stone Soap 1:4.',
+      'Wood / plywood / OSB: confirm the surface is stable, then use Liquid Membrane and fabric before X-Bond.',
       '',
-      'Need:',
-      '- substrate',
-      '- visible contamination or residue',
+      'Tell me:',
+      '1. What substrate is it?',
+      '2. Is there paint, sealer, glue, grease, wax, minerals, efflorescence, or unknown residue?',
     ].join('\n');
   }
 
@@ -527,39 +525,30 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
   const substrateLabel = facts.substrateType
     ? SUBSTRATE_MAP[facts.substrateType]?.label ?? facts.substrateType
     : facts.prepSurfaceLabel ?? 'this surface';
-  return [
-    `Answer: For ${substrateLabel}, use this prep path.`,
-    '',
-    'Do this:',
-    ...steps.map((item) => `- ${item}`),
-    '',
-    'Reason:',
-    '- Cleaner choice follows the contamination risk.',
-    '- Warranty and adhesion risk are higher when prep photos or residue checks are missing.',
-  ].join('\n');
+  return formatPrepPathAnswer(substrateLabel, steps);
 }
 
 function allSurfacePrepAnswer(): string {
   return [
-    'Answer: Yes. The app should treat surface prep as a decision tree, not one generic cleaning step.',
+    'Answer:',
+    'Use surface prep as a decision tree. The right cleaner path depends on the substrate and the contamination, not just the square footage.',
     '',
-    'Use this checked map:',
-    '- Concrete: Semco Canada field prep is Nu-Lift first as the pH/mineral reset, then Stone Soap final wash before coating. If concrete is exterior, stamped, unknown, or has heavier mineral/alkali/efflorescence risk, use the stronger SIP Type C path below.',
-    '- Clean, non-waxed natural stone, vinyl/VCT, metal, Formica, glass, plexiglass: SIP Type A. Sweep, dampen, Stone Soap 1:4, dwell 2-3 minutes, scrub, rinse, wet-vac interiors, repeat rinse/vacuum if needed, dry.',
-    '- Commercial kitchen contamination, epoxy, terrazzo, carpet glue, waxed, painted, sealed, or coated surfaces: SIP Type B. Power Cleaner 1:4, dwell 2-3 minutes, scrub, rinse/vacuum, then Stone Soap 1:4 final wash, rinse/vacuum, dry. Remove loose coating and confirm adhesion.',
-    '- Unknown existing conditions, stamped concrete, and exterior surfaces: SIP Type C. Power Cleaner 1:4, rinse/vacuum; Nu-Lift 1:1, rinse/vacuum; Power Cleaner 1:9, rinse/vacuum; dry.',
-    '- Tile, exterior block wall, stucco, below-grade plaster, calcium/mineral/alkali/magnesium/efflorescence: SIP Type D. Non-diluted Nu-Lift, dwell 2-3 minutes, scrub, rinse/vacuum; then Stone Soap 1:4 final wash, rinse/vacuum, dry.',
-    '- Wood, plywood, OSB, decks: SIP Type E. Confirm the wood is structural/stable, sweep, roll Liquid Membrane and dry, embed fabric into wet Liquid Membrane, immediately add two more membrane coats with pressure, overlap fabric 2 inches, dry before X-Bond.',
-    '- Drywall/gypsum board: walls only. It must be dry, stable, fastened, and not damaged. Do not use drywall as a floor substrate. Wet walls need the proper Liquid Membrane/fabric detail at joints/corners/seams.',
-    '- Cement board/backer board/concrete boards: confirm fastening and stability, then treat wet-area joints/corners/seams with Liquid Membrane and fabric before X-Bond.',
-    '- ICF: confirm the exposed face first. Concrete/parge/plaster faces can follow the matching prep type. Foam, unknown, loose, damp, or moving faces need Semco review before approval.',
-    '- Pools/jacuzzis/submerged/wet exposure: use the mineral-residue path where needed, rinse clean, dry, use the wet-area Liquid Membrane build-up, and finish with Natural Shield as the current stocked penetrating sealer.',
-    '- Heated floors: prep the actual top surface, keep heat off during application and cure, and do not thermal-cycle while the system is bonding.',
+    'Checked prep map:',
+    'Concrete: Semco Canada field prep is Nu-Lift first as the pH/mineral reset, then Stone Soap final wash before coating. If concrete is exterior, stamped, unknown, or has heavier mineral/alkali/efflorescence risk, use the stronger SIP Type C path.',
+    'Clean, non-waxed natural stone, vinyl/VCT, metal, Formica, glass, plexiglass: SIP Type A. Sweep, dampen, Stone Soap 1:4, dwell 2-3 minutes, scrub, rinse, wet-vac interiors, repeat rinse/vacuum if needed, dry.',
+    'Commercial kitchen contamination, epoxy, terrazzo, carpet glue, waxed, painted, sealed, or coated surfaces: SIP Type B. Power Cleaner 1:4, dwell 2-3 minutes, scrub, rinse/vacuum, then Stone Soap 1:4 final wash, rinse/vacuum, dry. Remove loose coating and confirm adhesion.',
+    'Unknown existing conditions, stamped concrete, and exterior surfaces: SIP Type C. Power Cleaner 1:4, rinse/vacuum; Nu-Lift 1:1, rinse/vacuum; Power Cleaner 1:9, rinse/vacuum; dry.',
+    'Tile, exterior block wall, stucco, below-grade plaster, calcium/mineral/alkali/magnesium/efflorescence: SIP Type D. Non-diluted Nu-Lift, dwell 2-3 minutes, scrub, rinse/vacuum; then Stone Soap 1:4 final wash, rinse/vacuum, dry.',
+    'Wood, plywood, OSB, decks: SIP Type E. Confirm the wood is structural/stable, sweep, roll Liquid Membrane and dry, embed fabric into wet Liquid Membrane, immediately add two more membrane coats with pressure, overlap fabric 2 inches, dry before X-Bond.',
+    'Drywall/gypsum board: walls only. It must be dry, stable, fastened, and not damaged. Do not use drywall as a floor substrate. Wet walls need the proper Liquid Membrane/fabric detail at joints/corners/seams.',
+    'Cement board/backer board/concrete boards: confirm fastening and stability, then treat wet-area joints/corners/seams with Liquid Membrane and fabric before X-Bond.',
+    'ICF: confirm the exposed face first. Concrete/parge/plaster faces can follow the matching prep type. Foam, unknown, loose, damp, or moving faces need Semco review before approval.',
+    'Pools/jacuzzis/submerged/wet exposure: use the mineral-residue path where needed, rinse clean, dry, use the wet-area Liquid Membrane build-up, and finish with Natural Shield as the current stocked penetrating sealer.',
+    'Heated floors: prep the actual top surface, keep heat off during application and cure, and do not thermal-cycle while the system is bonding.',
     '',
     'Stop and review:',
-    '- loose, hollow, moving, cracked, delaminating, wet, dusty, soft, spalling, or unknown surfaces',
-    '- active moisture, standing water, or failed coating',
-    '- missing warranty photos at prep, membrane/primer, base, finish, sealer, and final handover',
+    'Loose, hollow, moving, cracked, delaminating, wet, dusty, soft, spalling, or unknown surfaces.',
+    'Active moisture, standing water, failed coating, or missing warranty photos at prep, membrane/primer, base, finish, sealer, and final handover.',
     '',
     'Sources:',
     '- Open SIP manual - master copy v2019-3 2.pdf p. 20-24',
@@ -570,19 +559,49 @@ function allSurfacePrepAnswer(): string {
 
 function warrantyPhotoAnswer(): string {
   return [
-    'Answer: Warranty review needs photos from every required stage.',
+    'Answer:',
+    'Treat warranty photos like hold points. The installer should not cover a stage until there is a clear photo proving what was done.',
     '',
-    'Required photos:',
-    '- Substrate / Prep',
-    '- Liquid Membrane / Primer',
-    '- Scratch / Base Coat',
-    '- Finish Coat',
-    '- Sealer Applied',
-    '- Final / Handover',
+    'Photo sequence:',
+    '1. Substrate / prep before it gets covered.',
+    '2. Liquid Membrane / primer stage.',
+    '3. Scratch / base coat stage.',
+    '4. Finish coat stage.',
+    '5. Sealer applied.',
+    '6. Final / handover condition.',
     '',
-    'Logic:',
-    '- One clear photo per stage proves the installation sequence.',
-    '- Missing stages mean the project is not photo-qualified for warranty yet.',
+    'Field rule:',
+    'One clear photo per stage proves the installation sequence. Missing stages can block warranty qualification because there is no record of what happened under the finished surface.',
+  ].join('\n');
+}
+
+function numberedSteps(steps: string[]): string[] {
+  return steps.map((step, index) => `${index + 1}. ${step}`);
+}
+
+function formatPrepPathAnswer(substrateLabel: string, steps: string[]): string {
+  return [
+    'Answer:',
+    `For ${substrateLabel}, prep is the pass/fail step. Use the cleaner path that matches the surface condition, then do not coat until the surface is clean, rinsed, dry, and stable.`,
+    '',
+    'Jobsite path:',
+    ...numberedSteps(steps),
+    '',
+    'Field check:',
+    'Cleaner choice follows the contamination risk. If the surface is loose, wet, moving, dusty, coated with an unknown film, or missing prep photos, stop and get it reviewed before coating.',
+  ].join('\n');
+}
+
+function formatBuildUpPathAnswer(substrateLabel: string, steps: string[]): string {
+  return [
+    'Answer:',
+    `For ${substrateLabel}, first prove the surface is sound and bondable. Then follow the build-up in order and take photos before each stage gets covered.`,
+    '',
+    'Jobsite path:',
+    ...numberedSteps(steps),
+    '',
+    'Field check:',
+    'Stop for loose, hollow, moving, contaminated, actively wet, soft, spalling, delaminating, rusting, or unknown surfaces. For warranty, capture prep, membrane/primer, scratch/base, finish, sealer, and final handover photos.',
   ].join('\n');
 }
 
@@ -629,23 +648,25 @@ function concreteBuildUpAnswer(): string {
 function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
   if (missingInputs.length > 0 || (!facts.substrateType && !facts.prepSurfaceGroup)) {
     return [
-      'Answer: I need the substrate before I can give the Semco build-up.',
+      'Answer:',
+      'I need the substrate before I can give the Semco build-up. The right answer changes a lot depending on what the system is going over.',
       '',
       'Tell me one of these:',
-      '- concrete',
-      '- plywood / OSB',
-      '- tile',
-      '- drywall',
-      '- pool / submerged',
-      '- metal',
+      '1. concrete',
+      '2. plywood / OSB',
+      '3. tile',
+      '4. drywall / wall board',
+      '5. pool / submerged',
+      '6. metal',
       '',
-      'Rule: Ask Semco should not approve an assembly without knowing what it is going over.',
+      'Field rule:',
+      'Ask Semco should not approve an assembly without knowing the substrate and surface condition.',
     ].join('\n');
   }
 
   if (!facts.substrateType) {
     if (!facts.prepSurfaceGroup) {
-      return 'Answer: I need the substrate before I can give the Semco build-up.';
+      return 'Answer:\nI need the substrate before I can give the Semco build-up.';
     }
     return genericBuildUpForPrepSurface(facts.prepSurfaceGroup, facts.prepSurfaceLabel ?? 'this surface');
   }
@@ -735,16 +756,7 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
     ],
   };
 
-  return [
-    `Answer: For ${substrateLabel}, follow the Semco build-up and do not skip prep or photo documentation.`,
-    '',
-    'Do this:',
-    ...buildUps[substrateType].map((item) => `- ${item}`),
-    '',
-    'Watch out:',
-    '- If the substrate is loose, moving, contaminated, or wet beyond the system limit, stop and get Semco review.',
-    '- For warranty, capture photos at prep, membrane/primer, base, finish, sealer, and final handover.',
-  ].join('\n');
+  return formatBuildUpPathAnswer(substrateLabel, buildUps[substrateType]);
 }
 
 function genericBuildUpForPrepSurface(group: PrepSurfaceGroup, label: string): string {
@@ -788,22 +800,22 @@ function genericBuildUpForPrepSurface(group: PrepSurfaceGroup, label: string): s
   };
 
   return [
-    `Answer: For ${label}, first use the documented prep path, then only proceed if the surface is sound and bondable.`,
+    'Answer:',
+    `For ${label}, prep first, then build only if the surface is sound and bondable. Do not let the product choice outrun the substrate check.`,
     '',
-    'Prep:',
-    ...prepLines[group].map((item) => `- ${item}`),
+    'Prep first:',
+    ...numberedSteps(prepLines[group]),
     '',
     'Build-up after prep:',
-    '- Roll X-Bond Liquid as primer and do not allow it to dry.',
-    '- For floor scratch coat, mix 1 part X-Bond Liquid to 2 parts X-Bond Stone at low speed, 180-200 RPM, using a square mixing paddle.',
-    '- Spread the scratch coat tightly in one direction, let it dry, scrape loose particles, and sweep clean.',
-    '- Use Liquid Membrane/fabric at cracks, joints, seams, corners, drains, wet areas, and movement-risk areas where the detail requires it.',
-    '- Use Brown Coat only when leveling, filling voids over 1/8 inch, building over anti-fracture membrane, or correcting height transitions. Brown Coat mix: 1 part X-Bond Liquid + 1 part X-Bond Additive first, then 2 1/2 parts X-Bond Stone at 180-200 RPM.',
-    '- Apply the specified X-Bond finish and stocked Semco sealer after the build-up is ready.',
+    '1. Roll X-Bond Liquid as primer and do not allow it to dry.',
+    '2. For floor scratch coat, mix 1 part X-Bond Liquid to 2 parts X-Bond Stone at low speed, 180-200 RPM, using a square mixing paddle.',
+    '3. Spread the scratch coat tightly in one direction, let it dry, scrape loose particles, and sweep clean.',
+    '4. Use Liquid Membrane/fabric at cracks, joints, seams, corners, drains, wet areas, and movement-risk areas where the detail requires it.',
+    '5. Use Brown Coat only when leveling, filling voids over 1/8 inch, building over anti-fracture membrane, or correcting height transitions. Brown Coat mix: 1 part X-Bond Liquid + 1 part X-Bond Additive first, then 2 1/2 parts X-Bond Stone at 180-200 RPM.',
+    '6. Apply the specified X-Bond finish and stocked Semco sealer after the build-up is ready.',
     '',
-    'Stop and review:',
-    '- loose, moving, hollow, wet, soft, delaminating, spalling, dusty, rusting, or unknown surfaces',
-    '- any surface where adhesion has not been confirmed',
+    'Field check:',
+    'Stop for loose, moving, hollow, wet, soft, delaminating, spalling, dusty, rusting, or unknown surfaces, and for any surface where adhesion has not been confirmed.',
   ].join('\n');
 }
 
@@ -812,91 +824,94 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
 
   if (sku === 'NATURAL-SHIELD') {
     return [
-      'Answer: For pool, submerged, wet-exposure, and exterior penetrating-sealer work, use Natural Shield under the current stocked Semco Canada rule.',
+      'Answer:',
+      'For pool, submerged, wet-exposure, and exterior penetrating-sealer work, use Natural Shield under the current stocked Semco Canada rule. Treat it as a penetrating protection step, not a thick film build.',
       '',
       'Step-by-step:',
-      '- Confirm the surface is ready for sealer and sweep all debris and loose material off the surface.',
-      '- Apply Natural Shield wet-on-wet. The tech sheet requires 3 coats and says not to allow each coat to dry between coats.',
-      '- Use a 1/4 inch nap roller, HVLP sprayer, pump sprayer, or airless sprayer with tip size 17. For vertical work, use a 1/4 inch nap roller, HVLP, or airless tip size 15 and work bottom to top to avoid runs.',
-      '- Do not allow puddling. Puddling can create white haze and weak-looking spots.',
-      '- Product sheet coverage at 3 coats: artificial stone 200-250 sq ft/gal, polished concrete 150-250 sq ft/gal, stamped concrete 300-350 sq ft/gal. Use the Calculator for project order quantities and purchase rounding.',
-      '- Product sheet application environment is 50F to 90F. Cure changes with temperature and humidity; the SIP manual says allow at least 48 hours before cleaning and maximum strength is achieved in 7 days.',
+      '1. Confirm the surface is ready for sealer and sweep all debris and loose material off the surface.',
+      '2. Apply Natural Shield wet-on-wet. The tech sheet requires 3 coats and says not to allow each coat to dry between coats.',
+      '3. Use a 1/4 inch nap roller, HVLP sprayer, pump sprayer, or airless sprayer with tip size 17. For vertical work, use a 1/4 inch nap roller, HVLP, or airless tip size 15 and work bottom to top to avoid runs.',
+      '4. Do not allow puddling. Puddling can create white haze and weak-looking spots.',
+      '5. Product sheet coverage at 3 coats: artificial stone 200-250 sq ft/gal, polished concrete 150-250 sq ft/gal, stamped concrete 300-350 sq ft/gal. Use the Calculator for project order quantities and purchase rounding.',
+      '6. Product sheet application environment is 50F to 90F. Cure changes with temperature and humidity; the SIP manual says allow at least 48 hours before cleaning and maximum strength is achieved in 7 days.',
       '',
-      'Do not miss:',
-      '- Test a small area first.',
-      '- Wear gloves and eye protection.',
-      '- Do not mix with other cleaners.',
+      'Field check:',
+      'Test a small area first, wear gloves and eye protection, and do not mix it with other cleaners.',
     ].join('\n');
   }
 
   if (sku === 'SATIN-STONE') {
     return [
-      'Answer: Use Satin Stone when a stocked satin film finish is specified.',
+      'Answer:',
+      'Use Satin Stone when a stocked satin film finish is specified. This is a controlled coating step, so batch size, pot life, and spray method matter.',
       '',
       'Step-by-step:',
-      '- Sweep debris off the surface before sealing.',
-      '- Mix 2 parts Part A to 1 part Part B with a low-speed mixer and low-air paddle. Mark the time on the container; pot life is up to 35 minutes depending on temperature.',
-      '- Apply with airless sprayer tip size 21 at 850-1,000 PSI, holding the gun about 18 inches from the floor. A Magic Trowel can be used to spread it, but do not work it back and forth.',
-      '- Minimum 3 coats are required in the SIP procedure for 1.5 mil film thickness. The tech sheet lists coverage by surface at minimum 2 coats / 20 mils total thickness.',
-      '- Apply between 50F and 90F per the tech sheet. The SIP manual says allow at least 48 hours before foot traffic.',
+      '1. Sweep debris off the surface before sealing.',
+      '2. Mix 2 parts Part A to 1 part Part B with a low-speed mixer and low-air paddle. Mark the time on the container; pot life is up to 35 minutes depending on temperature.',
+      '3. Apply with airless sprayer tip size 21 at 850-1,000 PSI, holding the gun about 18 inches from the floor. A Magic Trowel can be used to spread it, but do not work it back and forth.',
+      '4. Minimum 3 coats are required in the SIP procedure for 1.5 mil film thickness. The tech sheet lists coverage by surface at minimum 2 coats / 20 mils total thickness.',
+      '5. Apply between 50F and 90F per the tech sheet. The SIP manual says allow at least 48 hours before foot traffic.',
       '',
-      'Do not miss:',
-      '- Mix small batches.',
-      '- Use the Calculator for project quantities.',
+      'Field check:',
+      'Mix small batches and use the Calculator for project quantities.',
     ].join('\n');
   }
 
   if (sku === 'TITAN-SHIELD') {
     return [
-      'Answer: Use Titan Gloss when a stocked gloss film finish is specified.',
+      'Answer:',
+      'Use Titan Gloss when a stocked gloss film finish is specified. Keep the surface clean, apply the required film build, and use the Calculator for quantity.',
       '',
       'Step-by-step:',
-      '- Confirm the surface is clean and ready for sealer.',
-      '- Apply with an airless sprayer, tip size 17, a 1/4 inch woven short nap roller, or Magic Trowel.',
-      '- Product sheet coverage at minimum 3 coats / 6-8 mils total thickness: polished concrete 150-200 sq ft/gal, artificial stone 150-200 sq ft/gal, stamped concrete 250-300 sq ft/gal, and X-Bond 200-250 sq ft/gal.',
-      '- Apply between 50F and 90F per the tech sheet.',
-      '- Recoat timing varies by temperature and humidity; the tech sheet example says full cure is about 48 hours at 45F and about 18 hours at 90F.',
+      '1. Confirm the surface is clean and ready for sealer.',
+      '2. Apply with an airless sprayer, tip size 17, a 1/4 inch woven short nap roller, or Magic Trowel.',
+      '3. Product sheet coverage at minimum 3 coats / 6-8 mils total thickness: polished concrete 150-200 sq ft/gal, artificial stone 150-200 sq ft/gal, stamped concrete 250-300 sq ft/gal, and X-Bond 200-250 sq ft/gal.',
+      '4. Apply between 50F and 90F per the tech sheet.',
+      '5. Recoat timing varies by temperature and humidity; the tech sheet example says full cure is about 48 hours at 45F and about 18 hours at 90F.',
       '',
-      'Do not miss:',
-      '- Use the Calculator for project quantities.',
-      '- Test a small area first and wear gloves and eye protection.',
+      'Field check:',
+      'Test a small area first, wear gloves and eye protection, and use the Calculator for project quantities.',
     ].join('\n');
   }
 
   if (sku === 'MATTE-SEALER') {
     return [
-      'Answer: Matte is a current stocked Semco Canada matte finish. The field rule in this app says it is Titan-like in a matte finish and slightly harder than Titan.',
+      'Answer:',
+      'Matte is a current stocked Semco Canada matte finish. The field rule in this app says it is Titan-like in a matte finish and slightly harder than Titan.',
       '',
       'Use this carefully:',
-      '- Treat Matte as the stocked matte option when the installer wants a matte finish.',
-      '- Do not recommend older non-stocked sealers unless the installer specifically asks about them.',
-      '- If the job needs exact application data beyond the Titan-style field rule, confirm against the current Matte tech sheet before giving ratios, coverage, recoat, or cure values.',
+      'Treat Matte as the stocked matte option when the installer wants a matte finish. Do not recommend older non-stocked sealers unless the installer specifically asks about them.',
+      '',
+      'Field check:',
+      'If the job needs exact application data beyond the Titan-style field rule, confirm against the current Matte tech sheet before giving ratios, coverage, recoat, or cure values.',
     ].join('\n');
   }
 
   return [
-    'Answer: Choose the sealer by the exposure and finish required.',
+    'Answer:',
+    'Choose the sealer by exposure first, then finish. The installer should not pick only by sheen if the project is exterior, wet, submerged, or high traffic.',
     '',
     'Current stocked Semco Canada options:',
-    '- Natural Shield: pools, submerged work, wet exposure, exterior, and natural penetrating protection.',
-    '- Satin Stone: stocked satin film finish.',
-    '- Titan Gloss: stocked gloss film finish.',
-    '- Matte: stocked matte finish; current field rule says Titan-like matte and slightly harder than Titan.',
+    'Natural Shield: pools, submerged work, wet exposure, exterior, and natural penetrating protection.',
+    'Satin Stone: stocked satin film finish.',
+    'Titan Gloss: stocked gloss film finish.',
+    'Matte: stocked matte finish; current field rule says Titan-like matte and slightly harder than Titan.',
     '',
     'Need:',
-    '- finish required: natural, satin, gloss, or matte',
-    '- exposure: interior, exterior, shower/wetroom, pool/submerged, traffic level',
+    '1. finish required: natural, satin, gloss, or matte',
+    '2. exposure: interior, exterior, shower/wetroom, pool/submerged, traffic level',
   ].join('\n');
 }
 
 function takeoffAnswer(): string {
   return [
-    'Answer: Takeoff should mean blueprint/plan reading, not manual material estimating.',
+    'Answer:',
+    'Takeoff should mean blueprint/plan reading, not manual material estimating. If the app is not reading drawings and measuring scope, it should not pretend that it is doing takeoff.',
     '',
     'Use this instead:',
-    '- Calculator: manual sq ft material estimate.',
-    '- Projects: photos, batches, warranty records.',
-    '- Future Takeoff: only add it when the app can read drawings and measure scope.',
+    'Calculator: manual sq ft material estimate.',
+    'Projects: photos, batches, warranty records.',
+    'Future Takeoff: only add it when the app can read drawings and measure scope.',
   ].join('\n');
 }
 

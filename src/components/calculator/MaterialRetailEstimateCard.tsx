@@ -3,30 +3,32 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import type { CalculationResult } from '@/database/schema/calculations';
 import {
-  MATERIAL_PRICE_SOURCE,
   getMaterialPriceTotal,
   priceMaterialLayers,
 } from '@/knowledge/material-pricing';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { UNASSIGNED_DEALER_CONTEXT, type DealerContext } from '@/constants/dealers';
 
 type MaterialRetailEstimateCardProps = {
   result: CalculationResult;
+  dealerContext?: DealerContext;
 };
 
-export function MaterialRetailEstimateCard({ result }: MaterialRetailEstimateCardProps) {
+export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_DEALER_CONTEXT }: MaterialRetailEstimateCardProps) {
   const lines = useMemo(() => priceMaterialLayers(result.layers), [result.layers]);
   const pricedLines = lines.filter((line) => line.quantity > 0);
   const missingPriceLines = pricedLines.filter((line) => !line.price);
   const totalCad = getMaterialPriceTotal(lines);
+  const showPrices = dealerContext.pricingAvailable;
 
   return (
     <Card style={styles.card}>
       <View style={styles.header}>
         <View style={styles.titleWrap}>
-          <Text style={styles.title}>Retail estimate</Text>
-          <Text style={styles.source}>{MATERIAL_PRICE_SOURCE}</Text>
+          <Text style={styles.title}>{showPrices ? `${dealerContext.dealerName} estimate` : 'Dealer estimate'}</Text>
+          <Text style={styles.source}>{dealerContext.pricingSourceLabel}</Text>
         </View>
-        <Text style={styles.total}>{formatCad(totalCad)}</Text>
+        <Text style={styles.total}>{showPrices ? formatCad(totalCad) : 'Pending'}</Text>
       </View>
 
       {pricedLines.map((line) => (
@@ -38,10 +40,14 @@ export function MaterialRetailEstimateCard({ result }: MaterialRetailEstimateCar
             </Text>
           </View>
           <Text style={styles.lineValue}>
-            {line.lineTotalCad != null ? formatCad(line.lineTotalCad) : 'No retail price'}
+            {showPrices && line.lineTotalCad != null ? formatCad(line.lineTotalCad) : 'Dealer price pending'}
           </Text>
         </View>
       ))}
+
+      <Text style={showPrices ? styles.routeNote : styles.warning}>
+        {dealerContext.orderRoutingLabel}
+      </Text>
 
       {missingPriceLines.length > 0 ? (
         <Text style={styles.warning}>
@@ -115,6 +121,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     backgroundColor: Colors.accentMuted,
     color: Colors.semcoOrange,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
+    padding: Spacing.sm,
+  },
+  routeNote: {
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    color: Colors.primary,
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.xs,
     lineHeight: Typography.size.xs * 1.35,

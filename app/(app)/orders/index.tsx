@@ -15,6 +15,7 @@ import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialReta
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { Button, Card, Badge, SectionHeader } from '@/components/ui';
 import { clearPendingMaterialRequest, getPendingMaterialRequest } from '@/services/pending-material-request';
+import { resolveDealerContext, UNASSIGNED_DEALER_CONTEXT } from '@/constants/dealers';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
@@ -74,6 +75,10 @@ export default function OrdersScreen() {
     if (!project) return 'Pick a project for this material request';
     return project.clientName ?? project.siteAddress ?? 'Unnamed project';
   }, [project]);
+  const dealerContext = useMemo(
+    () => resolveDealerContext({ projectAddress: project?.siteAddress }),
+    [project?.siteAddress],
+  );
 
   async function savePendingCalculation(now: string): Promise<string | null> {
     if (!project) return null;
@@ -138,8 +143,8 @@ export default function OrdersScreen() {
           </Text>
           <Text style={styles.body}>
             {pendingResult
-              ? 'Calculator quantities are loaded. Choose a project and submit for internal review.'
-              : 'No manual entry. Nothing is ordered externally.'}
+              ? 'Calculator quantities are loaded. Choose a project so dealer pricing and routing can be assigned.'
+              : 'No manual entry. Dealer routing comes from the contractor company profile postal code.'}
           </Text>
           <View style={styles.iconWrap}>
             <Ionicons name="cart-outline" size={26} color={Colors.accent} />
@@ -149,7 +154,7 @@ export default function OrdersScreen() {
         {project ? (
           <>
             <View style={styles.section}>
-              <SectionHeader title="Current request" subtitle="Internal review state only. Nothing is sent outside the app automatically." />
+              <SectionHeader title="Current request" subtitle="Review the quantities, dealer assignment, and request status before sending." />
               <Card style={styles.statusCard}>
                 <View style={styles.statusRow}>
                   <View style={styles.statusCopy}>
@@ -161,20 +166,34 @@ export default function OrdersScreen() {
                     variant={STATUS_VARIANT[(orderRequest?.status ?? 'draft') as OrderRequestStatus]}
                   />
                 </View>
+                <View style={styles.statusDivider} />
+                <View style={styles.statusRow}>
+                  <View style={styles.statusCopy}>
+                    <Text style={styles.statusLabel}>Assigned dealer</Text>
+                    <Text style={styles.statusValue}>{dealerContext.dealerId ? dealerContext.dealerName : 'Not assigned yet'}</Text>
+                  </View>
+                  <Badge
+                    label={dealerContext.region === 'west' ? 'West' : dealerContext.region === 'east' ? 'East' : 'Set location'}
+                    variant={dealerContext.dealerId ? 'primary' : 'warning'}
+                  />
+                </View>
                 <Text style={styles.bodySmall}>
                   Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? (pendingResult ? 'pending calculator result' : 'none yet')}
+                </Text>
+                <Text style={styles.bodySmall}>
+                  {dealerContext.orderRoutingLabel} Project address is used as a temporary fallback until company profiles are added.
                 </Text>
               </Card>
             </View>
 
             {result ? <MaterialBreakdownCard result={result} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
-            {result ? <MaterialRetailEstimateCard result={result} /> : null}
+            {result ? <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} /> : null}
 
             <View style={styles.section}>
-              <SectionHeader title="Status controls" subtitle="Save the request or move it to internal review." />
+              <SectionHeader title="Status controls" subtitle="Save the request or move it forward for dealer review." />
               <View style={styles.buttonGrid}>
                 <Button label="Draft" variant="secondary" onPress={() => ensureRequest('draft')} disabled={savingStatus !== null || !result} style={styles.button} />
-                <Button label="Submit for Review" variant="accent" onPress={() => ensureRequest('in_review')} disabled={savingStatus !== null || !result} style={styles.button} />
+                <Button label="Submit for Dealer Review" variant="accent" onPress={() => ensureRequest('in_review')} disabled={savingStatus !== null || !result} style={styles.button} />
                 <Button label="Needs Revision" variant="secondary" onPress={() => ensureRequest('needs_revision')} disabled={savingStatus !== null || !result} style={styles.button} />
                 <Button label="Approved" variant="primary" onPress={() => ensureRequest('approved')} disabled={savingStatus !== null || !result} style={styles.button} />
               </View>
@@ -182,7 +201,7 @@ export default function OrdersScreen() {
           </>
         ) : (
           <View style={styles.section}>
-            {pendingResult ? <MaterialRetailEstimateCard result={pendingResult} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
+            {pendingResult ? <MaterialRetailEstimateCard result={pendingResult} dealerContext={UNASSIGNED_DEALER_CONTEXT} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
             <SectionHeader title="Recent projects" subtitle="Choose a project to attach this request." />
             <View style={styles.projectList}>
               {recentProjects.map((item) => (
@@ -237,6 +256,7 @@ const styles = StyleSheet.create({
   statusCopy: { flex: 1, gap: 2 },
   statusLabel: { color: Colors.textDisabled, fontSize: Typography.size.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
   statusValue: { color: Colors.textPrimary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
+  statusDivider: { height: 1, backgroundColor: Colors.border },
   buttonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   button: { width: '48%' },
   projectList: { gap: Spacing.sm },
