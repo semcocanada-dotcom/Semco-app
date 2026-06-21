@@ -586,6 +586,46 @@ function warrantyPhotoAnswer(): string {
   ].join('\n');
 }
 
+function concreteBuildUpAnswer(): string {
+  return [
+    'Answer:',
+    'Yes. For a concrete floor, think of it as five field moves: clean and reset the slab, prime/scratch coat, detail the movement or water-risk areas, build the finish, then seal and document it. Do not move forward until the slab is sound, clean, dry enough, and stable.',
+    '',
+    'Step 1 - Make the go/no-go call',
+    'Concrete must be sound, non-delaminating, stable, and dry enough for coating. Stop and get Semco review if it is loose, moving, actively wet, contaminated, or has cracks/movement that can keep moving.',
+    '',
+    'Step 2 - Clean and reset the concrete',
+    'Take a prep photo first. Sweep loose debris and dampen the slab.',
+    'Use Nu-Lift first as the pH/mineral reset. Apply it lightly with a pump sprayer, let it sit 2-3 minutes, scrub/agitate with a scrub machine and concrete nylon brush or hand brush, rinse, and wet-vac indoors.',
+    'Then do Stone Soap as the final wash: 1 part Stone Soap to 4 parts water, 2-3 minute dwell, scrub/agitate, rinse, wet-vac indoors, repeat if particles remain, then let the slab dry.',
+    '',
+    'Step 3 - Adjust the prep if the slab is dirty, sealed, exterior, or unknown',
+    'If grease, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue is present, use Power Cleaner 1:4 first, rinse/vacuum, then continue with Nu-Lift and Stone Soap.',
+    'For exterior, stamped, unknown-condition, or heavier mineral/alkali/efflorescence risk, use Power Cleaner 1:4, rinse/vacuum, Nu-Lift 1:1, rinse/vacuum, then Power Cleaner 1:9, rinse/vacuum, and dry.',
+    '',
+    'Step 4 - Prime and scratch coat',
+    'Roll X-Bond Liquid as the primer and keep it tacky. Do not let it dry before the scratch coat.',
+    'Mix 1 part X-Bond Liquid to 2 parts X-Bond Stone, liquid first, with a square paddle at 180-200 RPM. Pour to the far edge and spread tight in one direction with a concrete broom. Let it dry, scrape loose particles, and sweep clean.',
+    '',
+    'Step 5 - Detail cracks, joints, drains, corners, and movement-risk areas',
+    'Use SEMCO Liquid Membrane with fabric reinforcement where the detail requires it. Press fabric into wet membrane and avoid voids, pinholes, and thin spots. Take the membrane-stage photo before covering it.',
+    '',
+    'Step 6 - Build the finish',
+    'Apply the second X-Bond scratch/base coat after membrane/detail work is ready. Use X-Bond Brown Coat only where leveling or build-up is required by the detail.',
+    'For the selected X-Bond finish, when that finish procedure applies, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone and spread tight in one direction with a trowel or X-Bond smoother at about 1/16 inch / 2 mil.',
+    'If a second finish coat is required, wait until the coat is dry slightly to the touch, about 20-30 minutes, and use shoe covers.',
+    'Optional MicroBond smooth finish: prime with X-Bond Liquid, then mix 1 part X-Bond Liquid to 2 parts MicroBond Stone and apply with a Magic Trowel.',
+    '',
+    'Step 7 - Dry, seal, and document',
+    'Let the surface dry completely before sealer. Color Bond/Natural Grain-style steps list 2-4 hours before the next step; Polished Bond lists at least 12 hours before sealing, or 24 hours in colder conditions.',
+    'Use the specified stocked Semco sealer. For pool/submerged/exterior penetrating-sealer needs, use Natural Shield under the current stocked-sealer rule. For Satin Stone, Titan Gloss, or Matte, follow that sealer procedure.',
+    'Take photos at prep, membrane/primer, scratch/base, finish, sealer, and final handover.',
+    '',
+    'Field check:',
+    'If the prep is not clean, dry, stable, and photo-documented, stop before coating. That is where most bond and warranty problems start.',
+  ].join('\n');
+}
+
 function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
   if (missingInputs.length > 0 || (!facts.substrateType && !facts.prepSurfaceGroup)) {
     return [
@@ -612,27 +652,12 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
 
   const substrateType = facts.substrateType;
   const substrateLabel = SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
-  const buildUps: Record<SubstrateId, string[]> = {
-    concrete: [
-      'Pre-check the slab: concrete must be sound, non-delaminating, stable, and dry enough for coating. Stop if the slab is loose, moving, contaminated, actively wet, or has cracks/movement that need Semco review.',
-      'Stage photo: take a clear substrate/prep photo before cleaning and another after prep is complete.',
-      'Prep: sweep debris, dampen the slab with water, then use the preferred Semco Canada field path: Nu-Lift first as the pH/mineral reset step, then Stone Soap final wash before coating.',
-      'Nu-Lift wash: apply Nu-Lift lightly with a pump sprayer, let it sit 2-3 minutes, scrub/agitate with a scrub machine and concrete nylon brush or hand brush, then rinse. For interiors, wet-vac residue.',
-      'Stone Soap final wash: apply Stone Soap solution and let it sit 2-3 minutes. Ratio: 1 part Stone Soap to 4 parts water. Scrub/agitate, rinse, wet-vac residue on interiors, repeat if particles remain, then let the concrete dry.',
-      'If grease, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue is present, use Power Cleaner first at 1 part Power Cleaner to 4 parts water, rinse/vacuum, then continue with Nu-Lift and Stone Soap final wash.',
-      'If the concrete is exterior, stamped, unknown-condition, or has heavier mineral/alkali/efflorescence risk, use the stronger SIP path: Power Cleaner 1:4, rinse/vacuum, Nu-Lift 1:1, rinse/vacuum, then Power Cleaner 1:9, rinse/vacuum, and dry.',
-      'Scratch coat primer: roll X-Bond Liquid as the primer coat and do not allow it to dry before the scratch coat.',
-      'Scratch coat mix: mix 1 part X-Bond Liquid to 2 parts X-Bond Stone, in that order, with a square mixing paddle at low speed, 180-200 RPM.',
-      'Scratch coat application: while the X-Bond Liquid is still tacky, pour the mix to the far edge and spread tightly in one direction with a concrete broom. Let it dry, scrape loose particles, and sweep clean.',
-      'Cracks, joints, drains, corners, and movement-risk areas: use SEMCO Liquid Membrane with fabric reinforcement where the detail requires it. Press fabric into wet membrane, avoid voids/pinholes/thin spots, and take a membrane-stage photo.',
-      'Second scratch/base coat: apply the second X-Bond scratch/base coat after the membrane/detail work is ready. If build-up is needed, use X-Bond Brown Coat only where the project detail requires it.',
-      'Finish coats: for the selected X-Bond finish, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone when that finish procedure applies. Spread tightly in one direction with a trowel or X-Bond smoother at about 1/16 inch / 2 mil.',
-      'Between finish coats: allow the coat to dry slightly to the touch, about 20-30 minutes, before the next coat when a second coat is required. Use shoe covers between coats.',
-      'Optional MicroBond smooth finish: prime with X-Bond Liquid, then mix 1 part X-Bond Liquid to 2 parts MicroBond Stone and apply with a Magic Trowel.',
-      'Before sealer: let the surface dry completely. Color Bond/Natural Grain-style steps list 2-4 hours before the next step; Polished Bond lists at least 12 hours before sealing, or 24 hours in colder conditions.',
-      'Sealer: use the specified stocked Semco sealer. For pool/submerged/exterior penetrating-sealer needs, use Natural Shield under the current stocked-sealer rule. For Satin Stone, Titan Gloss, or Matte, follow that sealer procedure.',
-      'Final warranty record: capture photos at prep, membrane/primer, scratch/base, finish, sealer, and final handover. Missing stage photos can block warranty qualification.',
-    ],
+
+  if (substrateType === 'concrete') {
+    return concreteBuildUpAnswer();
+  }
+
+  const buildUps: Record<Exclude<SubstrateId, 'concrete'>, string[]> = {
     plywood: [
       'Pre-check: confirm plywood / OSB is structural, fastened, stable, dry, and not flexing. Stop if the floor moves, deflects, swells, or has water damage.',
       'Stage photo: take a clear substrate/prep photo before covering joints.',
