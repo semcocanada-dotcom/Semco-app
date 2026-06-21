@@ -15,10 +15,11 @@ export interface RetrievalResult {
   retrievalNotes: string[];
 }
 
-const MAX_CHUNKS = 8;
-const LOCAL_CONTEXT_CHARS = 1400;
-const NEIGHBOR_CONTEXT_CHARS = 420;
+const MAX_CHUNKS = 10;
+const LOCAL_CONTEXT_CHARS = 1800;
+const NEIGHBOR_CONTEXT_CHARS = 520;
 const SEMANTIC_TIMEOUT_MS = 4500;
+const PROCESS_CONTEXT_SCORE = 80;
 
 function asString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
@@ -34,6 +35,10 @@ function cleanText(text: string, maxLength = LOCAL_CONTEXT_CHARS): string {
   return `${cleaned.slice(0, maxLength).trim()}...`;
 }
 
+function normalizeQuery(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function findDocId(sourceDocument?: string, title?: string): string | undefined {
   const source = sourceDocument?.toLowerCase();
   const label = title?.toLowerCase();
@@ -47,6 +52,33 @@ function findPage(sourceDocument: string, pageNumber: number) {
   return TECHNICAL_DOC_PAGES.find(
     (page) => page.sourceDocument === sourceDocument && page.pageNumber === pageNumber,
   );
+}
+
+function isProcessQuestion(query: string): boolean {
+  const normalized = normalizeQuery(query);
+  return /\b(process|procedure|steps?|start|finish|install|installation|apply|application|how|do|resurface)\b/.test(normalized);
+}
+
+function isConcreteQuestion(query: string): boolean {
+  return /\b(concrete|cement|slab|floor)\b/.test(normalizeQuery(query));
+}
+
+function isXBondQuestion(query: string): boolean {
+  return /\b(xbond|x-bond|microcement|micro cement|seamless stone|color bond|polished bond|ada)\b/.test(normalizeQuery(query));
+}
+
+function processSearchQuery(query: string): string {
+  if (!isProcessQuestion(query)) return query;
+
+  const contextTerms = [
+    query,
+    'X-Bond Seamless Stone over concrete floor detail',
+    'surface preparation scratch coat liquid membrane fabric reinforcement brown coat',
+    'Color Bond Polished Bond ADA Safety Floor Satin Stone sealer',
+    'coverage drying recoat time',
+  ];
+
+  return contextTerms.join(' ');
 }
 
 function buildLocalContext(sourceDocument: string, pageNumber: number, fallbackExcerpt: string): string {
@@ -91,6 +123,58 @@ function mapSemanticChunk(chunk: RagChunk, index: number): RetrievedSemcoChunk {
   };
 }
 
+function pinnedPageChunk(sourceDocument: string, pageNumber: number, score: number): RetrievedSemcoChunk | null {
+  const page = findPage(sourceDocument, pageNumber);
+  if (!page) return null;
+
+  return {
+    id: `process-${page.id}`,
+    documentName: page.sourceDocument,
+    title: page.title,
+    pageNumber: page.pageNumber,
+    docId: page.docId,
+    score,
+    retrieval: 'local',
+    text: cleanText(page.text),
+  };
+}
+
+function getPinnedProcessChunks(query: string): RetrievedSemcoChunk[] {
+  if (!isProcessQuestion(query)) return [];
+
+  const normalized = normalizeQuery(query);
+  const concrete = isConcreteQuestion(query);
+  const xbond = isXBondQuestion(query);
+
+  if (!concrete && !xbond) return [];
+
+  const pinned: Array<[string, number]> = [
+    ['Open SIP manual - master copy v2019-3 2.pdf', 20],
+    ['X-BondoverConcreteFloorDetail-2025.pdf', 1],
+    ['Open SIP manual - master copy v2019-3 2.pdf', 27],
+    ['Open SIP manual - master copy v2019-3 2.pdf', 28],
+    ['Open SIP manual - master copy v2019-3 2.pdf', 29],
+    ['Open SIP manual - master copy v2019-3 2.pdf', 30],
+    ['Tech_Sheet_X-Bond-2024-v3.pdf', 1],
+    ['Tech_Sheet_X-Bond-2024-v3.pdf', 2],
+  ];
+
+  if (normalized.includes('shower')) {
+    pinned.splice(1, 1, ['Shower-Detail-Concrete.pdf', 1]);
+  }
+
+  if (/\b(color bond|colour bond|finish|start to finish|xbond|x-bond)\b/.test(normalized)) {
+    pinned.push(['Open SIP manual - master copy v2019-3 2.pdf', 33]);
+    pinned.push(['Open SIP manual - master copy v2019-3 2.pdf', 45]);
+  }
+
+  return pinned
+    .map(([sourceDocument, pageNumber], index) => (
+      pinnedPageChunk(sourceDocument, pageNumber, PROCESS_CONTEXT_SCORE - index)
+    ))
+    .filter((chunk): chunk is RetrievedSemcoChunk => chunk !== null);
+}
+
 function uniqueBySource(chunks: RetrievedSemcoChunk[]): RetrievedSemcoChunk[] {
   const seen = new Set<string>();
   return chunks.filter((chunk) => {
@@ -106,7 +190,7 @@ async function trySemanticSearch(query: string, isOnline: boolean): Promise<Retr
 
   try {
     const { retrieveRelevantChunks } = await import('./rag');
-    const chunks = await withTimeout(retrieveRelevantChunks(query, MAX_CHUNKS), SEMANTIC_TIMEOUT_MS);
+    const chunks = await withTimeout(retrieveRelevantChunks(processSearchQuery(query), MAX_CHUNKS), SEMANTIC_TIMEOUT_MS);
     return chunks
       .map(mapSemanticChunk)
       .filter((chunk) => chunk.text.length > 40 && chunk.score >= 0.18);
@@ -130,10 +214,13 @@ export async function retrieveSemcoChunks(
   isOnline: boolean,
 ): Promise<RetrievalResult> {
   const retrievalNotes: string[] = [];
+  const pinnedProcessChunks = getPinnedProcessChunks(query);
+  if (pinnedProcessChunks.length > 0) retrievalNotes.push(`process:${pinnedProcessChunks.length}`);
+
   const semanticChunks = await trySemanticSearch(query, isOnline);
   if (semanticChunks.length > 0) retrievalNotes.push(`semantic:${semanticChunks.length}`);
 
-  const localHits = searchSipManual(query, MAX_CHUNKS);
+  const localHits = searchSipManual(processSearchQuery(query), MAX_CHUNKS);
   const localChunks: RetrievedSemcoChunk[] = localHits.map((hit, index) => ({
     id: `local-${hit.sourceDocument}-${hit.pageNumber}-${index}`,
     documentName: hit.sourceDocument,
@@ -146,7 +233,7 @@ export async function retrieveSemcoChunks(
   }));
   if (localChunks.length > 0) retrievalNotes.push(`local:${localChunks.length}`);
 
-  const chunks = uniqueBySource([...semanticChunks, ...localChunks])
+  const chunks = uniqueBySource([...pinnedProcessChunks, ...semanticChunks, ...localChunks])
     .sort((a, b) => {
       if (a.retrieval !== b.retrieval) return a.retrieval === 'semantic' ? -1 : 1;
       return b.score - a.score;

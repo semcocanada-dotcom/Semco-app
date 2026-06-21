@@ -6,6 +6,9 @@ import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
+const COLLAPSE_THRESHOLD = 900;
+const COLLAPSED_MAX_HEIGHT = 360;
+
 const assistantMarkdownStyles = {
   body: {
     fontSize: Typography.size.base,
@@ -56,6 +59,8 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   const router = useRouter();
   const isUser = message.role === 'user';
   const citations = !isUser ? message.citations?.slice(0, 4) ?? [] : [];
+  const isLongAssistantAnswer = !isUser && message.content.length > COLLAPSE_THRESHOLD;
+  const [isExpanded, setExpanded] = React.useState(!isLongAssistantAnswer);
 
   const openCitation = (docId?: string) => {
     if (docId) {
@@ -72,7 +77,26 @@ export function ChatBubble({ message }: ChatBubbleProps) {
           <Text style={[styles.text, styles.textUser]}>{message.content}</Text>
         ) : (
           <>
-            <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
+            <View style={!isExpanded && styles.collapsedAnswer}>
+              <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
+            </View>
+            {isLongAssistantAnswer && (
+              <TouchableOpacity
+                onPress={() => setExpanded((value) => !value)}
+                style={styles.expandBtn}
+                accessibilityRole="button"
+                accessibilityLabel={isExpanded ? 'Collapse answer' : 'Show full answer'}
+              >
+                <Text style={styles.expandText}>
+                  {isExpanded ? 'Show less' : 'Show full answer'}
+                </Text>
+                <Ionicons
+                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
+            )}
             {citations.length > 0 && (
               <View style={styles.sources}>
                 {citations.map((citation) => (
@@ -122,6 +146,29 @@ const styles = StyleSheet.create({
   text: { fontSize: Typography.size.base, fontFamily: Fonts.regular, lineHeight: Typography.size.base * 1.5 },
   textUser: { color: Colors.white },
   textAssistant: { color: Colors.navy },
+  collapsedAnswer: {
+    maxHeight: COLLAPSED_MAX_HEIGHT,
+    overflow: 'hidden',
+  },
+  expandBtn: {
+    alignSelf: 'flex-start',
+    minHeight: 36,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    paddingHorizontal: Spacing.sm,
+    marginTop: Spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  expandText: {
+    color: Colors.primary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+  },
   sources: {
     gap: Spacing.xs,
     marginTop: Spacing.sm,

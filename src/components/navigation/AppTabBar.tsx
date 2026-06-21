@@ -45,6 +45,8 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
   const routeByName = new Map(state.routes.map((route, index) => [route.name, { route, index }]));
   const activeRoute = getActiveTab(pathname);
 
+  if (pathname.startsWith('/assistant')) return null;
+
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       <View style={styles.shell}>

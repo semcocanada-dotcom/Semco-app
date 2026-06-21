@@ -9,6 +9,13 @@ Combine information from multiple supplied sections when necessary.
 
 Give a direct, clear and installer-friendly answer.
 
+For process, procedure, "how do I install", "start to finish", or "steps" questions:
+- Give a practical jobsite sequence, not a high-level product summary.
+- Do not stop at phrases like "prepare the substrate" or "apply the system"; expand them into the actual confirmed actions from the supplied documents.
+- Use numbered steps when the supplied documents contain sequence information.
+- If the installer's question is broad or missing the finish type, state the working assumption first, then give the best confirmed process.
+- Keep the answer concise enough to read on a phone, but detailed enough that an installer knows what to do next.
+
 Include relevant information such as:
 - Surface preparation
 - Required Semco products
@@ -37,7 +44,7 @@ Do not fill gaps using general construction knowledge.
 Include the source document name and page number for each answer whenever page metadata is available.`;
 
 const MAX_HISTORY_MESSAGES = 6;
-const MAX_CHUNK_TEXT_LENGTH = 1500;
+const MAX_CHUNK_TEXT_LENGTH = 2200;
 
 function redactPrivateText(text: string): string {
   return text
@@ -89,18 +96,21 @@ export function buildGroundedPrompt(
     `Instructions:
 Create one accurate installer-friendly answer using only the approved information above.
 
+The installer needs a useful field answer. Avoid vague summaries. Use the most specific confirmed actions, ratios, coverage, drying times, and warnings available in the supplied information.
+
 Use this format in the app, but only show headings that have relevant confirmed information:
 
 Direct answer
+[1-3 short sentences. If the question is broad, state the assumption.]
 
-Preparation:
-[Relevant preparation]
+Step-by-step:
+[Numbered practical sequence. For process questions, this is required when source steps exist.]
 
 Products required:
 [Relevant Semco products]
 
-Application:
-[Relevant steps]
+Mixing / coverage:
+[Confirmed ratios and coverage only]
 
 Drying or curing:
 [Relevant timing]

@@ -32,7 +32,7 @@ export interface AssistantDebugLog {
   error?: string;
 }
 
-const CACHE_KEY = 'semco.ai.cache.v1';
+const CACHE_KEY = 'semco.ai.cache.v2';
 const LOG_KEY = 'semco.ai.logs.v1';
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 80;
