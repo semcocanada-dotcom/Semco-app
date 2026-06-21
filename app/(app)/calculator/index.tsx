@@ -7,6 +7,7 @@ import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdown
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
 import { SEALER_OPTIONS, XBOND_FINISH_OPTIONS } from '@/constants/product-coverage';
+import { CURRENT_POOL_SEALER_SKU } from '@/constants/stocked-sealers';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 const ESTIMATOR_POINTS = [
@@ -29,6 +30,7 @@ export default function CalculatorScreen() {
     runCalculation,
     reset,
   } = useCalculator();
+  const isPool = form.substrateType === 'pool';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -115,9 +117,15 @@ export default function CalculatorScreen() {
                       variant={form.sealerSku === opt.sku ? 'primary' : 'secondary'}
                       size="sm"
                       style={styles.sealerBtn}
+                      disabled={isPool && opt.sku !== CURRENT_POOL_SEALER_SKU}
                     />
                   ))}
                 </View>
+                {isPool ? (
+                  <Text style={styles.helperText}>
+                    Pool, submerged, and exterior exposure use Natural Shield as the current stocked penetrating sealer.
+                  </Text>
+                ) : null}
               </View>
 
               <WasteToggle value={form.wastePct} onChange={setWastePct} />

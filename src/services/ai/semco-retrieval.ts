@@ -1,4 +1,9 @@
 import { TECHNICAL_DOCS, TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
+import {
+  STOCKED_SEALER_POLICY_PAGE,
+  STOCKED_SEALER_POLICY_SOURCE,
+  STOCKED_SEALER_POLICY_TEXT,
+} from '@/constants/stocked-sealers';
 import { searchSipManual } from './manual-knowledge';
 import type { AssistantCitation } from '@/database/schema/conversations';
 import type { RagChunk } from './rag';
@@ -80,7 +85,8 @@ function processSearchQuery(query: string): string {
     'surface preparation cleaning substrate Stone Soap Power Cleaner Nu-Lift Cleaner',
     'X-Bond Seamless Stone over concrete floor detail',
     'surface preparation scratch coat liquid membrane fabric reinforcement brown coat',
-    'Color Bond Polished Bond ADA Safety Floor Satin Stone sealer Crystal Coat X-Crete 400 Xtreme Gloss',
+    'Color Bond Polished Bond ADA Safety Floor Natural Shield Satin Stone Titan Gloss Matte sealer',
+    'current stocked sealers pool submerged exterior penetrating sealer Natural Shield',
     'coverage drying recoat time low speed mixer square mixing paddle 180-200 RPM',
   ];
 
@@ -233,6 +239,16 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     'topcoat',
     'satin stone',
     'natural shield',
+    'titan',
+    'titan gloss',
+    'titan shield',
+    'matte',
+    'pool',
+    'submerged',
+    'exterior',
+    'outside',
+    'wet room',
+    'wetroom',
     'x-crete',
     'xcrete',
     'x-tra',
@@ -252,41 +268,94 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     return;
   }
 
-  if (includesAny(normalized, ['natural shield', 'flat finish', 'flat sealer'])) {
+  if (includesAny(normalized, [
+    'natural shield',
+    'flat finish',
+    'flat sealer',
+    'pool',
+    'submerged',
+    'under water',
+    'underwater',
+    'exterior',
+    'outside',
+    'wet room',
+    'wetroom',
+    'shower',
+  ])) {
     pushPinned(pinned, SIP_MANUAL, 40);
-  }
-
-  if (includesAny(normalized, ['x-crete 500', 'xcrete 500', 'water containment', 'pool', 'fountain', 'anti-graffiti'])) {
-    pushPinned(pinned, SIP_MANUAL, 41);
-  }
-
-  if (includesAny(normalized, ['x-crete 400', 'xcrete 400', 'matte', 'gloss', 'non-skid', 'non skid'])) {
-    pushPinned(pinned, SIP_MANUAL, 42);
-  }
-
-  if (includesAny(normalized, ['x-tra', 'xtra', 'high gloss'])) {
-    pushPinned(pinned, SIP_MANUAL, 43);
-  }
-
-  if (includesAny(normalized, ['xtreme', 'extreme', 'deep gloss'])) {
-    pushPinned(pinned, SIP_MANUAL, 44);
+    pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 1);
+    pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 2);
+    pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 3);
   }
 
   if (includesAny(normalized, ['satin stone', 'satin'])) {
     pushPinned(pinned, SIP_MANUAL, 45);
+    pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 1);
+    pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 2);
+    pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 3);
   }
 
-  if (includesAny(normalized, ['colour coat', 'color coat', 'color gloss', 'colour gloss'])) {
-    pushPinned(pinned, SIP_MANUAL, 48);
+  if (includesAny(normalized, ['titan', 'titan gloss', 'titan shield', 'gloss', 'high gloss'])) {
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 1);
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 2);
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 3);
   }
 
-  if (includesAny(normalized, ['crystal coat', 'maintenance coat'])) {
-    pushPinned(pinned, SIP_MANUAL, 49);
+  if (includesAny(normalized, ['matte'])) {
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 1);
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 2);
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 3);
   }
 
   if (!pinned.some(([source, page]) => source === SIP_MANUAL && page >= 40 && page <= 49)) {
-    [40, 42, 43, 44, 45, 48, 49].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+    [40, 45].forEach((page) => pushPinned(pinned, SIP_MANUAL, page));
+    pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 1);
+    pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 1);
+    pushPinned(pinned, 'Tech_Sheet_TitanShield-v8.pdf', 1);
   }
+}
+
+function shouldAddStockedSealerPolicy(query: string): boolean {
+  const normalized = normalizeQuery(query);
+  return includesAny(normalized, [
+    'sealer',
+    'seal ',
+    'sealing',
+    'finish',
+    'top coat',
+    'topcoat',
+    'natural shield',
+    'satin stone',
+    'titan',
+    'matte',
+    'pool',
+    'submerged',
+    'exterior',
+    'outside',
+    'x-crete',
+    'xcrete',
+    'xtreme',
+    'x-tra',
+    'xtra',
+    'crystal coat',
+    'colour coat',
+    'color coat',
+    'color gloss',
+  ]);
+}
+
+function stockedSealerPolicyChunk(query: string): RetrievedSemcoChunk[] {
+  if (!shouldAddStockedSealerPolicy(query)) return [];
+
+  return [{
+    id: 'policy-stocked-sealers',
+    documentName: STOCKED_SEALER_POLICY_SOURCE,
+    title: 'Current stocked sealers',
+    pageNumber: STOCKED_SEALER_POLICY_PAGE,
+    score: PROCESS_CONTEXT_SCORE + 20,
+    retrieval: 'local',
+    text: STOCKED_SEALER_POLICY_TEXT,
+  }];
 }
 
 function getPinnedProcessChunks(query: string): RetrievedSemcoChunk[] {
@@ -347,6 +416,8 @@ export async function retrieveSemcoChunks(
   isOnline: boolean,
 ): Promise<RetrievalResult> {
   const retrievalNotes: string[] = [];
+  const policyChunks = stockedSealerPolicyChunk(query);
+  if (policyChunks.length > 0) retrievalNotes.push('policy:stocked-sealers');
   const pinnedProcessChunks = getPinnedProcessChunks(query);
   if (pinnedProcessChunks.length > 0) retrievalNotes.push(`process:${pinnedProcessChunks.length}`);
 
@@ -366,8 +437,10 @@ export async function retrieveSemcoChunks(
   }));
   if (localChunks.length > 0) retrievalNotes.push(`local:${localChunks.length}`);
 
-  const chunks = uniqueBySource([...pinnedProcessChunks, ...semanticChunks, ...localChunks])
+  const chunks = uniqueBySource([...policyChunks, ...pinnedProcessChunks, ...semanticChunks, ...localChunks])
     .sort((a, b) => {
+      if (a.id === 'policy-stocked-sealers') return -1;
+      if (b.id === 'policy-stocked-sealers') return 1;
       if (a.retrieval !== b.retrieval) return a.retrieval === 'semantic' ? -1 : 1;
       return b.score - a.score;
     })

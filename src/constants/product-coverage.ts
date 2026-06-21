@@ -1,4 +1,10 @@
 import type { SubstrateId } from '@/constants/substrates';
+import {
+  CURRENT_POOL_SEALER_SKU,
+  STOCKED_SEALER_POLICY_PAGE,
+  STOCKED_SEALER_POLICY_SOURCE,
+  STOCKED_SEALERS,
+} from '@/constants/stocked-sealers';
 
 export type CoverageUnit = 'bag' | 'kit' | 'gal' | 'qt' | 'pail';
 export type CoverageCategory = 'prep' | 'microcement' | 'x_bond_liquid' | 'microbond_finish' | 'waterproofing' | 'sealer';
@@ -42,11 +48,7 @@ export interface CoverageEstimate {
 
 export const SQFT_PER_SQM = 10.7639104167;
 
-export const SEALER_OPTIONS = [
-  { sku: 'NATURAL-SHIELD', label: 'Natural', productName: 'Natural Shield' },
-  { sku: 'SATIN-STONE', label: 'Satin', productName: 'Satin Stone' },
-  { sku: 'TITAN-SHIELD', label: 'Gloss', productName: 'Titan Shield Gloss' },
-] as const;
+export const SEALER_OPTIONS = STOCKED_SEALERS;
 
 export const WATERPROOFING_OPTIONS = [
   { mode: 'none', label: 'No membrane', description: 'Skip membrane for dry areas where it is not specified.' },
@@ -241,6 +243,16 @@ const NATURAL_SHIELD: CoverageProduct = {
       sourcePage: 1,
       basis: 'Coverage sq ft / 1 gal at 3 coats.',
     },
+    belowGrade: {
+      label: 'Pool / submerged / below grade',
+      minSqftPerUnit: 150,
+      maxSqftPerUnit: 200,
+      unit: 'gal',
+      coats: 3,
+      sourceDocument: 'Natural-Shield-Tech-Sheet.pdf',
+      sourcePage: 1,
+      basis: 'Natural Shield is the current Semco Canada pool/submerged sealer. The Natural Shield data lists below-grade coverage at 150-200 sq ft / 1 gal at 3 coats, used as the conservative pool estimating rate.',
+    },
   },
 };
 
@@ -318,7 +330,7 @@ const SATIN_STONE: CoverageProduct = {
 
 const TITAN_SHIELD: CoverageProduct = {
   sku: 'TITAN-SHIELD',
-  name: 'SEMCO Titan Shield Gloss',
+  name: 'SEMCO Titan Gloss',
   category: 'sealer',
   packLabel: '1 gal and 5 gal pails',
   purchaseSizes: [1, 5],
@@ -367,6 +379,27 @@ const TITAN_SHIELD: CoverageProduct = {
   },
 };
 
+const MATTE_SEALER: CoverageProduct = {
+  sku: 'MATTE-SEALER',
+  name: 'SEMCO Matte',
+  category: 'sealer',
+  packLabel: '1 gal and 5 gal pails',
+  purchaseSizes: [1, 5],
+  defaultRange: 'xbond',
+  ranges: {
+    xbond: {
+      label: 'X-Bond',
+      minSqftPerUnit: 200,
+      maxSqftPerUnit: 250,
+      unit: 'gal',
+      coats: 3,
+      sourceDocument: STOCKED_SEALER_POLICY_SOURCE,
+      sourcePage: STOCKED_SEALER_POLICY_PAGE,
+      basis: 'Current Semco Canada stocked product rule: Matte is like Titan Gloss in a matte finish and is slightly harder than Titan. The calculator uses the Titan Gloss X-Bond coverage rate as the closest stocked technical basis until a Matte data sheet is loaded.',
+    },
+  },
+};
+
 export const COVERAGE_PRODUCTS = {
   XBOND,
   XBOND_LIQUID,
@@ -375,6 +408,7 @@ export const COVERAGE_PRODUCTS = {
   NATURAL_SHIELD,
   SATIN_STONE,
   TITAN_SHIELD,
+  MATTE_SEALER,
 };
 
 export function getXBondRange(substrate: SubstrateId): CoverageRange {
@@ -404,10 +438,20 @@ export function getLiquidMembraneRange(mode: WaterproofingMode): CoverageRange |
 export function getSealerProduct(sku?: string): CoverageProduct {
   if (sku === NATURAL_SHIELD.sku) return NATURAL_SHIELD;
   if (sku === TITAN_SHIELD.sku) return TITAN_SHIELD;
+  if (sku === MATTE_SEALER.sku) return MATTE_SEALER;
   return SATIN_STONE;
 }
 
-export function getSealerRange(product: CoverageProduct): CoverageRange {
+export function getSealerSkuForSubstrate(substrate: SubstrateId, selectedSku?: string): string | undefined {
+  if (substrate === 'pool') return CURRENT_POOL_SEALER_SKU;
+  return selectedSku;
+}
+
+export function getSealerRange(product: CoverageProduct, substrate?: SubstrateId): CoverageRange {
+  if (product.sku === NATURAL_SHIELD.sku && substrate === 'pool') {
+    return product.ranges.belowGrade;
+  }
+
   return product.ranges[product.defaultRange];
 }
 

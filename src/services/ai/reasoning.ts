@@ -1,5 +1,6 @@
 import type { SubstrateId } from '@/constants/substrates';
 import { SUBSTRATE_MAP } from '@/constants/substrates';
+import { STOCKED_SEALER_POLICY_TEXT } from '@/constants/stocked-sealers';
 import type { ManualKnowledgeHit } from './manual-knowledge';
 
 type ReasoningIntent =
@@ -123,6 +124,7 @@ function extractSealerSku(normalized: string): string | undefined {
   if (hasAny(normalized, ['natural shield', 'natural sealer'])) return 'NATURAL-SHIELD';
   if (hasAny(normalized, ['titan shield', 'gloss sealer', 'high gloss'])) return 'TITAN-SHIELD';
   if (hasAny(normalized, ['satin stone', 'satin sealer'])) return 'SATIN-STONE';
+  if (hasAny(normalized, ['matte sealer', 'matte finish', 'matte'])) return 'MATTE-SEALER';
   return undefined;
 }
 
@@ -134,7 +136,7 @@ function buildAssumptions(intent: ReasoningIntent, facts: ExtractedJobFacts): st
   }
 
   if (facts.isSubmerged) {
-    assumptions.push('Pool/submerged conditions change the installation build-up and should be selected in the Calculator.');
+    assumptions.push('Pool/submerged conditions use Natural Shield as the current stocked penetrating sealer and should be selected in the Calculator.');
   }
 
   if (facts.wantsMicroBond) {
@@ -262,7 +264,7 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
     metal: ['Power Cleaner if oil, grease, or shop residue is present.', 'Confirm profile and adhesion before coating.'],
     existing_tile: ['Use Nu-Lift if mineral residue, calcium, alkali, or efflorescence is present.', 'Finish with Stone Soap final wash.', 'Fill grout lines flush before coating.'],
     gypsum_board: ['Stone Soap standard wash if needed.', 'Drywall is walls only; do not use it as a floor substrate.'],
-    pool: ['Use Nu-Lift when calcium, mineral, efflorescence, or pool residue is present.', 'Finish with Stone Soap final wash.', 'Use wet-area Liquid Membrane rate.'],
+    pool: ['Use Nu-Lift when calcium, mineral, efflorescence, or pool residue is present.', 'Finish with Stone Soap final wash.', 'Use wet-area Liquid Membrane rate.', 'Use Natural Shield as the current stocked penetrating sealer for submerged/pool work.'],
     concrete_block: ['Stone Soap standard wash.', 'Use Nu-Lift for mineral/efflorescence contamination.'],
     cement_board: ['Stone Soap standard wash.', 'Treat joints and wet-area risk before coating.'],
     existing_paint: ['Power Cleaner if coating residue is questionable.', 'Confirm adhesion before coating.'],
@@ -360,6 +362,7 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
       'Treat this as submerged/wet-area work, not a normal floor.',
       'Confirm the shell is sound and all calcium/mineral residue is handled before coating.',
       'Use the pool/wet-area Liquid Membrane build-up and select Pool in the Calculator for any quantities.',
+      'Use Natural Shield as the current stocked penetrating sealer for pool/submerged work.',
       'Capture stage photos because warranty risk is higher in submerged work.',
     ],
     concrete_block: [
@@ -425,6 +428,7 @@ function buildContextNotes(
     `Missing inputs: ${missingInputs.length ? missingInputs.join(', ') : 'none'}`,
     `Assumptions: ${assumptions.length ? assumptions.join(' | ') : 'none'}`,
     `Closest source: ${source}`,
+    `Current stocked sealer rule:\n${STOCKED_SEALER_POLICY_TEXT}`,
     localAnswer ? `Local reasoned answer:\n${localAnswer}` : '',
     'Instruction: answer like a field support conversation. Use the facts and logic above; do not paste source excerpts unless needed. Do not calculate material quantities unless a verified Calculator result is explicitly provided.',
   ]

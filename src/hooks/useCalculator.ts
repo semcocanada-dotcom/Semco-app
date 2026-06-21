@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { calculate } from '@/services/calculator';
 import type { SubstrateId } from '@/constants/substrates';
+import { CURRENT_POOL_SEALER_SKU } from '@/constants/stocked-sealers';
 import type { WaterproofingMode, XBondFinishSku } from '@/constants/product-coverage';
 import type { CalculationResult } from '@/database/schema/calculations';
 
@@ -26,7 +27,11 @@ export function useCalculator() {
   const [error, setError] = useState<string | null>(null);
 
   const setAreaSqft = useCallback((v: string) => setForm((f) => ({ ...f, areaSqft: v })), []);
-  const setSubstrate = useCallback((v: SubstrateId) => setForm((f) => ({ ...f, substrateType: v })), []);
+  const setSubstrate = useCallback((v: SubstrateId) => setForm((f) => ({
+    ...f,
+    substrateType: v,
+    sealerSku: v === 'pool' ? CURRENT_POOL_SEALER_SKU : f.sealerSku,
+  })), []);
   const setWastePct = useCallback((v: number) => setForm((f) => ({ ...f, wastePct: v })), []);
   const setSealerSku = useCallback((v: string) => setForm((f) => ({ ...f, sealerSku: v })), []);
   const setWaterproofingMode = useCallback((v: WaterproofingMode) => setForm((f) => ({ ...f, waterproofingMode: v })), []);

@@ -5,7 +5,7 @@
       { "sku": "PRIMER-2K", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+      { "sku": "SATIN-STONE", "coats": 2, "required": true }
     ]
   },
   "concrete_block": {
@@ -15,7 +15,7 @@
       { "sku": "PRIMER-2K", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+      { "sku": "SATIN-STONE", "coats": 2, "required": true }
     ]
   },
   "plywood": {
@@ -24,7 +24,7 @@
       { "sku": "PRIMER-2K", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 3, "required": true, "note": "Extra sealer coat for floor applications on wood" }
+      { "sku": "SATIN-STONE", "coats": 3, "required": true, "note": "Extra sealer coat for floor applications on wood" }
     ]
   },
   "cement_board": {
@@ -33,7 +33,7 @@
       { "sku": "PRIMER-2K", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+      { "sku": "SATIN-STONE", "coats": 2, "required": true }
     ]
   },
   "existing_tile": {
@@ -43,7 +43,7 @@
       { "sku": "PRIMER-2K", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+      { "sku": "SATIN-STONE", "coats": 2, "required": true }
     ]
   },
   "existing_paint": {
@@ -52,7 +52,7 @@
       { "sku": "PRIMER-ADHESION", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+      { "sku": "SATIN-STONE", "coats": 2, "required": true }
     ]
   },
   "gypsum_board": {
@@ -61,7 +61,7 @@
       { "sku": "PRIMER-ADHESION", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+      { "sku": "SATIN-STONE", "coats": 2, "required": true }
     ]
   },
   "heated_floor": {
@@ -70,7 +70,7 @@
       { "sku": "PRIMER-2K", "coats": 1, "required": true },
       { "sku": "BASE-W", "coats": 2, "required": true },
       { "sku": "FINISH-R", "coats": 2, "required": true },
-      { "sku": "SEAL-2K-S", "coats": 3, "required": true, "note": "Extra coat for heated floor protection" }
+      { "sku": "SATIN-STONE", "coats": 3, "required": true, "note": "Extra coat for heated floor protection" }
     ]
   }
 }

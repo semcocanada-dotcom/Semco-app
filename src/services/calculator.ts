@@ -9,6 +9,7 @@ import {
   getMicroBondRange,
   getSealerProduct,
   getSealerRange,
+  getSealerSkuForSubstrate,
   getXBondLiquidRange,
   getXBondRange,
 } from '@/constants/product-coverage';
@@ -43,7 +44,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     throw new Error('Please enter a valid area greater than 0');
   }
 
-  const sealerProduct = getSealerProduct(sealerSku);
+  const sealerProduct = getSealerProduct(getSealerSkuForSubstrate(substrateType, sealerSku));
   const estimates: CoverageEstimate[] = [
     estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqft, wastePct),
     estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getXBondLiquidRange(), areaSqft, wastePct),
@@ -62,7 +63,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     );
   }
 
-  estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct), areaSqft, wastePct));
+  estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct, substrateType), areaSqft, wastePct));
 
   return {
     layers: [...getPrepLayers(substrateType), ...estimates.map(toMaterialLayer)],

@@ -21,7 +21,7 @@ export const DOC_GROUPS: DocGroup[] = [
   { id: 'all', label: 'All', description: 'Every loaded Semco reference.' },
   { id: 'x-bond', label: 'X-Bond', description: 'Microcement, systems, and X-Bond references.' },
   { id: 'waterproofing', label: 'Waterproofing', description: 'Liquid Membrane, showers, pools, and below-grade details.' },
-  { id: 'sealers', label: 'Sealers', description: 'Natural Shield, Satin Stone, Titan Shield, Pre-Stain, and coatings.' },
+  { id: 'sealers', label: 'Sealers', description: 'Current stocked sealers plus supporting older reference sheets.' },
   { id: 'cleaners', label: 'Cleaners', description: 'Stone Soap, Power Cleaner, Nu-Lift, and prep products.' },
   { id: 'details', label: 'Details', description: 'System steps, drains, cracks, cove base, and job details.' },
   { id: 'sds', label: 'SDS', description: 'Safety data sheets.' },
