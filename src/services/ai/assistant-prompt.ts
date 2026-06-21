@@ -118,9 +118,13 @@ export function buildGroundedPrompt(
   chunks: RetrievedSemcoChunk[],
   history: ConversationMessage[],
   reasoningContext = '',
+  resolvedQuestion?: string,
 ): string {
   return [
     `Installer question:\n${redactPrivateText(question)}`,
+    resolvedQuestion && resolvedQuestion.trim() !== question.trim()
+      ? `Resolved follow-up context:\n${redactPrivateText(resolvedQuestion)}`
+      : '',
     `Recent conversation:\n${formatHistory(history)}`,
     `Semco field reasoning:\n${reasoningContext || 'None.'}`,
     `Approved Semco information:\n${formatChunks(chunks)}`,
@@ -133,6 +137,7 @@ Quality bar:
 - The answer should feel like a knowledgeable human instructor is walking the installer through the work.
 - Do not start by listing every possible Semco system unless the installer asked for a comparison.
 - If the question is broad, state your working assumption and then give the best confirmed path.
+- If Semco field reasoning says required inputs are missing, ask for those missing inputs. Do not choose a random substrate, sealer, or system from the retrieved chunks.
 - For "what is the process", "start to finish", or "steps" questions, provide the full confirmed sequence with enough detail to work from on site.
 - Preserve exact ratios, speeds, coverage, dry times, and warnings from the supplied documents.
 - If a section would only contain generic filler, leave that heading out.
@@ -181,5 +186,5 @@ Important:
 
 Sources:
 [Document name and page]`,
-  ].join('\n\n');
+  ].filter(Boolean).join('\n\n');
 }

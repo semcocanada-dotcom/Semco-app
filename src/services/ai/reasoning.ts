@@ -86,7 +86,7 @@ function detectIntent(normalized: string): ReasoningIntent {
   if (hasAny(normalized, ['takeoff', 'take off', 'blueprint', 'blueprints', 'plans'])) {
     return 'takeoff_scope';
   }
-  if (hasAny(normalized, ['cleaner', 'cleaners', 'surface prep', 'prepare substrate', 'prep ', 'stone soap', 'power cleaner', 'nu lift', 'nu-lift'])) {
+  if (hasAny(normalized, ['cleaner', 'cleaners', 'surface prep', 'prepare substrate', 'prep', 'prepping', 'preparation', 'stone soap', 'power cleaner', 'nu lift', 'nu-lift'])) {
     return 'prep_decision';
   }
   if (hasAny(normalized, ['sealer', 'seal ', 'sealing', 'top coat', 'topcoat', 'natural shield', 'satin stone', 'titan', 'matte'])) {
@@ -293,13 +293,46 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
   }
 
   const recommendations: Record<SubstrateId, string[]> = {
-    concrete: ['Stone Soap standard wash.', 'Add Power Cleaner only if grease, oil, wax, glue, paint, or coating residue is present.'],
-    plywood: ['Secure the wood first.', 'Use Liquid Membrane and fabric before X-Bond; cleaner quantity is not the main prep item.'],
+    concrete: [
+      'Sweep all debris off the concrete so the next coat can bond directly to the substrate.',
+      'Dampen the surface with water first so the cleaner does not dive too deep into the pores.',
+      'For normal unsealed/non-waxed concrete, apply Stone Soap solution lightly with a pump sprayer and let it sit 2-3 minutes. Ratio: 1 part Stone Soap to 4 parts water.',
+      'Scrub/agitate with a scrub machine and concrete nylon brush, or a hand scrub brush in tight areas.',
+      'Rinse the surface. For interiors, use a wet vacuum to remove residue.',
+      'Repeat rinse/vacuum if particles or residue remain, then allow the surface to dry before the next step so bubbles do not show up in the coating.',
+      'If the concrete has grease, wax, glue, paint, sealer, epoxy, terrazzo, or non-permanent topical coating residue, use Power Cleaner first at 1 part Power Cleaner to 4 parts water, then repeat with Stone Soap to clean chemical residue.',
+    ],
+    plywood: [
+      'Sweep debris off the wood surface first.',
+      'Roll 1 coat of Liquid Membrane over the wood and allow it to dry.',
+      'Apply Liquid Membrane again and, while still wet, press anti-fracture fabric into it with an 18 inch smoother, trowel, or roller.',
+      'Immediately roll two additional coats of Liquid Membrane with pressure.',
+      'Overlap fabric seams by at least 2 inches.',
+      'Allow the surface to dry before X-Bond so there are no imprints and the surface is ready.',
+    ],
     icf: ['Stone Soap standard wash.', 'Add Nu-Lift only if mineral/efflorescence contamination is visible.'],
     metal: ['Power Cleaner if oil, grease, or shop residue is present.', 'Confirm profile and adhesion before coating.'],
-    existing_tile: ['Use Nu-Lift if mineral residue, calcium, alkali, or efflorescence is present.', 'Finish with Stone Soap final wash.', 'Fill grout lines flush before coating.'],
-    gypsum_board: ['Stone Soap standard wash if needed.', 'Drywall is walls only; do not use it as a floor substrate.'],
-    pool: ['Use Nu-Lift when calcium, mineral, efflorescence, or pool residue is present.', 'Finish with Stone Soap final wash.', 'Use wet-area Liquid Membrane rate.', 'Use Natural Shield as the current stocked penetrating sealer for submerged/pool work.'],
+    existing_tile: [
+      'Sweep debris off the tile and dampen the surface with water.',
+      'Apply Nu-Lift Cleaner lightly with a pump sprayer and let it sit 2-3 minutes. SIP page 23 lists Nu-Lift as non-diluted for this prep path.',
+      'Scrub/agitate with a scrub machine and nylon brush, or a hand scrub brush in tight areas.',
+      'Rinse the surface. For interiors, use a wet vacuum to remove residue.',
+      'Repeat the same wash steps with Stone Soap solution to clean chemical residue and pH-balance the surface. Ratio: 1 part Stone Soap to 4 parts water.',
+      'Repeat rinse/vacuum if needed, then allow the surface to dry before coating.',
+      'Fill grout lines flush before coating and stop if tile is hollow, loose, cracked, or moving.',
+    ],
+    gypsum_board: [
+      'Drywall is walls only; do not use it as a floor substrate.',
+      'Confirm the board is dry, stable, properly fastened, and not damaged.',
+      'Use Stone Soap only if cleaning is needed, then allow the surface to dry before coating.',
+    ],
+    pool: [
+      'Treat pool/submerged prep like wet-area work, not a normal floor.',
+      'Remove calcium, mineral, alkali, efflorescence, or pool residue with the Nu-Lift prep path where present.',
+      'After Nu-Lift, repeat the wash with Stone Soap solution to clean chemical residue and pH-balance the surface. Ratio: 1 part Stone Soap to 4 parts water.',
+      'Rinse/vacuum and allow the surface to dry before coating.',
+      'Use the wet-area Liquid Membrane build-up and Natural Shield as the current stocked penetrating sealer for pool/submerged work.',
+    ],
     concrete_block: ['Stone Soap standard wash.', 'Use Nu-Lift for mineral/efflorescence contamination.'],
     cement_board: ['Stone Soap standard wash.', 'Treat joints and wet-area risk before coating.'],
     existing_paint: ['Power Cleaner if coating residue is questionable.', 'Confirm adhesion before coating.'],
