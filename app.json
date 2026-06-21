@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.semcocanada.semcopro",
+      "googleServicesFile": "./config/firebase/GoogleService-Info.plist",
       "buildNumber": "18",
       "config": {
         "usesNonExemptEncryption": false
@@ -33,6 +34,7 @@
     },
     "android": {
       "versionCode": 18,
+      "googleServicesFile": "./config/firebase/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0D0D0D"
@@ -48,6 +50,16 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-firebase/app",
+      "@react-native-firebase/app-check",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
       [
         "expo-image-picker",
         {

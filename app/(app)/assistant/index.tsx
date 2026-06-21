@@ -98,15 +98,9 @@ export default function AssistantScreen() {
         <View style={styles.headerContent}>
           <View style={styles.titleRow}>
             <Text style={styles.title}>Ask Semco</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{isOnline ? 'INSTALL HELP' : 'LOCAL'}</Text>
-            </View>
           </View>
           <Text style={styles.chatTitle} numberOfLines={1}>
-            {conversationTitle}
-          </Text>
-          <Text style={styles.subtitle}>
-            Ask install, prep, product, and warranty questions.
+            {conversationTitle} - {isOnline ? 'Install help' : 'Local'}
           </Text>
         </View>
         <View style={styles.headerActions}>
@@ -161,6 +155,7 @@ export default function AssistantScreen() {
         </View>
       ) : (
         <FlatList
+          style={styles.messagePane}
           ref={listRef}
           data={messages}
           keyExtractor={(m) => m.id}
@@ -229,65 +224,57 @@ const styles = StyleSheet.create({
     maxWidth: Layout.screenMaxWidth,
     alignSelf: 'center',
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.sm,
     gap: Spacing.sm,
   },
   backBtn: {
-    width: TAP_TARGET_MIN,
-    height: TAP_TARGET_MIN,
-    borderRadius: TAP_TARGET_MIN / 2,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerContent: { flex: 1 },
+  headerContent: { flex: 1, minWidth: 0 },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    marginBottom: 4,
-    flexWrap: 'wrap',
+    marginBottom: 2,
   },
-  title: { color: Colors.navy, fontSize: Typography.size.xl, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },
+  title: {
+    color: Colors.navy,
+    fontSize: Typography.size.lg,
+    lineHeight: 28,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
   chatTitle: {
     color: Colors.primary,
     fontSize: Typography.size.sm,
     fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.semibold,
-    marginBottom: 2,
-  },
-  subtitle: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular, lineHeight: Typography.size.sm * 1.4 },
-  badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  badgeText: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 0.8,
+    lineHeight: 18,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 2,
+    flexShrink: 0,
   },
   iconBtn: {
-    width: TAP_TARGET_MIN,
-    height: TAP_TARGET_MIN,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  messagePane: { flex: 1 },
   messageList: {
     width: '100%',
     maxWidth: Layout.screenMaxWidth,
