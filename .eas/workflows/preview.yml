@@ -1,12 +1,13 @@
-name: Preview Build
-on:
-  push:
-    branches:
-      - semco-pro-preview
-jobs:
-  build:
-    name: Build iOS + Android preview
-    type: build
-    params:
-      platform: ios
-      profile: preview
+build:
+  name: Preview Build
+  on:
+    push:
+      branches:
+        - semco-pro-preview
+  jobs:
+    build:
+      name: Build iOS + Android preview
+      type: build
+      params:
+        platform: ios
+        profile: preview
