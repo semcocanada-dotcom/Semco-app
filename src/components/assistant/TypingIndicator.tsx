@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,7 +10,7 @@ import Animated, {
   type SharedValue,
   Easing,
 } from 'react-native-reanimated';
-import { Colors, Spacing, Radius } from '@/constants/theme';
+import { Colors, Fonts, Spacing, Radius, Typography } from '@/constants/theme';
 
 export function TypingIndicator() {
   const opacity1 = useSharedValue(0.4);
@@ -58,9 +58,15 @@ export function TypingIndicator() {
   return (
     <View style={styles.wrapper}>
       <View style={styles.bubble}>
-        <Animated.View style={[styles.dot, dot1Style]} />
-        <Animated.View style={[styles.dot, dot2Style]} />
-        <Animated.View style={[styles.dot, dot3Style]} />
+        <View style={styles.iconWrap}>
+          <Animated.View style={[styles.dot, dot1Style]} />
+          <Animated.View style={[styles.dot, dot2Style]} />
+          <Animated.View style={[styles.dot, dot3Style]} />
+        </View>
+        <View style={styles.copy}>
+          <Text style={styles.title}>Ask Semco is checking the manuals</Text>
+          <Text style={styles.body}>Reading approved docs before answering.</Text>
+        </View>
       </View>
     </View>
   );
@@ -70,18 +76,46 @@ const styles = StyleSheet.create({
   wrapper: { paddingHorizontal: Spacing.base, marginVertical: Spacing.xs, alignItems: 'flex-start' },
   bubble: {
     flexDirection: 'row',
-    gap: Spacing.xs,
-    backgroundColor: Colors.surfaceElevated,
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.white,
     borderRadius: Radius.lg,
     borderBottomLeftRadius: Radius.sm,
-    padding: Spacing.sm,
+    padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.primaryMuted,
+    shadowColor: Colors.navy,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  iconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 3,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: Colors.primary,
+  },
+  copy: { gap: 2 },
+  title: {
+    color: Colors.navy,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+  },
+  body: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.regular,
   },
 });

@@ -20,6 +20,7 @@ import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
 import { SavedChatsSheet } from '@/components/assistant/SavedChatsSheet';
 import { getConfiguredProviderStatus } from '@/services/ai/providers';
+import { lightImpactHaptic, mediumImpactHaptic, selectionHaptic } from '@/utils/haptics';
 import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
@@ -47,11 +48,13 @@ export default function AssistantScreen() {
   const handleSend = () => {
     const text = inputText.trim();
     if (!text) return;
+    mediumImpactHaptic();
     setInputText('');
     send(text);
   };
 
   const handleBack = () => {
+    lightImpactHaptic();
     Keyboard.dismiss();
     if (router.canGoBack()) {
       router.back();
@@ -61,6 +64,7 @@ export default function AssistantScreen() {
   };
 
   const handleStartNewChat = async () => {
+    selectionHaptic();
     Keyboard.dismiss();
     await startNewChat();
   };
@@ -105,7 +109,8 @@ export default function AssistantScreen() {
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
-            onPress={() => {
+          onPress={() => {
+              selectionHaptic();
               Keyboard.dismiss();
               setChatSheetOpen(true);
             }}
@@ -124,7 +129,10 @@ export default function AssistantScreen() {
             <Ionicons name="add-circle-outline" size={22} color={Colors.semcoOrange} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => router.push('/assistant/debug' as any)}
+            onPress={() => {
+              lightImpactHaptic();
+              router.push('/assistant/debug' as any);
+            }}
             style={styles.iconBtn}
             accessibilityLabel="Open assistant debug"
             accessibilityRole="button"
@@ -174,7 +182,10 @@ export default function AssistantScreen() {
       >
         <View style={styles.inputBar}>
           <TouchableOpacity
-            onPress={Keyboard.dismiss}
+            onPress={() => {
+              lightImpactHaptic();
+              Keyboard.dismiss();
+            }}
             style={styles.dismissBtn}
             accessibilityLabel="Dismiss keyboard"
             accessibilityRole="button"

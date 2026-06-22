@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Layout, TAP_TARGET_MIN } from '@/constants/theme';
+import { lightImpactHaptic, mediumImpactHaptic, selectionHaptic } from '@/utils/haptics';
 
 type RouteName = 'dashboard' | 'projects' | 'add' | 'library' | 'more';
 
@@ -59,6 +60,14 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
           const title = descriptor?.options.title ?? tab.label;
 
           const onPress = () => {
+            if (isAdd) {
+              mediumImpactHaptic();
+            } else if (!isFocused) {
+              selectionHaptic();
+            } else {
+              lightImpactHaptic();
+            }
+
             const event = route
               ? navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
               : { defaultPrevented: false };
@@ -89,10 +98,10 @@ export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps)
                   </View>
                 </View>
               ) : (
-                <View style={styles.tabWrap}>
+                <View style={[styles.tabWrap, isFocused && styles.tabWrapActive]}>
                   <Ionicons
                     name={isFocused ? tab.active : tab.inactive}
-                    size={24}
+                    size={isFocused ? 25 : 24}
                     color={isFocused ? Colors.semcoOrange : Colors.navy}
                   />
                   <Text style={[styles.label, isFocused && styles.labelActive]} numberOfLines={1}>
@@ -144,7 +153,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 52,
+    minHeight: TAP_TARGET_MIN + 2,
+    paddingHorizontal: 6,
+    borderRadius: 18,
     gap: 4,
+  },
+  tabWrapActive: {
+    backgroundColor: Colors.accentMuted,
   },
   addWrap: {
     alignItems: 'center',

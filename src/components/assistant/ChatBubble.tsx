@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
+import { lightImpactHaptic } from '@/utils/haptics';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 const COLLAPSE_THRESHOLD = 900;
@@ -85,12 +86,21 @@ export function ChatBubble({ message }: ChatBubbleProps) {
           <Text style={[styles.text, styles.textUser]}>{message.content}</Text>
         ) : (
           <>
+            <View style={styles.answerHeader}>
+              <View style={styles.answerIcon}>
+                <Ionicons name="chatbubble-ellipses-outline" size={16} color={Colors.primary} />
+              </View>
+              <Text style={styles.answerTitle}>Semco answer</Text>
+            </View>
             <View style={!isExpanded && styles.collapsedAnswer}>
               <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
             </View>
             {isLongAssistantAnswer && (
               <TouchableOpacity
-                onPress={() => setExpanded((value) => !value)}
+                onPress={() => {
+                  lightImpactHaptic();
+                  setExpanded((value) => !value);
+                }}
                 style={styles.expandBtn}
                 accessibilityRole="button"
                 accessibilityLabel={isExpanded ? 'Collapse answer' : 'Show full answer'}
@@ -151,10 +161,37 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: Colors.navy,
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   text: { fontSize: Typography.size.base, fontFamily: Fonts.regular, lineHeight: Typography.size.base * 1.5 },
   textUser: { color: Colors.white },
   textAssistant: { color: Colors.navy },
+  answerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  answerIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  answerTitle: {
+    color: Colors.primary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   collapsedAnswer: {
     maxHeight: COLLAPSED_MAX_HEIGHT,
     overflow: 'hidden',
