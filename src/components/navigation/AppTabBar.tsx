@@ -35,7 +35,12 @@ function getActiveTab(pathname: string): RouteName {
   ) {
     return 'library';
   }
-  if (pathname.startsWith('/more')) return 'more';
+  if (
+    pathname.startsWith('/more') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/rewards') ||
+    pathname.startsWith('/receipts')
+  ) return 'more';
   return 'dashboard';
 }
 

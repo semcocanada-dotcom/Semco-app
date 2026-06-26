@@ -6,6 +6,7 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { calculations } from '@/database/schema/calculations';
 import { orderRequests, type OrderRequestStatus } from '@/database/schema/workflow';
+import { rewardCredits } from '@/database/schema/installers';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
 import type { Calculation, CalculationResult } from '@/database/schema/calculations';
@@ -16,6 +17,10 @@ import { ProjectCard } from '@/components/projects/ProjectCard';
 import { Button, Card, Badge, SectionHeader } from '@/components/ui';
 import { clearPendingMaterialRequest, getPendingMaterialRequest } from '@/services/pending-material-request';
 import { resolveDealerContext, UNASSIGNED_DEALER_CONTEXT } from '@/constants/dealers';
+import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
+import type { InstallerProfile } from '@/database/schema/installers';
+import { useAuthStore } from '@/store/auth';
+import { sqmToSqft } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
@@ -29,17 +34,24 @@ export default function OrdersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ projectId?: string; source?: string }>();
   const projectId = typeof params.projectId === 'string' ? params.projectId : undefined;
+  const user = useAuthStore((s) => s.user);
+  const installerId = user?.id ?? 'local';
 
   const [project, setProject] = useState<Project | null>(null);
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [calculation, setCalculation] = useState<Calculation | null>(null);
   const [orderRequest, setOrderRequest] = useState<OrderRequest | null>(null);
   const [pendingResult, setPendingResult] = useState<CalculationResult | null>(null);
+  const [profile, setProfile] = useState<InstallerProfile | null>(null);
   const [savingStatus, setSavingStatus] = useState<OrderRequestStatus | null>(null);
 
   useEffect(() => {
     db.select().from(projects).orderBy(desc(projects.updatedAt)).limit(3).then(setRecentProjects).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    getInstallerProfile(installerId).then(setProfile).catch(console.error);
+  }, [installerId]);
 
   useEffect(() => {
     getPendingMaterialRequest().then(setPendingResult).catch(console.error);
@@ -76,9 +88,14 @@ export default function OrdersScreen() {
     return project.clientName ?? project.siteAddress ?? 'Unnamed project';
   }, [project]);
   const dealerContext = useMemo(
-    () => resolveDealerContext({ projectAddress: project?.siteAddress }),
-    [project?.siteAddress],
+    () => {
+      const profileDealer = resolveDealerContext(profileToDealerInput(profile));
+      if (profileDealer.dealerId) return profileDealer;
+      return project ? resolveDealerContext({ projectAddress: project.siteAddress }) : UNASSIGNED_DEALER_CONTEXT;
+    },
+    [profile, project],
   );
+  const dealerUsesProfile = Boolean(profile?.postalCode);
 
   async function savePendingCalculation(now: string): Promise<string | null> {
     if (!project) return null;
@@ -110,6 +127,7 @@ export default function OrdersScreen() {
       const now = new Date().toISOString();
       const latestCalcId = await savePendingCalculation(now);
 
+      let requestId = orderRequest?.id;
       if (orderRequest) {
         await db.update(orderRequests)
           .set({ status, calculationId: latestCalcId, updatedAt: now })
@@ -127,10 +145,52 @@ export default function OrdersScreen() {
         };
         await db.insert(orderRequests).values(created);
         setOrderRequest(created);
+        requestId = created.id;
+      }
+
+      if (requestId && result && (status === 'in_review' || status === 'approved')) {
+        await syncOrderRewardCredit(requestId, result, now);
       }
     } finally {
       setSavingStatus(null);
     }
+  }
+
+  async function syncOrderRewardCredit(requestId: string, calcResult: CalculationResult, now: string) {
+    if (!project) return;
+    const sqft = calcResult.areaSqft ?? sqmToSqft(calcResult.areaSqm);
+    if (!Number.isFinite(sqft) || sqft <= 0) return;
+
+    const existing = await db
+      .select()
+      .from(rewardCredits)
+      .where(eq(rewardCredits.sourceId, requestId))
+      .limit(1);
+
+    if (existing[0]) {
+      await db
+        .update(rewardCredits)
+        .set({
+          sqft,
+          projectId: project.id,
+          notes: `${dealerContext.dealerName} material request submitted for review.`,
+        })
+        .where(eq(rewardCredits.id, existing[0].id));
+      return;
+    }
+
+    await db.insert(rewardCredits).values({
+      id: `reward-${Date.now()}`,
+      installerId: project.installerId,
+      projectId: project.id,
+      sourceType: 'order_request',
+      sourceId: requestId,
+      sqft,
+      status: 'pending',
+      notes: `${dealerContext.dealerName} material request submitted for review.`,
+      createdAt: now,
+      verifiedAt: null,
+    });
   }
 
   return (
@@ -181,8 +241,11 @@ export default function OrdersScreen() {
                   Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? (pendingResult ? 'pending calculator result' : 'none yet')}
                 </Text>
                 <Text style={styles.bodySmall}>
-                  {dealerContext.orderRoutingLabel} Project address is used as a temporary fallback until company profiles are added.
+                  {dealerContext.orderRoutingLabel} {dealerUsesProfile ? 'Assigned from company profile.' : 'Project address is a temporary fallback until the company profile is complete.'}
                 </Text>
+                {!dealerUsesProfile ? (
+                  <Button label="Complete Company Profile" variant="secondary" onPress={() => router.push('/profile' as any)} fullWidth />
+                ) : null}
               </Card>
             </View>
 

@@ -5,3 +5,4 @@ export * from './batches';
 export * from './calculations';
 export * from './workflow';
 export * from './conversations';
+export * from './installers';

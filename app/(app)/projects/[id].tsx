@@ -10,11 +10,13 @@ import { calculations } from '@/database/schema/calculations';
 import colorsData from '@/database/seed/colors.json';
 import { projects, projects_photos } from '@/database/schema/projects';
 import { orderRequests } from '@/database/schema/workflow';
+import { warrantyReviews } from '@/database/schema/installers';
 import type { BatchLog } from '@/database/schema/batches';
 import type { Calculation, CalculationResult } from '@/database/schema/calculations';
 import type { Color } from '@/database/schema/colors';
 import type { PhotoStage, Project, ProjectPhoto } from '@/database/schema/projects';
 import type { OrderRequest } from '@/database/schema/workflow';
+import type { InstallerProfile, WarrantyReview } from '@/database/schema/installers';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
 import { ColorSwatch } from '@/components/colors/ColorSwatch';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
@@ -27,6 +29,7 @@ import { useAuthStore } from '@/store/auth';
 import { Badge, BatchCard, Button, Card, EmptyState, TabControl } from '@/components/ui';
 import { resolveDealerContext } from '@/constants/dealers';
 import { STOCKED_SEALERS } from '@/constants/stocked-sealers';
+import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
@@ -58,6 +61,8 @@ export default function ProjectDetailScreen() {
   const [batches, setBatches] = useState<BatchLog[]>([]);
   const [calculation, setCalculation] = useState<Calculation | null>(null);
   const [orderRequest, setOrderRequest] = useState<OrderRequest | null>(null);
+  const [warrantyReview, setWarrantyReview] = useState<WarrantyReview | null>(null);
+  const [profile, setProfile] = useState<InstallerProfile | null>(null);
   const [tab, setTab] = useState<DetailTab>('job');
 
   const load = useCallback(() => {
@@ -68,18 +73,23 @@ export default function ProjectDetailScreen() {
       db.select().from(batchLogs).where(eq(batchLogs.projectId, id)),
       db.select().from(calculations).where(eq(calculations.projectId, id)).orderBy(desc(calculations.createdAt)).limit(1),
       db.select().from(orderRequests).where(eq(orderRequests.projectId, id)).orderBy(desc(orderRequests.createdAt)).limit(1),
+      db.select().from(warrantyReviews).where(eq(warrantyReviews.projectId, id)).orderBy(desc(warrantyReviews.createdAt)).limit(1),
     ])
-      .then(([projectRows, photoRows, batchRows, calcRows, requestRows]) => {
+      .then(([projectRows, photoRows, batchRows, calcRows, requestRows, warrantyRows]) => {
         setProject(projectRows[0] ?? null);
         setPhotos(photoRows);
         setBatches(batchRows);
         setCalculation(calcRows[0] ?? null);
         setOrderRequest(requestRows[0] ?? null);
+        setWarrantyReview(warrantyRows[0] ?? null);
       })
       .catch(console.error);
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    getInstallerProfile(user?.id ?? 'local').then(setProfile).catch(console.error);
+  }, [user?.id]);
 
   const handleAddPhoto = async (stage: PhotoStage) => {
     const photo = await captureProgressPhoto();
@@ -132,9 +142,51 @@ export default function ProjectDetailScreen() {
     return value && typeof value === 'object' ? value as CalculationResult : null;
   }, [calculation]);
   const dealerContext = useMemo(
-    () => resolveDealerContext({ projectAddress: project?.siteAddress }),
-    [project?.siteAddress],
+    () => {
+      const profileDealer = resolveDealerContext(profileToDealerInput(profile));
+      if (profileDealer.dealerId) return profileDealer;
+      return resolveDealerContext({ projectAddress: project?.siteAddress });
+    },
+    [profile, project?.siteAddress],
   );
+
+  const submitWarrantyReview = async () => {
+    if (!project) return;
+    const now = new Date().toISOString();
+    const products = [
+      selectedColor ? `Colour: ${selectedColor.name}${selectedColor.code ? ` (${selectedColor.code})` : ''}` : null,
+      selectedSealer ? `Sealer: ${selectedSealer.productName}` : null,
+      calculationResult ? `${calculationResult.layers.length} calculated material line${calculationResult.layers.length === 1 ? '' : 's'}` : null,
+    ].filter(Boolean).join(' | ');
+
+    if (warrantyReview) {
+      await db.update(warrantyReviews)
+        .set({
+          status: 'in_review',
+          productsSummary: products || warrantyReview.productsSummary,
+          updatedAt: now,
+        })
+        .where(eq(warrantyReviews.id, warrantyReview.id));
+    } else {
+      await db.insert(warrantyReviews).values({
+        id: `warranty-${Date.now()}`,
+        projectId: project.id,
+        installerId: project.installerId,
+        status: 'in_review',
+        productsSummary: products || null,
+        effectiveDate: null,
+        reviewerName: null,
+        reviewerSignatureUrl: null,
+        warrantyDocumentUrl: null,
+        notes: null,
+        createdAt: now,
+        updatedAt: now,
+        reviewedAt: null,
+      });
+    }
+
+    load();
+  };
 
   const handleMarkComplete = () => {
     if (!id) return;
@@ -333,6 +385,7 @@ export default function ProjectDetailScreen() {
             <WarrantyPhotoChecklist photos={photos} onAddPhoto={handleAddPhoto} />
             <Card style={styles.infoCard}>
               <InfoRow icon="shield-outline" label="Warranty Issued" value={project.warrantyIssued ? 'Yes' : 'No'} />
+              <InfoRow icon="clipboard-outline" label="Review Status" value={formatId(warrantyReview?.status ?? 'not submitted')} />
               <InfoRow
                 icon="shield-checkmark-outline"
                 label="Photo Qualification"
@@ -345,10 +398,19 @@ export default function ProjectDetailScreen() {
               />
               <Text style={styles.warrantyNote}>{warrantySummary}</Text>
               <InfoRow icon="calendar-outline" label="Completion Date" value={project.completionDate ?? 'Not complete yet'} />
+              <InfoRow icon="business-outline" label="Contractor" value={profile?.companyName ?? 'Company profile needed'} />
+              <InfoRow icon="document-attach-outline" label="Warranty Doc" value={warrantyReview?.warrantyDocumentUrl ? 'Available' : 'Available after Semco approval'} />
               <InfoRow icon="document-text-outline" label="Notes" value={project.notes ?? 'No notes yet'} />
+              <Text style={styles.warrantyCondition}>
+                Warranty review requires complete stage photos and Semco approval. The filled warranty document should only become downloadable after review, signature, and approval.
+              </Text>
               {!warrantyPhotoStatus.isQualified ? (
                 <Button label="Add Missing Photos" variant="primary" onPress={() => setTab('photos')} fullWidth />
-              ) : null}
+              ) : warrantyReview?.status === 'approved' && warrantyReview.warrantyDocumentUrl ? (
+                <Button label="Download Warranty Document" variant="primary" onPress={() => {}} fullWidth disabled />
+              ) : (
+                <Button label={warrantyReview ? 'Resubmit for Semco Review' : 'Submit for Semco Review'} variant="primary" onPress={submitWarrantyReview} fullWidth />
+              )}
               <Button label="Open Material Request" variant="secondary" onPress={() => router.push({ pathname: '/orders', params: { projectId: project.id } } as any)} fullWidth />
             </Card>
           </View>
@@ -520,6 +582,16 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     fontFamily: Fonts.regular,
     lineHeight: Typography.size.sm * 1.45,
+  },
+  warrantyCondition: {
+    borderRadius: Radius.md,
+    backgroundColor: Colors.accentMuted,
+    color: Colors.semcoOrange,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+    fontWeight: Typography.weight.semibold,
+    lineHeight: Typography.size.sm * 1.45,
+    padding: Spacing.sm,
   },
   quickActions: {
     flexDirection: 'row',

@@ -7,6 +7,27 @@ import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/
 
 const MORE_ACTIONS = [
   {
+    title: 'Company profile',
+    description: 'Installer account, dealer routing, and warranty identity.',
+    icon: 'business-outline' as const,
+    route: '/profile',
+    tone: 'primary' as const,
+  },
+  {
+    title: 'Reward tiers',
+    description: 'Verified square footage milestones and receipt credits.',
+    icon: 'trophy-outline' as const,
+    route: '/rewards',
+    tone: 'accent' as const,
+  },
+  {
+    title: 'Submit receipt',
+    description: 'Send purchase proof for reward review.',
+    icon: 'receipt-outline' as const,
+    route: '/receipts',
+    tone: 'primary' as const,
+  },
+  {
     title: 'Ask Semco',
     description: 'Technical install questions and saved chats.',
     icon: 'chatbubble-ellipses-outline' as const,

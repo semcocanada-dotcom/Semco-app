@@ -39,8 +39,19 @@ function findBundledColor(value?: string) {
 }
 
 export default function ColorDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string | string[] }>();
+  const params = useLocalSearchParams<{
+    id: string | string[];
+    origin?: string | string[];
+    query?: string | string[];
+    series?: string | string[];
+    index?: string | string[];
+  }>();
+  const { id } = params;
   const colorId = getParamValue(id);
+  const origin = getParamValue(params.origin);
+  const returnQuery = getParamValue(params.query) ?? '';
+  const returnSeries = getParamValue(params.series) ?? 'all';
+  const returnIndex = getParamValue(params.index) ?? '0';
   const router = useRouter();
   const [color, setColor] = useState<Color | null>(() => findBundledColor(colorId));
   const [isLoading, setIsLoading] = useState(true);
@@ -79,6 +90,27 @@ export default function ColorDetailScreen() {
     };
   }, [colorId]);
 
+  const handleBack = () => {
+    lightImpactHaptic();
+    if (origin === 'colors') {
+      router.replace({
+        pathname: '/colors',
+        params: {
+          query: returnQuery,
+          series: returnSeries,
+          initialIndex: returnIndex,
+        },
+      } as any);
+      return;
+    }
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/colors' as any);
+    }
+  };
+
   if (!color) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -97,7 +129,7 @@ export default function ColorDetailScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
+        <TouchableOpacity onPress={handleBack} style={styles.back} accessibilityRole="button" accessibilityLabel="Back to colour library">
           <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
 
@@ -166,28 +198,30 @@ export default function ColorDetailScreen() {
 
       <Modal visible={isPreviewOpen} transparent animationType="fade" onRequestClose={() => setPreviewOpen(false)}>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <TouchableOpacity
-              onPress={() => {
-                lightImpactHaptic();
-                setPreviewOpen(false);
-              }}
-              style={styles.modalClose}
-              accessibilityRole="button"
-              accessibilityLabel="Close colour preview"
-            >
-              <Ionicons name="close" size={22} color={Colors.navy} />
-            </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              lightImpactHaptic();
+              setPreviewOpen(false);
+            }}
+            style={styles.modalClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close colour preview"
+          >
+            <Ionicons name="close" size={24} color={Colors.navy} />
+          </TouchableOpacity>
+          <View style={styles.modalContent}>
             {color.photoUrl ? (
               <Image source={{ uri: color.photoUrl }} style={styles.modalSwatch} contentFit="cover" transition={200} />
             ) : (
               <View style={[styles.modalSwatch, { backgroundColor: color.swatchHex ?? Colors.softGrey }]} />
             )}
-            <Text style={styles.modalTitle}>{color.name}</Text>
-            {color.code ? <Text style={styles.modalCode}>{color.code}</Text> : null}
-            <Text style={styles.modalReference}>
-              Screen colour is reference only. Confirm with a physical sample.
-            </Text>
+            <View style={styles.modalCaption}>
+              <Text style={styles.modalTitle}>{color.name}</Text>
+              {color.code ? <Text style={styles.modalCode}>{color.code}</Text> : null}
+              <Text style={styles.modalReference}>
+                Screen colour is reference only. Confirm with a physical sample.
+              </Text>
+            </View>
           </View>
         </View>
       </Modal>
@@ -301,38 +335,40 @@ const styles = StyleSheet.create({
   loading: { color: Colors.textSecondary, textAlign: 'center', marginTop: Spacing.xl },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,35,45,0.72)',
-    padding: Spacing.lg,
-    justifyContent: 'center',
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    borderRadius: Radius.xl,
-    backgroundColor: Colors.white,
-    padding: Spacing.md,
-    gap: Spacing.sm,
+    backgroundColor: Colors.navy,
   },
   modalClose: {
     position: 'absolute',
-    top: Spacing.md,
-    right: Spacing.md,
+    top: 56,
+    right: Spacing.base,
     zIndex: 2,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   modalSwatch: {
     width: '100%',
-    height: 360,
-    borderRadius: Radius.lg,
+    flex: 1,
     backgroundColor: Colors.softGrey,
+  },
+  modalCaption: {
+    position: 'absolute',
+    left: Spacing.base,
+    right: Spacing.base,
+    bottom: Spacing.xl,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    gap: 3,
   },
   modalTitle: {
     color: Colors.navy,

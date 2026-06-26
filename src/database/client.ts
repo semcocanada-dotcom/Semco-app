@@ -150,6 +150,79 @@ export async function initDatabase() {
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS conversations_installer_idx ON conversations(installer_id);
+
+    CREATE TABLE IF NOT EXISTS installer_profiles (
+      id TEXT PRIMARY KEY,
+      installer_id TEXT NOT NULL,
+      company_name TEXT,
+      contact_name TEXT,
+      email TEXT,
+      phone TEXT,
+      company_address TEXT,
+      city TEXT,
+      province TEXT,
+      postal_code TEXT,
+      semco_account_id TEXT,
+      certification_status TEXT NOT NULL DEFAULT 'pending',
+      assigned_dealer_id TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS installer_profiles_installer_idx ON installer_profiles(installer_id);
+    CREATE INDEX IF NOT EXISTS installer_profiles_postal_idx ON installer_profiles(postal_code);
+
+    CREATE TABLE IF NOT EXISTS reward_credits (
+      id TEXT PRIMARY KEY,
+      installer_id TEXT NOT NULL,
+      project_id TEXT,
+      source_type TEXT NOT NULL,
+      source_id TEXT,
+      sqft REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      verified_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS reward_credits_installer_idx ON reward_credits(installer_id);
+    CREATE INDEX IF NOT EXISTS reward_credits_project_idx ON reward_credits(project_id);
+    CREATE INDEX IF NOT EXISTS reward_credits_status_idx ON reward_credits(status);
+
+    CREATE TABLE IF NOT EXISTS warranty_reviews (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      installer_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'in_review',
+      products_summary TEXT,
+      effective_date TEXT,
+      reviewer_name TEXT,
+      reviewer_signature_url TEXT,
+      warranty_document_url TEXT,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      reviewed_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS warranty_reviews_project_idx ON warranty_reviews(project_id);
+    CREATE INDEX IF NOT EXISTS warranty_reviews_installer_idx ON warranty_reviews(installer_id);
+    CREATE INDEX IF NOT EXISTS warranty_reviews_status_idx ON warranty_reviews(status);
+
+    CREATE TABLE IF NOT EXISTS purchase_receipts (
+      id TEXT PRIMARY KEY,
+      installer_id TEXT NOT NULL,
+      project_id TEXT,
+      dealer_name TEXT,
+      receipt_number TEXT,
+      receipt_url TEXT,
+      sqft_claimed REAL NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      reviewed_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS purchase_receipts_installer_idx ON purchase_receipts(installer_id);
+    CREATE INDEX IF NOT EXISTS purchase_receipts_project_idx ON purchase_receipts(project_id);
+    CREATE INDEX IF NOT EXISTS purchase_receipts_status_idx ON purchase_receipts(status);
   `);
 
   try {

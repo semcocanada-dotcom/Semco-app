@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { db, initDatabase } from '@/database/client';
 import { seedDatabase } from '@/database/seed';
@@ -23,6 +23,17 @@ const SERIES_OPTIONS: { value: ColorSeries; label: string; shortLabel: string }[
   { value: 'C', label: 'Dark colours', shortLabel: 'Dark' },
   { value: 'custom', label: 'Custom colours', shortLabel: 'Custom' },
 ];
+
+function isColorSeries(value: unknown): value is ColorSeries {
+  return SERIES_OPTIONS.some((option) => option.value === value);
+}
+
+function parseReturnIndex(value: string | string[] | undefined): number | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 const FAN_DECK_ORDER = STANDARD_COLORS.reduce<Record<string, number>>((order, color, index) => {
   order[color.id] = index;
@@ -66,10 +77,13 @@ function sortByFanDeck(a: Color, b: Color): number {
 }
 
 export default function ColorsScreen() {
+  const params = useLocalSearchParams<{ query?: string; series?: ColorSeries; initialIndex?: string }>();
   const [allColors, setAllColors] = useState<Color[]>(STANDARD_COLORS);
-  const [query, setQuery] = useState('');
-  const [series, setSeries] = useState<ColorSeries>('all');
+  const [query, setQuery] = useState(typeof params.query === 'string' ? params.query : '');
+  const [series, setSeries] = useState<ColorSeries>(isColorSeries(params.series) ? params.series : 'all');
+  const [pendingScrollIndex, setPendingScrollIndex] = useState(() => parseReturnIndex(params.initialIndex));
   const router = useRouter();
+  const listRef = useRef<FlatList<Color>>(null);
   const { width } = useWindowDimensions();
   const numColumns = FAN_DECK_COLUMN_COUNT;
   const availableGridWidth = Math.min(width, Layout.colorGridMaxWidth);
@@ -129,6 +143,22 @@ export default function ColorsScreen() {
     });
   }, [allColors, query, series]);
 
+  useEffect(() => {
+    if (pendingScrollIndex == null || filtered.length === 0) return;
+
+    const clampedIndex = Math.min(Math.max(pendingScrollIndex, 0), filtered.length - 1);
+    const timeout = setTimeout(() => {
+      listRef.current?.scrollToIndex({
+        index: clampedIndex,
+        animated: false,
+        viewPosition: 0.28,
+      });
+      setPendingScrollIndex(null);
+    }, 80);
+
+    return () => clearTimeout(timeout);
+  }, [filtered.length, pendingScrollIndex]);
+
   const standardCount = filtered.filter((c) => c.isStandard).length;
   const activeSeries = SERIES_OPTIONS.find((option) => option.value === series) ?? SERIES_OPTIONS[0];
   const resultLabel = query.trim()
@@ -177,17 +207,35 @@ export default function ColorsScreen() {
       </View>
 
       <FlatList
+        ref={listRef}
         key={`color-grid-${numColumns}`}
         data={filtered}
         numColumns={numColumns}
         keyExtractor={(item, index) => item.id || `${item.code ?? item.name}-${index}`}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <ColorTile
             color={item}
             size={tileSize}
-            onPress={() => router.push({ pathname: '/colors/[id]', params: { id: item.id } } as any)}
+            onPress={() => router.push({
+              pathname: '/colors/[id]',
+              params: {
+                id: item.id,
+                origin: 'colors',
+                query,
+                series,
+                index: String(index),
+              },
+            } as any)}
           />
         )}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            listRef.current?.scrollToOffset({
+              offset: Math.max(0, info.averageItemLength * Math.floor(info.index / numColumns)),
+              animated: false,
+            });
+          }, 80);
+        }}
         columnWrapperStyle={styles.gridRow}
         contentContainerStyle={[styles.list, filtered.length === 0 && styles.emptyList]}
         keyboardShouldPersistTaps="handled"
