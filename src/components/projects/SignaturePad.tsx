@@ -11,6 +11,13 @@ type SignatureRecord = {
   points: SignaturePoint[];
 };
 
+type SignatureBounds = {
+  minX: number;
+  minY: number;
+  width: number;
+  height: number;
+};
+
 type SignaturePadProps = {
   value?: string | null;
   onChange: (value: string | null) => void;
@@ -44,18 +51,48 @@ function cleanPoints(points: SignaturePoint[]) {
   return points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
 }
 
+export function getSignatureBounds(signature: SignatureRecord): SignatureBounds {
+  if (!signature.points.length) {
+    return { minX: 0, minY: 0, width: signature.width || 1, height: signature.height || 1 };
+  }
+
+  const xs = signature.points.map((point) => point.x);
+  const ys = signature.points.map((point) => point.y);
+  const minX = Math.max(0, Math.min(...xs));
+  const maxX = Math.min(signature.width, Math.max(...xs));
+  const minY = Math.max(0, Math.min(...ys));
+  const maxY = Math.min(signature.height, Math.max(...ys));
+
+  return {
+    minX,
+    minY,
+    width: Math.max(maxX - minX, 1),
+    height: Math.max(maxY - minY, 1),
+  };
+}
+
+function signaturePreviewPoint(point: SignaturePoint, bounds: SignatureBounds) {
+  return {
+    x: (((point.x - bounds.minX) / bounds.width) * 0.9) + 0.05,
+    y: (((point.y - bounds.minY) / bounds.height) * 0.72) + 0.14,
+  };
+}
+
 export function SignaturePreview({ value }: { value?: string | null }) {
   const signature = parseSignatureRecord(value);
   if (signature.points.length < 2) return null;
+  const bounds = getSignatureBounds(signature);
 
   return (
     <View style={styles.previewCanvas} pointerEvents="none">
       {signature.points.slice(1).map((point, index) => {
         const previous = signature.points[index];
-        const x1 = previous.x / signature.width;
-        const y1 = previous.y / signature.height;
-        const x2 = point.x / signature.width;
-        const y2 = point.y / signature.height;
+        const start = signaturePreviewPoint(previous, bounds);
+        const end = signaturePreviewPoint(point, bounds);
+        const x1 = start.x;
+        const y1 = start.y;
+        const x2 = end.x;
+        const y2 = end.y;
         const length = Math.hypot(x2 - x1, y2 - y1) * 100;
         const angle = Math.atan2(y2 - y1, x2 - x1);
         return (
@@ -224,7 +261,7 @@ const styles = StyleSheet.create({
   },
   previewStroke: {
     position: 'absolute',
-    height: 3,
+    height: 1.5,
     borderRadius: 2,
     backgroundColor: Colors.navy,
   },

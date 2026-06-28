@@ -30,8 +30,13 @@ const PAGE_RATIO = 1584 / 1224;
 
 function getFieldValue(field: PdfFormField, values: Record<string, string>) {
   if (field.type === 'signature') return '';
-  if (field.type === 'date' && !values[field.id]) return '';
-  return values[field.id] ?? '';
+  const value = values[field.id] ?? '';
+  if (field.type === 'date') {
+    if (!value) return '';
+    const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoDate) return `${Number(isoDate[2])}/${Number(isoDate[3])}/${isoDate[1]}`;
+  }
+  return value;
 }
 
 type PdfPageCanvasProps = {
@@ -94,9 +99,7 @@ function PdfPageCanvas({ template, values, signatureData, onOpenField }: PdfPage
                   >
                     {value}
                   </Text>
-                ) : (
-                  <Text numberOfLines={1} style={styles.emptyText}>{field.label}</Text>
-                )}
+                ) : null}
               </TouchableOpacity>
             );
           })
@@ -131,7 +134,7 @@ export function EditablePdfForm({ template, values, signatureData, onChangeField
     setDraftValue('');
   };
 
-  const previewWidth = Math.min(Math.max(width - (Spacing.md * 2), 320), 840);
+  const previewWidth = Math.max(width, 320);
 
   return (
     <View style={styles.wrap}>
@@ -176,24 +179,26 @@ export function EditablePdfForm({ template, values, signatureData, onChangeField
       </Modal>
 
       <Modal visible={signatureOpen} animationType="slide" onRequestClose={() => setSignatureOpen(false)}>
-        <View style={styles.signatureScreen}>
-          <View style={styles.signatureHeader}>
-            <TouchableOpacity onPress={() => setSignatureOpen(false)} style={styles.closeButton} accessibilityRole="button">
-              <Ionicons name="close" size={24} color={Colors.navy} />
-            </TouchableOpacity>
-            <View style={styles.signatureCopy}>
-              <Text style={styles.signatureTitle}>Customer signature</Text>
-              <Text style={styles.signatureHint}>Turn the phone sideways if they want more room.</Text>
+        <SafeAreaView style={styles.signatureSafe}>
+          <View style={styles.signatureScreen}>
+            <View style={styles.signatureHeader}>
+              <TouchableOpacity onPress={() => setSignatureOpen(false)} style={styles.closeButton} accessibilityRole="button">
+                <Ionicons name="close" size={24} color={Colors.navy} />
+              </TouchableOpacity>
+              <View style={styles.signatureCopy}>
+                <Text style={styles.signatureTitle}>Customer signature</Text>
+                <Text style={styles.signatureHint}>Turn the phone sideways if they want more room.</Text>
+              </View>
             </View>
+            <SignaturePad
+              value={signatureData}
+              onChange={onChangeSignature}
+              height={340}
+              hint="Use a finger or stylus. Clear and sign again if needed."
+            />
+            <Button label="Done" variant="primary" onPress={() => setSignatureOpen(false)} />
           </View>
-          <SignaturePad
-            value={signatureData}
-            onChange={onChangeSignature}
-            height={340}
-            hint="Use a finger or stylus. Clear and sign again if needed."
-          />
-          <Button label="Done" variant="primary" onPress={() => setSignatureOpen(false)} />
-        </View>
+        </SafeAreaView>
       </Modal>
 
       <Modal visible={previewOpen} animationType="slide" onRequestClose={() => setPreviewOpen(false)}>
@@ -294,8 +299,9 @@ const styles = StyleSheet.create({
   },
   tapZoneEmpty: {
     borderWidth: 1,
-    borderColor: Colors.lightTeal,
-    backgroundColor: 'rgba(5, 186, 194, 0.11)',
+    borderStyle: 'dashed',
+    borderColor: 'rgba(5, 186, 194, 0.42)',
+    backgroundColor: 'rgba(5, 186, 194, 0.035)',
   },
   tapZoneFilled: {
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
@@ -348,12 +354,15 @@ const styles = StyleSheet.create({
   editorMultiline: { minHeight: 140 },
   editorActions: { flexDirection: 'row', gap: Spacing.sm },
   editorButton: { flex: 1 },
+  signatureSafe: {
+    flex: 1,
+    backgroundColor: Colors.appBackground,
+  },
   signatureScreen: {
     flex: 1,
     gap: Spacing.lg,
     padding: Spacing.lg,
-    paddingTop: Spacing.xl,
-    backgroundColor: Colors.background,
+    paddingTop: Spacing.base,
   },
   signatureHeader: { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
   closeButton: {
@@ -387,12 +396,12 @@ const styles = StyleSheet.create({
   previewContent: {
     minHeight: '100%',
     alignItems: 'center',
-    padding: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
   previewPage: {
-    borderRadius: Radius.lg,
+    borderRadius: 0,
     backgroundColor: Colors.white,
-    padding: Spacing.xs,
     shadowColor: '#00232D',
     shadowOpacity: 0.12,
     shadowRadius: 18,

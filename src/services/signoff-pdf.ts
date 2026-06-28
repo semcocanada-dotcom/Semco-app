@@ -2,7 +2,7 @@ import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { SignoffTemplate } from '@/constants/project-signoffs';
-import { parseSignatureRecord } from '@/components/projects/SignaturePad';
+import { getSignatureBounds, parseSignatureRecord } from '@/components/projects/SignaturePad';
 import { supabase } from '@/services/supabase';
 
 type CreateFilledSignoffPdfInput = {
@@ -42,6 +42,12 @@ function wrapText(text: string, maxChars: number) {
   return lines;
 }
 
+function normalizeDate(value: string) {
+  const isoDate = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!isoDate) return value;
+  return `${Number(isoDate[2])}/${Number(isoDate[3])}/${isoDate[1]}`;
+}
+
 export async function createFilledSignoffPdf({
   projectId,
   template,
@@ -71,19 +77,24 @@ export async function createFilledSignoffPdf({
     if (field.type === 'signature') {
       const signature = parseSignatureRecord(signatureData);
       if (signature.points.length > 1) {
+        const bounds = getSignatureBounds(signature);
         for (let index = 1; index < signature.points.length; index += 1) {
           const previous = signature.points[index - 1];
           const point = signature.points[index];
+          const startX = (((previous.x - bounds.minX) / bounds.width) * 0.9) + 0.05;
+          const startY = (((previous.y - bounds.minY) / bounds.height) * 0.72) + 0.14;
+          const endX = (((point.x - bounds.minX) / bounds.width) * 0.9) + 0.05;
+          const endY = (((point.y - bounds.minY) / bounds.height) * 0.72) + 0.14;
           page.drawLine({
             start: {
-              x: x + (previous.x / signature.width) * width,
-              y: y + height - (previous.y / signature.height) * height,
+              x: x + startX * width,
+              y: y + height - startY * height,
             },
             end: {
-              x: x + (point.x / signature.width) * width,
-              y: y + height - (point.y / signature.height) * height,
+              x: x + endX * width,
+              y: y + height - endY * height,
             },
-            thickness: 1.2,
+            thickness: 0.8,
             color: ink,
           });
         }
@@ -91,7 +102,7 @@ export async function createFilledSignoffPdf({
       continue;
     }
 
-    const value = values[field.id];
+    const value = field.type === 'date' ? normalizeDate(values[field.id] ?? '') : values[field.id];
     if (!value) continue;
 
     const fontSize = field.fontSize ?? 10;
