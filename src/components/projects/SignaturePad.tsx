@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
@@ -49,7 +49,7 @@ export function SignaturePreview({ value }: { value?: string | null }) {
   if (signature.points.length < 2) return null;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={styles.previewCanvas} pointerEvents="none">
       {signature.points.slice(1).map((point, index) => {
         const previous = signature.points[index];
         const x1 = previous.x / signature.width;
@@ -82,11 +82,22 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
   const [points, setPoints] = useState<SignaturePoint[]>(() => parsed.points);
   const [surfaceSize, setSurfaceSize] = useState({ width: parsed.width || 360, height: parsed.height || height });
   const pointsRef = useRef(points);
+  const surfaceSizeRef = useRef(surfaceSize);
+
+  useEffect(() => {
+    pointsRef.current = parsed.points;
+    setPoints(parsed.points);
+  }, [parsed.points]);
+
+  useEffect(() => {
+    surfaceSizeRef.current = surfaceSize;
+  }, [surfaceSize]);
 
   const syncPoints = (next: SignaturePoint[]) => {
+    const size = surfaceSizeRef.current;
     pointsRef.current = next;
     setPoints(next);
-    onChange(next.length > 1 ? JSON.stringify({ version: 2, width: surfaceSize.width, height: surfaceSize.height, points: next }) : null);
+    onChange(next.length > 1 ? JSON.stringify({ version: 2, width: size.width, height: size.height, points: next }) : null);
   };
 
   const panResponder = useMemo(
@@ -125,7 +136,9 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
         style={[styles.surface, { height }]}
         onLayout={(event) => {
           const { width, height: nextHeight } = event.nativeEvent.layout;
-          setSurfaceSize({ width: Math.max(width, 1), height: Math.max(nextHeight, 1) });
+          const nextSize = { width: Math.max(width, 1), height: Math.max(nextHeight, 1) };
+          surfaceSizeRef.current = nextSize;
+          setSurfaceSize(nextSize);
         }}
         {...panResponder.panHandlers}
       >
@@ -202,9 +215,16 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: Colors.navy,
   },
+  previewCanvas: {
+    ...StyleSheet.absoluteFillObject,
+    left: 4,
+    right: 4,
+    top: 2,
+    bottom: 2,
+  },
   previewStroke: {
     position: 'absolute',
-    height: 2,
+    height: 3,
     borderRadius: 2,
     backgroundColor: Colors.navy,
   },

@@ -42,17 +42,37 @@ const ACCEPTANCE_FIELDS: SignoffField[] = [
   { id: 'acceptedByTitle', label: 'Accepted By Title', placeholder: 'Owner, contractor, designer, site supervisor, etc.' },
 ];
 
-const HEADER_PDF_FIELDS: PdfFormField[] = [
-  { id: 'projectName', label: 'Project Name', x: 29.5, y: 19.1, width: 64.5, height: 2.5 },
-  { id: 'projectLocation', label: 'Project Location', x: 29.5, y: 22.4, width: 64.5, height: 2.5 },
-  { id: 'surfaceArea', label: 'Surface Area', x: 29.5, y: 25.6, width: 64.5, height: 2.5 },
+const lineField = (
+  id: string,
+  label: string,
+  x: number,
+  lineY: number,
+  width: number,
+  type: PdfFormField['type'] = 'text',
+  height = 2.5,
+  fontSize?: number,
+): PdfFormField => ({
+  id,
+  label,
+  type,
+  x,
+  y: lineY - height,
+  width,
+  height,
+  fontSize,
+});
+
+const headerPdfFields = (x: number, width: number): PdfFormField[] => [
+  lineField('projectName', 'Project Name', x, 20.1, width),
+  lineField('projectLocation', 'Project Location', x, 23.4, width),
+  lineField('surfaceArea', 'Surface Area', x, 26.6, width),
 ];
 
-const ACCEPTANCE_PDF_FIELDS = (signatureY: number): PdfFormField[] => [
-  { id: 'signature', label: 'Signature', type: 'signature', x: 22.5, y: signatureY, width: 31.5, height: 4.3 },
-  { id: 'signedDate', label: 'Date', type: 'date', x: 59.5, y: signatureY, width: 34.5, height: 2.8 },
-  { id: 'customerName', label: 'Print Name', x: 22.5, y: signatureY + 8.4, width: 31.5, height: 2.8 },
-  { id: 'acceptedByTitle', label: 'Title', x: 59.5, y: signatureY + 8.4, width: 34.5, height: 2.8 },
+const ACCEPTANCE_PDF_FIELDS = (signatureY: number, nameDelta = 8.8): PdfFormField[] => [
+  lineField('signature', 'Signature', 22.6, signatureY, 32, 'signature', 4.6),
+  lineField('signedDate', 'Date', 60, signatureY, 34, 'date', 2.5),
+  lineField('customerName', 'Print Name', 22.6, signatureY + nameDelta, 32),
+  lineField('acceptedByTitle', 'Title', 60, signatureY + nameDelta, 34),
 ];
 
 export const PROJECT_SIGNOFF_TEMPLATES: SignoffTemplate[] = [
@@ -66,10 +86,10 @@ export const PROJECT_SIGNOFF_TEMPLATES: SignoffTemplate[] = [
       'Customer accepts the colour as shown on the SEMCO sample. Colours may vary depending on lighting, substrate, texture, troweling, thickness, humidity, climate, and aftercare.',
     pdfPage: require('../../assets/form-pages/Mockup-Approval-Color-Acceptance.jpg'),
     pdfFields: [
-      ...HEADER_PDF_FIELDS,
-      { id: 'color', label: 'Color', x: 29.5, y: 43.6, width: 64.5, height: 2.5 },
-      { id: 'finishCoatSealer', label: 'Finish Coat / Sealer', x: 29.5, y: 46.8, width: 64.5, height: 2.5 },
-      ...ACCEPTANCE_PDF_FIELDS(56.2),
+      ...headerPdfFields(29.7, 64.3),
+      lineField('color', 'Color', 29.7, 44.3, 64.3),
+      lineField('finishCoatSealer', 'Finish Coat / Sealer', 29.7, 47.5, 64.3),
+      ...ACCEPTANCE_PDF_FIELDS(56.9),
     ],
     fields: [
       ...PROJECT_FIELDS,
@@ -89,11 +109,11 @@ export const PROJECT_SIGNOFF_TEMPLATES: SignoffTemplate[] = [
       'Customer agrees the description accurately states the additional work requested and agrees to pay all costs associated with the change order.',
     pdfPage: require('../../assets/form-pages/Project-Change-Order.jpg'),
     pdfFields: [
-      ...HEADER_PDF_FIELDS,
-      { id: 'changeOrder', label: 'Change Order', x: 34.2, y: 28.8, width: 59.5, height: 2.5 },
-      { id: 'costOfChangeOrder', label: 'Cost of Change Order', x: 34.2, y: 32, width: 59.5, height: 2.5 },
-      { id: 'phaseDescription', label: 'Description', type: 'multiline', x: 10.5, y: 38.8, width: 83.5, height: 14.4, fontSize: 9 },
-      ...ACCEPTANCE_PDF_FIELDS(67.4),
+      ...headerPdfFields(34.3, 59.5),
+      lineField('changeOrder', 'Change Order', 34.3, 29.9, 59.5),
+      lineField('costOfChangeOrder', 'Cost of Change Order', 34.3, 33.1, 59.5),
+      { id: 'phaseDescription', label: 'Description', type: 'multiline', x: 10.5, y: 40.0, width: 83.5, height: 12.8, fontSize: 9 },
+      ...ACCEPTANCE_PDF_FIELDS(68.2, 6.1),
     ],
     fields: [
       ...PROJECT_FIELDS,
@@ -113,10 +133,10 @@ export const PROJECT_SIGNOFF_TEMPLATES: SignoffTemplate[] = [
       'Customer approves that the phase work has been completed in an acceptable fashion and completed as agreed upon in the contract or proposal.',
     pdfPage: require('../../assets/form-pages/Project-Phase-Acceptance.jpg'),
     pdfFields: [
-      ...HEADER_PDF_FIELDS,
-      { id: 'phaseName', label: 'Phase Approved', x: 35, y: 32, width: 59, height: 2.5 },
-      { id: 'phaseDescription', label: 'Description', type: 'multiline', x: 10.5, y: 36.2, width: 83.5, height: 13.4, fontSize: 9 },
-      ...ACCEPTANCE_PDF_FIELDS(61.5),
+      ...headerPdfFields(35.1, 58.9),
+      lineField('phaseName', 'Phase Approved', 35.1, 33.1, 58.9),
+      { id: 'phaseDescription', label: 'Description', type: 'multiline', x: 10.5, y: 39.3, width: 83.5, height: 10.9, fontSize: 9 },
+      ...ACCEPTANCE_PDF_FIELDS(62.1),
     ],
     fields: [
       ...PROJECT_FIELDS,
@@ -135,8 +155,8 @@ export const PROJECT_SIGNOFF_TEMPLATES: SignoffTemplate[] = [
       'Customer approves the colour, finish, and workmanship as seen on the project, and approves that all work has been completed to the agreed scope of work.',
     pdfPage: require('../../assets/form-pages/Final-Project-Acceptance.jpg'),
     pdfFields: [
-      ...HEADER_PDF_FIELDS,
-      ...ACCEPTANCE_PDF_FIELDS(44.5),
+      ...headerPdfFields(29.7, 64.3),
+      ...ACCEPTANCE_PDF_FIELDS(45.5),
     ],
     fields: [
       ...PROJECT_FIELDS,
@@ -155,8 +175,8 @@ export const PROJECT_SIGNOFF_TEMPLATES: SignoffTemplate[] = [
       'Customer understands SEMCO surfaces must be protected with kraft paper and plastic, with no duct tape or masking tape on the surface, and accepts responsibility for damage after final project acceptance.',
     pdfPage: require('../../assets/form-pages/Surface-Protection-Sign-Off.jpg'),
     pdfFields: [
-      ...HEADER_PDF_FIELDS,
-      ...ACCEPTANCE_PDF_FIELDS(64.5),
+      ...headerPdfFields(29.7, 64.3),
+      ...ACCEPTANCE_PDF_FIELDS(65.1, 11.9),
     ],
     fields: [
       ...PROJECT_FIELDS,
