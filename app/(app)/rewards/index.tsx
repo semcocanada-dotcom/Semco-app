@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { eq } from 'drizzle-orm';
 import { AppHeader, Badge, Button, Card, EmptyState, SectionHeader } from '@/components/ui';
+import { RewardTrackerCard } from '@/components/rewards/RewardTrackerCard';
 import { db } from '@/database/client';
 import { rewardCredits } from '@/database/schema/installers';
 import type { RewardCredit } from '@/database/schema/installers';
-import { REWARD_TIERS, formatSqft, getCurrentRewardTier, getNextRewardTier } from '@/constants/rewards';
+import { REWARD_TIERS, formatSqft, getRewardProgress } from '@/constants/rewards';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 import { useAuthStore } from '@/store/auth';
 import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
@@ -34,28 +36,30 @@ export default function RewardsScreen() {
     () => credits.filter((credit) => credit.status === 'pending').reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
     [credits],
   );
-  const currentTier = getCurrentRewardTier(verifiedSqft);
-  const nextTier = getNextRewardTier(verifiedSqft);
-  const nextProgress = nextTier ? Math.min(100, Math.round((verifiedSqft / nextTier.sqft) * 100)) : 100;
+  const progress = getRewardProgress(verifiedSqft);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <AppHeader title="Reward Tiers" subtitle="Cumulative verified square footage milestones." rightIcon="trophy-outline" />
 
+        <RewardTrackerCard verifiedSqft={verifiedSqft} pendingSqft={pendingSqft} />
+
         <Card elevated style={styles.heroCard}>
           <View style={styles.heroTop}>
-            <Badge label={currentTier ? currentTier.name : 'Not tiered yet'} variant={currentTier ? 'success' : 'warning'} />
+            <Badge label={progress.currentTier ? progress.currentTier.name : 'Not tiered yet'} variant={progress.currentTier ? 'success' : 'warning'} />
             <Badge label={`${formatSqft(verifiedSqft)} verified`} variant="primary" />
           </View>
           <Text style={styles.heroTitle}>
-            {nextTier ? `${formatSqft(Math.max(nextTier.sqft - verifiedSqft, 0))} to ${nextTier.name}` : '100K Club reached'}
+            {progress.nextTier
+              ? `${formatSqft(Math.max(progress.nextTier.sqft - verifiedSqft, 0))} to ${progress.nextTier.name}`
+              : '100K Club reached'}
           </Text>
           <Text style={styles.heroBody}>
             Only approved project reviews, dealer orders, or accepted receipts count toward rewards.
           </Text>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${nextProgress}%` }]} />
+            <View style={[styles.progressFill, { width: `${progress.progressPercent}%` }]} />
           </View>
           {pendingSqft > 0 ? <Text style={styles.pendingText}>{formatSqft(pendingSqft)} pending review</Text> : null}
         </Card>
@@ -65,17 +69,26 @@ export default function RewardsScreen() {
           <View style={styles.tierGrid}>
             {REWARD_TIERS.map((tier) => {
               const achieved = verifiedSqft >= tier.sqft;
-              const active = nextTier?.id === tier.id;
+              const active = progress.nextTier?.id === tier.id;
               return (
                 <Card key={tier.id} style={getTierCardStyle(achieved, active)}>
-                  <View style={[styles.tierNumber, achieved && styles.tierNumberAchieved]}>
-                    <Text style={[styles.tierNumberText, achieved && styles.tierNumberTextAchieved]}>{tier.level}</Text>
+                  <View style={styles.tierTopRow}>
+                    <View style={[styles.tierNumber, achieved && styles.tierNumberAchieved]}>
+                      <Text style={[styles.tierNumberText, achieved && styles.tierNumberTextAchieved]}>{tier.level}</Text>
+                    </View>
+                    <Badge label={achieved ? 'Unlocked' : active ? 'Next' : 'Locked'} variant={achieved ? 'success' : active ? 'warning' : 'neutral'} />
+                  </View>
+                  <View style={[styles.rewardImageFrame, !tier.image && styles.rewardImagePlaceholder]}>
+                    {tier.image ? (
+                      <Image source={tier.image} style={styles.rewardImage} contentFit="contain" />
+                    ) : (
+                      <Ionicons name={tier.level === 6 ? 'videocam-outline' : 'airplane-outline'} size={34} color={Colors.semcoOrange} />
+                    )}
                   </View>
                   <Text style={styles.tierName}>{tier.name}</Text>
                   <Text style={styles.tierSqft}>{formatSqft(tier.sqft)}</Text>
                   <Text style={styles.tierReward}>{tier.reward}</Text>
                   <Text style={styles.tierBody}>{tier.description}</Text>
-                  <Badge label={achieved ? 'Unlocked' : active ? 'Next' : 'Locked'} variant={achieved ? 'success' : active ? 'warning' : 'neutral'} />
                 </Card>
               );
             })}
@@ -159,9 +172,15 @@ const styles = StyleSheet.create({
   },
   section: { gap: Spacing.md },
   tierGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  tierCard: { width: '48%', flexGrow: 1, minHeight: 212, gap: Spacing.xs },
+  tierCard: { width: '48%', flexGrow: 1, minHeight: 300, gap: Spacing.xs },
   tierAchieved: { borderColor: Colors.successMuted, backgroundColor: Colors.surfaceElevated },
   tierActive: { borderColor: Colors.accentMuted },
+  tierTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
   tierNumber: {
     width: 30,
     height: 30,
@@ -178,6 +197,24 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
   },
   tierNumberTextAchieved: { color: Colors.white },
+  rewardImageFrame: {
+    height: 110,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  rewardImagePlaceholder: {
+    backgroundColor: Colors.accentMuted,
+    borderColor: Colors.accentMuted,
+  },
+  rewardImage: {
+    width: '100%',
+    height: '100%',
+  },
   tierName: {
     color: Colors.navy,
     fontFamily: Fonts.bold,

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { desc, eq } from 'drizzle-orm';
@@ -30,6 +30,49 @@ const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning
   approved: 'success',
 };
 
+const STATUS_OPTIONS: Array<{
+  value: OrderRequestStatus;
+  label: string;
+  description: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+}> = [
+  {
+    value: 'draft',
+    label: 'Draft',
+    description: 'Save it without sending.',
+    icon: 'document-text-outline',
+  },
+  {
+    value: 'in_review',
+    label: 'Send for Dealer Review',
+    description: 'Ready for Semco/dealer review.',
+    icon: 'send-outline',
+  },
+  {
+    value: 'needs_revision',
+    label: 'Needs Revision',
+    description: 'Hold it for quantity changes.',
+    icon: 'create-outline',
+  },
+  {
+    value: 'approved',
+    label: 'Approved',
+    description: 'Mark reviewed and approved.',
+    icon: 'checkmark-circle-outline',
+  },
+];
+
+const STATUS_HELP: Record<OrderRequestStatus, string> = {
+  draft: 'Saved as a draft. It will stay editable until it is submitted for dealer review.',
+  in_review: 'Submitted for dealer review. Reward square footage is logged as pending until it is verified.',
+  needs_revision: 'Marked for revision. Update the calculator quantities, then submit it again.',
+  approved: 'Approved. This is ready for dealer handoff and Semco review records.',
+};
+
+function statusLabel(status: OrderRequestStatus) {
+  return STATUS_OPTIONS.find((option) => option.value === status)?.label ?? status;
+}
+
 export default function OrdersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ projectId?: string; source?: string }>();
@@ -44,6 +87,7 @@ export default function OrdersScreen() {
   const [pendingResult, setPendingResult] = useState<CalculationResult | null>(null);
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
   const [savingStatus, setSavingStatus] = useState<OrderRequestStatus | null>(null);
+  const [lastSavedStatus, setLastSavedStatus] = useState<OrderRequestStatus | null>(null);
 
   useEffect(() => {
     db.select().from(projects).orderBy(desc(projects.updatedAt)).limit(3).then(setRecentProjects).catch(console.error);
@@ -151,6 +195,7 @@ export default function OrdersScreen() {
       if (requestId && result && (status === 'in_review' || status === 'approved')) {
         await syncOrderRewardCredit(requestId, result, now);
       }
+      setLastSavedStatus(status);
     } finally {
       setSavingStatus(null);
     }
@@ -197,7 +242,7 @@ export default function OrdersScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card elevated style={styles.heroCard}>
-          <Badge label="Material request" variant="accent" />
+          <Badge label="Material request" variant="primary" />
           <Text style={styles.title}>
             {project ? `${projectTitle} - Material request` : pendingResult ? 'Pick a project' : 'Create material request'}
           </Text>
@@ -222,7 +267,7 @@ export default function OrdersScreen() {
                     <Text style={styles.statusValue}>{orderRequest?.status ?? 'draft'}</Text>
                   </View>
                   <Badge
-                    label={orderRequest?.status ?? 'draft'}
+                    label={statusLabel((orderRequest?.status ?? 'draft') as OrderRequestStatus)}
                     variant={STATUS_VARIANT[(orderRequest?.status ?? 'draft') as OrderRequestStatus]}
                   />
                 </View>
@@ -253,13 +298,48 @@ export default function OrdersScreen() {
             {result ? <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} /> : null}
 
             <View style={styles.section}>
-              <SectionHeader title="Status controls" subtitle="Save the request or move it forward for dealer review." />
-              <View style={styles.buttonGrid}>
-                <Button label="Draft" variant="secondary" onPress={() => ensureRequest('draft')} disabled={savingStatus !== null || !result} style={styles.button} />
-                <Button label="Submit for Dealer Review" variant="accent" onPress={() => ensureRequest('in_review')} disabled={savingStatus !== null || !result} style={styles.button} />
-                <Button label="Needs Revision" variant="secondary" onPress={() => ensureRequest('needs_revision')} disabled={savingStatus !== null || !result} style={styles.button} />
-                <Button label="Approved" variant="primary" onPress={() => ensureRequest('approved')} disabled={savingStatus !== null || !result} style={styles.button} />
+              <SectionHeader title="Request status" subtitle="Choose the stage for this material request." />
+              <View style={styles.statusOptionGrid}>
+                {STATUS_OPTIONS.map((option) => {
+                  const active = (orderRequest?.status ?? 'draft') === option.value;
+                  const loading = savingStatus === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.78}
+                      disabled={savingStatus !== null || !result}
+                      onPress={() => ensureRequest(option.value)}
+                      style={[
+                        styles.statusOption,
+                        active && styles.statusOptionActive,
+                        (!result || savingStatus !== null) && styles.statusOptionDisabled,
+                      ]}
+                    >
+                      <View style={[styles.statusOptionIcon, active && styles.statusOptionIconActive]}>
+                        <Ionicons
+                          name={loading ? 'hourglass-outline' : active ? 'checkmark-outline' : option.icon}
+                          size={20}
+                          color={active ? Colors.white : Colors.darkTeal}
+                        />
+                      </View>
+                      <View style={styles.statusOptionCopy}>
+                        <Text style={[styles.statusOptionTitle, active && styles.statusOptionTitleActive]}>
+                          {option.label}
+                        </Text>
+                        <Text style={[styles.statusOptionBody, active && styles.statusOptionBodyActive]}>
+                          {option.description}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
+              <Card style={styles.statusHelpCard}>
+                <Ionicons name="information-circle-outline" size={20} color={Colors.darkTeal} />
+                <Text style={styles.statusHelpText}>
+                  {lastSavedStatus ? STATUS_HELP[lastSavedStatus] : result ? STATUS_HELP[(orderRequest?.status ?? 'draft') as OrderRequestStatus] : 'Run the calculator first so this request has quantities to save.'}
+                </Text>
+              </Card>
             </View>
           </>
         ) : (
@@ -308,7 +388,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxxl + 16,
     gap: Spacing.lg,
   },
-  heroCard: { gap: Spacing.md, borderColor: Colors.accentMuted, backgroundColor: Colors.surfaceElevated },
+  heroCard: { gap: Spacing.md, borderColor: Colors.primaryMuted, backgroundColor: Colors.surfaceElevated },
   title: { color: Colors.textPrimary, fontSize: Typography.size.xl, lineHeight: Typography.size.xl * 1.1, fontWeight: Typography.weight.bold },
   body: { color: Colors.textSecondary, fontSize: Typography.size.base, lineHeight: Typography.size.base * 1.5 },
   bodySmall: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.45 },
@@ -320,8 +400,70 @@ const styles = StyleSheet.create({
   statusLabel: { color: Colors.textDisabled, fontSize: Typography.size.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
   statusValue: { color: Colors.textPrimary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
   statusDivider: { height: 1, backgroundColor: Colors.border },
-  buttonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  button: { width: '48%' },
+  statusOptionGrid: { gap: Spacing.sm },
+  statusOption: {
+    minHeight: 72,
+    backgroundColor: Colors.white,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    shadowColor: Colors.navy,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 2,
+  },
+  statusOptionActive: {
+    backgroundColor: Colors.navy,
+    borderColor: Colors.darkTeal,
+  },
+  statusOptionDisabled: {
+    opacity: 0.55,
+  },
+  statusOptionIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusOptionIconActive: {
+    backgroundColor: Colors.semcoOrange,
+  },
+  statusOptionCopy: { flex: 1, gap: 3 },
+  statusOptionTitle: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.base,
+    fontWeight: Typography.weight.bold,
+  },
+  statusOptionTitleActive: { color: Colors.white },
+  statusOptionBody: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
+  },
+  statusOptionBodyActive: { color: '#DDF4F5' },
+  statusHelpCard: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'flex-start',
+    borderColor: Colors.primaryMuted,
+    backgroundColor: Colors.surfaceElevated,
+  },
+  statusHelpText: {
+    flex: 1,
+    color: Colors.textSecondary,
+    fontFamily: Fonts.medium,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.45,
+  },
   projectList: { gap: Spacing.sm },
   noEstimateCard: {
     alignItems: 'stretch',

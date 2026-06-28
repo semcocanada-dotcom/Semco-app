@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxxl + 44,
     gap: Spacing.md,
   },
-  heroCard: { gap: Spacing.sm, borderColor: Colors.accentMuted, backgroundColor: Colors.surfaceElevated },
+  heroCard: { gap: Spacing.sm, borderColor: Colors.primaryMuted, backgroundColor: Colors.surfaceElevated },
   heroTitle: {
     color: Colors.navy,
     fontFamily: Fonts.bold,

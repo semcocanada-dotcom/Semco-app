@@ -9,6 +9,15 @@ import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
 
 export default function InstallationGuidesScreen() {
   const router = useRouter();
+  const [category, setCategory] = React.useState('All');
+  const categories = React.useMemo(
+    () => ['All', ...Array.from(new Set(INSTALLATION_GUIDES.map((guide) => guide.category)))],
+    [],
+  );
+  const visibleGuides = React.useMemo(
+    () => category === 'All' ? INSTALLATION_GUIDES : INSTALLATION_GUIDES.filter((guide) => guide.category === category),
+    [category],
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -20,7 +29,7 @@ export default function InstallationGuidesScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={22} color={Colors.semcoOrange} />
+            <Ionicons name="chevron-back" size={22} color={Colors.darkTeal} />
           </TouchableOpacity>
           <AppHeader title="System Diagrams" subtitle="Official detail drawings and install sequence." rightIcon="layers-outline" />
         </View>
@@ -32,12 +41,27 @@ export default function InstallationGuidesScreen() {
               Official Semco diagrams stay here for field reference. Job photos still stay inside each project for warranty records.
             </Text>
           </View>
-          <Badge label={`${INSTALLATION_GUIDES.length} guides`} variant="primary" />
+          <Badge label={`${visibleGuides.length} guides`} variant="primary" />
         </View>
 
         <View style={styles.section}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryRow}>
+            {categories.map((item) => {
+              const active = item === category;
+              return (
+                <TouchableOpacity
+                  key={item}
+                  onPress={() => setCategory(item)}
+                  activeOpacity={0.78}
+                  style={[styles.categoryChip, active && styles.categoryChipActive]}
+                >
+                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{item}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
           <SectionHeader title="Official diagrams" subtitle="Tap Ask Semco from a guide when you want a direct answer about that system." />
-          {INSTALLATION_GUIDES.map((guide) => (
+          {visibleGuides.map((guide) => (
             <SystemGuideCard
               key={guide.id}
               guide={guide}
@@ -97,4 +121,30 @@ const styles = StyleSheet.create({
     lineHeight: Typography.size.sm * 1.45,
   },
   section: { gap: Spacing.md },
+  categoryRow: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.base,
+  },
+  categoryChip: {
+    minHeight: 38,
+    borderRadius: 19,
+    paddingHorizontal: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  categoryChipActive: {
+    backgroundColor: Colors.semcoOrange,
+    borderColor: Colors.semcoOrange,
+  },
+  categoryText: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.sm,
+  },
+  categoryTextActive: {
+    color: Colors.white,
+  },
 });

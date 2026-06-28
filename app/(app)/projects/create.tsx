@@ -82,29 +82,37 @@ export default function CreateProjectScreen() {
     setError(null);
     setIsSaving(true);
 
-    const areaSqft = parseFloat(totalAreaSqft);
+    try {
+      const areaSqft = parseFloat(totalAreaSqft);
+      const projectId = `proj-${Date.now()}`;
+      const now = new Date().toISOString();
 
-    await db.insert(projects).values({
-      id: `proj-${Date.now()}`,
-      installerId: user?.id ?? 'local',
-      clientName: clientName.trim(),
-      clientEmail: clientEmail.trim() || null,
-      clientPhone: clientPhone.trim() || null,
-      siteAddress: siteAddress.trim() || null,
-      substrateType: substrateType ?? null,
-      totalAreaSqm: isNaN(areaSqft) ? null : sqftToSqm(areaSqft),
-      selectedColorId,
-      finishType,
-      sealerProductId,
-      status: 'active',
-      warrantyIssued: false,
-      notes: notes.trim() || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+      await db.insert(projects).values({
+        id: projectId,
+        installerId: user?.id ?? 'local',
+        clientName: clientName.trim(),
+        clientEmail: clientEmail.trim() || null,
+        clientPhone: clientPhone.trim() || null,
+        siteAddress: siteAddress.trim() || null,
+        substrateType: substrateType ?? null,
+        totalAreaSqm: isNaN(areaSqft) ? null : sqftToSqm(areaSqft),
+        selectedColorId,
+        finishType,
+        sealerProductId,
+        status: 'active',
+        warrantyIssued: false,
+        notes: notes.trim() || null,
+        createdAt: now,
+        updatedAt: now,
+      });
 
-    setIsSaving(false);
-    router.back();
+      router.replace({ pathname: '/projects/[id]', params: { id: projectId } } as any);
+    } catch (saveError) {
+      console.error(saveError);
+      setError('Project could not be saved. Try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

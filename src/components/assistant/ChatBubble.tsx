@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
@@ -25,9 +24,12 @@ const assistantMarkdownStyles = {
   },
   paragraph: {
     marginTop: 0,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
-  strong: { fontWeight: Typography.weight.bold },
+  strong: {
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
   em: { fontStyle: 'italic' as const },
   link: { color: Colors.primary },
   code_inline: {
@@ -65,25 +67,19 @@ interface ChatBubbleProps {
 }
 
 export function ChatBubble({ message }: ChatBubbleProps) {
-  const router = useRouter();
   const isUser = message.role === 'user';
-  const citations = !isUser ? message.citations?.slice(0, 4) ?? [] : [];
-  const isLongAssistantAnswer = !isUser && message.content.length > COLLAPSE_THRESHOLD;
+  const displayContent = React.useMemo(
+    () => (isUser ? message.content : normalizeDisplayedAnswer(message.content)),
+    [isUser, message.content],
+  );
+  const isLongAssistantAnswer = !isUser && displayContent.length > COLLAPSE_THRESHOLD;
   const [isExpanded, setExpanded] = React.useState(!isLongAssistantAnswer);
-
-  const openCitation = (docId?: string) => {
-    if (docId) {
-      router.push(`/products/${docId}` as any);
-      return;
-    }
-    router.push('/products' as any);
-  };
 
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
       <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAssistant]}>
         {isUser ? (
-          <Text style={[styles.text, styles.textUser]}>{message.content}</Text>
+          <Text style={[styles.text, styles.textUser]}>{displayContent}</Text>
         ) : (
           <>
             <View style={styles.answerHeader}>
@@ -93,7 +89,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
               <Text style={styles.answerTitle}>Semco answer</Text>
             </View>
             <View style={!isExpanded && styles.collapsedAnswer}>
-              <MarkdownDisplay style={assistantMarkdownStyles}>{message.content}</MarkdownDisplay>
+              <MarkdownDisplay style={assistantMarkdownStyles}>{displayContent}</MarkdownDisplay>
             </View>
             {isLongAssistantAnswer && (
               <TouchableOpacity
@@ -115,31 +111,71 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 />
               </TouchableOpacity>
             )}
-            {citations.length > 0 && (
-              <View style={styles.sources}>
-                {citations.map((citation) => (
-                  <TouchableOpacity
-                    key={citation.id}
-                    onPress={() => openCitation(citation.docId)}
-                    activeOpacity={0.78}
-                    style={styles.sourceChip}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Open ${citation.documentName}`}
-                  >
-                    <Ionicons name="document-text-outline" size={14} color={Colors.primary} />
-                    <Text style={styles.sourceText} numberOfLines={1}>
-                      {citation.title ?? citation.documentName}
-                      {citation.pageNumber ? ` p. ${citation.pageNumber}` : ''}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
           </>
         )}
       </View>
     </View>
   );
+}
+
+function normalizeDisplayedAnswer(content: string): string {
+  const original = content.trim();
+  let next = original.replace(/\r\n/g, '\n').trim();
+
+  next = next
+    .replace(/^\s*Direct answer\s*\n+/i, '')
+    .replace(/^\s*Answer:\s*/i, '')
+    .replace(/\n\s*Direct answer\s*\n/gi, '\n')
+    .replace(/\n\s*Sources:\s*[\s\S]*$/i, '')
+    .replace(/\n\s*Closest confirmed source:\s*[\s\S]*$/i, '')
+    .replace(/\n\s*Source:\s*[^\n]+$/i, '')
+    .replace(/\bJobsite path:\s*/i, "Here's the field sequence:\n")
+    .split('\n')
+    .map(formatStepLine)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return next || original;
+}
+
+function formatStepLine(line: string): string {
+  const numberedMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
+  if (numberedMatch) {
+    return formatStepBody(numberedMatch[1], numberedMatch[2], numberedMatch[3]);
+  }
+
+  const markdownMatch = line.match(/^(\s*)\*\*Step\s+(\d+):?\*\*\s+(.+)$/i);
+  if (markdownMatch) {
+    return formatStepBody(markdownMatch[1], markdownMatch[2], markdownMatch[3]);
+  }
+
+  const plainMatch = line.match(/^(\s*)Step\s+(\d+):\s+(.+)$/i);
+  if (plainMatch) {
+    return formatStepBody(plainMatch[1], plainMatch[2], plainMatch[3]);
+  }
+
+  return line;
+}
+
+function formatStepBody(indent: string, stepNumber: string, text: string): string {
+  const clean = text.trim();
+  const titled = clean.match(/^([^:.!?]{3,64}):\s+(.+)$/);
+  if (titled) {
+    return `${indent}**Step ${stepNumber}: ${titled[1].trim()}**\n\n${indent}${sentenceCase(titled[2].trim())}`;
+  }
+
+  const conditional = clean.match(/^(If [^,]{8,72}),\s+(.+)$/i);
+  if (conditional) {
+    return `${indent}**Step ${stepNumber}: ${sentenceCase(conditional[1].trim())}**\n\n${indent}${sentenceCase(conditional[2].trim())}`;
+  }
+
+  return `${indent}**Step ${stepNumber}**\n\n${indent}${sentenceCase(clean)}`;
+}
+
+function sentenceCase(value: string): string {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 const styles = StyleSheet.create({
@@ -212,31 +248,6 @@ const styles = StyleSheet.create({
   expandText: {
     color: Colors.primary,
     fontSize: Typography.size.sm,
-    fontFamily: Fonts.semibold,
-    fontWeight: Typography.weight.semibold,
-  },
-  sources: {
-    gap: Spacing.xs,
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  sourceChip: {
-    minHeight: 34,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.primaryMuted,
-    borderWidth: 1,
-    borderColor: '#C6EEF0',
-    paddingHorizontal: Spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  sourceText: {
-    flex: 1,
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
     fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.semibold,
   },

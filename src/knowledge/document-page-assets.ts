@@ -220,6 +220,13 @@ export const DOCUMENT_PAGE_ASSETS: DocumentPageAsset[] = [
     image: require('../../assets/document-pages/Shower-Detail-Concrete-p01.jpg'),
   },
   {
+    sourceDocument: 'Shower-Detail-Glasroc-OSB.pdf',
+    pageNumber: 1,
+    width: 1024,
+    height: 1280,
+    image: require('../../assets/document-pages/Shower-Detail-Glasroc-OSB-p01.jpg'),
+  },
+  {
     sourceDocument: 'Shower-Detail-Wood.pdf',
     pageNumber: 1,
     width: 1224,

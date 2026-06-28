@@ -1,11 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '@/components/ui/Badge';
 import { DocumentPagePreview } from '@/components/library/DocumentPagePreview';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import type { InstallationGuide } from '@/knowledge/installation-guides';
-import { getDocumentPageAsset } from '@/knowledge/document-page-assets';
+import { getDocumentPageAsset, getDocumentSourceUrl } from '@/knowledge/document-page-assets';
 
 type SystemGuideCardProps = {
   guide: InstallationGuide;
@@ -17,6 +17,7 @@ type SystemGuideCardProps = {
 
 export function SystemGuideCard({ guide, compact = false, onPress, onAsk, style }: SystemGuideCardProps) {
   const hasDocumentPreview = Boolean(getDocumentPageAsset(guide.sourceDocument));
+  const sourceUrl = getDocumentSourceUrl(guide.sourceDocument);
   const body = (
     <>
       <View style={styles.topRow}>
@@ -27,7 +28,7 @@ export function SystemGuideCard({ guide, compact = false, onPress, onAsk, style 
           <Text style={styles.title}>{guide.title}</Text>
           <Text style={styles.subtitle}>{guide.subtitle}</Text>
         </View>
-        <Badge label={guide.category} variant="accent" />
+        <Badge label={guide.category} variant="primary" />
       </View>
 
       {hasDocumentPreview ? (
@@ -60,12 +61,20 @@ export function SystemGuideCard({ guide, compact = false, onPress, onAsk, style 
             <Text style={styles.sourceText}>{guide.sourceDocument}</Text>
             {guide.sourcePage ? <Text style={styles.sourcePage}>{guide.sourcePage}</Text> : null}
           </View>
-          {onAsk ? (
-            <TouchableOpacity onPress={onAsk} style={styles.askButton} accessibilityRole="button">
-              <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.white} />
-              <Text style={styles.askText}>Ask Semco about this</Text>
-            </TouchableOpacity>
-          ) : null}
+          <View style={styles.actionRow}>
+            {sourceUrl ? (
+              <TouchableOpacity onPress={() => Linking.openURL(sourceUrl)} style={styles.sourceButton} accessibilityRole="button">
+                <Ionicons name="open-outline" size={18} color={Colors.darkTeal} />
+                <Text style={styles.sourceButtonText}>Open PDF</Text>
+              </TouchableOpacity>
+            ) : null}
+            {onAsk ? (
+              <TouchableOpacity onPress={onAsk} style={styles.askButton} accessibilityRole="button">
+                <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.white} />
+                <Text style={styles.askText}>Ask Semco</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
         </>
       ) : null}
     </>
@@ -117,6 +126,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     padding: Spacing.md,
     gap: Spacing.md,
+    shadowColor: Colors.navy,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
   },
   compactCard: {
     width: '100%',
@@ -261,7 +275,29 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: Typography.size.xs,
   },
+  actionRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  sourceButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  sourceButtonText: {
+    color: Colors.darkTeal,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
+  },
   askButton: {
+    flex: 1,
     minHeight: 46,
     borderRadius: Radius.md,
     backgroundColor: Colors.semcoOrange,

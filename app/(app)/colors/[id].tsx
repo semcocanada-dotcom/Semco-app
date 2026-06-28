@@ -180,7 +180,7 @@ export default function ColorDetailScreen() {
         </TouchableOpacity>
 
         <Card style={styles.referenceCard}>
-          <Ionicons name="information-circle-outline" size={19} color={Colors.semcoOrange} />
+          <Ionicons name="information-circle-outline" size={19} color={Colors.darkTeal} />
           <Text style={styles.referenceText}>
             Colour shown is a screen reference only. Verify final selection with an approved physical sample before install.
           </Text>

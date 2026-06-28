@@ -16,7 +16,7 @@ export function SearchBar({ showMic = true, containerStyle, ...rest }: SearchBar
         {...rest}
         style={styles.input}
         placeholderTextColor={Colors.textDisabled}
-        selectionColor={Colors.semcoOrange}
+        selectionColor={Colors.darkTeal}
       />
       {showMic ? <Ionicons name="mic-outline" size={20} color={Colors.textSecondary} /> : null}
     </View>

@@ -10,38 +10,52 @@ import { calculations } from '@/database/schema/calculations';
 import colorsData from '@/database/seed/colors.json';
 import { projects, projects_photos } from '@/database/schema/projects';
 import { orderRequests } from '@/database/schema/workflow';
+import { projectSignoffs } from '@/database/schema/signoffs';
 import { warrantyReviews } from '@/database/schema/installers';
 import type { BatchLog } from '@/database/schema/batches';
 import type { Calculation, CalculationResult } from '@/database/schema/calculations';
 import type { Color } from '@/database/schema/colors';
 import type { PhotoStage, Project, ProjectPhoto } from '@/database/schema/projects';
 import type { OrderRequest } from '@/database/schema/workflow';
+import type { ProjectSignoff } from '@/database/schema/signoffs';
 import type { InstallerProfile, WarrantyReview } from '@/database/schema/installers';
 import { FormulaDisplay } from '@/components/colors/FormulaDisplay';
 import { ColorSwatch } from '@/components/colors/ColorSwatch';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
 import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialRetailEstimateCard';
 import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
+import { ProjectSignoffPanel } from '@/components/projects/ProjectSignoffPanel';
 import { WarrantyPhotoChecklist } from '@/components/projects/WarrantyPhotoChecklist';
 import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
 import { getWarrantyPhotoStatus, getWarrantySummaryText } from '@/services/warranty';
 import { useAuthStore } from '@/store/auth';
-import { Badge, BatchCard, Button, Card, EmptyState, TabControl } from '@/components/ui';
+import { Badge, BatchCard, Button, Card, EmptyState, StatCard, TabControl } from '@/components/ui';
 import { resolveDealerContext } from '@/constants/dealers';
 import { STOCKED_SEALERS } from '@/constants/stocked-sealers';
 import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
-type DetailTab = 'job' | 'spec' | 'materials' | 'photos' | 'warranty';
+type DetailTab = 'job' | 'spec' | 'materials' | 'photos' | 'forms';
 
 const DETAIL_TABS: { value: DetailTab; label: string }[] = [
   { value: 'job', label: 'Job' },
   { value: 'spec', label: 'Spec' },
   { value: 'materials', label: 'Materials' },
   { value: 'photos', label: 'Photos' },
-  { value: 'warranty', label: 'Warranty' },
+  { value: 'forms', label: 'Forms' },
 ];
+
+type DashboardAction = 'calculator' | 'materials' | 'photos' | 'complete' | 'none';
+
+type DashboardNextStep = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  body: string;
+  buttonLabel: string;
+  action: DashboardAction;
+  variant: 'primary' | 'secondary';
+};
 
 const STATUS_BADGE: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> = {
   active: { label: 'In Progress', variant: 'success' },
@@ -62,11 +76,18 @@ export default function ProjectDetailScreen() {
   const [calculation, setCalculation] = useState<Calculation | null>(null);
   const [orderRequest, setOrderRequest] = useState<OrderRequest | null>(null);
   const [warrantyReview, setWarrantyReview] = useState<WarrantyReview | null>(null);
+  const [signoffs, setSignoffs] = useState<ProjectSignoff[]>([]);
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
+  const [isLoadingProject, setIsLoadingProject] = useState(true);
   const [tab, setTab] = useState<DetailTab>('job');
 
   const load = useCallback(() => {
-    if (!id) return;
+    if (!id) {
+      setProject(null);
+      setIsLoadingProject(false);
+      return;
+    }
+    setIsLoadingProject(true);
     Promise.all([
       db.select().from(projects).where(eq(projects.id, id)).limit(1),
       db.select().from(projects_photos).where(eq(projects_photos.projectId, id)),
@@ -74,16 +95,22 @@ export default function ProjectDetailScreen() {
       db.select().from(calculations).where(eq(calculations.projectId, id)).orderBy(desc(calculations.createdAt)).limit(1),
       db.select().from(orderRequests).where(eq(orderRequests.projectId, id)).orderBy(desc(orderRequests.createdAt)).limit(1),
       db.select().from(warrantyReviews).where(eq(warrantyReviews.projectId, id)).orderBy(desc(warrantyReviews.createdAt)).limit(1),
+      db.select().from(projectSignoffs).where(eq(projectSignoffs.projectId, id)).orderBy(desc(projectSignoffs.updatedAt)),
     ])
-      .then(([projectRows, photoRows, batchRows, calcRows, requestRows, warrantyRows]) => {
+      .then(([projectRows, photoRows, batchRows, calcRows, requestRows, warrantyRows, signoffRows]) => {
         setProject(projectRows[0] ?? null);
         setPhotos(photoRows);
         setBatches(batchRows);
         setCalculation(calcRows[0] ?? null);
         setOrderRequest(requestRows[0] ?? null);
         setWarrantyReview(warrantyRows[0] ?? null);
+        setSignoffs(signoffRows);
       })
-      .catch(console.error);
+      .catch((error) => {
+        console.error(error);
+        setProject(null);
+      })
+      .finally(() => setIsLoadingProject(false));
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -215,7 +242,7 @@ export default function ProjectDetailScreen() {
     ]);
   };
 
-  if (!project) {
+  if (isLoadingProject) {
     return (
       <SafeAreaView style={styles.safe}>
         <Text style={styles.loading}>Loading...</Text>
@@ -223,14 +250,55 @@ export default function ProjectDetailScreen() {
     );
   }
 
+  if (!project) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.notFoundWrap}>
+          <EmptyState
+            icon="folder-open-outline"
+            title="Project not found"
+            body="The project record is not available on this device yet. Go back to the project list or create it again."
+          />
+          <Button label="Back to Projects" variant="primary" onPress={() => router.replace('/projects' as any)} fullWidth />
+          <Button label="Create Project" variant="secondary" onPress={() => router.replace('/projects/create' as any)} fullWidth />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const orderStatus = getOrderStatusMeta(orderRequest?.status);
+  const dashboardNextStep = getDashboardNextStep({
+    project,
+    calculationResult,
+    orderRequest,
+    warrantyPhotoStatus,
+    warrantyReview,
+  });
+  const handleDashboardNextStep = () => {
+    switch (dashboardNextStep.action) {
+      case 'calculator':
+        router.push('/calculator' as any);
+        return;
+      case 'materials':
+        setTab('materials');
+        return;
+      case 'photos':
+        setTab('photos');
+        return;
+      case 'complete':
+        handleMarkComplete();
+        return;
+      default:
+        setTab('job');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.roundButton} accessibilityLabel="Back">
-            <Ionicons name="chevron-back" size={22} color={Colors.semcoOrange} />
+            <Ionicons name="chevron-back" size={22} color={Colors.darkTeal} />
           </TouchableOpacity>
           <Text style={styles.screenTitle}>Project File</Text>
           <TouchableOpacity style={styles.roundButton} accessibilityLabel="More project options">
@@ -259,7 +327,67 @@ export default function ProjectDetailScreen() {
 
         {tab === 'job' ? (
           <>
+            <View style={styles.dashboardGrid}>
+              <StatCard
+                label="Area"
+                value={formatSqftFromSqm(project.totalAreaSqm)}
+                detail={formatId(project.substrateType)}
+                icon="resize-outline"
+                tone="primary"
+                style={styles.dashboardStat}
+              />
+              <StatCard
+                label="Photos"
+                value={`${warrantyPhotoStatus.completedCount}/${warrantyPhotoStatus.requiredCount}`}
+                detail={warrantyPhotoStatus.isQualified ? 'Warranty ready' : 'Stages needed'}
+                icon="camera-outline"
+                tone={warrantyPhotoStatus.isQualified ? 'success' : 'accent'}
+                style={styles.dashboardStat}
+              />
+              <StatCard
+                label="Materials"
+                value={orderStatus.label}
+                detail={dealerContext.dealerId ? dealerContext.dealerName : 'Dealer pending'}
+                icon="cart-outline"
+                tone={orderRequest?.status === 'approved' ? 'success' : 'primary'}
+                style={styles.dashboardStat}
+              />
+              <StatCard
+                label="Batches"
+                value={String(batchSummary.count)}
+                detail={`${batchSummary.kg.toFixed(1)} kg logged`}
+                icon="receipt-outline"
+                tone="neutral"
+                style={styles.dashboardStat}
+              />
+            </View>
+
+            <Card style={styles.nextStepCard}>
+              <View style={styles.nextStepIcon}>
+                <Ionicons name={dashboardNextStep.icon} size={22} color={Colors.semcoOrange} />
+              </View>
+              <View style={styles.nextStepCopy}>
+                <Text style={styles.nextStepEyebrow}>Next best action</Text>
+                <Text style={styles.nextStepTitle}>{dashboardNextStep.title}</Text>
+                <Text style={styles.nextStepBody}>{dashboardNextStep.body}</Text>
+              </View>
+              <Button
+                label={dashboardNextStep.buttonLabel}
+                variant={dashboardNextStep.variant}
+                onPress={handleDashboardNextStep}
+                fullWidth
+              />
+            </Card>
+
+            <View style={styles.quickActions}>
+              <QuickAction icon="calculator-outline" label="Calculator" onPress={() => router.push('/calculator' as any)} />
+              <QuickAction icon="cart-outline" label="Materials" onPress={() => setTab('materials')} />
+              <QuickAction icon="camera-outline" label="Photos" onPress={() => setTab('photos')} />
+              <QuickAction icon="create-outline" label="Forms" onPress={() => setTab('forms')} />
+            </View>
+
             <Card style={styles.infoCard}>
+              <Text style={styles.sectionTitle}>Job information</Text>
               <InfoRow icon="person-outline" label="Client" value={project.clientName ?? 'Not set'} />
               <InfoRow icon="mail-outline" label="Email" value={project.clientEmail ?? 'Not set'} />
               <InfoRow icon="call-outline" label="Phone" value={project.clientPhone ?? 'Not set'} />
@@ -270,13 +398,6 @@ export default function ProjectDetailScreen() {
               <InfoRow icon="business-outline" label="Dealer" value={dealerContext.dealerId ? dealerContext.dealerName : 'Set company profile'} />
               <InfoRow icon="pulse-outline" label="Status" value={status.label} />
             </Card>
-
-            <View style={styles.quickActions}>
-              <QuickAction icon="calculator-outline" label="Calculator" onPress={() => router.push('/calculator' as any)} />
-              <QuickAction icon="cart-outline" label="Materials" onPress={() => setTab('materials')} />
-              <QuickAction icon="camera-outline" label="Photos" onPress={() => setTab('photos')} />
-              <QuickAction icon="shield-checkmark-outline" label="Warranty" onPress={() => setTab('warranty')} />
-            </View>
 
             {project.status === 'active' ? (
               <Button label="Mark as Complete" variant="secondary" onPress={handleMarkComplete} fullWidth />
@@ -375,14 +496,8 @@ export default function ProjectDetailScreen() {
 
         {tab === 'photos' ? (
           <View style={styles.section}>
-            <WarrantyPhotoChecklist photos={photos} onAddPhoto={handleAddPhoto} compact />
-            <PhotoTimeline photos={photos} onAddPhoto={handleAddPhoto} />
-          </View>
-        ) : null}
-
-        {tab === 'warranty' ? (
-          <View style={styles.section}>
             <WarrantyPhotoChecklist photos={photos} onAddPhoto={handleAddPhoto} />
+            <PhotoTimeline photos={photos} onAddPhoto={handleAddPhoto} />
             <Card style={styles.infoCard}>
               <InfoRow icon="shield-outline" label="Warranty Issued" value={project.warrantyIssued ? 'Yes' : 'No'} />
               <InfoRow icon="clipboard-outline" label="Review Status" value={formatId(warrantyReview?.status ?? 'not submitted')} />
@@ -415,6 +530,10 @@ export default function ProjectDetailScreen() {
             </Card>
           </View>
         ) : null}
+
+        {tab === 'forms' ? (
+          <ProjectSignoffPanel project={project} signoffs={signoffs} onSaved={load} />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -433,6 +552,85 @@ function getOrderStatusMeta(status?: string | null): { label: string; variant: '
     default:
       return { label: 'Not Started', variant: 'neutral' };
   }
+}
+
+function getDashboardNextStep({
+  project,
+  calculationResult,
+  orderRequest,
+  warrantyPhotoStatus,
+  warrantyReview,
+}: {
+  project: Project;
+  calculationResult: CalculationResult | null;
+  orderRequest: OrderRequest | null;
+  warrantyPhotoStatus: ReturnType<typeof getWarrantyPhotoStatus>;
+  warrantyReview: WarrantyReview | null;
+}): DashboardNextStep {
+  if (!project.totalAreaSqm || !calculationResult) {
+    return {
+      icon: 'calculator-outline',
+      title: 'Build the material count',
+      body: 'Run the calculator so this job has quantities, retail estimate, and a material request path.',
+      buttonLabel: 'Open Calculator',
+      action: 'calculator',
+      variant: 'primary',
+    };
+  }
+
+  if (!orderRequest || orderRequest.status === 'draft' || orderRequest.status === 'needs_revision') {
+    return {
+      icon: 'cart-outline',
+      title: 'Review materials for this job',
+      body: 'Open the material tab, confirm quantities, then submit the request for dealer review.',
+      buttonLabel: 'Review Materials',
+      action: 'materials',
+      variant: 'primary',
+    };
+  }
+
+  if (!warrantyPhotoStatus.isQualified) {
+    const nextMissing = warrantyPhotoStatus.missingStages[0]?.label ?? 'next stage';
+    return {
+      icon: 'camera-outline',
+      title: `Capture ${nextMissing}`,
+      body: 'Warranty needs a clear photo record for every stage before Semco can approve the job.',
+      buttonLabel: 'Add Photos',
+      action: 'photos',
+      variant: 'primary',
+    };
+  }
+
+  if (!warrantyReview || warrantyReview.status === 'needs_revision' || warrantyReview.status === 'rejected') {
+    return {
+      icon: 'shield-checkmark-outline',
+      title: 'Submit warranty review',
+      body: 'Photos are complete. Send the project file to Semco review so the warranty document can be approved.',
+      buttonLabel: 'Review Photos',
+      action: 'photos',
+      variant: 'primary',
+    };
+  }
+
+  if (project.status === 'active') {
+    return {
+      icon: 'checkmark-circle-outline',
+      title: 'Close out the project',
+      body: 'The file is organized. Mark complete when the job has been handed over.',
+      buttonLabel: 'Mark Complete',
+      action: 'complete',
+      variant: 'secondary',
+    };
+  }
+
+  return {
+    icon: 'briefcase-outline',
+    title: 'Project file is organized',
+    body: 'Use the tabs below to review specs, materials, photos, warranty status, and batches.',
+    buttonLabel: 'Stay Here',
+    action: 'none',
+    variant: 'secondary',
+  };
 }
 
 function formatId(value?: string | null): string {
@@ -458,7 +656,7 @@ function InfoRow({ icon, label, value }: { icon: React.ComponentProps<typeof Ion
 function QuickAction({ icon, label, onPress }: { icon: React.ComponentProps<typeof Ionicons>['name']; label: string; onPress: () => void }) {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.78} style={styles.quickAction}>
-      <Ionicons name={icon} size={24} color={Colors.semcoOrange} />
+      <Ionicons name={icon} size={24} color={Colors.darkTeal} />
       <Text style={styles.quickActionText}>{label}</Text>
     </TouchableOpacity>
   );
@@ -475,6 +673,15 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
+  notFoundWrap: {
+    flex: 1,
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    gap: Spacing.md,
+    padding: Spacing.base,
+  },
   scroll: {
     width: '100%',
     maxWidth: Layout.screenMaxWidth,
@@ -540,6 +747,50 @@ const styles = StyleSheet.create({
   },
   infoCard: { gap: Spacing.sm },
   section: { gap: Spacing.md },
+  dashboardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  dashboardStat: {
+    width: '48%',
+    flexGrow: 1,
+  },
+  nextStepCard: {
+    gap: Spacing.md,
+    borderColor: Colors.accentMuted,
+    backgroundColor: Colors.surfaceElevated,
+  },
+  nextStepIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.accentMuted,
+    borderWidth: 1,
+    borderColor: '#F5CBBB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nextStepCopy: { gap: 4 },
+  nextStepEyebrow: {
+    color: Colors.semcoOrange,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  nextStepTitle: {
+    color: Colors.navy,
+    fontSize: Typography.size.lg,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+  },
+  nextStepBody: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.sm * 1.45,
+  },
   sectionTitle: {
     color: Colors.navy,
     fontSize: Typography.size.lg,

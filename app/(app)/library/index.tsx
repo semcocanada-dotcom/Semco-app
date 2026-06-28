@@ -2,11 +2,6 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { db, initDatabase } from '@/database/client';
-import { seedDatabase } from '@/database/seed';
-import colorsData from '@/database/seed/colors.json';
-import { colors } from '@/database/schema/colors';
-import type { Color } from '@/database/schema/colors';
 import { BrandMark } from '@/components/brand/BrandMark';
 import { SystemGuideCard } from '@/components/library/SystemGuideCard';
 import { ActionCard, Badge, Card, SectionHeader } from '@/components/ui';
@@ -22,10 +17,10 @@ import { INSTALLATION_GUIDES } from '@/knowledge/installation-guides';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 
 const HUB_CARDS = [
-  { title: 'System Diagrams', description: 'Layers + process', icon: 'layers-outline' as const, route: '/library/guides' },
-  { title: 'Product Docs', description: 'Grouped sheets', icon: 'document-text-outline' as const, route: '/products' },
+  { title: 'Install Guides', description: 'X-Bond diagrams', icon: 'layers-outline' as const, route: '/library/guides' },
+  { title: 'Products', description: 'Docs + SDS', icon: 'document-text-outline' as const, route: '/products' },
   { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, route: '/colors' },
-  { title: 'Calculator', description: 'Tech coverage', icon: 'calculator-outline' as const, route: '/calculator' },
+  { title: 'Photos', description: 'Stage records', icon: 'camera-outline' as const, route: '/add' },
 ] as const;
 
 const DOC_GROUP_ICONS: Record<DocGroupId, React.ComponentProps<typeof Ionicons>['name']> = {
@@ -48,46 +43,12 @@ const KEY_DOC_IDS = [
   'doc-open-sip-manual-master-copy-v2019-3-2',
 ];
 
-const STANDARD_COLORS = colorsData as Color[];
-
-function getSwatchColor(color: Color): string {
-  return /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(color.swatchHex ?? '') ? String(color.swatchHex) : Colors.softGrey;
-}
-
 export default function LibraryScreen() {
   const router = useRouter();
   const push = (href: string) => router.push(href as any);
-  const [colorCount, setColorCount] = React.useState(STANDARD_COLORS.length);
-  const [colorsList, setColorsList] = React.useState<Color[]>(STANDARD_COLORS.slice(0, 4));
   const keyDocs = KEY_DOC_IDS
     .map((id) => PRODUCT_DOCS.find((doc) => doc.id === id))
     .filter((doc): doc is (typeof PRODUCT_DOCS)[number] => Boolean(doc));
-
-  React.useEffect(() => {
-    let isMounted = true;
-
-    async function loadLibrary() {
-      try {
-        await initDatabase();
-        await seedDatabase();
-        const colorRows = await db.select().from(colors);
-        if (!isMounted) return;
-        setColorsList((colorRows.length > 0 ? colorRows : STANDARD_COLORS).slice(0, 4));
-        setColorCount(colorRows.length || STANDARD_COLORS.length);
-      } catch (error) {
-        console.error(error);
-        if (!isMounted) return;
-        setColorsList(STANDARD_COLORS.slice(0, 4));
-        setColorCount(STANDARD_COLORS.length);
-      }
-    }
-
-    loadLibrary();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -95,15 +56,16 @@ export default function LibraryScreen() {
         <Card elevated style={styles.heroCard}>
           <View style={styles.heroTop}>
             <BrandMark />
+            <View style={styles.heroPill}>
+              <Text style={styles.heroPillText}>Library</Text>
+            </View>
           </View>
-          <Text style={styles.heroTitle}>Semco field knowledge, grouped by job task.</Text>
-          <Text style={styles.heroBody}>
-            Product sheets, SDS, system details, colour formulas, and calculator inputs are organized for quick lookup.
-          </Text>
+          <Text style={styles.heroTitle}>Semco Library</Text>
+          <Text style={styles.heroBody}>Install guides, product docs, colours, stage photos, and Ask Semco.</Text>
         </Card>
 
         <View style={styles.section}>
-          <SectionHeader title="Quick access" subtitle="Open the working surface you need." />
+          <SectionHeader title="Main tools" />
           <View style={styles.cardsGrid}>
             {HUB_CARDS.map((card, index) => (
               <ActionCard
@@ -111,9 +73,9 @@ export default function LibraryScreen() {
                 title={card.title}
                 description={card.description}
                 icon={card.icon}
-                tone={index % 2 === 0 ? 'primary' : 'accent'}
+                tone="primary"
                 onPress={() => push(card.route)}
-                compact
+                premium
                 style={styles.hubCard}
               />
             ))}
@@ -124,17 +86,17 @@ export default function LibraryScreen() {
             </View>
             <View style={styles.askCopy}>
               <Text style={styles.askTitle}>Ask Semco</Text>
-              <Text style={styles.askBody}>Get an installer answer from the loaded Semco docs.</Text>
+              <Text style={styles.askBody}>Ask an install question and get a guided answer from the loaded Semco docs.</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.semcoOrange} />
+              <Ionicons name="chevron-forward" size={20} color={Colors.darkTeal} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <SectionHeader
-            title="Official diagrams"
-            subtitle="Source drawings from Semco documentation."
-            actionLabel="All"
+            title="Install guides"
+            subtitle={`${INSTALLATION_GUIDES.length} official diagrams`}
+            actionLabel="View all"
             onActionPress={() => push('/library/guides')}
           />
           <View style={styles.guidePreviewList}>
@@ -150,7 +112,7 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Library groups" subtitle="Browse a smaller set first, then search inside it." />
+          <SectionHeader title="Product docs" subtitle="Browse by category." />
           <View style={styles.groupGrid}>
             {BROWSABLE_DOC_GROUPS.map((group) => (
               <TouchableOpacity
@@ -171,25 +133,7 @@ export default function LibraryScreen() {
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Loaded content" subtitle="Seeded references available to the app and Ask Semco." />
-          <View style={styles.statsRow}>
-            <Card style={styles.statBox}>
-              <Text style={styles.statValue}>{PRODUCT_DOCS.length}</Text>
-              <Text style={styles.statLabel}>Docs</Text>
-            </Card>
-            <Card style={styles.statBox}>
-              <Text style={styles.statValue}>{TECHNICAL_DOC_PAGES.length}</Text>
-              <Text style={styles.statLabel}>Pages</Text>
-            </Card>
-            <Card style={styles.statBox}>
-              <Text style={styles.statValue}>{colorCount}</Text>
-              <Text style={styles.statLabel}>Colours</Text>
-            </Card>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <SectionHeader title="Key references" subtitle="Core docs used by the calculator and installer support." />
+          <SectionHeader title="Core references" subtitle={`${TECHNICAL_DOC_PAGES.length} searchable pages loaded.`} />
           {keyDocs.map((doc) => (
             <TouchableOpacity
               key={doc.id}
@@ -206,23 +150,6 @@ export default function LibraryScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <View style={styles.section}>
-          <SectionHeader
-            title="Colour fan deck"
-            subtitle="The colour grid opens in the imported fan deck order."
-            actionLabel="Open"
-            onActionPress={() => push('/colors')}
-          />
-          <View style={styles.colorPreview}>
-            {colorsList.map((color) => (
-              <View key={color.id} style={styles.colorPreviewItem}>
-                <View style={[styles.colorDot, { backgroundColor: getSwatchColor(color) }]} />
-                <Text style={styles.colorCode}>{color.code ?? 'Custom'}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -238,17 +165,41 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxxl + 44,
     gap: Spacing.lg,
   },
-  heroCard: { gap: Spacing.md, borderColor: Colors.primaryMuted, backgroundColor: Colors.surfaceElevated },
+  heroCard: {
+    gap: Spacing.md,
+    borderColor: '#00686B',
+    backgroundColor: Colors.navy,
+    shadowColor: Colors.navy,
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 5,
+  },
   heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.md },
+  heroPill: {
+    borderRadius: Radius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    backgroundColor: 'rgba(5,186,194,0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(221,244,245,0.24)',
+  },
+  heroPillText: {
+    color: '#DDF4F5',
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.bold,
+    fontWeight: Typography.weight.bold,
+    textTransform: 'uppercase',
+  },
   heroTitle: {
-    color: Colors.textPrimary,
+    color: Colors.white,
     fontSize: Typography.size.xl,
-    lineHeight: Typography.size.xl * 1.12,
+    lineHeight: Typography.size.xl * 1.14,
     fontFamily: Fonts.bold,
     fontWeight: Typography.weight.bold,
   },
   heroBody: {
-    color: Colors.textSecondary,
+    color: '#DDF4F5',
     fontSize: Typography.size.sm,
     lineHeight: Typography.size.sm * 1.5,
     fontFamily: Fonts.regular,
@@ -257,20 +208,25 @@ const styles = StyleSheet.create({
   cardsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
   hubCard: { width: '48.5%', flexBasis: '48.5%', flexGrow: 0 },
   askBand: {
-    minHeight: 72,
-    backgroundColor: Colors.white,
-    borderRadius: Radius.lg,
+    minHeight: 84,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: Radius.xl,
     borderWidth: 1,
-    borderColor: Colors.primaryMuted,
-    padding: Spacing.md,
+    borderColor: Colors.accentMuted,
+    padding: Spacing.base,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    shadowColor: Colors.navy,
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 3,
   },
   askIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: Radius.md,
+    width: 48,
+    height: 48,
+    borderRadius: Radius.lg,
     backgroundColor: Colors.primaryMuted,
     borderWidth: 1,
     borderColor: '#C6EEF0',
@@ -327,10 +283,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     flex: 1,
   },
-  statsRow: { flexDirection: 'row', gap: Spacing.sm },
-  statBox: { flex: 1, alignItems: 'center', gap: 6, paddingHorizontal: Spacing.sm },
-  statValue: { color: Colors.textPrimary, fontSize: Typography.size.xl, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold },
-  statLabel: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.medium, fontWeight: Typography.weight.medium },
   lineCard: {
     backgroundColor: Colors.white,
     borderRadius: Radius.lg,
@@ -342,30 +294,4 @@ const styles = StyleSheet.create({
   lineTop: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, flexWrap: 'wrap' },
   lineTitle: { color: Colors.textPrimary, fontSize: Typography.size.base, fontFamily: Fonts.bold, fontWeight: Typography.weight.bold, flex: 1 },
   lineBody: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontFamily: Fonts.regular },
-  colorPreview: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  colorPreviewItem: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  colorDot: {
-    height: 48,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  colorCode: {
-    color: Colors.navy,
-    fontSize: Typography.size.xs,
-    fontFamily: Fonts.semibold,
-    fontWeight: Typography.weight.semibold,
-    textAlign: 'center',
-  },
 });

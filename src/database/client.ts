@@ -223,6 +223,27 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS purchase_receipts_installer_idx ON purchase_receipts(installer_id);
     CREATE INDEX IF NOT EXISTS purchase_receipts_project_idx ON purchase_receipts(project_id);
     CREATE INDEX IF NOT EXISTS purchase_receipts_status_idx ON purchase_receipts(status);
+
+    CREATE TABLE IF NOT EXISTS project_signoffs (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      installer_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'draft',
+      title TEXT NOT NULL,
+      customer_name TEXT,
+      customer_email TEXT,
+      summary TEXT,
+      notes TEXT,
+      form_data TEXT NOT NULL DEFAULT '{}',
+      signature_data TEXT,
+      signed_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS project_signoffs_project_idx ON project_signoffs(project_id);
+    CREATE INDEX IF NOT EXISTS project_signoffs_type_idx ON project_signoffs(type);
+    CREATE INDEX IF NOT EXISTS project_signoffs_status_idx ON project_signoffs(status);
   `);
 
   try {

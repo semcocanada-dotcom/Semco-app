@@ -14,7 +14,7 @@ export function BatchCard({ batchNumber, detail, notes, style }: BatchCardProps)
   return (
     <View style={[styles.card, style]}>
       <View style={styles.iconWrap}>
-        <Ionicons name="layers-outline" size={20} color={Colors.semcoOrange} />
+        <Ionicons name="layers-outline" size={20} color={Colors.darkTeal} />
       </View>
       <View style={styles.copy}>
         <Text style={styles.title}>Batch: {batchNumber}</Text>
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.accentMuted,
+    backgroundColor: Colors.primaryMuted,
   },
   copy: { flex: 1, gap: 3 },
   title: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.base },

@@ -43,7 +43,7 @@
       "googleServicesFile": "./config/firebase/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#0D0D0D"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.semcocanada.semcopro",
       "permissions": [

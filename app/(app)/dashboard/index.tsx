@@ -1,48 +1,58 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { desc } from 'drizzle-orm';
-import { ActionCard, EmptyState, SearchBar, StatCard } from '@/components/ui';
+import { desc, eq } from 'drizzle-orm';
+import { ActionCard, EmptyState, SearchBar } from '@/components/ui';
 import { ProjectCard } from '@/components/projects/ProjectCard';
+import { RewardTrackerCard } from '@/components/rewards/RewardTrackerCard';
 import { db } from '@/database/client';
+import { rewardCredits } from '@/database/schema/installers';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
+import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
+import { useAuthStore } from '@/store/auth';
 
 type LoadState = {
   projects: Project[];
+  verifiedSqft: number;
+  pendingSqft: number;
 };
 
 const FEATURE_CARDS = [
   { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/projects' },
-  { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'accent' as const, route: '/calculator' },
+  { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'primary' as const, route: '/calculator' },
   { title: 'Materials', description: 'Order review', icon: 'cart-outline' as const, tone: 'primary' as const, route: '/orders' },
-  { title: 'Photos', description: 'Capture stage', icon: 'camera-outline' as const, tone: 'accent' as const, route: '/add' },
+  { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, tone: 'primary' as const, route: '/colors' },
 ];
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const installerId = user?.id ?? LOCAL_INSTALLER_ID;
   const push = (href: string) => router.push(href as any);
-  const [state, setState] = useState<LoadState>({ projects: [] });
+  const [state, setState] = useState<LoadState>({ projects: [], verifiedSqft: 0, pendingSqft: 0 });
 
   useEffect(() => {
-    db.select().from(projects).orderBy(desc(projects.updatedAt))
-      .then((projectRows) => {
-        setState({ projects: projectRows });
+    Promise.all([
+      db.select().from(projects).orderBy(desc(projects.updatedAt)),
+      db.select().from(rewardCredits).where(eq(rewardCredits.installerId, installerId)),
+    ])
+      .then(([projectRows, creditRows]) => {
+        setState({
+          projects: projectRows,
+          verifiedSqft: creditRows
+            .filter((credit) => credit.status === 'verified')
+            .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
+          pendingSqft: creditRows
+            .filter((credit) => credit.status === 'pending')
+            .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
+        });
       })
       .catch(console.error);
-  }, []);
-
-  const stats = useMemo(() => {
-    const active = state.projects.filter((project) => project.status === 'active').length;
-
-    return [
-      { label: 'Projects', value: String(state.projects.length || 0), detail: 'Total', icon: 'folder-open-outline' as const, tone: 'primary' as const },
-      { label: 'In Progress', value: String(active || 0), detail: 'Live jobs', icon: 'pulse-outline' as const, tone: 'accent' as const },
-    ];
-  }, [state.projects]);
+  }, [installerId]);
 
   const recentProjects = state.projects.slice(0, 3);
 
@@ -87,7 +97,7 @@ export default function DashboardScreen() {
                   icon={card.icon}
                   tone={card.tone}
                   onPress={() => push(card.route)}
-                  compact
+                  premium
                   style={styles.featureCard}
                 />
               ))}
@@ -96,19 +106,11 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.content}>
-          <View style={styles.summaryGrid}>
-            {stats.map((stat) => (
-              <StatCard
-                key={stat.label}
-                label={stat.label}
-                value={stat.value}
-                detail={stat.detail}
-                icon={stat.icon}
-                tone={stat.tone}
-                style={styles.summaryCard}
-              />
-            ))}
-          </View>
+          <RewardTrackerCard
+            verifiedSqft={state.verifiedSqft}
+            pendingSqft={state.pendingSqft}
+            onPress={() => push('/(app)/rewards')}
+          />
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Projects</Text>
@@ -240,17 +242,6 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
     gap: Spacing.lg,
   },
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  summaryCard: {
-    width: '48.5%',
-    flexBasis: '48.5%',
-    flexGrow: 0,
-    flexShrink: 0,
-  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -264,7 +255,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weight.bold,
   },
   sectionAction: {
-    color: Colors.semcoOrange,
+    color: Colors.darkTeal,
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.sm,
   },

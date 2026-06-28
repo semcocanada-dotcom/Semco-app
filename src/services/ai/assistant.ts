@@ -39,7 +39,8 @@ export async function sendMessage(
   isOnline: boolean,
   installerId?: string,
 ): Promise<AssistantResponse> {
-  return handleKnowledgeAssistant(userMessage, history, isOnline, installerId);
+  const response = await handleKnowledgeAssistant(userMessage, history, isOnline, installerId);
+  return { ...response, content: normalizeAssistantContent(response.content) };
 }
 
 async function handleKnowledgeAssistant(
@@ -49,7 +50,7 @@ async function handleKnowledgeAssistant(
   installerId?: string,
 ): Promise<AssistantResponse> {
   const debugId = `ai-debug-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-  const retrievalQuestion = resolveFollowUpQuestion(userMessage, history);
+  const retrievalQuestion = resolveContextualQuestion(userMessage, history);
   const retrieval = await retrieveSemcoChunks(retrievalQuestion, isOnline);
   const citations = citationsFromChunks(retrieval.chunks);
   const reasoningProfile = buildReasoningProfile(retrievalQuestion);
@@ -81,8 +82,8 @@ async function handleKnowledgeAssistant(
     };
   }
 
-  if (shouldUseLocalFieldAnswer(reasoningProfile) && retrieval.chunks.length > 0) {
-    const content = ensureSourceList(reasoningProfile.localAnswer ?? '', citations);
+  if (shouldUseLocalFieldAnswer(reasoningProfile)) {
+    const content = normalizeAssistantContent(reasoningProfile.localAnswer ?? '');
     await writeDebugLog(debugId, {
       question: userMessage,
       provider: 'local-field-rules',
@@ -234,7 +235,7 @@ async function handleKnowledgeAssistant(
     });
     await incrementDailyAiUsage(installerId);
 
-    const content = ensureSourceList(result.content, citations);
+    const content = normalizeAssistantContent(result.content);
     await setCachedAnswer(retrievalQuestion, retrieval.chunks, {
       content,
       citations,
@@ -289,35 +290,57 @@ async function handleKnowledgeAssistant(
   }
 }
 
-function resolveFollowUpQuestion(userMessage: string, history: ConversationMessage[]): string {
+function resolveContextualQuestion(userMessage: string, history: ConversationMessage[]): string {
   const clean = userMessage.replace(/\s+/g, ' ').trim();
-  if (!clean || !isLikelyShortFollowUp(clean)) return clean;
+  if (!clean) return clean;
 
-  const recentUserMessages = history
-    .filter((message) => message.role === 'user')
-    .slice(-3)
-    .map((message) => truncate(redactPrivateText(message.content), 180))
-    .filter(Boolean);
+  const contextMessages = getRecentConversationContext(history);
+  if (contextMessages.length === 0) return clean;
 
-  if (recentUserMessages.length === 0) return clean;
+  const contextText = contextMessages.join('\n');
+  if (!shouldUseConversationContext(clean, contextText)) return clean;
 
   return [
-    `Previous installer question context: ${recentUserMessages.join(' | ')}`,
+    'Conversation context for this installer question:',
+    contextMessages.join('\n'),
     `Follow-up question: ${redactPrivateText(clean)}`,
   ].join('\n');
 }
 
-function isLikelyShortFollowUp(message: string): boolean {
+function getRecentConversationContext(history: ConversationMessage[]): string[] {
+  return history
+    .slice(-6)
+    .map((message) => {
+      const role = message.role === 'assistant' ? 'Semco answer' : 'Installer';
+      const content = truncate(redactPrivateText(message.content), message.role === 'assistant' ? 320 : 220);
+      return content ? `${role}: ${content}` : '';
+    })
+    .filter(Boolean);
+}
+
+function shouldUseConversationContext(message: string, contextText: string): boolean {
   const normalized = message.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
   const words = normalized.split(' ').filter(Boolean);
-  if (words.length === 0 || words.length > 6) return false;
+  if (words.length === 0) return false;
 
-  const hasOwnSubstrate = /\b(concrete|tile|plywood|osb|wood|metal|drywall|gypsum|pool|shower|icf|block|cmu|x-bond|xbond)\b/.test(normalized);
-  const explicitContinuation = /^(what about|and|then|also)\b/.test(normalized);
-  if (hasOwnSubstrate && !explicitContinuation) return false;
+  const hasOwnSubstrate = /\b(concrete|tile|plywood|osb|wood|metal|drywall|gypsum|pool|pond|fountain|water containment|underwater|submerged|shower|icf|block|cmu|x-bond|xbond)\b/.test(normalized);
+  const explicitContinuation = /^(what about|and then|then|after that|afterwards|next|what next|also|from there|once that)\b/.test(normalized);
+  if (explicitContinuation) return true;
 
-  return /\b(prep|prepare|prepping|clean|cleaner|sealer|seal|mix|mixing|coverage|dry|cure|apply|install|warranty|photos|how much|what next)\b/.test(normalized)
-    || /^(how|what|which|when|can|do|does|should|is|are)\b/.test(normalized);
+  const referencesPriorContext = /\b(it|that|this|those|there|same|previous|above|before|after|next|continue|finish|coats?|step|steps|stage|system|process|sequence|build-up|build up|detail|details)\b/.test(normalized);
+  const asksForContinuation = /\b(what now|what do i do|what would i do|where do i go|how do i continue|how to continue|what is next|next step|next steps|more detail|more detailed|need more detail|explain more|walk me through|break it down|expand on)\b/.test(normalized);
+  const productOnlyQuestion = /\b(xbond|x-bond|x bond|microbond|micro bond|liquid membrane|brown coat|sealer|finish coat|finish coats|top coat|primer)\b/.test(normalized)
+    && !hasOwnSubstrate;
+  const contextHasJobFacts = /\b(concrete|tile|plywood|osb|wood|deck|metal|drywall|gypsum|pool|pond|fountain|water containment|underwater|shower|icf|block|cmu|exterior|outside|submerged|wet|x-bond|xbond|liquid membrane)\b/i.test(contextText);
+
+  if (hasOwnSubstrate && !referencesPriorContext && !asksForContinuation) return false;
+
+  return contextHasJobFacts && (
+    referencesPriorContext
+    || asksForContinuation
+    || productOnlyQuestion
+    || words.length <= 8
+  );
 }
 
 function redactPrivateText(text: string): string {
@@ -344,7 +367,7 @@ function shouldAskForRequiredInputs(
 function shouldUseLocalFieldAnswer(
   profile: ReturnType<typeof buildReasoningProfile>,
 ): boolean {
-  return ['prep_decision', 'install_build_up'].includes(profile.intent) && Boolean(profile.localAnswer);
+  return ['prep_decision', 'install_build_up', 'x_bond_finish', 'liquid_membrane_application'].includes(profile.intent) && Boolean(profile.localAnswer);
 }
 
 async function searchOfflineProducts(
@@ -378,15 +401,21 @@ async function searchOfflineProducts(
   };
 }
 
-function ensureSourceList(content: string, citations: AssistantCitation[]): string {
-  if (/sources:/i.test(content) || citations.length === 0) return content;
+function normalizeAssistantContent(content: string): string {
+  const original = content.trim();
+  let next = original.replace(/\r\n/g, '\n').trim();
 
-  const sourceLines = citations
-    .slice(0, 5)
-    .map((citation) => `- ${citation.documentName}${citation.pageNumber ? ` p. ${citation.pageNumber}` : ''}`)
-    .join('\n');
+  next = next
+    .replace(/^\s*Direct answer\s*\n+/i, '')
+    .replace(/^\s*Answer:\s*/i, '')
+    .replace(/\n\s*Direct answer\s*\n/gi, '\n')
+    .replace(/\n\s*Sources:\s*[\s\S]*$/i, '')
+    .replace(/\n\s*Closest confirmed source:\s*[\s\S]*$/i, '')
+    .replace(/\n\s*Source:\s*[^\n]+$/i, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 
-  return `${content.trim()}\n\nSources:\n${sourceLines}`;
+  return next || original;
 }
 
 async function writeDebugLog(

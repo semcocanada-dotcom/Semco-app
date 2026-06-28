@@ -86,7 +86,8 @@ function processSearchQuery(query: string): string {
     'X-Bond Seamless Stone over concrete floor detail',
     'surface preparation scratch coat liquid membrane fabric reinforcement brown coat',
     'Color Bond Polished Bond ADA Safety Floor Natural Shield Satin Stone Titan Gloss Matte sealer',
-    'current stocked sealers pool submerged exterior penetrating sealer Natural Shield',
+    'current stocked sealers pool pond fountain water containment submerged exterior penetrating sealer Natural Shield',
+    'underwater submerged pond pool fountain Liquid Membrane 3 coats water containment',
     'coverage drying recoat time low speed mixer square mixing paddle 180-200 RPM',
   ];
 
@@ -185,7 +186,7 @@ function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
     pushPinned(pinned, SIP_MANUAL, 22);
   }
 
-  if (includesAny(normalized, ['block', 'cmu', 'stucco', 'masonry', 'below grade plaster', 'plaster', 'tile', 'ceramic', 'porcelain', 'grout', 'pool', 'jacuzzi', 'magnesium', 'efflorescence', 'efflorescent', 'calcium', 'mineral', 'alkali'])) {
+  if (includesAny(normalized, ['block', 'cmu', 'stucco', 'masonry', 'below grade plaster', 'plaster', 'tile', 'ceramic', 'porcelain', 'grout', 'pool', 'pond', 'fountain', 'water containment', 'jacuzzi', 'magnesium', 'efflorescence', 'efflorescent', 'calcium', 'mineral', 'alkali'])) {
     pushPinned(pinned, SIP_MANUAL, 23);
   }
 
@@ -226,6 +227,9 @@ function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) 
     'epoxy',
     'terrazzo',
     'pool',
+    'pond',
+    'fountain',
+    'water containment',
     'jacuzzi',
     'submerged',
     'drywall',
@@ -257,7 +261,7 @@ function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) 
     pushPinned(pinned, 'Cove-Base-Detail-Plywood.pdf', 1);
   }
 
-  if (includesAny(normalized, ['pool', 'jacuzzi', 'submerged', 'wet room', 'wetroom'])) {
+  if (includesAny(normalized, ['pool', 'pond', 'fountain', 'water feature', 'water containment', 'jacuzzi', 'submerged', 'wet room', 'wetroom'])) {
     pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 1);
     pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 2);
   }
@@ -303,6 +307,9 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     'titan shield',
     'matte',
     'pool',
+    'pond',
+    'fountain',
+    'water containment',
     'submerged',
     'exterior',
     'outside',
@@ -332,6 +339,9 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     'flat finish',
     'flat sealer',
     'pool',
+    'pond',
+    'fountain',
+    'water containment',
     'submerged',
     'under water',
     'underwater',
@@ -388,6 +398,9 @@ function shouldAddStockedSealerPolicy(query: string): boolean {
     'titan',
     'matte',
     'pool',
+    'pond',
+    'fountain',
+    'water containment',
     'submerged',
     'exterior',
     'outside',

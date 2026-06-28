@@ -10,27 +10,29 @@ interface ActionCardProps {
   onPress: () => void;
   tone?: 'primary' | 'accent' | 'neutral';
   compact?: boolean;
+  premium?: boolean;
   style?: ViewStyle;
 }
 
-export function ActionCard({ title, description, icon, onPress, tone = 'neutral', compact = false, style }: ActionCardProps) {
-  const iconColor = tone === 'accent' ? Colors.semcoOrange : tone === 'primary' ? Colors.primary : Colors.lightTeal;
+export function ActionCard({ title, description, icon, onPress, tone = 'neutral', compact = false, premium = false, style }: ActionCardProps) {
+  const iconColor = tone === 'accent' ? Colors.semcoOrange : Colors.darkTeal;
+  const iconSize = premium ? 27 : compact ? 20 : 24;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.8}
-      style={[styles.card, compact && styles.cardCompact, styles[`tone_${tone}`], style]}
+      style={[styles.card, compact && styles.cardCompact, premium && styles.cardPremium, styles[`tone_${tone}`], style]}
     >
-      <View style={[styles.iconWrap, compact && styles.iconWrapCompact, styles[`icon_${tone}`]]}>
+      <View style={[styles.iconWrap, compact && styles.iconWrapCompact, premium && styles.iconWrapPremium, styles[`icon_${tone}`]]}>
         <Ionicons
           name={icon}
-          size={compact ? 20 : 24}
+          size={iconSize}
           color={iconColor}
         />
       </View>
-      <Text style={[styles.title, compact && styles.titleCompact]}>{title}</Text>
-      <Text style={[styles.description, compact && styles.descriptionCompact]}>{description}</Text>
+      <Text style={[styles.title, compact && styles.titleCompact, premium && styles.titlePremium]}>{title}</Text>
+      <Text style={[styles.description, compact && styles.descriptionCompact, premium && styles.descriptionPremium]}>{description}</Text>
     </TouchableOpacity>
   );
 }
@@ -60,6 +62,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     gap: 4,
   },
+  cardPremium: {
+    minHeight: 112,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.base,
+    gap: Spacing.xs,
+    borderRadius: Radius.xl,
+    shadowOpacity: 0.09,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 4,
+  },
   tone_primary: { borderColor: Colors.primaryMuted },
   tone_accent: { borderColor: Colors.accentMuted },
   tone_neutral: {},
@@ -77,9 +90,15 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: Radius.sm,
   },
+  iconWrapPremium: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    marginBottom: 2,
+  },
   icon_primary: { backgroundColor: Colors.primaryMuted, borderColor: '#C6EEF0' },
   icon_accent: { backgroundColor: Colors.accentMuted, borderColor: '#F5CBBB' },
-  icon_neutral: { backgroundColor: '#E8FAFB', borderColor: '#CBEFF2' },
+  icon_neutral: { backgroundColor: Colors.primaryMuted, borderColor: '#C6EEF0' },
   title: {
     color: Colors.navy,
     fontSize: Typography.size.sm,
@@ -89,6 +108,10 @@ const styles = StyleSheet.create({
   },
   titleCompact: {
     fontSize: Typography.size.xs,
+  },
+  titlePremium: {
+    fontSize: Typography.size.base,
+    lineHeight: Typography.size.base * 1.2,
   },
   description: {
     color: Colors.textSecondary,
@@ -100,5 +123,9 @@ const styles = StyleSheet.create({
   descriptionCompact: {
     fontSize: 10,
     lineHeight: 12,
+  },
+  descriptionPremium: {
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.35,
   },
 });

@@ -5,7 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
 import { desc } from 'drizzle-orm';
@@ -24,6 +24,7 @@ const FILTER_OPTIONS: { value: ProjectFilter; label: string }[] = [
 ];
 
 export default function ProjectsScreen() {
+  const params = useLocalSearchParams<{ filter?: string }>();
   const [projectList, setProjectList] = useState<Project[]>([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<ProjectFilter>('all');
@@ -35,6 +36,13 @@ export default function ProjectsScreen() {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const requestedFilter = Array.isArray(params.filter) ? params.filter[0] : params.filter;
+    if (requestedFilter && isProjectFilter(requestedFilter)) {
+      setFilter(requestedFilter);
+    }
+  }, [params.filter]);
 
   const filteredProjects = projectList.filter((project) => {
     const matchesStatus = filter === 'all' || project.status === filter;
@@ -51,7 +59,7 @@ export default function ProjectsScreen() {
         <AppHeader title="Projects" subtitle="Live jobs, photos, batches, and specs." rightIcon="folder-open-outline" />
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search projects" showMic={false} />
         <TabControl value={filter} options={FILTER_OPTIONS} onChange={setFilter} />
-        <Button label="Add Project" variant="primary" onPress={() => router.push('/(app)/projects/create')} fullWidth />
+        <Button label="Add Project" variant="primary" onPress={() => router.push('/projects/create' as any)} fullWidth />
       </View>
 
       <FlatList
@@ -60,7 +68,7 @@ export default function ProjectsScreen() {
         renderItem={({ item }) => (
           <ProjectCard
             project={item}
-            onPress={() => router.push({ pathname: '/(app)/projects/[id]', params: { id: item.id } })}
+            onPress={() => router.push({ pathname: '/projects/[id]', params: { id: item.id } } as any)}
           />
         )}
         contentContainerStyle={styles.list}
@@ -74,6 +82,10 @@ export default function ProjectsScreen() {
       />
     </SafeAreaView>
   );
+}
+
+function isProjectFilter(value: string): value is ProjectFilter {
+  return FILTER_OPTIONS.some((option) => option.value === value);
 }
 
 const styles = StyleSheet.create({

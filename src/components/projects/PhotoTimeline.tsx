@@ -36,7 +36,7 @@ export function PhotoTimeline({ photos, onAddPhoto }: PhotoTimelineProps) {
           style={styles.iconButton}
           accessibilityLabel={`Add photo for ${selectedLabel}`}
         >
-          <Ionicons name="camera-outline" size={20} color={Colors.semcoOrange} />
+          <Ionicons name="camera-outline" size={20} color={Colors.darkTeal} />
         </TouchableOpacity>
       </View>
 
