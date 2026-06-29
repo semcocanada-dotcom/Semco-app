@@ -114,8 +114,8 @@ const XBOND_LIQUID: CoverageProduct = {
   sku: 'XBOND-LIQUID',
   name: 'SEMCO X-Bond Liquid',
   category: 'x_bond_liquid',
-  packLabel: '1 gal, 5 gal, and 55 gal pails',
-  purchaseSizes: [1, 5, 55],
+  packLabel: '1 gal and 5 gal pails',
+  purchaseSizes: [1, 5],
   defaultRange: 'stoneMix',
   ranges: {
     stoneMix: {
@@ -166,8 +166,8 @@ const LIQUID_MEMBRANE: CoverageProduct = {
   sku: 'SEMCO-LIQUID-MEMBRANE',
   name: 'SEMCO Liquid Membrane',
   category: 'waterproofing',
-  packLabel: '1 gal, 5 gal, and 55 gal pails',
-  purchaseSizes: [1, 5, 55],
+  packLabel: '1 gal and 5 gal pails',
+  purchaseSizes: [1, 5],
   defaultRange: 'aboveGrade',
   ranges: {
     aboveGrade: {
@@ -198,8 +198,8 @@ const NATURAL_SHIELD: CoverageProduct = {
   sku: 'NATURAL-SHIELD',
   name: 'SEMCO Natural Shield',
   category: 'sealer',
-  packLabel: '1 gal, 5 gal, and 55 gal pails',
-  purchaseSizes: [1, 5, 55],
+  packLabel: '1 gal and 5 gal pails',
+  purchaseSizes: [1, 5],
   defaultRange: 'xbond',
   ranges: {
     xbond: {
@@ -504,23 +504,13 @@ function getPurchaseRecommendation(product: CoverageProduct, unit: CoverageUnit,
   const sizes = [...product.purchaseSizes].sort((a, b) => a - b);
   const smallSize = sizes[0] ?? 1;
   const pailSize = sizes.find((size) => size >= 5) ?? sizes[sizes.length - 1] ?? 1;
-  const drumSize = sizes.find((size) => size >= 55);
 
   if (exactUnits <= smallSize) {
-    return { roundedUnits: smallSize, purchaseLabel: `Buy ${formatQuantity(smallSize)} gal` };
+    return { roundedUnits: smallSize, purchaseLabel: `Buy 1 x ${formatQuantity(smallSize)} gal pail` };
   }
 
   if (exactUnits <= pailSize) {
     return { roundedUnits: pailSize, purchaseLabel: `Buy 1 x ${formatQuantity(pailSize)} gal pail` };
-  }
-
-  if (drumSize && exactUnits > pailSize * 8) {
-    const drumCount = Math.ceil(exactUnits / drumSize);
-    const total = drumCount * drumSize;
-    return {
-      roundedUnits: total,
-      purchaseLabel: `Buy ${drumCount} x ${formatQuantity(drumSize)} gal drum${drumCount === 1 ? '' : 's'} (${formatQuantity(total)} gal)`,
-    };
   }
 
   const pailCount = Math.ceil(exactUnits / pailSize);
