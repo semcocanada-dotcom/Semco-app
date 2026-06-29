@@ -105,9 +105,11 @@ function getSignatureBreakDistance(points: SignaturePoint[], signature: Signatur
   return Math.max(20, Math.min(maxNaturalJump, median * 5));
 }
 
-function shouldSkipSegment(previous: SignaturePoint, point: SignaturePoint, signature: SignatureRecord, breakDistance: number) {
+function shouldSkipSegment(previous: SignaturePoint, point: SignaturePoint, signature: SignatureRecord, breakDistance: number, inferBreaks: boolean) {
   if (point.break || previous.break) return true;
-  return Math.hypot(point.x - previous.x, point.y - previous.y) > breakDistance;
+  const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
+  if (inferBreaks) return distance > breakDistance;
+  return distance > Math.max(signature.width, signature.height) * 0.55;
 }
 
 function simplifyPoints(points: SignaturePoint[], minDistance: number) {
@@ -143,16 +145,39 @@ function getSignatureStrokes(signature: SignatureRecord, targetWidth: number, ta
   const bounds = getSignatureBounds(signature);
   const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.004);
   const breakDistance = getSignatureBreakDistance(points, signature);
+  const inferBreaks = !points.some((point) => point.break);
   const strokes: SignatureStroke[] = [];
   let current: SignatureDrawPoint[] = [];
 
   points.forEach((point, index) => {
     const previous = points[index - 1];
-    if (index > 0 && shouldSkipSegment(previous, point, signature, breakDistance)) {
+    if (index > 0 && shouldSkipSegment(previous, point, signature, breakDistance, inferBreaks)) {
       if (current.length > 1) strokes.push({ points: current });
       current = [];
     }
     current.push(signaturePreviewPoint(point, bounds, targetWidth, targetHeight));
+  });
+  if (current.length > 1) strokes.push({ points: current });
+  return strokes;
+}
+
+function getSignatureSurfaceStrokes(signature: SignatureRecord, targetWidth: number, targetHeight: number): SignatureStroke[] {
+  if (signature.points.length < 2) return [];
+  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.003);
+  const breakDistance = getSignatureBreakDistance(points, signature);
+  const inferBreaks = !points.some((point) => point.break);
+  const xScale = targetWidth / Math.max(signature.width, 1);
+  const yScale = targetHeight / Math.max(signature.height, 1);
+  const strokes: SignatureStroke[] = [];
+  let current: SignatureDrawPoint[] = [];
+
+  points.forEach((point, index) => {
+    const previous = points[index - 1];
+    if (index > 0 && shouldSkipSegment(previous, point, signature, breakDistance, inferBreaks)) {
+      if (current.length > 1) strokes.push({ points: current });
+      current = [];
+    }
+    current.push({ x: point.x * xScale, y: point.y * yScale });
   });
   if (current.length > 1) strokes.push({ points: current });
   return strokes;
@@ -189,6 +214,19 @@ export function getSignaturePath(signature: SignatureRecord, width = 240, height
     width,
     height,
     strokeWidth: Math.max(1.4, Math.min(2.8, height * 0.07)),
+  };
+}
+
+function getSignatureSurfacePath(signature: SignatureRecord, width: number, height: number): SignaturePath | null {
+  const strokes = getSignatureSurfaceStrokes(signature, width, height);
+  const d = strokes.map((stroke) => strokeToPath(stroke.points)).filter(Boolean).join(' ');
+  if (!d) return null;
+
+  return {
+    d,
+    width,
+    height,
+    strokeWidth: Math.max(3, Math.min(4.6, Math.min(width, height) * 0.012)),
   };
 }
 
@@ -229,6 +267,15 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
   const parsed = useMemo(() => parseSignatureRecord(value), [value]);
   const [points, setPoints] = useState<SignaturePoint[]>(() => parsed.points);
   const [surfaceSize, setSurfaceSize] = useState({ width: parsed.width || 360, height: parsed.height || height });
+  const liveSignature = useMemo(
+    () => ({ version: 2 as const, width: surfaceSize.width, height: surfaceSize.height, points }),
+    [points, surfaceSize.height, surfaceSize.width],
+  );
+  const livePath = useMemo(
+    () => getSignatureSurfacePath(liveSignature, surfaceSize.width, surfaceSize.height),
+    [liveSignature, surfaceSize.height, surfaceSize.width],
+  );
+  const liveUri = useMemo(() => (livePath ? getSignatureSvgUri(livePath) : null), [livePath]);
   const pointsRef = useRef(points);
   const surfaceSizeRef = useRef(surfaceSize);
 
@@ -261,7 +308,7 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
         const { locationX, locationY } = event.nativeEvent;
         const current = pointsRef.current;
         const last = current[current.length - 1];
-        if (last && Math.hypot(locationX - last.x, locationY - last.y) < 3) return;
+        if (last && Math.hypot(locationX - last.x, locationY - last.y) < 2) return;
         syncPoints([...current, { x: locationX, y: locationY }]);
       },
     }),
@@ -296,26 +343,9 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
             <Text style={styles.placeholderText}>Sign here</Text>
           </View>
         ) : null}
-        {points.slice(1).map((point, index) => {
-          const previous = points[index];
-          if (point.break) return null;
-          const length = Math.hypot(point.x - previous.x, point.y - previous.y);
-          const angle = Math.atan2(point.y - previous.y, point.x - previous.x);
-          return (
-            <View
-              key={`${index}-${point.x}-${point.y}`}
-              style={[
-                styles.stroke,
-                {
-                  left: ((previous.x + point.x) / 2) - (length / 2),
-                  top: ((previous.y + point.y) / 2) - 1.5,
-                  width: length,
-                  transform: [{ rotateZ: `${angle}rad` }],
-                },
-              ]}
-            />
-          );
-        })}
+        {liveUri ? (
+          <ExpoImage source={{ uri: liveUri }} style={styles.surfaceInk} contentFit="fill" pointerEvents="none" />
+        ) : null}
       </View>
       <Text style={styles.hint}>{hint ?? 'Hand the phone or iPad to the customer and have them sign in the box.'}</Text>
     </View>
@@ -359,12 +389,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: Typography.size.lg,
   },
-  stroke: {
-    position: 'absolute',
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: Colors.navy,
-  },
+  surfaceInk: { ...StyleSheet.absoluteFillObject },
   previewCanvas: {
     ...StyleSheet.absoluteFillObject,
     left: 4,
