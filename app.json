@@ -3,7 +3,7 @@
     "name": "Semco Pro",
     "slug": "semco-pro",
     "version": "1.0.17",
-    "orientation": "portrait",
+    "orientation": "default",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -30,6 +30,7 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
+        "EXDefaultScreenOrientationMask": "UIInterfaceOrientationMaskAllButUpsideDown",
         "NSCameraUsageDescription": "Used to capture color samples for custom formulas and project progress photos.",
         "NSPhotoLibraryUsageDescription": "Used to access project and color photos when you choose a saved image.",
         "NSPhotoLibraryAddUsageDescription": "Used to save project and color photos when you choose to keep them.",

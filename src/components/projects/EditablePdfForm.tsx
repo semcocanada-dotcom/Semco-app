@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   Modal,
@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { Ionicons } from '@expo/vector-icons';
 import type { PdfFormField, SignoffTemplate } from '@/constants/project-signoffs';
 import { Button, Card } from '@/components/ui';
@@ -110,11 +111,26 @@ function PdfPageCanvas({ template, values, signatureData, onOpenField }: PdfPage
 }
 
 export function EditablePdfForm({ template, values, signatureData, onChangeField, onChangeSignature }: EditablePdfFormProps) {
-  const { width } = useWindowDimensions();
+  const { width, height: viewportHeight } = useWindowDimensions();
   const [editingField, setEditingField] = useState<PdfFormField | null>(null);
   const [draftValue, setDraftValue] = useState('');
   const [signatureOpen, setSignatureOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const isPhone = Math.min(width, viewportHeight) < 600;
+  const isLandscape = width > viewportHeight;
+  const phoneNeedsRotate = isPhone && !isLandscape;
+  const signaturePadHeight = isPhone
+    ? Math.max(220, viewportHeight - 100)
+    : Math.min(Math.max(viewportHeight * 0.66, 360), viewportHeight * 0.75);
+
+  useEffect(() => {
+    if (!signatureOpen || !isPhone) return undefined;
+
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE).catch(() => undefined);
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => undefined);
+    };
+  }, [isPhone, signatureOpen]);
 
   const openField = (field: PdfFormField) => {
     Haptics.selectionAsync().catch(() => undefined);
@@ -135,6 +151,11 @@ export function EditablePdfForm({ template, values, signatureData, onChangeField
     setDraftValue('');
   };
 
+  const closeSignature = () => setSignatureOpen(false);
+  const clearSignature = () => {
+    Haptics.selectionAsync().catch(() => undefined);
+    onChangeSignature(null);
+  };
   const previewWidth = Math.max(width, 320);
 
   return (
@@ -179,26 +200,54 @@ export function EditablePdfForm({ template, values, signatureData, onChangeField
         </View>
       </Modal>
 
-      <Modal visible={signatureOpen} animationType="slide" onRequestClose={() => setSignatureOpen(false)}>
+      <Modal
+        visible={signatureOpen}
+        animationType="slide"
+        onRequestClose={closeSignature}
+        supportedOrientations={['portrait', 'landscape', 'landscape-left', 'landscape-right']}
+      >
         <SafeAreaView style={styles.signatureSafe}>
-          <View style={styles.signatureScreen}>
-            <View style={styles.signatureHeader}>
-              <TouchableOpacity onPress={() => setSignatureOpen(false)} style={styles.closeButton} accessibilityRole="button">
+          {phoneNeedsRotate ? (
+            <View style={styles.rotateScreen}>
+              <TouchableOpacity onPress={closeSignature} style={styles.closeButton} accessibilityRole="button">
                 <Ionicons name="close" size={24} color={Colors.navy} />
               </TouchableOpacity>
-              <View style={styles.signatureCopy}>
-                <Text style={styles.signatureTitle}>Customer signature</Text>
-                <Text style={styles.signatureHint}>Turn the phone sideways if they want more room.</Text>
+              <View style={styles.rotateCard}>
+                <Ionicons name="phone-landscape-outline" size={42} color={Colors.darkTeal} />
+                <Text style={styles.rotateTitle}>Rotate your phone to sign.</Text>
+                <Text style={styles.rotateHint}>The signature area opens horizontally so the customer has room to sign naturally.</Text>
               </View>
             </View>
-            <SignaturePad
-              value={signatureData}
-              onChange={onChangeSignature}
-              height={340}
-              hint="Use a finger or stylus. Clear and sign again if needed."
-            />
-            <Button label="Done" variant="primary" onPress={() => setSignatureOpen(false)} />
-          </View>
+          ) : (
+            <View style={[styles.signatureStage, isPhone ? styles.signatureStagePhone : styles.signatureStageTablet]}>
+              <View style={styles.signatureTopBar}>
+                <TouchableOpacity onPress={closeSignature} style={styles.compactIconButton} accessibilityRole="button">
+                  <Ionicons name="close" size={22} color={Colors.navy} />
+                </TouchableOpacity>
+                <View style={styles.signatureCopy}>
+                  <Text style={styles.signatureTitle}>Customer signature</Text>
+                  <Text style={styles.signatureHint}>
+                    {isPhone ? 'Use the wide signing area.' : 'Sign inside the large box. Rotate or resize if needed.'}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={clearSignature} style={styles.compactTextButton} accessibilityRole="button">
+                  <Text style={styles.compactTextButtonLabel}>Clear</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={closeSignature} style={styles.doneButton} accessibilityRole="button">
+                  <Text style={styles.doneButtonLabel}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={[styles.signaturePanel, isPhone ? styles.signaturePanelPhone : styles.signaturePanelTablet]}>
+                <SignaturePad
+                  value={signatureData}
+                  onChange={onChangeSignature}
+                  height={signaturePadHeight}
+                  showHeader={false}
+                  style={styles.signaturePad}
+                />
+              </View>
+            </View>
+          )}
         </SafeAreaView>
       </Modal>
 
@@ -359,13 +408,120 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.appBackground,
   },
-  signatureScreen: {
+  rotateScreen: {
     flex: 1,
-    gap: Spacing.lg,
     padding: Spacing.lg,
-    paddingTop: Spacing.base,
+    gap: Spacing.xl,
   },
-  signatureHeader: { flexDirection: 'row', gap: Spacing.md, alignItems: 'center' },
+  rotateCard: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.md,
+    borderRadius: Radius.xl,
+    backgroundColor: Colors.white,
+    padding: Spacing.xl,
+  },
+  rotateTitle: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.xl,
+    textAlign: 'center',
+  },
+  rotateHint: {
+    maxWidth: 320,
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+    fontSize: Typography.size.base,
+    lineHeight: Typography.size.base * 1.45,
+    textAlign: 'center',
+  },
+  signatureStage: {
+    flex: 1,
+    gap: Spacing.md,
+    padding: Spacing.md,
+  },
+  signatureStagePhone: {
+    padding: Spacing.sm,
+  },
+  signatureStageTablet: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xl,
+  },
+  signatureTopBar: {
+    width: '100%',
+    maxWidth: 980,
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radius.xl,
+    backgroundColor: Colors.white,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    shadowColor: '#00232D',
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+  },
+  compactIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.softGrey,
+  },
+  compactTextButton: {
+    minHeight: 42,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.accentMuted,
+    paddingHorizontal: Spacing.md,
+  },
+  compactTextButtonLabel: {
+    color: Colors.semcoOrange,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
+  },
+  doneButton: {
+    minHeight: 42,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.semcoOrange,
+    paddingHorizontal: Spacing.lg,
+  },
+  doneButtonLabel: {
+    color: Colors.white,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
+  },
+  signaturePanel: {
+    overflow: 'hidden',
+    borderRadius: Radius.xl,
+    backgroundColor: Colors.white,
+    shadowColor: '#00232D',
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
+  signaturePanelPhone: {
+    flex: 1,
+    width: '100%',
+  },
+  signaturePanelTablet: {
+    width: '88%',
+    maxWidth: 980,
+    minWidth: 520,
+  },
+  signaturePad: {
+    flex: 1,
+  },
   closeButton: {
     width: 52,
     height: 52,

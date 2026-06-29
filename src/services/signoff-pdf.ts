@@ -2,7 +2,7 @@ import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { LineCapStyle, PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { SignoffTemplate } from '@/constants/project-signoffs';
-import { getSignaturePath, parseSignatureRecord } from '@/components/projects/SignaturePad';
+import { getCroppedSignaturePath, parseSignatureRecord } from '@/components/projects/SignaturePad';
 import { supabase } from '@/services/supabase';
 
 type CreateFilledSignoffPdfInput = {
@@ -76,13 +76,24 @@ export async function createFilledSignoffPdf({
 
     if (field.type === 'signature') {
       const signature = parseSignatureRecord(signatureData);
-      const path = getSignaturePath(signature, width, height);
+      const path = getCroppedSignaturePath(signature, 12);
       if (path) {
+        const marginX = Math.min(14, width * 0.05);
+        const marginY = Math.min(4, height * 0.12);
+        const availableWidth = Math.max(width - (marginX * 2), 1);
+        const availableHeight = Math.max(height - (marginY * 2), 1);
+        const scale = Math.min(availableWidth / path.width, availableHeight / path.height);
+        const drawWidth = path.width * scale;
+        const drawHeight = path.height * scale;
+        const drawX = x + marginX + ((availableWidth - drawWidth) / 2);
+        const drawY = (PAGE_HEIGHT - top - height) + marginY + ((availableHeight - drawHeight) / 2);
+
         page.drawSvgPath(path.d, {
-          x,
-          y: y + height,
+          x: drawX,
+          y: drawY + drawHeight,
+          scale,
           borderColor: ink,
-          borderWidth: Math.max(0.7, Math.min(1.2, path.strokeWidth * 0.42)),
+          borderWidth: Math.max(0.55, Math.min(1.35, path.strokeWidth * scale)),
           borderLineCap: LineCapStyle.Round,
         });
       }

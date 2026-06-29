@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Image as ExpoImage } from 'expo-image';
+import { GestureResponderEvent, PanResponder, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
@@ -24,6 +24,8 @@ type SignaturePadProps = {
   onChange: (value: string | null) => void;
   height?: number;
   hint?: string;
+  showHeader?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 type SignatureDrawPoint = {
@@ -90,6 +92,16 @@ export function getSignatureBounds(signature: SignatureRecord): SignatureBounds 
   };
 }
 
+function scalePoints(points: SignaturePoint[], from: { width: number; height: number }, to: { width: number; height: number }) {
+  const xScale = to.width / Math.max(from.width, 1);
+  const yScale = to.height / Math.max(from.height, 1);
+  return points.map((point) => ({
+    ...point,
+    x: point.x * xScale,
+    y: point.y * yScale,
+  }));
+}
+
 function getSignatureBreakDistance(points: SignaturePoint[], signature: SignatureRecord) {
   const distances = points.slice(1).flatMap((point, index) => {
     const previous = points[index];
@@ -140,10 +152,9 @@ function signaturePreviewPoint(
   };
 }
 
-function getSignatureStrokes(signature: SignatureRecord, targetWidth: number, targetHeight: number): SignatureStroke[] {
+function getRawSignatureStrokes(signature: SignatureRecord): SignatureStroke[] {
   if (signature.points.length < 2) return [];
-  const bounds = getSignatureBounds(signature);
-  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.004);
+  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.0025);
   const breakDistance = getSignatureBreakDistance(points, signature);
   const inferBreaks = !points.some((point) => point.break);
   const strokes: SignatureStroke[] = [];
@@ -155,32 +166,17 @@ function getSignatureStrokes(signature: SignatureRecord, targetWidth: number, ta
       if (current.length > 1) strokes.push({ points: current });
       current = [];
     }
-    current.push(signaturePreviewPoint(point, bounds, targetWidth, targetHeight));
+    current.push({ x: point.x, y: point.y });
   });
   if (current.length > 1) strokes.push({ points: current });
   return strokes;
 }
 
-function getSignatureSurfaceStrokes(signature: SignatureRecord, targetWidth: number, targetHeight: number): SignatureStroke[] {
-  if (signature.points.length < 2) return [];
-  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.003);
-  const breakDistance = getSignatureBreakDistance(points, signature);
-  const inferBreaks = !points.some((point) => point.break);
-  const xScale = targetWidth / Math.max(signature.width, 1);
-  const yScale = targetHeight / Math.max(signature.height, 1);
-  const strokes: SignatureStroke[] = [];
-  let current: SignatureDrawPoint[] = [];
-
-  points.forEach((point, index) => {
-    const previous = points[index - 1];
-    if (index > 0 && shouldSkipSegment(previous, point, signature, breakDistance, inferBreaks)) {
-      if (current.length > 1) strokes.push({ points: current });
-      current = [];
-    }
-    current.push({ x: point.x * xScale, y: point.y * yScale });
-  });
-  if (current.length > 1) strokes.push({ points: current });
-  return strokes;
+function getSignatureStrokes(signature: SignatureRecord, targetWidth: number, targetHeight: number): SignatureStroke[] {
+  const bounds = getSignatureBounds(signature);
+  return getRawSignatureStrokes(signature).map((stroke) => ({
+    points: stroke.points.map((point) => signaturePreviewPoint(point, bounds, targetWidth, targetHeight)),
+  }));
 }
 
 function strokeToPath(points: SignatureDrawPoint[]) {
@@ -204,9 +200,13 @@ function strokeToPath(points: SignatureDrawPoint[]) {
   return commands.join(' ');
 }
 
+function strokesToPath(strokes: SignatureStroke[]) {
+  return strokes.map((stroke) => strokeToPath(stroke.points)).filter(Boolean).join(' ');
+}
+
 export function getSignaturePath(signature: SignatureRecord, width = 240, height = 52): SignaturePath | null {
   const strokes = getSignatureStrokes(signature, width, height);
-  const d = strokes.map((stroke) => strokeToPath(stroke.points)).filter(Boolean).join(' ');
+  const d = strokesToPath(strokes);
   if (!d) return null;
 
   return {
@@ -217,53 +217,55 @@ export function getSignaturePath(signature: SignatureRecord, width = 240, height
   };
 }
 
-function getSignatureSurfacePath(signature: SignatureRecord, width: number, height: number): SignaturePath | null {
-  const strokes = getSignatureSurfaceStrokes(signature, width, height);
-  const d = strokes.map((stroke) => strokeToPath(stroke.points)).filter(Boolean).join(' ');
+export function getCroppedSignaturePath(signature: SignatureRecord, padding = 12): SignaturePath | null {
+  const strokes = getRawSignatureStrokes(signature);
+  if (!strokes.length) return null;
+
+  const allPoints = strokes.flatMap((stroke) => stroke.points);
+  const minX = Math.min(...allPoints.map((point) => point.x));
+  const maxX = Math.max(...allPoints.map((point) => point.x));
+  const minY = Math.min(...allPoints.map((point) => point.y));
+  const maxY = Math.max(...allPoints.map((point) => point.y));
+  const cropX = minX - padding;
+  const cropY = minY - padding;
+  const cropRight = maxX + padding;
+  const cropBottom = maxY + padding;
+  const width = Math.max(cropRight - cropX, 1);
+  const height = Math.max(cropBottom - cropY, 1);
+  const croppedStrokes = strokes.map((stroke) => ({
+    points: stroke.points.map((point) => ({
+      x: point.x - cropX,
+      y: point.y - cropY,
+    })),
+  }));
+  const d = strokesToPath(croppedStrokes);
   if (!d) return null;
 
   return {
     d,
     width,
     height,
-    strokeWidth: Math.max(3, Math.min(4.6, Math.min(width, height) * 0.012)),
+    strokeWidth: Math.max(2.4, Math.min(4.2, Math.min(signature.width, signature.height) * 0.011)),
   };
-}
-
-function getSignatureSvgUri(path: SignaturePath) {
-  const svg = [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${path.width} ${path.height}">`,
-    `<path d="${path.d}" fill="none" stroke="${Colors.navy}" stroke-width="${path.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`,
-    '</svg>',
-  ].join('');
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
 export function SignaturePreview({ value, boxAspectRatio = 5 }: { value?: string | null; boxAspectRatio?: number }) {
   const signature = parseSignatureRecord(value);
   const width = Math.max(160, Math.round(boxAspectRatio * 48));
-  const path = getSignaturePath(signature, width, 48);
-  const uri = path ? getSignatureSvgUri(path) : null;
-  const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [uri]);
+  const path = getCroppedSignaturePath(signature, 10) ?? getSignaturePath(signature, width, 48);
 
   if (!path) return null;
 
   return (
     <View style={styles.previewCanvas} pointerEvents="none">
-      {imageFailed || !uri ? (
-        <Text style={styles.previewFallback}>Signed</Text>
-      ) : (
-        <ExpoImage source={{ uri }} style={styles.previewImage} contentFit="fill" onError={() => setImageFailed(true)} />
-      )}
+      <Svg width="100%" height="100%" viewBox={`0 0 ${path.width} ${path.height}`} preserveAspectRatio="xMidYMid meet">
+        <Path d={path.d} fill="none" stroke={Colors.navy} strokeWidth={path.strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
     </View>
   );
 }
 
-export function SignaturePad({ value, onChange, height = 190, hint }: SignaturePadProps) {
+export function SignaturePad({ value, onChange, height = 190, hint, showHeader = true, style }: SignaturePadProps) {
   const parsed = useMemo(() => parseSignatureRecord(value), [value]);
   const [points, setPoints] = useState<SignaturePoint[]>(() => parsed.points);
   const [surfaceSize, setSurfaceSize] = useState({ width: parsed.width || 360, height: parsed.height || height });
@@ -272,10 +274,23 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
     [points, surfaceSize.height, surfaceSize.width],
   );
   const livePath = useMemo(
-    () => getSignatureSurfacePath(liveSignature, surfaceSize.width, surfaceSize.height),
+    () => {
+      const strokes = getRawSignatureStrokes(liveSignature);
+      const d = strokesToPath(strokes);
+      const strokeWidth = Math.max(3, Math.min(4.8, Math.min(surfaceSize.width, surfaceSize.height) * 0.012));
+      const padding = Math.max(6, strokeWidth * 1.4);
+      return d
+        ? {
+            d,
+            width: surfaceSize.width,
+            height: surfaceSize.height,
+            padding,
+            strokeWidth,
+          }
+        : null;
+    },
     [liveSignature, surfaceSize.height, surfaceSize.width],
   );
-  const liveUri = useMemo(() => (livePath ? getSignatureSvgUri(livePath) : null), [livePath]);
   const pointsRef = useRef(points);
   const surfaceSizeRef = useRef(surfaceSize);
 
@@ -295,21 +310,33 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
     onChange(next.length > 1 ? JSON.stringify({ version: 2, width: size.width, height: size.height, points: next }) : null);
   };
 
+  const getEventPoint = (event: GestureResponderEvent) => {
+    const { locationX, locationY } = event.nativeEvent;
+    const size = surfaceSizeRef.current;
+    return {
+      x: Math.max(0, Math.min(size.width, locationX)),
+      y: Math.max(0, Math.min(size.height, locationY)),
+    };
+  };
+
   const panResponder = useMemo(
     () => PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderTerminationRequest: () => false,
       onPanResponderGrant: (event) => {
-        const { locationX, locationY } = event.nativeEvent;
+        const { x, y } = getEventPoint(event);
         const current = pointsRef.current;
-        syncPoints([...current, { x: locationX, y: locationY, break: current.length > 0 || undefined }]);
+        syncPoints([...current, { x, y, break: current.length > 0 || undefined }]);
       },
       onPanResponderMove: (event) => {
-        const { locationX, locationY } = event.nativeEvent;
+        const { x, y } = getEventPoint(event);
         const current = pointsRef.current;
         const last = current[current.length - 1];
-        if (last && Math.hypot(locationX - last.x, locationY - last.y) < 2) return;
-        syncPoints([...current, { x: locationX, y: locationY }]);
+        if (last && Math.hypot(x - last.x, y - last.y) < 2) return;
+        syncPoints([...current, { x, y }]);
       },
     }),
     [],
@@ -318,23 +345,35 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
   const clear = () => syncPoints([]);
 
   return (
-    <View style={styles.wrap}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Ionicons name="create-outline" size={18} color={Colors.darkTeal} />
-          <Text style={styles.label}>Customer signature</Text>
+    <View style={[styles.wrap, style]}>
+      {showHeader ? (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Ionicons name="create-outline" size={18} color={Colors.darkTeal} />
+            <Text style={styles.label}>Customer signature</Text>
+          </View>
+          <TouchableOpacity onPress={clear} style={styles.clearButton} accessibilityRole="button">
+            <Text style={styles.clearText}>Clear</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={clear} style={styles.clearButton} accessibilityRole="button">
-          <Text style={styles.clearText}>Clear</Text>
-        </TouchableOpacity>
-      </View>
+      ) : null}
       <View
         style={[styles.surface, { height }]}
         onLayout={(event) => {
           const { width, height: nextHeight } = event.nativeEvent.layout;
           const nextSize = { width: Math.max(width, 1), height: Math.max(nextHeight, 1) };
+          const previousSize = surfaceSizeRef.current;
           surfaceSizeRef.current = nextSize;
           setSurfaceSize(nextSize);
+          if (
+            pointsRef.current.length &&
+            (Math.abs(previousSize.width - nextSize.width) > 2 || Math.abs(previousSize.height - nextSize.height) > 2)
+          ) {
+            const resized = scalePoints(pointsRef.current, previousSize, nextSize);
+            pointsRef.current = resized;
+            setPoints(resized);
+            onChange(JSON.stringify({ version: 2, width: nextSize.width, height: nextSize.height, points: resized }));
+          }
         }}
         {...panResponder.panHandlers}
       >
@@ -343,11 +382,26 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
             <Text style={styles.placeholderText}>Sign here</Text>
           </View>
         ) : null}
-        {liveUri ? (
-          <ExpoImage source={{ uri: liveUri }} style={styles.surfaceInk} contentFit="fill" pointerEvents="none" />
+        {livePath ? (
+          <Svg
+            width="100%"
+            height="100%"
+            viewBox={`${-livePath.padding} ${-livePath.padding} ${livePath.width + (livePath.padding * 2)} ${livePath.height + (livePath.padding * 2)}`}
+            style={styles.surfaceInk}
+            pointerEvents="none"
+          >
+            <Path
+              d={livePath.d}
+              fill="none"
+              stroke={Colors.navy}
+              strokeWidth={livePath.strokeWidth}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
         ) : null}
       </View>
-      <Text style={styles.hint}>{hint ?? 'Hand the phone or iPad to the customer and have them sign in the box.'}</Text>
+      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
     </View>
   );
 }
