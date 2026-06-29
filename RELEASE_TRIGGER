@@ -1,0 +1,12 @@
+Production release triggers — add a line below and push to build + submit to App Store Connect.
+
+# (none yet)
+
+2026-06-07T04:30:00Z — release v1.0: Autism Fund Tracker, email-only login, full feature set
+2026-06-08T01:15:00Z — release v1.0 retry: ASC API key secrets configured
+2026-06-08T01:30:00Z — release v1.0 retry: set Apple team type INDIVIDUAL
+2026-06-08T01:35:00Z — release v1.0 retry: normalize ASC .p8 PEM formatting
+2026-06-08T02:00:00Z — release v1.0: iPhone-only (disable iPad support)
+2026-06-08T03:55:00Z — release v1.0: increment buildNumber to 3 (avoid duplicate ASC submission)
+2026-06-11T11:30:00Z — release v1.0 (build 4): fix iPad launch crash (deterministic initial route + overlay location prompt)
+2026-06-29T00:00:00Z — release v1.0 (build 5): retry submission (buildNumber was already used)

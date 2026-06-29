@@ -1,0 +1,97 @@
+{
+  "expo": {
+    "name": "Autism Fund Tracker",
+    "slug": "semco-app",
+    "owner": "kitzul88",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "autismfundtracker",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FAF8FF",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6300fb3b-12f9-4b5c-9d1d-66dba1f328ee",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FAF8FF"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ca.semco.app",
+      "appleTeamId": "9M779XQXAW",
+      "buildNumber": "5",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FAF8FF"
+      },
+      "package": "ca.semco.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-updates",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAF8FF"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Autism Fund Tracker to access your photos to attach receipts.",
+          "cameraPermission": "Allow Autism Fund Tracker to use your camera to capture receipts."
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Allow Autism Fund Tracker to add appointments to your calendar."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "iosDisplayInForeground": true
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Autism Fund Tracker to find nearby approved providers."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "supabaseUrl": "https://wowlxyxaltgxbbsbcxao.supabase.co",
+      "supabaseAnonKey": "sb_publishable_X9eDFGcf0Vn27-yct5E0dQ_4u-HgtN9",
+      "googleVisionApiKey": "AIzaSyDS6Q-EWDE9aI8eI-Y4IwEsS9fpDBw5QOM",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "6300fb3b-12f9-4b5c-9d1d-66dba1f328ee"
+      }
+    }
+  }
+}

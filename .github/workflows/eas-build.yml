@@ -1,0 +1,33 @@
+name: EAS — Native Build
+
+on:
+  push:
+    branches:
+      - claude/autism-grant-app-eUE6R
+    paths:
+      - 'BUILD_TRIGGER'
+
+jobs:
+  build-preview:
+    name: Build iOS Preview (Native)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@18.13.0
+
+      - name: Build iOS preview
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform ios --profile preview --non-interactive --clear-cache

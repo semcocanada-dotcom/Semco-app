@@ -1,0 +1,67 @@
+name: EAS — Production Build & Submit
+
+# Builds the App Store (production) binary and submits it to App Store
+# Connect automatically. Runs only when RELEASE_TRIGGER changes, so it never
+# fires by accident (production builds use paid build credits).
+#
+# Credentials: in non-interactive CI, EAS needs an App Store Connect API key
+# to create the distribution certificate and App Store provisioning profile.
+# Provide it via repository secrets:
+#   ASC_KEY_P8     – the full contents of the AuthKey_XXXX.p8 file
+#   ASC_KEY_ID     – the key's Key ID
+#   ASC_ISSUER_ID  – the Issuer ID (App Store Connect → Integrations)
+
+on:
+  push:
+    branches:
+      - claude/autism-grant-app-eUE6R
+    paths:
+      - 'RELEASE_TRIGGER'
+
+jobs:
+  build-and-submit:
+    name: Build iOS Production & Submit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli@18.13.0
+
+      - name: Write App Store Connect API key
+        # Rebuild a clean PKCS#8 PEM from the secret, tolerant of pasted keys
+        # whose line breaks were flattened (common when copying on a phone).
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          BODY=$(printf '%s' "$ASC_KEY_P8" \
+            | sed -e 's/-----BEGIN PRIVATE KEY-----//' \
+                  -e 's/-----END PRIVATE KEY-----//' \
+            | tr -d '[:space:]')
+          {
+            echo "-----BEGIN PRIVATE KEY-----"
+            printf '%s' "$BODY" | fold -w 64
+            echo
+            echo "-----END PRIVATE KEY-----"
+          } > "$RUNNER_TEMP/asc-key.p8"
+          echo "Wrote $(wc -l < "$RUNNER_TEMP/asc-key.p8") lines"
+
+      - name: Build iOS production and submit to App Store Connect
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_ASC_API_KEY_PATH: ${{ runner.temp }}/asc-key.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: '9M779XQXAW'
+          EXPO_APPLE_TEAM_TYPE: 'INDIVIDUAL'
+        run: eas build --platform ios --profile production --non-interactive --auto-submit
