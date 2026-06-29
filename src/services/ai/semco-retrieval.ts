@@ -4,6 +4,11 @@ import {
   STOCKED_SEALER_POLICY_SOURCE,
   STOCKED_SEALER_POLICY_TEXT,
 } from '@/constants/stocked-sealers';
+import {
+  STANDARD_SHOWER_POLICY_PAGE,
+  STANDARD_SHOWER_POLICY_SOURCE,
+  STANDARD_SHOWER_POLICY_TEXT,
+} from '@/constants/shower-policy';
 import { searchSipManual } from './manual-knowledge';
 import type { AssistantCitation } from '@/database/schema/conversations';
 import type { RagChunk } from './rag';
@@ -84,6 +89,8 @@ function processSearchQuery(query: string): string {
     query,
     'surface preparation cleaning substrate Stone Soap Power Cleaner Nu-Lift Cleaner',
     'X-Bond Seamless Stone over concrete floor detail',
+    'standard shower X-Bond substrate GlasRoc GlassRoc concrete construction board plywood OSB tile grouted block CMU',
+    'standard shower Liquid Membrane 2 coats fabric joints inside corners Satin Stone 2 coats',
     'surface preparation scratch coat liquid membrane fabric reinforcement brown coat',
     'Color Bond Polished Bond ADA Safety Floor Natural Shield Satin Stone Titan Gloss Matte sealer',
     'current stocked sealers pool pond fountain water containment submerged exterior penetrating sealer Natural Shield',
@@ -234,6 +241,8 @@ function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) 
     'submerged',
     'drywall',
     'gypsum',
+    'glasroc',
+    'glassroc',
     'cement board',
     'backer board',
     'concrete board',
@@ -261,13 +270,17 @@ function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) 
     pushPinned(pinned, 'Cove-Base-Detail-Plywood.pdf', 1);
   }
 
-  if (includesAny(normalized, ['pool', 'pond', 'fountain', 'water feature', 'water containment', 'jacuzzi', 'submerged', 'wet room', 'wetroom'])) {
+  if (includesAny(normalized, ['pool', 'pond', 'fountain', 'water feature', 'water containment', 'jacuzzi', 'submerged'])) {
     pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 1);
     pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 2);
   }
 
-  if (normalized.includes('shower')) {
+  if (includesAny(normalized, ['shower', 'wet room', 'wetroom'])) {
     pushPinned(pinned, 'Shower-Detail-Concrete.pdf', 1);
+    pushPinned(pinned, 'Shower-Detail-Wood.pdf', 1);
+    pushPinned(pinned, 'Shower-Detail.pdf', 1);
+    pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 1);
+    pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 2);
   }
 
   if (includesAny(normalized, ['polished bond', 'polished'])) {
@@ -315,6 +328,7 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     'outside',
     'wet room',
     'wetroom',
+    'shower',
     'x-crete',
     'xcrete',
     'x-tra',
@@ -347,9 +361,6 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     'underwater',
     'exterior',
     'outside',
-    'wet room',
-    'wetroom',
-    'shower',
   ])) {
     pushPinned(pinned, SIP_MANUAL, 40);
     pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 1);
@@ -357,7 +368,7 @@ function addSealerPages(query: string, pinned: Array<[string, number]>) {
     pushPinned(pinned, 'Natural-Shield-Tech-Sheet.pdf', 3);
   }
 
-  if (includesAny(normalized, ['satin stone', 'satin'])) {
+  if (includesAny(normalized, ['satin stone', 'satin', 'shower', 'wet room', 'wetroom'])) {
     pushPinned(pinned, SIP_MANUAL, 45);
     pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 1);
     pushPinned(pinned, 'Satin+Stone+Tech+Sheet.pdf', 2);
@@ -404,6 +415,9 @@ function shouldAddStockedSealerPolicy(query: string): boolean {
     'submerged',
     'exterior',
     'outside',
+    'shower',
+    'wet room',
+    'wetroom',
     'x-crete',
     'xcrete',
     'xtreme',
@@ -414,6 +428,34 @@ function shouldAddStockedSealerPolicy(query: string): boolean {
     'color coat',
     'color gloss',
   ]);
+}
+
+function shouldAddShowerPolicy(query: string): boolean {
+  const normalized = normalizeQuery(query);
+  return includesAny(normalized, [
+    'shower',
+    'wet room',
+    'wetroom',
+    'glasroc',
+    'glassroc',
+    'bathroom wall',
+    'inside corner',
+    'shower substrate',
+  ]);
+}
+
+function showerPolicyChunk(query: string): RetrievedSemcoChunk[] {
+  if (!shouldAddShowerPolicy(query)) return [];
+
+  return [{
+    id: 'policy-standard-shower-xbond',
+    documentName: STANDARD_SHOWER_POLICY_SOURCE,
+    title: 'Current standard shower X-Bond rule',
+    pageNumber: STANDARD_SHOWER_POLICY_PAGE,
+    score: PROCESS_CONTEXT_SCORE + 18,
+    retrieval: 'local',
+    text: STANDARD_SHOWER_POLICY_TEXT,
+  }];
 }
 
 function stockedSealerPolicyChunk(query: string): RetrievedSemcoChunk[] {
@@ -490,6 +532,8 @@ export async function retrieveSemcoChunks(
   const retrievalNotes: string[] = [];
   const policyChunks = stockedSealerPolicyChunk(query);
   if (policyChunks.length > 0) retrievalNotes.push('policy:stocked-sealers');
+  const showerPolicyChunks = showerPolicyChunk(query);
+  if (showerPolicyChunks.length > 0) retrievalNotes.push('policy:standard-shower');
   const pinnedProcessChunks = getPinnedProcessChunks(query);
   if (pinnedProcessChunks.length > 0) retrievalNotes.push(`process:${pinnedProcessChunks.length}`);
 
@@ -509,10 +553,15 @@ export async function retrieveSemcoChunks(
   }));
   if (localChunks.length > 0) retrievalNotes.push(`local:${localChunks.length}`);
 
-  const chunks = uniqueBySource([...policyChunks, ...pinnedProcessChunks, ...semanticChunks, ...localChunks])
+  const chunks = uniqueBySource([...policyChunks, ...showerPolicyChunks, ...pinnedProcessChunks, ...semanticChunks, ...localChunks])
     .sort((a, b) => {
-      if (a.id === 'policy-stocked-sealers') return -1;
-      if (b.id === 'policy-stocked-sealers') return 1;
+      const policyRank = (id: string) => {
+        if (id === 'policy-stocked-sealers') return 0;
+        if (id === 'policy-standard-shower-xbond') return 1;
+        return 2;
+      };
+      const rankDiff = policyRank(a.id) - policyRank(b.id);
+      if (rankDiff !== 0) return rankDiff;
       if (a.retrieval !== b.retrieval) return a.retrieval === 'semantic' ? -1 : 1;
       return b.score - a.score;
     })

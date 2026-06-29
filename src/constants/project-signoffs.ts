@@ -69,7 +69,7 @@ const headerPdfFields = (x: number, width: number): PdfFormField[] => [
 ];
 
 const ACCEPTANCE_PDF_FIELDS = (signatureY: number, nameDelta = 8.8): PdfFormField[] => [
-  lineField('signature', 'Signature', 22.6, signatureY, 32, 'signature', 4.6),
+  lineField('signature', 'Signature', 22.6, signatureY, 32, 'signature', 6.1),
   lineField('signedDate', 'Date', 60, signatureY, 34, 'date', 2.5),
   lineField('customerName', 'Print Name', 22.6, signatureY + nameDelta, 32),
   lineField('acceptedByTitle', 'Title', 60, signatureY + nameDelta, 34),

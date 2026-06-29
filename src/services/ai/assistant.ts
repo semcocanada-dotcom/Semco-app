@@ -367,7 +367,7 @@ function shouldAskForRequiredInputs(
 function shouldUseLocalFieldAnswer(
   profile: ReturnType<typeof buildReasoningProfile>,
 ): boolean {
-  return ['prep_decision', 'install_build_up', 'x_bond_finish', 'liquid_membrane_application'].includes(profile.intent) && Boolean(profile.localAnswer);
+  return ['prep_decision', 'install_build_up', 'shower_substrate', 'x_bond_finish', 'liquid_membrane_application'].includes(profile.intent) && Boolean(profile.localAnswer);
 }
 
 async function searchOfflineProducts(

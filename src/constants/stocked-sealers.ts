@@ -46,10 +46,12 @@ export const DEPRECATED_SEALER_SKUS = ['SEAL-2K-G', 'SEAL-2K-M', 'SEAL-2K-S'] as
 export const STOCKED_SEALER_POLICY_TEXT = [
   'Current Semco Canada stocked sealers are Natural Shield, Satin Stone, Titan Gloss, and Matte.',
   'These four stocked sealers are enough to cover current Semco Canada applications.',
-  'Natural Shield is the current stocked sealer used for pools, submerged conditions, wet exposure, and exterior work. It replaces X-Crete for current pool guidance because it is a penetrating sealer and is best for submerged and exterior exposure.',
-  'Satin Stone is the stocked satin finish.',
+  'Natural Shield is the current stocked sealer used for pools, submerged conditions, continuous water-containment work, and exterior penetrating-sealer work. It replaces X-Crete for current pool guidance because it is a penetrating sealer and is best for submerged and exterior exposure.',
+  'Standard interior showers and wet rooms use Satin Stone as the current stocked Semco Canada shower finish unless Semco specifies otherwise.',
+  'Satin Stone is the stocked satin finish. Standard shower guidance is Satin Stone in 2 coats.',
   'Titan Gloss is the stocked gloss finish.',
   'Matte is a stocked matte finish. Semco Canada field rule: Matte is like Titan Gloss in a matte finish and is slightly harder than Titan.',
+  'Do not treat a standard interior shower as a pool/submerged Natural Shield job.',
   'Do not present X-Crete 400, X-Crete 500, X-Tra Gloss, Xtreme Gloss, Crystal Coat, Colour Coat, or Color Gloss as current stocked Semco Canada sealer options. If older Semco documents mention them, treat them as older reference material unless the installer specifically asks about that older product.',
 ].join('\n');
 

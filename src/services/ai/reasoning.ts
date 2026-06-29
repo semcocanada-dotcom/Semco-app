@@ -1,6 +1,7 @@
 import type { SubstrateId } from '@/constants/substrates';
 import { SUBSTRATE_MAP } from '@/constants/substrates';
 import { STOCKED_SEALER_POLICY_TEXT } from '@/constants/stocked-sealers';
+import { STANDARD_SHOWER_POLICY_TEXT } from '@/constants/shower-policy';
 import type { ManualKnowledgeHit } from './manual-knowledge';
 
 type ReasoningIntent =
@@ -10,6 +11,7 @@ type ReasoningIntent =
   | 'liquid_membrane_application'
   | 'prep_decision'
   | 'install_build_up'
+  | 'shower_substrate'
   | 'x_bond_finish'
   | 'sealer_application'
   | 'warranty_photos'
@@ -25,6 +27,7 @@ interface ExtractedJobFacts {
   wantsAllPrep: boolean;
   wantsMicroBond: boolean;
   isSubmerged: boolean;
+  isShower: boolean;
 }
 
 type PrepSurfaceGroup =
@@ -53,7 +56,7 @@ export interface ReasoningProfile {
 }
 
 const SUBSTRATE_ALIASES: { id: SubstrateId; terms: string[] }[] = [
-  { id: 'cement_board', terms: ['cement board', 'backer board', 'concrete board', 'concrete boards', 'concrete panel', 'concrete panels'] },
+  { id: 'cement_board', terms: ['cement board', 'backer board', 'concrete board', 'concrete boards', 'concrete panel', 'concrete panels', 'glasroc', 'glassroc', 'glaseroc'] },
   { id: 'concrete_block', terms: ['block', 'cmu', 'stucco', 'masonry', 'brick', 'below grade plaster', 'plaster'] },
   { id: 'existing_paint', terms: ['paint', 'painted', 'coating', 'coated', 'epoxy', 'terrazzo', 'carpet glue', 'wax', 'waxed', 'sealer residue'] },
   { id: 'existing_tile', terms: ['tile', 'ceramic', 'porcelain', 'grout'] },
@@ -90,7 +93,7 @@ const PREP_SURFACE_GROUPS: { group: PrepSurfaceGroup; label: string; terms: stri
   {
     group: 'wall_board',
     label: 'drywall, gypsum board, cement board, backer board, concrete board, or wall panel',
-    terms: ['drywall', 'gypsum', 'wallboard', 'gyp board', 'cement board', 'backer board', 'concrete board', 'concrete panel'],
+    terms: ['drywall', 'gypsum', 'wallboard', 'gyp board', 'cement board', 'backer board', 'concrete board', 'concrete panel', 'glasroc', 'glassroc', 'glaseroc'],
   },
   {
     group: 'pool_submerged',
@@ -164,6 +167,12 @@ function detectIntent(normalized: string, contextNormalized = normalized): Reaso
   if (isSubmergedLiquidMembraneQuestion(normalized, contextNormalized)) {
     return 'liquid_membrane_application';
   }
+  if (isShowerSubstrateQuestion(normalized, contextNormalized)) {
+    return 'shower_substrate';
+  }
+  if (isShowerQuestion(contextNormalized) && isProcedureQuestion(normalized, contextNormalized)) {
+    return 'install_build_up';
+  }
   if (
     hasAny(normalized, ['finish coat', 'finish coats', 'xbond finish', 'x-bond finish', 'x bond finish', 'x-bond top coat', 'xbond top coat', 'texture coat', 'texture coats', 'final xbond', 'final x-bond'])
     && hasAny(normalized, ['xbond', 'x-bond', 'x bond', 'finish', 'coat', 'coats', 'texture'])
@@ -217,6 +226,7 @@ function mergeFacts(contextFacts: ExtractedJobFacts, focusedFacts: ExtractedJobF
     wantsAllPrep: focusedFacts.wantsAllPrep || contextFacts.wantsAllPrep,
     wantsMicroBond: focusedFacts.wantsMicroBond || contextFacts.wantsMicroBond,
     isSubmerged: focusedFacts.isSubmerged || contextFacts.isSubmerged,
+    isShower: focusedFacts.isShower || contextFacts.isShower,
   };
 }
 
@@ -231,6 +241,7 @@ function extractFacts(normalized: string): ExtractedJobFacts {
     wantsAllPrep: wantsAllSurfacePrep(normalized),
     wantsMicroBond: hasAny(normalized, ['microbond', 'micro bond', 'smooth finish']),
     isSubmerged: hasAny(normalized, ['pool', 'pond', 'fountain', 'water feature', 'water containment', 'holding water', 'hold water', 'submerged', 'under water', 'underwater', 'jacuzzi']),
+    isShower: isShowerQuestion(normalized),
   };
 }
 
@@ -265,6 +276,53 @@ function wantsAllSurfacePrep(normalized: string): boolean {
       && hasAny(normalized, ['procedure', 'procedures', 'prep', 'preparation', 'clean', 'cleaning', 'double check'])
     )
   );
+}
+
+function isShowerQuestion(normalized: string): boolean {
+  return hasAny(normalized, ['shower', 'wet room', 'wetroom']);
+}
+
+function isProcedureQuestion(normalized: string, contextNormalized = normalized): boolean {
+  return hasAny(normalized, [
+    'process',
+    'procedure',
+    'steps',
+    'step',
+    'start to finish',
+    'from start',
+    'install',
+    'installation',
+    'apply',
+    'application',
+    'how do i',
+    'how do we',
+    'how do you',
+    'how to',
+    'what procedure',
+    'what process',
+    'walk me through',
+  ]) || hasAny(contextNormalized, ['start to finish', 'procedure', 'process']);
+}
+
+function isShowerSubstrateQuestion(normalized: string, contextNormalized = normalized): boolean {
+  if (!isShowerQuestion(contextNormalized)) return false;
+  if (isProcedureQuestion(normalized, contextNormalized) && extractSubstrate(normalized)) return false;
+  return hasAny(normalized, [
+    'what substrate',
+    'which substrate',
+    'substrate should',
+    'approved substrate',
+    'substrates can',
+    'substrate can',
+    'what surface',
+    'which surface',
+    'what board',
+    'which board',
+    'glasroc',
+    'glassroc',
+    'concrete board',
+    'backer board',
+  ]);
 }
 
 function isSubmergedLiquidMembraneQuestion(normalized: string, contextNormalized = normalized): boolean {
@@ -322,6 +380,10 @@ function buildAssumptions(intent: ReasoningIntent, facts: ExtractedJobFacts): st
     assumptions.push('Pool/submerged conditions use Natural Shield as the current stocked penetrating sealer and should be selected in the Calculator.');
   }
 
+  if (facts.isShower) {
+    assumptions.push('Standard interior shower work should not assume the substrate; use the current shower rule and ask for the substrate if missing.');
+  }
+
   if (facts.wantsMicroBond) {
     assumptions.push('MicroBond/smooth finish should be selected in the Calculator when quantities are needed.');
   }
@@ -360,6 +422,7 @@ function buildLocalAnswer(
   if (intent === 'takeoff_scope') return takeoffAnswer();
   if (intent === 'prep_decision') return prepAnswer(facts, missingInputs);
   if (intent === 'liquid_membrane_application') return liquidMembraneApplicationAnswer(facts);
+  if (intent === 'shower_substrate') return showerSubstrateAnswer();
   if (intent === 'install_build_up') return installBuildUpAnswer(facts, missingInputs);
   if (intent === 'x_bond_finish') return xBondFinishCoatAnswer(facts);
   if (intent === 'sealer_application') return sealerApplicationAnswer(facts);
@@ -697,6 +760,124 @@ function warrantyPhotoAnswer(): string {
   ].join('\n');
 }
 
+function showerSubstrateAnswer(): string {
+  return [
+    'For a shower, first identify the substrate. The build-up changes depending on what is behind the X-Bond, so I would not assume concrete, tile, or board from the word "shower" alone.',
+    '',
+    '**Option 1: Concrete or construction boards/panels.**',
+    'Use the concrete/construction-board shower detail when the surface is sound, dry, stable, and properly prepared.',
+    '',
+    '**Option 2: GlasRoc, GlassRoc, or similar wet-area board.**',
+    'Treat it like a wet-area construction board only if it is properly installed, fastened, sound, dry, and stable. Do not treat regular damaged drywall as a shower substrate.',
+    '',
+    '**Option 3: Wood, plywood, or OSB boards.**',
+    'Use the Semco wood shower detail only when the assembly is structural, dry, fastened, and not flexing.',
+    '',
+    '**Option 4: Existing tile or grouted substrate, including block or CMU.**',
+    'Only continue if it is bonded solid. Brown Coat is for leveling, grout elimination, larger void filling, or build-up when that condition exists.',
+    '',
+    'For a standard interior shower, the current Semco Canada path is the 2-coat Liquid Membrane/fabric detail at joints and inside corners, then X-Bond, then Satin Stone in 2 coats.',
+    '',
+    'Tell me which substrate is on this shower: concrete/board, GlasRoc/similar board, plywood/OSB, or tile/grouted/block?',
+  ].join('\n');
+}
+
+function showerSubstrateNeededAnswer(): string {
+  return [
+    'I need the shower substrate first before I give the procedure. Shower work changes by what is behind the X-Bond, so guessing here can send the installer down the wrong path.',
+    '',
+    'Which one is on site?',
+    '',
+    '**1. Concrete or construction board/panel.**',
+    '**2. GlasRoc, GlassRoc, or similar wet-area board.**',
+    '**3. Wood, plywood, or OSB.**',
+    '**4. Existing tile, grouted surface, block, or CMU.**',
+    '',
+    'Once you tell me that, I can give the exact shower sequence. The standard shower finish rule is still: 2-coat Liquid Membrane/fabric detail, X-Bond, then Satin Stone in 2 coats.',
+  ].join('\n');
+}
+
+function showerBuildUpAnswer(substrateType: SubstrateId): string {
+  const substratePath: Record<SubstrateId, string[]> = {
+    concrete: [
+      'Confirm the concrete is sound, non-delaminating, stable, dry enough, and not actively wet.',
+      'Clean and reset the surface before coating. If minerals, calcium, alkali, or efflorescence are present, use the Nu-Lift path, then Stone Soap final wash at 1:4, rinse/vacuum, and dry.',
+    ],
+    cement_board: [
+      'Confirm the cement board, concrete board, construction board/panel, GlasRoc, GlassRoc, or similar wet-area board is properly fastened, sound, dry, and stable.',
+      'Clean dust and debris off the board. Do not continue over loose board, damaged board, soft spots, swelling, or contamination.',
+    ],
+    gypsum_board: [
+      'Do not treat regular drywall as an approved shower substrate. Only continue if the board is a proper wet-area board such as GlasRoc/GlassRoc or similar, installed sound, dry, and stable.',
+      'If it is standard drywall, stop and get the substrate corrected before X-Bond shower work.',
+    ],
+    plywood: [
+      'Confirm plywood/OSB is structural, fastened, stable, dry, and not flexing. Stop if it moves, swells, deflects, or shows water damage.',
+      'Use the wood shower detail. Sweep debris before membrane work.',
+    ],
+    existing_tile: [
+      'Check every tile area first. Only continue over tile or grout that is bonded solid, not hollow, cracked, loose, tenting, or moving.',
+      'Use the tile/mineral prep path: Nu-Lift, scrub/agitate, rinse/vacuum, then Stone Soap 1:4 final wash, rinse/vacuum, and dry. Fill grout lines flush.',
+    ],
+    concrete_block: [
+      'Confirm block/CMU/grouted substrate is sound, clean, dry enough, and not loose, dusty, spalling, or actively wet.',
+      'Use the tile/mineral masonry prep path where minerals or efflorescence are present: Nu-Lift, then Stone Soap 1:4 final wash, rinse/vacuum, and dry.',
+    ],
+    existing_paint: [
+      'Do not approve a painted or coated shower substrate by assumption. Remove loose or failing coating and confirm adhesion before any X-Bond work.',
+      'Use the Power Cleaner path for paint/coating residue, then Stone Soap final wash. If the coating is unknown, stop for Semco review.',
+    ],
+    icf: [
+      'Confirm the exposed ICF face first. A sound cementitious face can follow the matching board/concrete path; foam, loose, damp, or unknown faces need Semco review.',
+      'Do not approve ICF shower work without knowing the exposed face and movement risk.',
+    ],
+    metal: [
+      'Metal is not a standard shower substrate path from the supplied shower details. Stop and get Semco review before approving it.',
+      'If Semco approves the condition, prep and adhesion testing must be confirmed before coating.',
+    ],
+    pool: [
+      'A pool or submerged area is not a standard interior shower. Treat it as submerged water-containment work and use the pool/submerged procedure.',
+      'For underwater Liquid Membrane work, use 3 coats. Use Natural Shield where a penetrating sealer is specified for submerged/exterior work.',
+    ],
+    heated_floor: [
+      'For heated shower floors, identify the actual top substrate first, then keep heat off during application and cure.',
+      'Do not thermal-cycle the assembly while the system is bonding.',
+    ],
+  };
+
+  const substrateLabel = SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
+  const prep = substratePath[substrateType] ?? substratePath.cement_board;
+
+  return [
+    `For this shower over ${substrateLabel}, use the shower path for that substrate. Do not treat it like a normal dry floor: the important pieces are substrate approval, waterproofing detail, X-Bond build-up, Satin Stone, and warranty photos.`,
+    '',
+    '**Step 1: Confirm the substrate before coating.**',
+    prep[0],
+    prep[1],
+    '',
+    '**Step 2: Prep and clean the surface.**',
+    'Do not move forward until the surface is clean, dry enough, stable, and bondable. Remove dust, loose material, residue, minerals, coating failure, or grout issues before membrane or X-Bond covers them.',
+    '',
+    '**Step 3: Use the 2-coat Liquid Membrane shower detail.**',
+    'For a standard interior shower, use SEMCO Liquid Membrane with fabric reinforcement at joints and inside corners. Apply the membrane/detail work as a 2-coat shower waterproofing detail before it is covered. Press fabric into wet membrane and avoid voids, pinholes, wrinkles, bubbles, and thin spots.',
+    '',
+    '**Step 4: Scratch/base coat after the membrane detail is ready.**',
+    'Continue with the X-Bond scratch/base build-up once the shower membrane detail is ready for the next step. Brown Coat is not automatic. Use Brown Coat only for leveling, grout elimination, larger void filling, height correction, or when the project detail calls for build-up.',
+    '',
+    '**Step 5: Apply the X-Bond finish.**',
+    'Apply the selected X-Bond Seamless Stone finish only after the base/detail work is ready. Keep the finish tight and even, and do not trap dust, wet membrane, loose particles, or soft spots under the finish.',
+    '',
+    '**Step 6: Seal the shower with Satin Stone.**',
+    'For a standard interior shower, use Satin Stone as the current Semco Canada shower finish. Apply Satin Stone in 2 coats. Do not swap to Natural Shield unless the job is pool, submerged, continuous water-containment, exterior penetrating-sealer work, or Semco specifically reviews and approves that change.',
+    '',
+    '**Step 7: Photograph each warranty stage.**',
+    'Capture photos before each stage gets covered: substrate/prep, Liquid Membrane/fabric, scratch/base, X-Bond finish, Satin Stone, and final handover.',
+    '',
+    'Field check:',
+    'Stop if the substrate is loose, moving, wet, contaminated, hollow, soft, swollen, delaminating, or unknown. In a shower, hidden prep and membrane mistakes are what create callbacks.',
+  ].join('\n');
+}
+
 function numberedSteps(steps: string[]): string[] {
   return steps.map((step, index) => `**Step ${index + 1}:** ${step.replace(/^Step\s*\d+\s*[-:]\s*/i, '')}`);
 }
@@ -807,6 +988,10 @@ function poolBuildUpAnswer(): string {
 }
 
 function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
+  if (facts.isShower && missingInputs.includes('substrate')) {
+    return showerSubstrateNeededAnswer();
+  }
+
   if (missingInputs.length > 0 || (!facts.substrateType && !facts.prepSurfaceGroup)) {
     return [
       'Answer:',
@@ -834,6 +1019,10 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
 
   const substrateType = facts.substrateType;
   const substrateLabel = SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
+
+  if (facts.isShower) {
+    return showerBuildUpAnswer(substrateType);
+  }
 
   if (substrateType === 'concrete') {
     return concreteBuildUpAnswer();
@@ -1021,7 +1210,7 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
   if (sku === 'NATURAL-SHIELD') {
     return [
       'Answer:',
-      'For pool, submerged, wet-exposure, and exterior penetrating-sealer work, use Natural Shield under the current stocked Semco Canada rule. Treat it as a penetrating protection step, not a thick film build.',
+      'For pool, submerged, continuous water-containment, and exterior penetrating-sealer work, use Natural Shield under the current stocked Semco Canada rule. Treat it as a penetrating protection step, not a thick film build.',
       '',
       'Step-by-step:',
       '**Step 1:** Confirm the surface is ready for sealer and sweep all debris and loose material off the surface.',
@@ -1088,14 +1277,14 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
     'Choose the sealer by exposure first, then finish. The installer should not pick only by sheen if the project is exterior, wet, submerged, or high traffic.',
     '',
     'Current stocked Semco Canada options:',
-    'Natural Shield: pools, submerged work, wet exposure, exterior, and natural penetrating protection.',
-    'Satin Stone: stocked satin film finish.',
+    'Natural Shield: pools, submerged work, continuous water-containment, exterior, and natural penetrating protection.',
+    'Satin Stone: stocked satin film finish. Standard interior showers use Satin Stone in 2 coats.',
     'Titan Gloss: stocked gloss film finish.',
     'Matte: stocked matte finish; current field rule says Titan-like matte and slightly harder than Titan.',
     '',
     'Need:',
     '1. finish required: natural, satin, gloss, or matte',
-    '2. exposure: interior, exterior, shower/wetroom, pool/submerged, traffic level',
+    '2. exposure: interior, standard shower/wetroom, exterior, pool/submerged, traffic level',
   ].join('\n');
 }
 
@@ -1130,6 +1319,7 @@ function buildContextNotes(
     `Assumptions: ${assumptions.length ? assumptions.join(' | ') : 'none'}`,
     `Closest source: ${source}`,
     `Current stocked sealer rule:\n${STOCKED_SEALER_POLICY_TEXT}`,
+    `Current standard shower rule:\n${STANDARD_SHOWER_POLICY_TEXT}`,
     localAnswer ? `Local reasoned answer:\n${localAnswer}` : '',
     'Instruction: answer like a field support conversation. Use the facts and logic above; do not paste source excerpts unless needed. Do not calculate material quantities unless a verified Calculator result is explicitly provided.',
   ]
@@ -1146,6 +1336,7 @@ function formatFacts(facts: ExtractedJobFacts): string {
     facts.wantsAllPrep ? 'scope=all surface prep' : null,
     facts.wantsMicroBond ? 'finish=MicroBond smooth' : null,
     facts.isSubmerged ? 'condition=submerged/pool' : null,
+    facts.isShower ? 'condition=shower/wetroom' : null,
   ].filter(Boolean);
 
   return parts.length ? parts.join(', ') : 'none';
