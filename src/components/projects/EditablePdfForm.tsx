@@ -62,6 +62,7 @@ function PdfPageCanvas({ template, values, signatureData, onOpenField }: PdfPage
             const isSignature = field.type === 'signature';
             const isMultiline = field.type === 'multiline';
             const hasValue = isSignature ? Boolean(signatureData) : Boolean(value);
+            const fieldAspectRatio = field.width / Math.max(field.height * PAGE_RATIO, 0.1);
             return (
               <TouchableOpacity
                 key={`${template.type}-${field.id}`}
@@ -82,7 +83,7 @@ function PdfPageCanvas({ template, values, signatureData, onOpenField }: PdfPage
               >
                 {isSignature ? (
                   hasValue ? (
-                    <SignaturePreview value={signatureData} />
+                    <SignaturePreview value={signatureData} boxAspectRatio={fieldAspectRatio} />
                   ) : (
                     <Text style={styles.emptyText}>Tap to sign</Text>
                   )

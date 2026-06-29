@@ -3,7 +3,7 @@ import { PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
-type SignaturePoint = { x: number; y: number };
+type SignaturePoint = { x: number; y: number; break?: boolean };
 type SignatureRecord = {
   version: 2;
   width: number;
@@ -23,6 +23,13 @@ type SignaturePadProps = {
   onChange: (value: string | null) => void;
   height?: number;
   hint?: string;
+};
+
+export type SignatureSegment = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 };
 
 export function parseSignatureRecord(value?: string | null): SignatureRecord {
@@ -48,7 +55,9 @@ export function parseSignatureRecord(value?: string | null): SignatureRecord {
 }
 
 function cleanPoints(points: SignaturePoint[]) {
-  return points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+  return points
+    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
+    .map((point) => ({ x: point.x, y: point.y, break: Boolean(point.break) || undefined }));
 }
 
 export function getSignatureBounds(signature: SignatureRecord): SignatureBounds {
@@ -71,33 +80,93 @@ export function getSignatureBounds(signature: SignatureRecord): SignatureBounds 
   };
 }
 
-function signaturePreviewPoint(point: SignaturePoint, bounds: SignatureBounds) {
+function getSignatureBreakDistance(points: SignaturePoint[], signature: SignatureRecord) {
+  const distances = points.slice(1).flatMap((point, index) => {
+    const previous = points[index];
+    if (point.break || previous.break) return [];
+    const distance = Math.hypot(point.x - previous.x, point.y - previous.y);
+    return Number.isFinite(distance) && distance > 0 ? [distance] : [];
+  });
+  if (!distances.length) return Math.max(signature.width, signature.height) * 0.12;
+
+  const sorted = [...distances].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)] || 1;
+  const maxNaturalJump = Math.max(signature.width, signature.height) * 0.16;
+  return Math.max(20, Math.min(maxNaturalJump, median * 5));
+}
+
+function shouldSkipSegment(previous: SignaturePoint, point: SignaturePoint, signature: SignatureRecord, breakDistance: number) {
+  if (point.break || previous.break) return true;
+  return Math.hypot(point.x - previous.x, point.y - previous.y) > breakDistance;
+}
+
+function simplifyPoints(points: SignaturePoint[], minDistance: number) {
+  const simplified: SignaturePoint[] = [];
+  for (const point of points) {
+    const previous = simplified[simplified.length - 1];
+    if (!previous || point.break || previous.break || Math.hypot(point.x - previous.x, point.y - previous.y) >= minDistance) {
+      simplified.push(point);
+    }
+  }
+  return simplified;
+}
+
+function signaturePreviewPoint(
+  point: SignaturePoint,
+  bounds: SignatureBounds,
+  boxAspectRatio: number,
+) {
+  const signatureAspectRatio = bounds.width / Math.max(bounds.height, 1);
+  const safeBoxAspectRatio = Math.max(boxAspectRatio, 0.1);
+  const maxWidth = 0.9;
+  const maxHeight = 0.62;
+  let drawWidth = maxWidth;
+  let drawHeight = maxHeight;
+
+  if (signatureAspectRatio < safeBoxAspectRatio) {
+    drawWidth = Math.max(0.18, (signatureAspectRatio / safeBoxAspectRatio) * maxHeight);
+  } else {
+    drawHeight = Math.max(0.18, (safeBoxAspectRatio / signatureAspectRatio) * maxWidth);
+  }
+
+  const offsetX = (1 - drawWidth) / 2;
+  const offsetY = (1 - drawHeight) / 2;
+
   return {
-    x: (((point.x - bounds.minX) / bounds.width) * 0.9) + 0.05,
-    y: (((point.y - bounds.minY) / bounds.height) * 0.72) + 0.14,
+    x: (((point.x - bounds.minX) / bounds.width) * drawWidth) + offsetX,
+    y: (((point.y - bounds.minY) / bounds.height) * drawHeight) + offsetY,
   };
 }
 
-export function SignaturePreview({ value }: { value?: string | null }) {
-  const signature = parseSignatureRecord(value);
-  if (signature.points.length < 2) return null;
+export function getSignaturePreviewSegments(signature: SignatureRecord, boxAspectRatio: number): SignatureSegment[] {
+  if (signature.points.length < 2) return [];
   const bounds = getSignatureBounds(signature);
+  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.006);
+  const breakDistance = getSignatureBreakDistance(points, signature);
+
+  return points.slice(1).flatMap((point, index) => {
+    const previous = points[index];
+    if (shouldSkipSegment(previous, point, signature, breakDistance)) return [];
+    const start = signaturePreviewPoint(previous, bounds, boxAspectRatio);
+    const end = signaturePreviewPoint(point, bounds, boxAspectRatio);
+    return [{ x1: start.x, y1: start.y, x2: end.x, y2: end.y }];
+  });
+}
+
+export function SignaturePreview({ value, boxAspectRatio = 5 }: { value?: string | null; boxAspectRatio?: number }) {
+  const signature = parseSignatureRecord(value);
+  const segments = getSignaturePreviewSegments(signature, boxAspectRatio);
+  if (!segments.length) return null;
 
   return (
     <View style={styles.previewCanvas} pointerEvents="none">
-      {signature.points.slice(1).map((point, index) => {
-        const previous = signature.points[index];
-        const start = signaturePreviewPoint(previous, bounds);
-        const end = signaturePreviewPoint(point, bounds);
-        const x1 = start.x;
-        const y1 = start.y;
-        const x2 = end.x;
-        const y2 = end.y;
+      {segments.map((segment, index) => {
+        const { x1, y1, x2, y2 } = segment;
         const length = Math.hypot(x2 - x1, y2 - y1) * 100;
         const angle = Math.atan2(y2 - y1, x2 - x1);
         return (
           <View
-            key={`${index}-${point.x}-${point.y}`}
+            key={`${index}-${x1}-${y1}-${x2}-${y2}`}
             style={[
               styles.previewStroke,
               {
@@ -143,7 +212,8 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (event) => {
         const { locationX, locationY } = event.nativeEvent;
-        syncPoints([...pointsRef.current, { x: locationX, y: locationY }]);
+        const current = pointsRef.current;
+        syncPoints([...current, { x: locationX, y: locationY, break: current.length > 0 || undefined }]);
       },
       onPanResponderMove: (event) => {
         const { locationX, locationY } = event.nativeEvent;
@@ -186,6 +256,7 @@ export function SignaturePad({ value, onChange, height = 190, hint }: SignatureP
         ) : null}
         {points.slice(1).map((point, index) => {
           const previous = points[index];
+          if (point.break) return null;
           const length = Math.hypot(point.x - previous.x, point.y - previous.y);
           const angle = Math.atan2(point.y - previous.y, point.x - previous.x);
           return (
@@ -261,8 +332,8 @@ const styles = StyleSheet.create({
   },
   previewStroke: {
     position: 'absolute',
-    height: 1.5,
-    borderRadius: 2,
+    height: 0.85,
+    borderRadius: 1,
     backgroundColor: Colors.navy,
   },
   hint: {

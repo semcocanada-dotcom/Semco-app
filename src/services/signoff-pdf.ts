@@ -2,7 +2,7 @@ import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { SignoffTemplate } from '@/constants/project-signoffs';
-import { getSignatureBounds, parseSignatureRecord } from '@/components/projects/SignaturePad';
+import { getSignaturePreviewSegments, parseSignatureRecord } from '@/components/projects/SignaturePad';
 import { supabase } from '@/services/supabase';
 
 type CreateFilledSignoffPdfInput = {
@@ -76,25 +76,19 @@ export async function createFilledSignoffPdf({
 
     if (field.type === 'signature') {
       const signature = parseSignatureRecord(signatureData);
-      if (signature.points.length > 1) {
-        const bounds = getSignatureBounds(signature);
-        for (let index = 1; index < signature.points.length; index += 1) {
-          const previous = signature.points[index - 1];
-          const point = signature.points[index];
-          const startX = (((previous.x - bounds.minX) / bounds.width) * 0.9) + 0.05;
-          const startY = (((previous.y - bounds.minY) / bounds.height) * 0.72) + 0.14;
-          const endX = (((point.x - bounds.minX) / bounds.width) * 0.9) + 0.05;
-          const endY = (((point.y - bounds.minY) / bounds.height) * 0.72) + 0.14;
+      const segments = getSignaturePreviewSegments(signature, width / Math.max(height, 1));
+      if (segments.length) {
+        for (const segment of segments) {
           page.drawLine({
             start: {
-              x: x + startX * width,
-              y: y + height - startY * height,
+              x: x + segment.x1 * width,
+              y: y + height - segment.y1 * height,
             },
             end: {
-              x: x + endX * width,
-              y: y + height - endY * height,
+              x: x + segment.x2 * width,
+              y: y + height - segment.y2 * height,
             },
-            thickness: 0.8,
+            thickness: 0.28,
             color: ink,
           });
         }
