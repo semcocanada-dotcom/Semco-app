@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
@@ -25,11 +26,20 @@ type SignaturePadProps = {
   hint?: string;
 };
 
-export type SignatureSegment = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
+type SignatureDrawPoint = {
+  x: number;
+  y: number;
+};
+
+type SignatureStroke = {
+  points: SignatureDrawPoint[];
+};
+
+export type SignaturePath = {
+  d: string;
+  width: number;
+  height: number;
+  strokeWidth: number;
 };
 
 export function parseSignatureRecord(value?: string | null): SignatureRecord {
@@ -114,23 +124,13 @@ function simplifyPoints(points: SignaturePoint[], minDistance: number) {
 function signaturePreviewPoint(
   point: SignaturePoint,
   bounds: SignatureBounds,
-  boxAspectRatio: number,
+  targetWidth: number,
+  targetHeight: number,
 ) {
-  const signatureAspectRatio = bounds.width / Math.max(bounds.height, 1);
-  const safeBoxAspectRatio = Math.max(boxAspectRatio, 0.1);
-  const maxWidth = 0.9;
-  const maxHeight = 0.62;
-  let drawWidth = maxWidth;
-  let drawHeight = maxHeight;
-
-  if (signatureAspectRatio < safeBoxAspectRatio) {
-    drawWidth = Math.max(0.18, (signatureAspectRatio / safeBoxAspectRatio) * maxHeight);
-  } else {
-    drawHeight = Math.max(0.18, (safeBoxAspectRatio / signatureAspectRatio) * maxWidth);
-  }
-
-  const offsetX = (1 - drawWidth) / 2;
-  const offsetY = (1 - drawHeight) / 2;
+  const drawWidth = targetWidth * 0.9;
+  const drawHeight = targetHeight * 0.62;
+  const offsetX = (targetWidth - drawWidth) / 2;
+  const offsetY = (targetHeight - drawHeight) / 2;
 
   return {
     x: (((point.x - bounds.minX) / bounds.width) * drawWidth) + offsetX,
@@ -138,47 +138,89 @@ function signaturePreviewPoint(
   };
 }
 
-export function getSignaturePreviewSegments(signature: SignatureRecord, boxAspectRatio: number): SignatureSegment[] {
+function getSignatureStrokes(signature: SignatureRecord, targetWidth: number, targetHeight: number): SignatureStroke[] {
   if (signature.points.length < 2) return [];
   const bounds = getSignatureBounds(signature);
-  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.006);
+  const points = simplifyPoints(signature.points, Math.max(signature.width, signature.height) * 0.004);
   const breakDistance = getSignatureBreakDistance(points, signature);
+  const strokes: SignatureStroke[] = [];
+  let current: SignatureDrawPoint[] = [];
 
-  return points.slice(1).flatMap((point, index) => {
-    const previous = points[index];
-    if (shouldSkipSegment(previous, point, signature, breakDistance)) return [];
-    const start = signaturePreviewPoint(previous, bounds, boxAspectRatio);
-    const end = signaturePreviewPoint(point, bounds, boxAspectRatio);
-    return [{ x1: start.x, y1: start.y, x2: end.x, y2: end.y }];
+  points.forEach((point, index) => {
+    const previous = points[index - 1];
+    if (index > 0 && shouldSkipSegment(previous, point, signature, breakDistance)) {
+      if (current.length > 1) strokes.push({ points: current });
+      current = [];
+    }
+    current.push(signaturePreviewPoint(point, bounds, targetWidth, targetHeight));
   });
+  if (current.length > 1) strokes.push({ points: current });
+  return strokes;
+}
+
+function strokeToPath(points: SignatureDrawPoint[]) {
+  if (points.length < 2) return '';
+  const [first, ...rest] = points;
+  if (points.length === 2) {
+    const second = rest[0];
+    return `M ${first.x.toFixed(2)} ${first.y.toFixed(2)} L ${second.x.toFixed(2)} ${second.y.toFixed(2)}`;
+  }
+
+  const commands = [`M ${first.x.toFixed(2)} ${first.y.toFixed(2)}`];
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const point = points[index];
+    const next = points[index + 1];
+    const midX = (point.x + next.x) / 2;
+    const midY = (point.y + next.y) / 2;
+    commands.push(`Q ${point.x.toFixed(2)} ${point.y.toFixed(2)} ${midX.toFixed(2)} ${midY.toFixed(2)}`);
+  }
+  const last = points[points.length - 1];
+  commands.push(`L ${last.x.toFixed(2)} ${last.y.toFixed(2)}`);
+  return commands.join(' ');
+}
+
+export function getSignaturePath(signature: SignatureRecord, width = 240, height = 52): SignaturePath | null {
+  const strokes = getSignatureStrokes(signature, width, height);
+  const d = strokes.map((stroke) => strokeToPath(stroke.points)).filter(Boolean).join(' ');
+  if (!d) return null;
+
+  return {
+    d,
+    width,
+    height,
+    strokeWidth: Math.max(1.4, Math.min(2.8, height * 0.07)),
+  };
+}
+
+function getSignatureSvgUri(path: SignaturePath) {
+  const svg = [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${path.width} ${path.height}">`,
+    `<path d="${path.d}" fill="none" stroke="${Colors.navy}" stroke-width="${path.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>`,
+    '</svg>',
+  ].join('');
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
 export function SignaturePreview({ value, boxAspectRatio = 5 }: { value?: string | null; boxAspectRatio?: number }) {
   const signature = parseSignatureRecord(value);
-  const segments = getSignaturePreviewSegments(signature, boxAspectRatio);
-  if (!segments.length) return null;
+  const width = Math.max(160, Math.round(boxAspectRatio * 48));
+  const path = getSignaturePath(signature, width, 48);
+  const uri = path ? getSignatureSvgUri(path) : null;
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [uri]);
+
+  if (!path) return null;
 
   return (
     <View style={styles.previewCanvas} pointerEvents="none">
-      {segments.map((segment, index) => {
-        const { x1, y1, x2, y2 } = segment;
-        const length = Math.hypot(x2 - x1, y2 - y1) * 100;
-        const angle = Math.atan2(y2 - y1, x2 - x1);
-        return (
-          <View
-            key={`${index}-${x1}-${y1}-${x2}-${y2}`}
-            style={[
-              styles.previewStroke,
-              {
-                left: `${(((x1 + x2) / 2) * 100) - (length / 2)}%`,
-                top: `${((y1 + y2) / 2) * 100}%`,
-                width: `${length}%`,
-                transform: [{ rotateZ: `${angle}rad` }],
-              },
-            ]}
-          />
-        );
-      })}
+      {imageFailed || !uri ? (
+        <Text style={styles.previewFallback}>Signed</Text>
+      ) : (
+        <ExpoImage source={{ uri }} style={styles.previewImage} contentFit="fill" onError={() => setImageFailed(true)} />
+      )}
     </View>
   );
 }
@@ -330,11 +372,12 @@ const styles = StyleSheet.create({
     top: 2,
     bottom: 2,
   },
-  previewStroke: {
-    position: 'absolute',
-    height: 0.85,
-    borderRadius: 1,
-    backgroundColor: Colors.navy,
+  previewImage: { width: '100%', height: '100%' },
+  previewFallback: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
+    letterSpacing: 0,
   },
   hint: {
     color: Colors.textSecondary,

@@ -1,8 +1,8 @@
 import { Image } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { LineCapStyle, PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { SignoffTemplate } from '@/constants/project-signoffs';
-import { getSignaturePreviewSegments, parseSignatureRecord } from '@/components/projects/SignaturePad';
+import { getSignaturePath, parseSignatureRecord } from '@/components/projects/SignaturePad';
 import { supabase } from '@/services/supabase';
 
 type CreateFilledSignoffPdfInput = {
@@ -76,22 +76,15 @@ export async function createFilledSignoffPdf({
 
     if (field.type === 'signature') {
       const signature = parseSignatureRecord(signatureData);
-      const segments = getSignaturePreviewSegments(signature, width / Math.max(height, 1));
-      if (segments.length) {
-        for (const segment of segments) {
-          page.drawLine({
-            start: {
-              x: x + segment.x1 * width,
-              y: y + height - segment.y1 * height,
-            },
-            end: {
-              x: x + segment.x2 * width,
-              y: y + height - segment.y2 * height,
-            },
-            thickness: 0.28,
-            color: ink,
-          });
-        }
+      const path = getSignaturePath(signature, width, height);
+      if (path) {
+        page.drawSvgPath(path.d, {
+          x,
+          y: y + height,
+          borderColor: ink,
+          borderWidth: Math.max(0.7, Math.min(1.2, path.strokeWidth * 0.42)),
+          borderLineCap: LineCapStyle.Round,
+        });
       }
       continue;
     }
