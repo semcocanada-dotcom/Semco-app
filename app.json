@@ -25,7 +25,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.semcocanada.semcopro",
       "googleServicesFile": "./config/firebase/GoogleService-Info.plist",
-      "buildNumber": "18",
+      "buildNumber": "19",
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -40,7 +40,7 @@
       }
     },
     "android": {
-      "versionCode": 18,
+      "versionCode": 19,
       "googleServicesFile": "./config/firebase/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
