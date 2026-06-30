@@ -45,7 +45,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.appBackground } }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
-        <Stack.Screen name="portal" />
+        <Stack.Screen name="portal/index" />
       </Stack>
     </GestureHandlerRootView>
   );

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
@@ -8,7 +8,6 @@ import type { Project } from '@/database/schema/projects';
 import { PROJECT_SIGNOFF_TEMPLATES, getSignoffTemplate } from '@/constants/project-signoffs';
 import { Badge, Button, Card, Input } from '@/components/ui';
 import { EditablePdfForm } from '@/components/projects/EditablePdfForm';
-import { createFilledSignoffPdf, uploadSignoffPdf } from '@/services/signoff-pdf';
 import { syncProjectSignoffToCloud } from '@/services/signoffs-cloud';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
@@ -110,18 +109,23 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
     let savedPdfUri = existing ? parseFormData(existing.formData).savedPdfUri : undefined;
     let cloudPdfUrl = existing ? parseFormData(existing.formData).cloudPdfUrl : undefined;
     if (status === 'signed') {
-      try {
-        savedPdfUri = await createFilledSignoffPdf({
-          projectId: project.id,
-          template: selectedTemplate,
-          values: savedFormData,
-          signatureData,
-        });
-        savedFormData.savedPdfUri = savedPdfUri;
-        cloudPdfUrl = await uploadSignoffPdf(savedPdfUri, project.installerId, project.id, signoffId, selectedTemplate) ?? cloudPdfUrl;
-        if (cloudPdfUrl) savedFormData.cloudPdfUrl = cloudPdfUrl;
-      } catch {
-        Alert.alert('PDF file not created', 'The sign-off was saved, but the filled PDF file could not be generated on this device.');
+      if (Platform.OS === 'web') {
+        Alert.alert('PDF file not created', 'Filled PDF generation runs from the mobile app. The signed record will still sync for admin review.');
+      } else {
+        try {
+          const { createFilledSignoffPdf, uploadSignoffPdf } = await import('../../services/signoff-pdf');
+          savedPdfUri = await createFilledSignoffPdf({
+            projectId: project.id,
+            template: selectedTemplate,
+            values: savedFormData,
+            signatureData,
+          });
+          savedFormData.savedPdfUri = savedPdfUri;
+          cloudPdfUrl = await uploadSignoffPdf(savedPdfUri, project.installerId, project.id, signoffId, selectedTemplate) ?? cloudPdfUrl;
+          if (cloudPdfUrl) savedFormData.cloudPdfUrl = cloudPdfUrl;
+        } catch {
+          Alert.alert('PDF file not created', 'The sign-off was saved, but the filled PDF file could not be generated on this device.');
+        }
       }
     }
     const values = {
