@@ -621,8 +621,13 @@ export default function ProvidersScreen() {
         </View>
       </View>
 
-      {/* Category pills */}
-      <View style={s.catRow}>
+      {/* Category pills — single scrollable row, as in the design mockups */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={s.catRow}
+      >
         {visibleCats.map(cat => {
           const active = activeCategory === cat;
           return (
@@ -649,9 +654,9 @@ export default function ProvidersScreen() {
           activeOpacity={0.75}
         >
           <Text style={s.catPillText}>{showMoreCats ? 'Less' : 'More'}</Text>
-          <Ionicons name={showMoreCats ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.textSecondary} />
+          <Ionicons name={showMoreCats ? 'chevron-back' : 'chevron-forward'} size={14} color={Colors.textSecondary} />
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* Section header */}
       <View style={s.sectionHeader}>
@@ -736,7 +741,7 @@ const s = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary },
 
   catRow: {
-    flexDirection: 'row', flexWrap: 'wrap',
+    flexDirection: 'row',
     paddingHorizontal: 16, paddingBottom: 8, gap: 8,
   },
   catPill: {

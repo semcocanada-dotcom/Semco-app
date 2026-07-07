@@ -624,7 +624,7 @@ const s = StyleSheet.create({
 
   // FAB
   fabWrap: {
-    position: 'absolute', bottom: 28, right: 20,
+    position: 'absolute', bottom: 28, right: 20, borderRadius: 29,
     shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
   },

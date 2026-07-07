@@ -1658,8 +1658,10 @@ const s = StyleSheet.create({
 
   // FABs
   fabStack:     { position: 'absolute', bottom: 28, right: 20, alignItems: 'center', gap: 12 },
-  fabWrap:      { shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
-  fabMileageWrap:{ shadowColor: Colors.teal, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
+  // borderRadius on the shadow wrapper keeps Android elevation (and web
+  // box-shadow) circular — without it the shadow draws as a square plate.
+  fabWrap:      { borderRadius: 29, shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
+  fabMileageWrap:{ borderRadius: 23, shadowColor: Colors.teal, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
   fab:          { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
   fabSmall:     { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   fabPlus:      { fontSize: 30, color: '#fff', fontWeight: '300', marginTop: -1 },
