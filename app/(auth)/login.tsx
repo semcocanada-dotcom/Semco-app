@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   async function handleSignIn() {
     if (!email || !password) { setError('Please enter your email and password.'); return; }
@@ -113,6 +114,10 @@ export default function LoginScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
+              textContentType="emailAddress"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => passwordRef.current?.focus()}
               placeholder="you@example.com"
               placeholderTextColor={Colors.textMuted}
               style={{
@@ -132,10 +137,14 @@ export default function LoginScreen() {
               Password
             </Text>
             <TextInput
+              ref={passwordRef}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
               autoComplete="current-password"
+              textContentType="password"
+              returnKeyType="go"
+              onSubmitEditing={handleSignIn}
               placeholder="••••••••"
               placeholderTextColor={Colors.textMuted}
               style={{
@@ -151,7 +160,11 @@ export default function LoginScreen() {
               }}
             />
 
-            <Pressable onPress={handleSignIn} disabled={loading}>
+            <Pressable
+              onPress={handleSignIn}
+              disabled={loading}
+              style={({ pressed }) => (pressed ? { transform: [{ scale: 0.98 }], opacity: 0.9 } : null)}
+            >
               <LinearGradient
                 colors={Colors.gradients.purple}
                 start={{ x: 0, y: 0 }}

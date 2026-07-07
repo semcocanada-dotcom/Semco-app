@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus, Linking } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import { AuthProvider, useAuth } from '@context/AuthContext';
 import { ChildProvider } from '@context/ChildContext';
-import { supabase } from '@lib/supabase';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -58,22 +57,9 @@ export default function RootLayout() {
     return () => sub.remove();
   }, []);
 
-  useEffect(() => {
-    // Handle OAuth deep-link callback — extracts tokens from URL fragment
-    async function handleUrl({ url }: { url: string }) {
-      const fragment = url.split('#')[1] ?? url.split('?')[1] ?? '';
-      const params = Object.fromEntries(new URLSearchParams(fragment));
-      if (params.access_token && params.refresh_token) {
-        await supabase.auth.setSession({
-          access_token: params.access_token,
-          refresh_token: params.refresh_token,
-        });
-      }
-    }
-    const sub = Linking.addEventListener('url', handleUrl);
-    Linking.getInitialURL().then(url => { if (url) handleUrl({ url }); });
-    return () => sub.remove();
-  }, []);
+  // No deep-link token handler: the app has no OAuth/magic-link flow, and
+  // accepting access/refresh tokens from arbitrary URLs would let a crafted
+  // link silently swap this device onto an attacker's session.
 
   return (
     <AuthProvider>

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import * as Location from 'expo-location';
 import { Colors } from '@constants/colors';
 import { useAuth } from '@context/AuthContext';
@@ -34,37 +35,38 @@ function LocationPermissionModal({ onDone }: { onDone: () => void }) {
   return (
     // In-tree absolute overlay (not a native <Modal>) so it never triggers a
     // UIViewController presentation — that presentation path was implicated in
-    // the iPad launch crash. Visually identical to the previous sheet.
-    <View style={ls.overlay} pointerEvents="auto">
-      <View style={ls.sheet}>
-          <Text style={ls.icon}>📍</Text>
-          <Text style={ls.title}>Allow Location Access</Text>
-          <Text style={ls.body}>
-            Autism Fund Tracker uses your location for two things:
+    // the iPad launch crash. Reanimated entering transitions restore the fade
+    // and slide the native sheet used to provide.
+    <Animated.View entering={FadeIn.duration(220)} style={ls.overlay} pointerEvents="auto">
+      <Animated.View entering={SlideInDown.springify().damping(18)} style={ls.sheet}>
+        <Text style={ls.icon}>📍</Text>
+        <Text style={ls.title}>Allow Location Access</Text>
+        <Text style={ls.body}>
+          Autism Fund Tracker uses your location for two things:
+        </Text>
+        <View style={ls.reasonRow}>
+          <Text style={ls.reasonIcon}>🚗</Text>
+          <Text style={ls.reasonText}>
+            <Text style={{ fontWeight: '700' }}>Mileage forms</Text>
+            {' — automatically calculate the distance to your child\'s appointments for reimbursement claims.'}
           </Text>
-          <View style={ls.reasonRow}>
-            <Text style={ls.reasonIcon}>🚗</Text>
-            <Text style={ls.reasonText}>
-              <Text style={{ fontWeight: '700' }}>Mileage forms</Text>
-              {' — automatically calculate the distance to your child\'s appointments for reimbursement claims.'}
-            </Text>
-          </View>
-          <View style={ls.reasonRow}>
-            <Text style={ls.reasonIcon}>🏥</Text>
-            <Text style={ls.reasonText}>
-              <Text style={{ fontWeight: '700' }}>Nearby providers</Text>
-              {' — show approved therapy providers sorted by how close they are to you.'}
-            </Text>
-          </View>
-          <Text style={ls.note}>Your location is never stored or shared.</Text>
-          <TouchableOpacity style={ls.allowBtn} onPress={handleAllow} activeOpacity={0.85}>
-            <Text style={ls.allowBtnText}>Allow Location Access</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={ls.skipBtn} onPress={onDone} activeOpacity={0.7}>
-            <Text style={ls.skipBtnText}>Not Now</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+        <View style={ls.reasonRow}>
+          <Text style={ls.reasonIcon}>🏥</Text>
+          <Text style={ls.reasonText}>
+            <Text style={{ fontWeight: '700' }}>Nearby providers</Text>
+            {' — show approved therapy providers sorted by how close they are to you.'}
+          </Text>
+        </View>
+        <Text style={ls.note}>Your location is never stored or shared.</Text>
+        <TouchableOpacity style={ls.allowBtn} onPress={handleAllow} activeOpacity={0.85}>
+          <Text style={ls.allowBtnText}>Allow Location Access</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={ls.skipBtn} onPress={onDone} activeOpacity={0.7}>
+          <Text style={ls.skipBtnText}>Not Now</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
