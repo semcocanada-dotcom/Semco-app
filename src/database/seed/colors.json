@@ -3897,7 +3897,7 @@
     ],
     "swatchHex": "#FFC699",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2088P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2088P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -4093,7 +4093,7 @@
     ],
     "swatchHex": "#F8EAD9",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Quart batch not published at source; mix the gallon batch. Corrected a suspected source misprint in the 5 gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Quart batch not published at source; mix the gallon batch. Corrected a source misprint (confirmed against the source formula pages; the printed value contradicts the two consistent batch sizes) in the 5 gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -17355,7 +17355,7 @@
     ],
     "swatchHex": "#8BB0DA",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Corrected a suspected source misprint in the gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Corrected a source misprint (confirmed against the source formula pages; the printed value contradicts the two consistent batch sizes) in the gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -19903,7 +19903,7 @@
     ],
     "swatchHex": "#518DB0",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a suspected source misprint in the quart batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a source misprint (confirmed against the source formula pages; the printed value contradicts the two consistent batch sizes) in the quart batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -23461,7 +23461,7 @@
     ],
     "swatchHex": "#5DA79A",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2509P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2509P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -26681,7 +26681,7 @@
     ],
     "swatchHex": "#577256",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2574P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2574P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -27235,7 +27235,7 @@
     ],
     "swatchHex": "#C5E59F",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2585P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2585P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -27323,7 +27323,7 @@
     ],
     "swatchHex": "#8ACA64",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2587P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2587P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -28215,7 +28215,7 @@
     ],
     "swatchHex": "#C9D0BA",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a suspected source misprint in the gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a source misprint (confirmed against the source formula pages; the printed value contradicts the two consistent batch sizes) in the gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -29501,7 +29501,7 @@
     ],
     "swatchHex": "#9EB761",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a suspected source misprint in the 5 gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a source misprint (confirmed against the source formula pages; the printed value contradicts the two consistent batch sizes) in the 5 gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -31321,7 +31321,7 @@
     ],
     "swatchHex": "#978F63",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2464D. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2464D. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -31487,7 +31487,7 @@
     ],
     "swatchHex": "#E8E0A0",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2688T.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2688T.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -32397,7 +32397,7 @@
     ],
     "swatchHex": "#EDE2C3",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a suspected source misprint in the gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed. Corrected a source misprint (confirmed against the source formula pages; the printed value contradicts the two consistent batch sizes) in the gallon batch (derived from the consistent batch sizes); verify with a cured sample before large batches.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -37635,7 +37635,7 @@
     ],
     "swatchHex": "#AB7A5D",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2790D. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2790D. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
@@ -41305,7 +41305,7 @@
     ],
     "swatchHex": "#BCB1B0",
     "photoUrl": null,
-    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Formula source lists this colour as 2865P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
+    "notes": "Semco XBond formula import v3: dispenser units (US fl oz in 1/48 steps) from the ColoursByName source; ml computed at 29.57 ml per fl oz. Fan deck code confirmed; the formula source PDF misprints this colour as 2865P. Source gallon batch is not an exact 4x of the quart; dispense each batch size as listed.",
     "createdAt": "2026-06-02T00:00:00.000Z",
     "updatedAt": "2026-07-08T00:00:00.000Z"
   },
