@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -523,7 +523,7 @@ export default function ProjectDetailScreen() {
               {!warrantyPhotoStatus.isQualified ? (
                 <Button label="Add Missing Photos" variant="primary" onPress={() => setTab('photos')} fullWidth />
               ) : warrantyReview?.status === 'approved' && warrantyReview.warrantyDocumentUrl ? (
-                <Button label="Download Warranty Document" variant="primary" onPress={() => {}} fullWidth disabled />
+                <Button label="Download Warranty Document" variant="primary" onPress={() => { Linking.openURL(warrantyReview.warrantyDocumentUrl!).catch(console.error); }} fullWidth />
               ) : (
                 <Button label={warrantyReview ? 'Resubmit for Semco Review' : 'Submit for Semco Review'} variant="primary" onPress={submitWarrantyReview} fullWidth />
               )}

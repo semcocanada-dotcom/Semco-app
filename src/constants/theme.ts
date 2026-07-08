@@ -76,6 +76,32 @@ export const Radius = {
   full: 9999,
 } as const;
 
+// Shared elevation scale so cards, premium tiles, and bars sit on one
+// consistent depth system instead of per-component shadow values.
+export const Shadows = {
+  soft: {
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  card: {
+    shadowColor: '#000',
+    shadowOpacity: 0.09,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  floating: {
+    shadowColor: '#000',
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+} as const;
+
 export const TAP_TARGET_MIN = 48;
 
 export const Layout = {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
+import { Colors, Fonts, Shadows, Typography, Spacing, Radius } from '@/constants/theme';
 
 interface ActionCardProps {
   title: string;
@@ -50,11 +50,7 @@ const styles = StyleSheet.create({
     gap: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 2,
+    ...Shadows.soft,
   },
   cardCompact: {
     minHeight: 82,
@@ -68,10 +64,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.base,
     gap: Spacing.sm,
     borderRadius: Radius.xl,
-    shadowOpacity: 0.09,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 7 },
-    elevation: 4,
+    ...Shadows.card,
   },
   tone_primary: { borderColor: Colors.primaryMuted },
   tone_accent: { borderColor: Colors.accentMuted },
