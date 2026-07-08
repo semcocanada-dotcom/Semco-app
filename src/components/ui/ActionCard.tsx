@@ -16,7 +16,7 @@ interface ActionCardProps {
 
 export function ActionCard({ title, description, icon, onPress, tone = 'neutral', compact = false, premium = false, style }: ActionCardProps) {
   const iconColor = tone === 'accent' ? Colors.semcoOrange : Colors.darkTeal;
-  const iconSize = premium ? 27 : compact ? 20 : 24;
+  const iconSize = premium ? 30 : compact ? 20 : 24;
 
   return (
     <TouchableOpacity
@@ -63,10 +63,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   cardPremium: {
-    minHeight: 112,
+    minHeight: 122,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.base,
-    gap: Spacing.xs,
+    gap: Spacing.sm,
     borderRadius: Radius.xl,
     shadowOpacity: 0.09,
     shadowRadius: 14,
@@ -91,10 +91,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   iconWrapPremium: {
-    width: 48,
-    height: 48,
+    width: 54,
+    height: 54,
     borderRadius: Radius.md,
-    marginBottom: 2,
+    marginBottom: 3,
   },
   icon_primary: { backgroundColor: Colors.primaryMuted, borderColor: '#C6EEF0' },
   icon_accent: { backgroundColor: Colors.accentMuted, borderColor: '#F5CBBB' },
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
   },
   titlePremium: {
-    fontSize: Typography.size.base,
-    lineHeight: Typography.size.base * 1.2,
+    fontSize: Typography.size.md,
+    lineHeight: Typography.size.md * 1.15,
   },
   description: {
     color: Colors.textSecondary,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     lineHeight: 12,
   },
   descriptionPremium: {
-    fontSize: Typography.size.xs,
-    lineHeight: Typography.size.xs * 1.35,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.25,
   },
 });

@@ -1,10 +1,13 @@
 node_modules/
 .expo/
 dist/
+dist-*/
 web-build/
 tmp/
 verification-screenshots/
 expo-doc-previews-*.log
+expo-*.log
+portal-tunnel*.log
 .DS_Store
 *.jks
 *.p8

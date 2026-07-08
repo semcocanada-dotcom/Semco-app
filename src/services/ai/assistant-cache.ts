@@ -18,7 +18,7 @@ export interface AssistantDebugLog {
   provider: string;
   status: 'generated' | 'cached' | 'fallback' | 'blocked';
   retrievalNotes: string[];
-  chunks: Array<{
+  chunks: {
     id: string;
     documentName: string;
     title?: string;
@@ -26,7 +26,7 @@ export interface AssistantDebugLog {
     score: number;
     retrieval: 'semantic' | 'local';
     preview: string;
-  }>;
+  }[];
   answerPreview: string;
   sources: AssistantCitation[];
   error?: string;

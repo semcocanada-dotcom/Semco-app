@@ -19,8 +19,8 @@ import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/
 const HUB_CARDS = [
   { title: 'Install Guides', description: 'X-Bond diagrams', icon: 'layers-outline' as const, route: '/library/guides' },
   { title: 'Products', description: 'Docs + SDS', icon: 'document-text-outline' as const, route: '/products' },
-  { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, route: '/colors' },
   { title: 'Photos', description: 'Stage records', icon: 'camera-outline' as const, route: '/add' },
+  { title: 'Project Forms', description: 'Sign-offs', icon: 'clipboard-outline' as const, route: '/projects' },
 ] as const;
 
 const DOC_GROUP_ICONS: Record<DocGroupId, React.ComponentProps<typeof Ionicons>['name']> = {
@@ -61,7 +61,7 @@ export default function LibraryScreen() {
             </View>
           </View>
           <Text style={styles.heroTitle}>Semco Library</Text>
-          <Text style={styles.heroBody}>Install guides, product docs, colours, stage photos, and Ask Semco.</Text>
+          <Text style={styles.heroBody}>Install guides, product documents, stage photos, and Ask Semco.</Text>
         </Card>
 
         <View style={styles.section}>

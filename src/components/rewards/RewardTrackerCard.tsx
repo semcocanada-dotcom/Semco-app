@@ -60,6 +60,18 @@ export function RewardTrackerCard({ verifiedSqft, pendingSqft = 0, onPress }: Re
         <Text style={styles.body}>
           Current: {tierLabel}. Verified square footage is cumulative and moves you to the next reward.
         </Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, styles.legendVerified]} />
+            <Text style={styles.legendText}>Verified</Text>
+          </View>
+          {pendingSqft > 0 ? (
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.legendPending]} />
+              <Text style={styles.legendText}>Pending</Text>
+            </View>
+          ) : null}
+        </View>
         {pendingSqft > 0 ? <Text style={styles.pending}>{formatSqft(pendingSqft)} pending review</Text> : null}
       </View>
     </Pressable>
@@ -245,5 +257,28 @@ const styles = StyleSheet.create({
     color: Colors.offlineAmberMuted,
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.xs,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    alignItems: 'center',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  legendVerified: { backgroundColor: Colors.semcoOrange },
+  legendPending: { backgroundColor: Colors.lightTeal },
+  legendText: {
+    color: 'rgba(255,255,255,0.72)',
+    fontFamily: Fonts.medium,
+    fontSize: 10,
   },
 });

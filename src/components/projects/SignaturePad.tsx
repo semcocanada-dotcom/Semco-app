@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GestureResponderEvent, PanResponder, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
@@ -303,21 +303,21 @@ export function SignaturePad({ value, onChange, height = 190, hint, showHeader =
     surfaceSizeRef.current = surfaceSize;
   }, [surfaceSize]);
 
-  const syncPoints = (next: SignaturePoint[]) => {
+  const syncPoints = useCallback((next: SignaturePoint[]) => {
     const size = surfaceSizeRef.current;
     pointsRef.current = next;
     setPoints(next);
     onChange(next.length > 1 ? JSON.stringify({ version: 2, width: size.width, height: size.height, points: next }) : null);
-  };
+  }, [onChange]);
 
-  const getEventPoint = (event: GestureResponderEvent) => {
+  const getEventPoint = useCallback((event: GestureResponderEvent) => {
     const { locationX, locationY } = event.nativeEvent;
     const size = surfaceSizeRef.current;
     return {
       x: Math.max(0, Math.min(size.width, locationX)),
       y: Math.max(0, Math.min(size.height, locationY)),
     };
-  };
+  }, []);
 
   const panResponder = useMemo(
     () => PanResponder.create({
@@ -339,7 +339,7 @@ export function SignaturePad({ value, onChange, height = 190, hint, showHeader =
         syncPoints([...current, { x, y }]);
       },
     }),
-    [],
+    [getEventPoint, syncPoints],
   );
 
   const clear = () => syncPoints([]);

@@ -358,7 +358,7 @@ function isSubmergedLiquidMembraneQuestion(normalized: string, contextNormalized
     'holding water',
   ]);
 
-  return membraneContext && (waterContainmentContext || coatFollowUp);
+  return (membraneContext && (waterContainmentContext || coatFollowUp)) || (coatFollowUp && waterContainmentContext);
 }
 
 function extractSealerSku(normalized: string): string | undefined {
@@ -845,7 +845,9 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
     ],
   };
 
-  const substrateLabel = SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
+  const substrateLabel = substrateType === 'cement_board'
+    ? 'GlasRoc / GlassRoc or similar wet-area board'
+    : SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
   const prep = substratePath[substrateType] ?? substratePath.cement_board;
 
   return [
@@ -1269,6 +1271,24 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
       '',
       'Field check:',
       'If the job needs exact application data beyond the Titan-style field rule, confirm against the current Matte tech sheet before giving ratios, coverage, recoat, or cure values.',
+    ].join('\n');
+  }
+
+  if (facts.isShower) {
+    return [
+      'For a standard interior shower, use Satin Stone as the current Semco Canada shower sealer/finish.',
+      '',
+      '**Step 1: Confirm the shower build-up first.**',
+      'Do not choose the sealer before the substrate, Liquid Membrane/fabric detail, X-Bond base, and X-Bond finish are ready. If the installer has not named the substrate yet, ask for it first.',
+      '',
+      '**Step 2: Use the standard shower finish rule.**',
+      'Standard interior shower guidance is 2-coat Liquid Membrane/fabric detail before X-Bond, then Satin Stone in 2 coats.',
+      '',
+      '**Step 3: Do not swap sealers by habit.**',
+      'Do not use Natural Shield for a standard interior shower unless the job is pool, submerged, continuous water-containment, exterior penetrating-sealer work, or Semco specifically reviews and approves that change.',
+      '',
+      'Field check:',
+      'If this is actually a pool, pond, fountain, exterior shower, or submerged/water-containment project, say that clearly because the sealer and membrane rules change.',
     ].join('\n');
   }
 
