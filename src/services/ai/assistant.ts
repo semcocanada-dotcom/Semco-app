@@ -29,6 +29,7 @@ import {
   formatJobContextLine,
   resolveContextualQuestion,
 } from './job-context';
+import { buildMathAnswer } from './assistant-math';
 import type { AssistantCitation, ConversationMessage, MessageSource } from '@/database/schema/conversations';
 
 export interface AssistantResponse {
@@ -65,6 +66,35 @@ async function handleKnowledgeAssistant(
 ): Promise<AssistantResponse> {
   const debugId = `ai-debug-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const jobContext = extractJobContext(history, userMessage);
+
+  // Deterministic math first: quantities, mixing ratios, tint formulas, and
+  // glossary answers come from the shared Calculator/colour formula data and
+  // never need retrieval or AI generation.
+  const mathAnswer = buildMathAnswer(jobContext, userMessage, history);
+  if (mathAnswer) {
+    const content = normalizeAssistantContent(mathAnswer.content);
+    await writeDebugLog(debugId, {
+      question: userMessage,
+      provider: 'local-calculator',
+      status: 'fallback',
+      chunks: [],
+      retrievalNotes: [`math:${mathAnswer.kind}`],
+      answer: content,
+      sources: [],
+    });
+
+    return {
+      content,
+      source: 'ai_fallback',
+      isOffline: false,
+      citations: [],
+      debugId,
+      provider: 'local-calculator',
+      quickReplies: mathAnswer.quickReplies,
+      suggestedFollowUps: mathAnswer.followUps,
+    };
+  }
+
   const retrievalQuestion = resolveContextualQuestion(userMessage, history, jobContext);
   const retrieval = await retrieveSemcoChunks(retrievalQuestion, isOnline);
   const citations = citationsFromChunks(retrieval.chunks);

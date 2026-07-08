@@ -1346,7 +1346,7 @@ function buildContextNotes(
     `Current stocked sealer rule:\n${STOCKED_SEALER_POLICY_TEXT}`,
     `Current standard shower rule:\n${STANDARD_SHOWER_POLICY_TEXT}`,
     localAnswer ? `Local reasoned answer:\n${localAnswer}` : '',
-    'Instruction: answer like a field support conversation. Use the facts and logic above; do not paste source excerpts unless needed. Do not calculate material quantities unless a verified Calculator result is explicitly provided.',
+    'Instruction: answer like a field support conversation. Use the facts and logic above; do not paste source excerpts unless needed. Material quantities must come from the shared Semco Calculator formulas - use a calculator result when one is supplied in this context, and never invent quantities, ratios, or coverage yourself.',
   ]
     .filter(Boolean)
     .join('\n');

@@ -10,6 +10,7 @@
  *   npx tsx --tsconfig tsconfig.json scripts/assistant-smoke.ts
  */
 import type { ConversationMessage } from '@/database/schema/conversations';
+import { buildMathAnswer } from '@/services/ai/assistant-math';
 import {
   buildClarifyingQuestion,
   extractJobContext,
@@ -44,6 +45,16 @@ function makeMessage(role: 'user' | 'assistant', content: string): ConversationM
 /** Mirrors the offline branch of handleKnowledgeAssistant. */
 async function simulateTurn(history: ConversationMessage[], userMessage: string): Promise<SimulatedTurn> {
   const jobContext = extractJobContext(history, userMessage);
+
+  const mathAnswer = buildMathAnswer(jobContext, userMessage, history);
+  if (mathAnswer) {
+    return {
+      content: mathAnswer.content,
+      provider: 'local-calculator',
+      quickReplies: mathAnswer.quickReplies,
+    };
+  }
+
   const retrievalQuestion = resolveContextualQuestion(userMessage, history, jobContext);
   const retrieval = await retrieveSemcoChunks(retrievalQuestion, false);
   const profile = buildReasoningProfile(retrievalQuestion);
@@ -193,14 +204,68 @@ const SCENARIOS: Scenario[] = [
     checks: [lastIncludes('photo')],
   },
   {
-    name: 'Bag coverage routes away from invented numbers',
+    name: 'Bag coverage answers the verified 75 sq ft figure',
     prompts: ['How much area does one bag cover?'],
-    checks: [],
+    checks: [lastIncludes('75 sq ft')],
   },
   {
-    name: 'Liquid Membrane quantity routes to Calculator',
+    name: 'Liquid Membrane quantity asks for the area',
     prompts: ['How much Liquid Membrane do I need?'],
-    checks: [lastIncludes('calculator')],
+    checks: [lastIncludes('area')],
+  },
+  {
+    name: 'Material count for 600 sq ft over concrete shows worked math',
+    prompts: ['How much X-Bond do I need for 600 sq ft over concrete?'],
+    checks: [lastIncludes('x-bond stone', '660', 'calculator', 'waste')],
+  },
+  {
+    name: 'Room dimensions parse into the material count',
+    prompts: ['The floor is concrete', 'My room is 20 by 30, how many bags of X-Bond do I need?'],
+    checks: [lastIncludes('600 sq ft', 'x-bond stone')],
+  },
+  {
+    name: 'Quantity flow asks area, then substrate chips, then computes',
+    prompts: ['How many bags of X-Bond do I need?', '450 sq ft', 'Concrete'],
+    checks: [
+      (turns) => (turns[0].content.includes('area') ? null : 'turn 1 should ask for the area'),
+      (turns) => (turns[1].quickReplies?.length ? null : 'turn 2 should offer substrate tap choices'),
+      lastIncludes('450 sq ft', 'x-bond stone', 'calculator'),
+    ],
+  },
+  {
+    name: 'Liquid per bag mixing math',
+    prompts: ['How much liquid do I mix with one bag of X-Bond?'],
+    checks: [lastIncludes('2 gallons', '50 lb bag')],
+  },
+  {
+    name: 'Liquid scales linearly for three bags',
+    prompts: ['How much liquid do I need to mix 3 bags of X-Bond?'],
+    checks: [lastIncludes('6 gallons')],
+  },
+  {
+    name: 'Finish coat mix ratio',
+    prompts: ["What's the mix ratio for the finish coat?"],
+    checks: [lastIncludes('2 1/2 parts', '180-200 rpm')],
+  },
+  {
+    name: 'Tint formula for Sunny Lemon per gallon',
+    prompts: ["What's the tint formula for Sunny Lemon?"],
+    checks: [lastIncludes('titanium white', '262 ml', 'cured sample')],
+  },
+  {
+    name: 'Tint formula scales to the official 5-gallon batch',
+    prompts: ['Tint formula for 2001P for 5 gallons'],
+    checks: [lastIncludes('sunny lemon', '1.31 l')],
+  },
+  {
+    name: 'Glossary explains efflorescence in plain words',
+    prompts: ['What does efflorescence mean?'],
+    checks: [lastIncludes('white', 'clean')],
+  },
+  {
+    name: 'Glossary explains substrate for learners',
+    prompts: ['What is a substrate?'],
+    checks: [lastIncludes('surface')],
   },
 ];
 
