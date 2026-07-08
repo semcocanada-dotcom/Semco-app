@@ -5,91 +5,105 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/store";
 
 const statuses = [
-  { key: "received", label: "Received", icon: "✓" },
-  { key: "preparing", label: "Preparing", icon: "⚙" },
-  { key: "ready", label: "Ready for Pickup", icon: "📦" },
+  { key: "received", label: "Received", sub: "Just now", active: true },
+  { key: "preparing", label: "Preparing", sub: "In progress", active: false },
+  { key: "ready", label: "Ready for Pickup", sub: "Ready by 2:00 PM", active: false },
 ];
 
 export default function ConfirmationPage() {
   const { clearCart } = useCart();
   const router = useRouter();
-  const [visible, setVisible] = useState(false);
+  const [phase, setPhase] = useState(0);
   const [orderNumber, setOrderNumber] = useState("BTT-00000");
 
+  // Sequence: 1 = circle + check draw, 2 = headline, 3 = status card + actions
   useEffect(() => {
     setOrderNumber(`BTT-${Math.floor(10000 + Math.random() * 90000)}`);
     clearCart();
-    const t = setTimeout(() => setVisible(true), 80);
-    return () => clearTimeout(t);
+    const t1 = setTimeout(() => setPhase(1), 60);
+    const t2 = setTimeout(() => setPhase(2), 480);
+    const t3 = setTimeout(() => setPhase(3), 740);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [clearCart]);
-
-  function handleDone() {
-    router.push("/");
-  }
 
   return (
     <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-6 py-12">
-      <div
-        className={`flex flex-col items-center text-center transition-all duration-500 ${
-          visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
-      >
-        {/* Success circle */}
+      <div className="flex flex-col items-center text-center w-full max-w-xs">
+
+        {/* Success circle — scales in, checkmark draws */}
         <div className="relative mb-6">
           <div
-            className={`w-20 h-20 rounded-full bg-success flex items-center justify-center transition-all duration-700 ${
-              visible ? "scale-100" : "scale-50"
-            }`}
+            className="w-20 h-20 rounded-full bg-success flex items-center justify-center"
+            style={{
+              opacity: phase >= 1 ? 1 : 0,
+              transform: phase >= 1 ? "scale(1)" : "scale(0.6)",
+              transition: "opacity 0.3s ease-out, transform 0.45s cubic-bezier(0.34, 1.4, 0.64, 1)",
+            }}
           >
-            <svg
-              width="36"
-              height="36"
-              viewBox="0 0 36 36"
-              fill="none"
-              className={`transition-all duration-500 delay-300 ${visible ? "opacity-100" : "opacity-0"}`}
-            >
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
               <path
                 d="M8 18L14.5 24.5L28 11"
                 stroke="white"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                className={phase >= 1 ? "animate-check-draw" : ""}
+                style={phase >= 1 ? undefined : { strokeDasharray: 36, strokeDashoffset: 36 }}
               />
             </svg>
           </div>
-          {/* Ripple */}
+          {/* Soft expanding ring */}
           <div
-            className={`absolute inset-0 rounded-full bg-success/20 transition-all duration-1000 ${
-              visible ? "scale-150 opacity-0" : "scale-100 opacity-100"
-            }`}
+            className="absolute inset-0 rounded-full bg-success/15 pointer-events-none"
+            style={{
+              opacity: phase >= 2 ? 0 : phase >= 1 ? 1 : 0,
+              transform: phase >= 2 ? "scale(1.5)" : "scale(1)",
+              transition: "transform 0.8s ease-out, opacity 0.8s ease-out",
+            }}
           />
         </div>
 
-        <h1 className="text-[28px] font-bold text-text1 mb-1">Order Received</h1>
-        <p className="text-[15px] text-text2 mb-1">{orderNumber}</p>
-        <p className="text-[14px] text-text2 mb-8" suppressHydrationWarning>
-          {new Date().toLocaleDateString("en-CA", {
-            weekday: "long",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
+        {/* Headline block */}
+        <div
+          style={{
+            opacity: phase >= 2 ? 1 : 0,
+            transform: phase >= 2 ? "translateY(0)" : "translateY(6px)",
+            transition: "opacity 0.26s ease-out, transform 0.26s ease-out",
+          }}
+        >
+          <h1 className="text-[28px] font-bold text-text1 mb-1">Order Received</h1>
+          <p className="text-[15px] text-text2 mb-0.5">{orderNumber}</p>
+          <p className="text-[13px] text-text2 mb-8" suppressHydrationWarning>
+            {new Date().toLocaleDateString("en-CA", {
+              weekday: "long",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        </div>
 
-        {/* Status progression */}
-        <div className="w-full max-w-xs bg-surface rounded-2xl border border-separator shadow-card overflow-hidden mb-6">
+        {/* Status progression — card fades up, rows slide in one by one */}
+        <div
+          className="w-full bg-surface rounded-2xl border border-separator shadow-card overflow-hidden mb-6"
+          style={{
+            opacity: phase >= 3 ? 1 : 0,
+            transform: phase >= 3 ? "translateY(0)" : "translateY(8px)",
+            transition: "opacity 0.26s ease-out, transform 0.26s ease-out",
+          }}
+        >
           {statuses.map((status, idx) => (
             <div key={status.key}>
               {idx > 0 && <div className="h-px bg-separator ml-14" />}
-              <div className="flex items-center gap-4 px-4 py-3.5">
+              <div
+                className={phase >= 3 ? "flex items-center gap-4 px-4 py-3.5 animate-status-in" : "flex items-center gap-4 px-4 py-3.5 opacity-0"}
+                style={phase >= 3 ? { animationDelay: `${idx * 90}ms` } : undefined}
+              >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[14px] transition-all duration-500 ${
-                    idx === 0
-                      ? "bg-success text-white"
-                      : "bg-bg text-text2"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    status.active ? "bg-success text-white" : "bg-bg text-text2"
                   }`}
-                  style={{ transitionDelay: `${idx * 150 + 400}ms` }}
                 >
                   {idx === 0 ? (
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -106,25 +120,15 @@ export default function ConfirmationPage() {
                     </svg>
                   )}
                 </div>
-                <div className="flex-1">
-                  <p
-                    className={`text-[15px] font-medium ${
-                      idx === 0 ? "text-text1" : "text-text2"
-                    }`}
-                  >
+                <div className="flex-1 text-left">
+                  <p className={`text-[15px] font-medium ${status.active ? "text-text1" : "text-text2"}`}>
                     {status.label}
                   </p>
-                  {idx === 0 && (
-                    <p className="text-[12px] text-success font-medium">Just now</p>
-                  )}
-                  {idx === 1 && (
-                    <p className="text-[12px] text-text2">In progress</p>
-                  )}
-                  {idx === 2 && (
-                    <p className="text-[12px] text-text2">Ready by 2:00 PM</p>
-                  )}
+                  <p className={`text-[12px] ${status.active ? "text-success font-medium" : "text-text2"}`}>
+                    {status.sub}
+                  </p>
                 </div>
-                {idx === 0 && (
+                {status.active && (
                   <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
                 )}
               </div>
@@ -132,25 +136,33 @@ export default function ConfirmationPage() {
           ))}
         </div>
 
-        {/* SMS notice */}
-        <p className="text-[13px] text-text2 mb-8 px-4">
-          You&apos;ll receive an SMS when your order is ready
-        </p>
+        {/* SMS notice + actions */}
+        <div
+          className="w-full"
+          style={{
+            opacity: phase >= 3 ? 1 : 0,
+            transition: "opacity 0.3s ease-out 0.15s",
+          }}
+        >
+          <p className="text-[13px] text-text2 mb-8 px-4">
+            You&apos;ll receive an SMS when your order is ready
+          </p>
 
-        {/* Actions */}
-        <div className="w-full space-y-3">
-          <button
-            onClick={handleDone}
-            className="w-full py-4 bg-brand text-white rounded-2xl text-[17px] font-semibold active:scale-[0.98] transition-transform shadow-card-lg"
-          >
-            Done
-          </button>
-          <button
-            onClick={() => router.push("/")}
-            className="w-full py-3.5 bg-surface text-brand rounded-2xl text-[15px] font-medium border border-separator active:bg-bg transition-colors"
-          >
-            New Order
-          </button>
+          <div className="w-full space-y-3">
+            <button
+              onClick={() => router.push("/")}
+              className="spring-tap w-full py-4 text-white rounded-2xl text-[17px] font-semibold shadow-card-lg"
+              style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
+            >
+              Done
+            </button>
+            <button
+              onClick={() => router.push("/search")}
+              className="spring-tap w-full py-3.5 bg-surface text-text1 rounded-2xl text-[15px] font-medium border border-separator"
+            >
+              New Order
+            </button>
+          </div>
         </div>
       </div>
     </div>

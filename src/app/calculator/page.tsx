@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/store";
+import { useToast } from "@/lib/toast";
 import { products } from "@/lib/data";
 
 interface MaterialResult {
@@ -15,7 +16,6 @@ interface MaterialResult {
 
 function calculateMaterials(sqft: number): MaterialResult[] {
   if (sqft <= 0) return [];
-  const sheets = Math.ceil(sqft / 32);
   const compound = Math.ceil(sqft / 400);
   const tape = Math.ceil(sqft / 600);
   const screws = Math.ceil(sqft / 150);
@@ -34,7 +34,8 @@ function calculateMaterials(sqft: number): MaterialResult[] {
 export default function CalculatorPage() {
   const [sqft, setSqft] = useState("");
   const [rooms, setRooms] = useState("1");
-  const { addItem } = useCart();
+  const { addMany } = useCart();
+  const { show: showToast } = useToast();
   const router = useRouter();
   const [added, setAdded] = useState(false);
 
@@ -43,22 +44,23 @@ export default function CalculatorPage() {
   const totalCost = materials.reduce((s, m) => s + m.price * m.quantity, 0);
 
   function handleAddAll() {
-    materials.forEach((m) => {
-      const product = products.find((p) => p.id === m.productId);
-      if (product) {
-        for (let i = 0; i < m.quantity; i++) {
-          addItem(product);
-        }
-      }
-    });
+    if (added) return;
+    // Single dispatch — badge bumps once for the whole list
+    addMany(
+      materials.flatMap((m) => {
+        const product = products.find((p) => p.id === m.productId);
+        return product ? [{ product, quantity: m.quantity }] : [];
+      })
+    );
     setAdded(true);
+    showToast("Materials added to your toolbox");
     setTimeout(() => {
       router.push("/toolbox");
-    }, 500);
+    }, 550);
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg animate-page-in">
       {/* Header */}
       <div className="bg-surface border-b border-separator px-4 pt-14 pb-4">
         <h1 className="text-[22px] font-bold text-text1">Material Calculator</h1>
@@ -89,16 +91,16 @@ export default function CalculatorPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setRooms((r) => String(Math.max(1, parseInt(r) - 1)))}
-                className="w-10 h-10 rounded-full bg-bg flex items-center justify-center active:bg-separator transition-colors"
+                className="spring-tap-strong w-10 h-10 rounded-full bg-bg flex items-center justify-center"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M2 7H12" stroke="#1D1D1F" strokeWidth="1.75" strokeLinecap="round" />
                 </svg>
               </button>
-              <span className="text-[24px] font-bold text-text1 w-8 text-center tabular-nums">{rooms}</span>
+              <span key={rooms} className="text-[24px] font-bold text-text1 w-8 text-center tabular-nums animate-value-update">{rooms}</span>
               <button
                 onClick={() => setRooms((r) => String(parseInt(r) + 1))}
-                className="w-10 h-10 rounded-full bg-bg flex items-center justify-center active:bg-separator transition-colors"
+                className="spring-tap-strong w-10 h-10 rounded-full bg-bg flex items-center justify-center"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M7 2V12M2 7H12" stroke="#1D1D1F" strokeWidth="1.75" strokeLinecap="round" />
@@ -111,7 +113,7 @@ export default function CalculatorPage() {
           </div>
         </div>
 
-        {/* Results */}
+        {/* Results — re-reveal gently whenever the size changes */}
         {materials.length > 0 && (
           <>
             <div>
@@ -120,7 +122,7 @@ export default function CalculatorPage() {
               </p>
               <div className="bg-surface rounded-2xl border border-separator shadow-card overflow-hidden">
                 {materials.map((m, idx) => (
-                  <div key={m.productId}>
+                  <div key={`${totalSqft}-${m.productId}`} className="animate-fade-up" style={{ animationDelay: `${idx * 36}ms` }}>
                     {idx > 0 && <div className="h-px bg-separator ml-4" />}
                     <div className="flex items-center justify-between px-4 py-3.5">
                       <div>
@@ -137,7 +139,9 @@ export default function CalculatorPage() {
                 <div className="h-px bg-separator" />
                 <div className="flex items-center justify-between px-4 py-3.5 bg-bg">
                   <p className="text-[14px] font-semibold text-text1">Estimated Total</p>
-                  <p className="text-[16px] font-bold text-text1">${totalCost.toFixed(2)} CAD</p>
+                  <p key={totalCost} className="text-[16px] font-bold text-text1 tabular-nums animate-value-update">
+                    ${totalCost.toFixed(2)} CAD
+                  </p>
                 </div>
               </div>
             </div>
@@ -145,26 +149,32 @@ export default function CalculatorPage() {
             <button
               onClick={handleAddAll}
               disabled={added}
-              className={`w-full py-4 rounded-2xl text-[17px] font-semibold text-white transition-all duration-200 active:scale-[0.98] shadow-card-lg ${
-                added ? "bg-success" : "bg-brand hover:bg-brand-dark"
+              className={`spring-tap w-full py-4 rounded-2xl text-[17px] font-semibold text-white transition-colors duration-200 shadow-card-lg ${
+                added ? "bg-success" : ""
               }`}
+              style={added ? undefined : { background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
             >
               {added ? (
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-center gap-2 animate-pop-in">
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                    <path d="M4 9L7.5 12.5L14 5.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M4 9L7.5 12.5L14 5.5"
+                      stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                      className="animate-check-draw"
+                      style={{ strokeDasharray: 22, animationDelay: "0s", animationDuration: "0.3s" }}
+                    />
                   </svg>
-                  Added to Cart
+                  Added to Toolbox
                 </span>
               ) : (
-                "Add All to Cart"
+                "Add All to Toolbox"
               )}
             </button>
           </>
         )}
 
         {!sqft && (
-          <div className="text-center py-8 px-4">
+          <div className="text-center py-8 px-4 animate-scale-in">
             <div className="w-14 h-14 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-3">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <rect x="4" y="2" width="16" height="20" rx="2" stroke="#1A8FA8" strokeWidth="1.5" />

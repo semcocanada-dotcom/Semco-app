@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/store";
@@ -16,22 +16,43 @@ export default function ToolboxPage() {
   const [payment, setPayment] = useState<PaymentMethod>("account");
   const [delivery, setDelivery] = useState<DeliveryMethod>("pickup");
   const [placing, setPlacing] = useState(false);
+  const [totalKey, setTotalKey] = useState(0);
+  const [highlightRows, setHighlightRows] = useState(false);
+  const prevTotalRef = useRef(total);
+
+  // Soft tick on every money value when the total changes
+  useEffect(() => {
+    if (total !== prevTotalRef.current) {
+      setTotalKey((k) => k + 1);
+      prevTotalRef.current = total;
+    }
+  }, [total]);
+
+  // Highlight rows that arrived via "Reorder Last Order"
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("reordered") === "1") {
+        sessionStorage.removeItem("reordered");
+        setHighlightRows(true);
+      }
+    } catch {}
+  }, []);
 
   function handlePlaceOrder() {
     if (placing || items.length === 0) return;
     setPlacing(true);
     setTimeout(() => {
       router.push("/confirmation");
-    }, 600);
+    }, 550);
   }
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col">
+      <div className="min-h-screen bg-bg flex flex-col animate-page-in">
         <div className="bg-surface border-b border-separator px-4 pt-14 pb-4">
           <h1 className="text-[22px] font-bold text-text1">Toolbox</h1>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center py-20">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center py-20 animate-scale-in">
           <div className="w-16 h-16 bg-bg rounded-full flex items-center justify-center mb-4 border border-separator">
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
               <rect x="2" y="8" width="24" height="16" rx="2" stroke="#6E6E73" strokeWidth="1.75" />
@@ -54,12 +75,12 @@ export default function ToolboxPage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg animate-page-in">
       {/* Header */}
       <div className="bg-surface border-b border-separator px-4 pt-14 pb-4">
         <div className="flex items-center justify-between">
           <h1 className="text-[22px] font-bold text-text1">Toolbox</h1>
-          <button onClick={clearCart} className="text-[14px] text-text2 font-medium">
+          <button onClick={clearCart} className="spring-tap text-[14px] text-text2 font-medium">
             Clear
           </button>
         </div>
@@ -69,7 +90,11 @@ export default function ToolboxPage() {
         {/* Toolbox items */}
         <div className="bg-surface rounded-2xl mx-4 overflow-hidden border border-separator shadow-card">
           {items.map((item, idx) => (
-            <div key={item.product.id}>
+            <div
+              key={item.product.id}
+              className={`animate-fade-up ${highlightRows ? "animate-row-highlight" : ""}`}
+              style={{ animationDelay: `${idx * 28}ms` }}
+            >
               {idx > 0 && <div className="h-px bg-separator ml-4" />}
               <ToolboxItem item={item} />
             </div>
@@ -98,7 +123,7 @@ export default function ToolboxPage() {
               </button>
             </div>
             {payment === "account" ? (
-              <div className="px-4 py-3 flex items-center justify-between">
+              <div className="px-4 py-3 flex items-center justify-between animate-fade-in">
                 <div>
                   <p className="text-[14px] font-medium text-text1">Mike&apos;s Drywall</p>
                   <p className="text-[12px] text-text2">Net-30 account</p>
@@ -109,7 +134,7 @@ export default function ToolboxPage() {
                 </div>
               </div>
             ) : (
-              <div className="px-4 py-3 flex items-center justify-between">
+              <div className="px-4 py-3 flex items-center justify-between animate-fade-in">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-6 bg-[#1A1F71] rounded flex items-center justify-center">
                     <span className="text-[9px] font-bold text-white">VISA</span>
@@ -144,12 +169,12 @@ export default function ToolboxPage() {
               </button>
             </div>
             {delivery === "pickup" ? (
-              <div className="px-4 py-3">
+              <div className="px-4 py-3 animate-fade-in">
                 <p className="text-[14px] font-medium text-text1">6030 50th Street</p>
                 <p className="text-[12px] text-text2">Edmonton, AB · Ready today after 2pm</p>
               </div>
             ) : (
-              <div className="px-4 py-3">
+              <div className="px-4 py-3 animate-fade-in">
                 <p className="text-[14px] font-medium text-text1">12450 Maple Ridge Rd</p>
                 <p className="text-[12px] text-text2">Next business day · Free over $500</p>
               </div>
@@ -162,11 +187,15 @@ export default function ToolboxPage() {
           <div className="px-4 py-3 space-y-2">
             <div className="flex justify-between text-[14px]">
               <span className="text-text2">Subtotal</span>
-              <span className="font-medium text-text1">${total.toFixed(2)}</span>
+              <span key={`sub-${totalKey}`} className="font-medium text-text1 tabular-nums animate-value-update">
+                ${total.toFixed(2)}
+              </span>
             </div>
             <div className="flex justify-between text-[14px]">
               <span className="text-text2">GST (5%)</span>
-              <span className="font-medium text-text1">${(total * 0.05).toFixed(2)}</span>
+              <span key={`gst-${totalKey}`} className="font-medium text-text1 tabular-nums animate-value-update">
+                ${(total * 0.05).toFixed(2)}
+              </span>
             </div>
             {delivery === "delivery" && total < 500 && (
               <div className="flex justify-between text-[14px]">
@@ -177,8 +206,11 @@ export default function ToolboxPage() {
             <div className="h-px bg-separator" />
             <div className="flex justify-between">
               <span className="text-[16px] font-semibold text-text1">Total</span>
-              <span className="text-[16px] font-bold text-text1">
-                ${(total * 1.05 + (delivery === "delivery" && total < 500 ? 25 : 0)).toFixed(2)} CAD
+              <span key={`tot-${totalKey}`} className="text-[16px] font-bold text-text1 tabular-nums animate-value-update">
+                ${(
+                  total * 1.05 +
+                  (delivery === "delivery" && total < 500 ? 25 : 0)
+                ).toFixed(2)} CAD
               </span>
             </div>
           </div>
@@ -189,22 +221,20 @@ export default function ToolboxPage() {
           <button
             onClick={handlePlaceOrder}
             disabled={placing}
-            className={`spring-tap w-full py-4 rounded-2xl text-[17px] font-semibold text-white transition-all duration-200 shadow-card-lg ${
-              placing ? "opacity-70" : ""
-            }`}
-            style={{ background: placing ? "#1C3A6E99" : "linear-gradient(135deg, #1C3A6E, #142B52)" }}
+            className="spring-tap w-full py-4 rounded-2xl text-[17px] font-semibold text-white shadow-card-lg relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)", opacity: placing ? 0.85 : 1 }}
           >
-            {placing ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <circle cx="9" cy="9" r="7" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
-                  <path d="M9 2C9 2 16 2 16 9" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                Placing Order…
-              </span>
-            ) : (
-              "Place Order"
+            {placing && (
+              <span
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(100deg, transparent 25%, rgba(255,255,255,0.14) 50%, transparent 75%)",
+                  backgroundSize: "220% 100%",
+                  animation: "btn-shimmer 0.55s ease-in-out infinite",
+                }}
+              />
             )}
+            <span className="relative">{placing ? "Placing Order…" : "Place Order"}</span>
           </button>
           <p className="text-[12px] text-text2 text-center mt-2">
             Order will be confirmed via SMS

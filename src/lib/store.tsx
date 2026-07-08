@@ -10,6 +10,7 @@ interface CartState {
 
 type CartAction =
   | { type: "ADD_ITEM"; product: Product }
+  | { type: "ADD_MANY"; items: CartItem[] }
   | { type: "REMOVE_ITEM"; productId: number }
   | { type: "SET_QUANTITY"; productId: number; quantity: number }
   | { type: "CLEAR_CART" }
@@ -20,25 +21,29 @@ interface CartContextValue {
   itemCount: number;
   total: number;
   addItem: (product: Product) => void;
+  addMany: (items: CartItem[]) => void;
   removeItem: (productId: number) => void;
   setQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
   reorder: () => void;
 }
 
+function mergeItems(existing: CartItem[], additions: CartItem[]): CartItem[] {
+  const merged = [...existing];
+  for (const add of additions) {
+    const idx = merged.findIndex((i) => i.product.id === add.product.id);
+    if (idx >= 0) merged[idx] = { ...merged[idx], quantity: merged[idx].quantity + add.quantity };
+    else merged.push({ ...add });
+  }
+  return merged;
+}
+
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
-    case "ADD_ITEM": {
-      const existing = state.items.find((i) => i.product.id === action.product.id);
-      if (existing) {
-        return {
-          items: state.items.map((i) =>
-            i.product.id === action.product.id ? { ...i, quantity: i.quantity + 1 } : i
-          ),
-        };
-      }
-      return { items: [...state.items, { product: action.product, quantity: 1 }] };
-    }
+    case "ADD_ITEM":
+      return { items: mergeItems(state.items, [{ product: action.product, quantity: 1 }]) };
+    case "ADD_MANY":
+      return { items: mergeItems(state.items, action.items) };
     case "REMOVE_ITEM":
       return { items: state.items.filter((i) => i.product.id !== action.productId) };
     case "SET_QUANTITY": {
@@ -65,6 +70,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
 
   const addItem    = useCallback((product: Product) => dispatch({ type: "ADD_ITEM", product }), []);
+  const addMany    = useCallback((items: CartItem[]) => dispatch({ type: "ADD_MANY", items }), []);
   const removeItem = useCallback((productId: number) => dispatch({ type: "REMOVE_ITEM", productId }), []);
   const setQuantity = useCallback((productId: number, quantity: number) => dispatch({ type: "SET_QUANTITY", productId, quantity }), []);
   const clearCart  = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
@@ -74,8 +80,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const total     = state.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
   const value = useMemo<CartContextValue>(
-    () => ({ items: state.items, itemCount, total, addItem, removeItem, setQuantity, clearCart, reorder }),
-    [state.items, itemCount, total, addItem, removeItem, setQuantity, clearCart, reorder]
+    () => ({ items: state.items, itemCount, total, addItem, addMany, removeItem, setQuantity, clearCart, reorder }),
+    [state.items, itemCount, total, addItem, addMany, removeItem, setQuantity, clearCart, reorder]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

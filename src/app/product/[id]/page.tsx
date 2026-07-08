@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { products } from "@/lib/data";
 import { useCart } from "@/lib/store";
+import { useToast } from "@/lib/toast";
 import { useState } from "react";
 import ProductImage from "@/components/ProductImage";
 import AvatarStack from "@/components/AvatarStack";
@@ -11,6 +12,7 @@ export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { addItem, items } = useCart();
+  const { show: showToast } = useToast();
   const [addedKey, setAddedKey] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -28,13 +30,14 @@ export default function ProductDetailPage() {
 
   function handleAdd() {
     addItem(product!);
+    showToast("Added to your toolbox");
     setIsAdded(true);
     setAddedKey((k) => k + 1);
     setTimeout(() => setIsAdded(false), 1200);
   }
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg animate-page-in">
       {/* Back button */}
       <div className="fixed top-0 left-0 right-0 z-40 max-w-lg mx-auto px-4 pt-12 pb-2 pointer-events-none">
         <button

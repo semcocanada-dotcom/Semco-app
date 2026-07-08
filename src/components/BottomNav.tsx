@@ -73,10 +73,12 @@ export default function BottomNav() {
   const { itemCount } = useCart();
   const prevCount = useRef(itemCount);
   const [badgeKey, setBadgeKey] = useState(0);
+  const [iconBumpKey, setIconBumpKey] = useState(0);
 
   useEffect(() => {
     if (itemCount !== prevCount.current) {
       setBadgeKey((k) => k + 1);
+      if (itemCount > prevCount.current) setIconBumpKey((k) => k + 1);
       prevCount.current = itemCount;
     }
   }, [itemCount]);
@@ -98,9 +100,15 @@ export default function BottomNav() {
               <div className={`absolute top-0 left-1/2 -translate-x-1/2 h-0.5 rounded-full bg-navy transition-all duration-300 ${active ? "w-5 opacity-100" : "w-0 opacity-0"}`} />
 
               <div className="relative">
-                {tab.icon(active)}
+                {tab.href === "/toolbox" ? (
+                  <div key={`bump-${iconBumpKey}`} className={iconBumpKey > 0 ? "animate-nav-bump" : ""}>
+                    {tab.icon(active)}
+                  </div>
+                ) : (
+                  tab.icon(active)
+                )}
                 {tab.href === "/toolbox" && itemCount > 0 && (
-                  <span key={badgeKey} className="animate-badge absolute -top-1.5 -right-2 bg-navy text-white text-[9px] font-bold min-w-[16px] h-4 flex items-center justify-center rounded-full px-1 leading-none">
+                  <span key={`badge-${badgeKey}`} className="animate-badge absolute -top-1.5 -right-2 bg-navy text-white text-[9px] font-bold min-w-[16px] h-4 flex items-center justify-center rounded-full px-1 leading-none">
                     {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 )}

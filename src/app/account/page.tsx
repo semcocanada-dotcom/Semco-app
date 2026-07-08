@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useCart } from "@/lib/store";
+import { useToast } from "@/lib/toast";
 import { lastOrder } from "@/lib/data";
 
 const orderHistory = [
@@ -12,9 +12,10 @@ const orderHistory = [
 
 export default function AccountPage() {
   const { reorder } = useCart();
+  const { show: showToast } = useToast();
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg animate-page-in">
       {/* Header */}
       <div className="bg-surface border-b border-separator px-4 pt-14 pb-5">
         <div className="flex items-center gap-3.5">
@@ -61,7 +62,7 @@ export default function AccountPage() {
             <div className="flex items-center justify-between mb-3">
               <p className="text-[11px] font-bold text-text2 uppercase tracking-widest">Last Order</p>
               <button
-                onClick={() => reorder()}
+                onClick={() => { reorder(); showToast("Last order added to your toolbox"); }}
                 className="spring-tap text-[13px] font-semibold text-white px-3.5 py-1.5 rounded-full"
                 style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
               >

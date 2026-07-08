@@ -4,9 +4,12 @@ import Link from "next/link";
 import { recentItems, savedJobs, proTools } from "@/lib/data";
 import ReorderButton from "@/components/ReorderButton";
 import { useCart } from "@/lib/store";
+import { useToast } from "@/lib/toast";
 import { useState } from "react";
+import { Product } from "@/lib/types";
 import ProductImage from "@/components/ProductImage";
 import AvatarStack from "@/components/AvatarStack";
+import ProofSheet from "@/components/ProofSheet";
 
 /* ─── Category tile config ───────────────────────────── */
 const categories = [
@@ -112,10 +115,11 @@ const promos = [
 export default function HomePage() {
   const { items, addItem } = useCart();
   const [promoIdx] = useState(0);
+  const [proofProduct, setProofProduct] = useState<{ product: Product; prosCount: number } | null>(null);
   const promo = promos[promoIdx];
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-bg animate-page-in">
       {/* ── Header ───────────────────────────────── */}
       <div className="bg-surface px-4 pt-14 pb-4 border-b border-separator">
         <div className="flex items-center justify-between mb-4">
@@ -241,7 +245,10 @@ export default function HomePage() {
             {proTools.map(({ product, prosCount }, idx) => (
               <div key={product.id}>
                 {idx > 0 && <div className="h-px bg-separator" />}
-                <Link href={`/product/${product.id}`} className="flex items-center gap-3.5 px-4 py-3.5 active:bg-bg transition-colors">
+                <button
+                  onClick={() => setProofProduct({ product, prosCount })}
+                  className="w-full flex items-center gap-3.5 px-4 py-3.5 text-left active:bg-bg transition-colors"
+                >
                   <ProductImage product={product} size="sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-semibold text-text1 truncate">{product.name}</p>
@@ -253,7 +260,7 @@ export default function HomePage() {
                     <p className="text-[14px] font-bold text-text1">${product.price.toFixed(2)}</p>
                     <p className="text-[11px] text-text2">{product.unit}</p>
                   </div>
-                </Link>
+                </button>
               </div>
             ))}
           </div>
@@ -322,6 +329,13 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Proof bottom sheet */}
+      <ProofSheet
+        product={proofProduct?.product ?? null}
+        prosCount={proofProduct?.prosCount ?? 0}
+        onClose={() => setProofProduct(null)}
+      />
     </div>
   );
 }
@@ -336,12 +350,14 @@ function RecentRow({
   items: ReturnType<typeof useCart>["items"];
   onAdd: () => void;
 }) {
+  const { show: showToast } = useToast();
   const [addedKey, setAddedKey] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
   const inCart = items.find((i) => i.product.id === product.id);
 
   function handleAdd() {
     onAdd();
+    showToast("Added to your toolbox");
     setIsAdded(true);
     setAddedKey((k) => k + 1);
     setTimeout(() => setIsAdded(false), 1000);
@@ -376,7 +392,7 @@ function RecentRow({
             Added
           </>
         ) : inCart ? (
-          <>{inCart.quantity} in cart</>
+          <>{inCart.quantity} in toolbox</>
         ) : (
           <>
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">

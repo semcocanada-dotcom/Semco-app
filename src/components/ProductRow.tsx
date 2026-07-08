@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Product } from "@/lib/types";
 import { useCart } from "@/lib/store";
+import { useToast } from "@/lib/toast";
 import { useRef, useState } from "react";
 import ProductImage from "./ProductImage";
 import AvatarStack from "./AvatarStack";
@@ -14,17 +15,26 @@ interface Props {
 
 export default function ProductRow({ product, showCategory = false }: Props) {
   const { addItem, items } = useCart();
+  const { show: showToast } = useToast();
   const [addedKey, setAddedKey] = useState(0);
   const [isAdded, setIsAdded] = useState(false);
+  const [showProof, setShowProof] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const proofTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inCart = items.find((i) => i.product.id === product.id);
 
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
     addItem(product);
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (proofTimerRef.current) clearTimeout(proofTimerRef.current);
     setIsAdded(true);
     setAddedKey((k) => k + 1);
+    showToast("Added to your toolbox");
+    if (product.prosUsing > 0) {
+      setShowProof(true);
+      proofTimerRef.current = setTimeout(() => setShowProof(false), 1000);
+    }
     timerRef.current = setTimeout(() => setIsAdded(false), 1100);
   }
 
@@ -59,30 +69,33 @@ export default function ProductRow({ product, showCategory = false }: Props) {
         </div>
       </div>
 
-      {/* Add button */}
-      <button
-        key={addedKey}
-        onClick={handleAdd}
-        className={`spring-tap-strong flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-200 ${
-          isAdded
-            ? "bg-success animate-pop-in"
-            : inCart
-            ? "bg-navy"
-            : "bg-navy"
-        }`}
-      >
-        {isAdded ? (
-          <svg className="animate-check-pop" width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : inCart ? (
-          <span className="text-white text-[12px] font-bold">{inCart.quantity}</span>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 2V12M2 7H12" stroke="white" strokeWidth="2" strokeLinecap="round" />
-          </svg>
+      {/* Add button with confidence flash */}
+      <div className="relative flex-shrink-0">
+        {showProof && (
+          <div className="animate-proof-flash absolute -top-7 left-1/2 -translate-x-1/2 bg-navy text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap pointer-events-none z-10">
+            Used by {product.prosUsing} pros
+          </div>
         )}
-      </button>
+        <button
+          key={addedKey}
+          onClick={handleAdd}
+          className={`spring-tap-strong w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150 ${
+            isAdded ? "bg-success animate-pop-in" : "bg-navy"
+          }`}
+        >
+          {isAdded ? (
+            <svg className="animate-check-pop" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 7L5.5 10.5L12 3.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : inCart ? (
+            <span className="text-white text-[12px] font-bold">{inCart.quantity}</span>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2V12M2 7H12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
+        </button>
+      </div>
     </Link>
   );
 }

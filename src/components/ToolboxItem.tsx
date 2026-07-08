@@ -47,7 +47,7 @@ export default function ToolboxItem({ item }: Props) {
             />
           </svg>
         </button>
-        <span key={qtyKey} className="w-7 text-center text-[14px] font-bold text-text1 tabular-nums animate-slide-up">
+        <span key={qtyKey} className="w-7 text-center text-[14px] font-bold text-text1 tabular-nums animate-fade-up">
           {item.quantity}
         </span>
         <button
@@ -60,8 +60,8 @@ export default function ToolboxItem({ item }: Props) {
         </button>
       </div>
 
-      {/* Line total */}
-      <p className="text-[13px] font-bold text-text1 w-14 text-right tabular-nums">
+      {/* Line total — crossfades on qty change */}
+      <p key={`total-${qtyKey}`} className="text-[13px] font-bold text-text1 w-14 text-right tabular-nums animate-value-update">
         ${(item.product.price * item.quantity).toFixed(2)}
       </p>
     </div>

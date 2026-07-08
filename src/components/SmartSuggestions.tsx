@@ -1,12 +1,14 @@
 "use client";
 
 import { useCart } from "@/lib/store";
+import { useToast } from "@/lib/toast";
 import { smartSuggestions } from "@/lib/data";
 import { useState } from "react";
 import ProductImage from "./ProductImage";
 
 export default function SmartSuggestions() {
   const { addItem, items } = useCart();
+  const { show: showToast } = useToast();
   const [added, setAdded] = useState<Record<number, boolean>>({});
 
   const visible = smartSuggestions.filter(
@@ -19,12 +21,13 @@ export default function SmartSuggestions() {
     const product = smartSuggestions.find((p) => p.id === productId);
     if (!product) return;
     addItem(product);
+    showToast("Added to your toolbox");
     setAdded((prev) => ({ ...prev, [productId]: true }));
     setTimeout(() => setAdded((prev) => ({ ...prev, [productId]: false })), 1100);
   }
 
   return (
-    <div className="px-4 py-1">
+    <div className="px-4 py-1 animate-fade-in">
       <p className="text-[11px] font-bold text-text2 uppercase tracking-widest mb-2.5">
         You may need
       </p>
