@@ -12,6 +12,7 @@ import {
   type PortalData,
   type PortalRecord,
 } from '@/services/portal-cloud';
+import { getSignoffPdfViewUrl } from '@/services/signoff-pdf';
 import { Badge, Button, Card, EmptyState } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
@@ -289,6 +290,20 @@ function RecordSection({ title, emptyTitle, children }: { title: string; emptyTi
 }
 
 function FormRow({ form, project, installer }: { form: PortalRecord; project?: PortalRecord; installer?: PortalRecord }) {
+  const [openingPdf, setOpeningPdf] = useState(false);
+
+  const openPdf = async () => {
+    setOpeningPdf(true);
+    try {
+      const url = await getSignoffPdfViewUrl(form.pdf_url);
+      if (url) await Linking.openURL(url);
+    } catch (err) {
+      console.error('[portal] open signoff pdf failed', err);
+    } finally {
+      setOpeningPdf(false);
+    }
+  };
+
   return (
     <Card style={styles.recordCard}>
       <View style={styles.recordTop}>
@@ -301,7 +316,7 @@ function FormRow({ form, project, installer }: { form: PortalRecord; project?: P
         </View>
         <Badge label={form.status ?? 'draft'} variant={form.status === 'signed' ? 'success' : 'warning'} />
       </View>
-      {form.pdf_url ? <Button label="Open PDF" variant="secondary" size="sm" onPress={() => Linking.openURL(form.pdf_url)} /> : <Text style={styles.subtle}>PDF upload pending</Text>}
+      {form.pdf_url ? <Button label="Open PDF" variant="secondary" size="sm" isLoading={openingPdf} onPress={openPdf} /> : <Text style={styles.subtle}>PDF upload pending</Text>}
     </Card>
   );
 }

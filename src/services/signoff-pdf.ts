@@ -164,10 +164,33 @@ export async function uploadSignoffPdf(
       return null;
     }
 
-    const { data } = supabase.storage.from('project-signoffs').getPublicUrl(storagePath);
-    return data.publicUrl;
+    // The project-signoffs bucket is private; store the storage path and
+    // create a signed URL at view time (see getSignoffPdfViewUrl).
+    return storagePath;
   } catch (err) {
     console.error('[signoff-pdf] upload failed:', err);
+    return null;
+  }
+}
+
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+export async function getSignoffPdfViewUrl(pdfUrl: string): Promise<string | null> {
+  // Rows synced before the bucket went private stored a full public URL.
+  if (/^https?:\/\//i.test(pdfUrl)) return pdfUrl;
+
+  try {
+    const { data, error } = await supabase.storage
+      .from('project-signoffs')
+      .createSignedUrl(pdfUrl, SIGNED_URL_TTL_SECONDS);
+
+    if (error) {
+      console.error('[signoff-pdf] signed url error:', error);
+      return null;
+    }
+    return data.signedUrl;
+  } catch (err) {
+    console.error('[signoff-pdf] signed url failed:', err);
     return null;
   }
 }
