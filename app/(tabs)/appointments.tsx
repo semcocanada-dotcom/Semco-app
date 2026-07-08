@@ -10,6 +10,8 @@ import * as CalendarAPI from 'expo-calendar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO, isFuture, isPast } from 'date-fns';
 import { Colors } from '@constants/colors';
+import { AppLogo } from '@components/AppLogo';
+import { CalendarArt } from '@components/EmptyArt';
 import { DateField } from '@components/DateField';
 import { supabase } from '@lib/supabase';
 import type { Appointment, Provider, ProviderCategory } from '@lib/types';
@@ -508,14 +510,17 @@ export default function AppointmentsScreen() {
         ListHeaderComponent={() => (
           <View style={{ gap: 10 }}>
             <View style={s.header}>
-              <Text style={s.headerTitle}>Calendar</Text>
-              {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AppLogo size={30} />
+                <Text style={s.headerTitle}>Calendar</Text>
+              </View>
+              {activeChild && <Text style={s.headerSub}>Appointments for {activeChild.name} 💙</Text>}
             </View>
 
             {upcoming.length === 0 && !loading && (
               <View style={s.emptyCard}>
-                <Text style={{ fontSize: 36, marginBottom: 8 }}>📅</Text>
-                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16 }}>No upcoming appointments</Text>
+                <CalendarArt />
+                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16, marginTop: 8 }}>No upcoming appointments</Text>
                 <Text style={{ color: Colors.textMuted, fontSize: 13, marginTop: 4 }}>Tap + to schedule one</Text>
               </View>
             )}
@@ -592,8 +597,8 @@ export default function AppointmentsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  header:      { gap: 3, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
   listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
   sectionLabel:{ fontSize: 11, fontWeight: '700', color: Colors.textMuted, letterSpacing: 0.6, marginTop: 4 },
@@ -624,7 +629,7 @@ const s = StyleSheet.create({
 
   // FAB
   fabWrap: {
-    position: 'absolute', bottom: 28, right: 20,
+    position: 'absolute', bottom: 28, right: 20, borderRadius: 29,
     shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
   },

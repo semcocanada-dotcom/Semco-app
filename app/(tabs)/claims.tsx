@@ -168,32 +168,16 @@ export default function ClaimsScreen() {
     setSubmitting(true);
 
     try {
+      // The function re-derives every emailed value (names, health card,
+      // amounts) from the database under the caller's ownership — we only
+      // send identifiers, never the PII itself.
       const payload = {
         child_id: activeChild.id,
-        child_name: activeChild.name,
-        child_health_card: activeChild.health_card_number ?? null,
         funding_year_id: fundingYear.id,
         month: group.month,
         month_label: group.monthLabel,
-        expenses: group.expenses.map((e) => ({
-          id: e.id,
-          expense_date: e.expense_date,
-          description: e.description ?? null,
-          category: e.category,
-          provider_name: e.providers?.name ?? null,
-          amount: Number(e.amount),
-        })),
-        mileage: group.mileage.map((m) => ({
-          id: m.id,
-          trip_date: m.trip_date,
-          description: m.description ?? null,
-          distance_km: Number(m.distance_km),
-          rate_per_km: Number(m.rate_per_km),
-          reimbursement_amount: Number(m.reimbursement_amount),
-        })),
-        total_amount: group.total,
-        parent_full_name: profile?.full_name ?? 'Parent',
-        parent_email: session.user.email ?? '',
+        expense_ids: group.expenses.map((e) => e.id),
+        mileage_ids: group.mileage.map((m) => m.id),
       };
 
       const { error } = await supabase.functions.invoke('submit-claim', { body: payload });

@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { differenceInYears, parseISO, isValid } from 'date-fns';
 import { Colors } from '@constants/colors';
@@ -533,14 +534,18 @@ export default function ProfileScreen() {
 
         {/* Reports */}
         <TouchableOpacity style={s.actionBtn} onPress={() => router.push('/(tabs)/reports')} activeOpacity={0.8}>
-          <Text style={{ fontSize: 20 }}>📊</Text>
+          <View style={[s.actionIcon, { backgroundColor: Colors.purple + '1A' }]}>
+            <Ionicons name="bar-chart" size={18} color={Colors.purple} />
+          </View>
           <Text style={s.actionBtnText}>Generate Grant Report</Text>
           <Text style={{ color: Colors.textMuted, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
 
         {/* Sign Out */}
         <TouchableOpacity style={[s.actionBtn, { borderColor: '#FECDD3' }]} onPress={handleSignOut} activeOpacity={0.8}>
-          <Text style={{ fontSize: 20 }}>🚪</Text>
+          <View style={[s.actionIcon, { backgroundColor: '#BE123C1A' }]}>
+            <Ionicons name="log-out-outline" size={18} color="#BE123C" />
+          </View>
           <Text style={[s.actionBtnText, { color: '#BE123C' }]}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -592,6 +597,10 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: Colors.surface, borderRadius: 16, padding: 16,
     borderWidth: 1, borderColor: Colors.border,
+  },
+  actionIcon: {
+    width: 34, height: 34, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
   },
   actionBtnText: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
 

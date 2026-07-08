@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 import * as Location from 'expo-location';
 import { Colors } from '@constants/colors';
 import { useAuth } from '@context/AuthContext';
@@ -19,6 +20,7 @@ import { useRecentExpenses } from '@hooks/useExpenses';
 import { BudgetRing } from '@components/BudgetRing';
 import { StatCard, formatCAD } from '@components/StatCard';
 import { AppLogo } from '@components/AppLogo';
+import { ChildArt, ReceiptArt } from '@components/EmptyArt';
 import { ChildSelector } from '@components/ChildSelector';
 import { AlertBanner } from '@components/AlertBanner';
 import { FAB } from '@components/FAB';
@@ -34,37 +36,38 @@ function LocationPermissionModal({ onDone }: { onDone: () => void }) {
   return (
     // In-tree absolute overlay (not a native <Modal>) so it never triggers a
     // UIViewController presentation — that presentation path was implicated in
-    // the iPad launch crash. Visually identical to the previous sheet.
-    <View style={ls.overlay} pointerEvents="auto">
-      <View style={ls.sheet}>
-          <Text style={ls.icon}>📍</Text>
-          <Text style={ls.title}>Allow Location Access</Text>
-          <Text style={ls.body}>
-            Autism Fund Tracker uses your location for two things:
+    // the iPad launch crash. Reanimated entering transitions restore the fade
+    // and slide the native sheet used to provide.
+    <Animated.View entering={FadeIn.duration(220)} style={ls.overlay} pointerEvents="auto">
+      <Animated.View entering={SlideInDown.springify().damping(18)} style={ls.sheet}>
+        <Text style={ls.icon}>📍</Text>
+        <Text style={ls.title}>Allow Location Access</Text>
+        <Text style={ls.body}>
+          Autism Fund Tracker uses your location for two things:
+        </Text>
+        <View style={ls.reasonRow}>
+          <Text style={ls.reasonIcon}>🚗</Text>
+          <Text style={ls.reasonText}>
+            <Text style={{ fontWeight: '700' }}>Mileage forms</Text>
+            {' — automatically calculate the distance to your child\'s appointments for reimbursement claims.'}
           </Text>
-          <View style={ls.reasonRow}>
-            <Text style={ls.reasonIcon}>🚗</Text>
-            <Text style={ls.reasonText}>
-              <Text style={{ fontWeight: '700' }}>Mileage forms</Text>
-              {' — automatically calculate the distance to your child\'s appointments for reimbursement claims.'}
-            </Text>
-          </View>
-          <View style={ls.reasonRow}>
-            <Text style={ls.reasonIcon}>🏥</Text>
-            <Text style={ls.reasonText}>
-              <Text style={{ fontWeight: '700' }}>Nearby providers</Text>
-              {' — show approved therapy providers sorted by how close they are to you.'}
-            </Text>
-          </View>
-          <Text style={ls.note}>Your location is never stored or shared.</Text>
-          <TouchableOpacity style={ls.allowBtn} onPress={handleAllow} activeOpacity={0.85}>
-            <Text style={ls.allowBtnText}>Allow Location Access</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={ls.skipBtn} onPress={onDone} activeOpacity={0.7}>
-            <Text style={ls.skipBtnText}>Not Now</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+        <View style={ls.reasonRow}>
+          <Text style={ls.reasonIcon}>🏥</Text>
+          <Text style={ls.reasonText}>
+            <Text style={{ fontWeight: '700' }}>Nearby providers</Text>
+            {' — show approved therapy providers sorted by how close they are to you.'}
+          </Text>
+        </View>
+        <Text style={ls.note}>Your location is never stored or shared.</Text>
+        <TouchableOpacity style={ls.allowBtn} onPress={handleAllow} activeOpacity={0.85}>
+          <Text style={ls.allowBtnText}>Allow Location Access</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={ls.skipBtn} onPress={onDone} activeOpacity={0.7}>
+          <Text style={ls.skipBtnText}>Not Now</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -200,8 +203,8 @@ export default function DashboardScreen() {
         {/* No children state */}
         {children.length === 0 && (
           <View style={{ alignItems: 'center', padding: 32 }}>
-            <Text style={{ fontSize: 40, marginBottom: 12 }}>👶</Text>
-            <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary, textAlign: 'center' }}>
+            <ChildArt />
+            <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary, textAlign: 'center', marginTop: 12 }}>
               Add your first child
             </Text>
             <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginTop: 6 }}>
@@ -227,19 +230,19 @@ export default function DashboardScreen() {
 
         {/* Rainbow arc budget card */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 14 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(40)} style={{ paddingHorizontal: 20, marginBottom: 14 }}>
             <BudgetRing
               totalBudget={summary.totalBudget}
               totalSpent={summary.totalSpent}
               remaining={summary.remaining}
               yearLabel={summary.fundingYear?.label}
             />
-          </View>
+          </Animated.View>
         )}
 
         {/* Stat cards */}
         {activeChild && (
-          <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 18 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(110)} style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 18 }}>
             <StatCard
               label="Total Spent"
               value={formatCAD(summary.totalSpent)}
@@ -256,12 +259,12 @@ export default function DashboardScreen() {
               icon="wallet"
               onPress={() => router.push('/(tabs)/reports')}
             />
-          </View>
+          </Animated.View>
         )}
 
         {/* Mileage reimbursement (grant year) */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 18 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(180)} style={{ paddingHorizontal: 20, marginBottom: 18 }}>
             <Pressable
               onPress={() => router.push('/(tabs)/mileage')}
               style={({ pressed }) => [{
@@ -286,12 +289,12 @@ export default function DashboardScreen() {
                 {formatCAD(summary.totalMileage)}
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         )}
 
         {/* Recent expenses */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(250)} style={{ paddingHorizontal: 20 }}>
             <View style={{
               backgroundColor: Colors.surface,
               borderRadius: 20,
@@ -316,8 +319,8 @@ export default function DashboardScreen() {
 
               {expenses.length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                  <Text style={{ fontSize: 28, marginBottom: 8 }}>🧾</Text>
-                  <Text style={{ fontSize: 14, color: Colors.textMuted, textAlign: 'center' }}>No expenses yet. Tap + to add one.</Text>
+                  <ReceiptArt size={84} />
+                  <Text style={{ fontSize: 14, color: Colors.textMuted, textAlign: 'center', marginTop: 8 }}>No expenses yet. Tap + to add one.</Text>
                 </View>
               ) : (
                 expenses.map((expense, index) => (
@@ -331,7 +334,7 @@ export default function DashboardScreen() {
                 ))
               )}
             </View>
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
 

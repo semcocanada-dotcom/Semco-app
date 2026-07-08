@@ -55,6 +55,17 @@ function setField(form: PDFForm, name: string, value: string): void {
   }
 }
 
+// User-entered values must be escaped before interpolation into the HTML
+// print templates (the AcroForm path sets field values directly and is safe).
+function esc(v: unknown): string {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -290,7 +301,7 @@ function buildMileageHtml(data: MileagePdfInput): string {
     }
     return `<tr>
       <td class="td-date">${fmtDate(row.trip_date)}</td>
-      <td class="td-purpose">${row.description ?? ''}</td>
+      <td class="td-purpose">${esc(row.description ?? '')}</td>
       <td class="td-num">${Number(row.distance_km).toFixed(1)}</td>
       <td class="td-num">$${Number(row.rate_per_km).toFixed(4)}</td>
       <td class="td-num">$${Number(row.reimbursement_amount).toFixed(2)}</td>
@@ -485,15 +496,15 @@ function buildMileageHtml(data: MileagePdfInput): string {
   <div class="section-heading">Child Information</div>
   <div class="field-row">
     <div class="field-cell">
-      <div class="field-value">${child.first}</div>
+      <div class="field-value">${esc(child.first)}</div>
       <span class="field-label">Child First Name</span>
     </div>
     <div class="field-cell">
-      <div class="field-value">${child.last}</div>
+      <div class="field-value">${esc(child.last)}</div>
       <span class="field-label">Child Last Name</span>
     </div>
     <div class="field-cell">
-      <div class="field-value">${data.healthServicesNumber ?? ''}</div>
+      <div class="field-value">${esc(data.healthServicesNumber ?? '')}</div>
       <span class="field-label">Health Services Number</span>
     </div>
   </div>
@@ -501,15 +512,15 @@ function buildMileageHtml(data: MileagePdfInput): string {
   <div class="section-heading">Parent/Guardian Information*</div>
   <div class="field-row">
     <div class="field-cell">
-      <div class="field-value">${parent.first}</div>
+      <div class="field-value">${esc(parent.first)}</div>
       <span class="field-label">Parent/Guardian First Name</span>
     </div>
     <div class="field-cell">
-      <div class="field-value">${parent.last}</div>
+      <div class="field-value">${esc(parent.last)}</div>
       <span class="field-label">Parent/Guardian Last Name</span>
     </div>
     <div class="field-cell field-cell-wide">
-      <div class="field-value">${data.parentEmail}</div>
+      <div class="field-value">${esc(data.parentEmail)}</div>
       <span class="field-label">Email Address</span>
     </div>
   </div>
@@ -549,7 +560,7 @@ function buildMileageHtml(data: MileagePdfInput): string {
 
   <div class="sig-row">
     <div class="sig-cell">
-      <div class="sig-line">${data.parentName}</div>
+      <div class="sig-line">${esc(data.parentName)}</div>
       <div class="sig-label">Printed Name (Parent/Guardian)</div>
     </div>
     <div class="sig-cell">
@@ -577,9 +588,9 @@ function buildExpenseHtml(data: ExpensePdfInput): string {
 
   const rows = padded.map(r => r ? `<tr>
     <td class="tc">${fmtDate(r.expense_date)}</td>
-    <td>${r.category_label}</td>
-    <td>${r.provider_name ?? ''}</td>
-    <td>${r.description ?? ''}</td>
+    <td>${esc(r.category_label)}</td>
+    <td>${esc(r.provider_name ?? '')}</td>
+    <td>${esc(r.description ?? '')}</td>
     <td class="tr">$${Number(r.amount).toFixed(2)}</td>
   </tr>` : `<tr><td class="tc">&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td class="tr">&nbsp;</td></tr>`).join('');
 
@@ -623,16 +634,16 @@ function buildExpenseHtml(data: ExpensePdfInput): string {
 
   <div class="sh">Child Information</div>
   <div class="fr">
-    <div class="fc"><div class="fv">${child.first}</div><span class="fl">Child First Name</span></div>
-    <div class="fc"><div class="fv">${child.last}</div><span class="fl">Child Last Name</span></div>
-    <div class="fc"><div class="fv">${data.healthServicesNumber ?? ''}</div><span class="fl">Health Services Number</span></div>
+    <div class="fc"><div class="fv">${esc(child.first)}</div><span class="fl">Child First Name</span></div>
+    <div class="fc"><div class="fv">${esc(child.last)}</div><span class="fl">Child Last Name</span></div>
+    <div class="fc"><div class="fv">${esc(data.healthServicesNumber ?? '')}</div><span class="fl">Health Services Number</span></div>
   </div>
 
   <div class="sh">Parent/Guardian Information*</div>
   <div class="fr">
-    <div class="fc"><div class="fv">${parent.first}</div><span class="fl">First Name</span></div>
-    <div class="fc"><div class="fv">${parent.last}</div><span class="fl">Last Name</span></div>
-    <div class="fc fc2"><div class="fv">${data.parentEmail}</div><span class="fl">Email Address</span></div>
+    <div class="fc"><div class="fv">${esc(parent.first)}</div><span class="fl">First Name</span></div>
+    <div class="fc"><div class="fv">${esc(parent.last)}</div><span class="fl">Last Name</span></div>
+    <div class="fc fc2"><div class="fv">${esc(data.parentEmail)}</div><span class="fl">Email Address</span></div>
   </div>
   <p class="an">*ASD-IF funding applicant. Questions? <a href="mailto:autismif@gov.sk.ca">autismif@gov.sk.ca</a></p>
   <hr>
@@ -654,7 +665,7 @@ function buildExpenseHtml(data: ExpensePdfInput): string {
   </div>
 
   <div class="sr">
-    <div class="sc"><div class="sl">${data.parentName}</div><div class="slb">Printed Name (Parent/Guardian)</div></div>
+    <div class="sc"><div class="sl">${esc(data.parentName)}</div><div class="slb">Printed Name (Parent/Guardian)</div></div>
     <div class="sc"><div class="sl">${fmtDateLong(today)}</div><div class="slb">Date (MM/DD/YYYY)</div></div>
   </div>
 

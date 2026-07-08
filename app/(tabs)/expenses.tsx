@@ -30,6 +30,8 @@ import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, buildMileageProposalFromAddress, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import { AppLogo } from '@components/AppLogo';
+import { CalendarArt, ReceiptArt } from '@components/EmptyArt';
 import { DateField } from '@components/DateField';
 import { inferCategoryFromText } from '@lib/ocr';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -1492,8 +1494,11 @@ export default function ExpensesScreen() {
           <View style={{ gap: 10 }}>
             {/* Page title */}
             <View style={s.header}>
-              <Text style={s.headerTitle}>Expenses</Text>
-              {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AppLogo size={30} />
+                <Text style={s.headerTitle}>Expenses</Text>
+              </View>
+              {activeChild && <Text style={s.headerSub}>Tracking for {activeChild.name} 💙</Text>}
             </View>
 
             {/* Budget bar */}
@@ -1511,8 +1516,8 @@ export default function ExpensesScreen() {
             {/* No funding year message */}
             {!bLoading && !summary.fundingYear && (
               <View style={[s.budgetCard, { alignItems: 'center', paddingVertical: 28 }]}>
-                <Text style={{ fontSize: 32, marginBottom: 8 }}>📅</Text>
-                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16 }}>
+                <CalendarArt />
+                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16, marginTop: 8 }}>
                   No active funding year
                 </Text>
                 <Text style={{ color: Colors.textMuted, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
@@ -1540,7 +1545,7 @@ export default function ExpensesScreen() {
             <ActivityIndicator color={Colors.purple} style={{ marginTop: 40 }} />
           ) : (
             <View style={{ alignItems: 'center', paddingTop: 40, gap: 8 }}>
-              <Text style={{ fontSize: 40 }}>🧾</Text>
+              <ReceiptArt />
               <Text style={{ fontWeight: '600', color: Colors.textPrimary, fontSize: 16 }}>No expenses yet</Text>
               <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Tap + to log your first expense</Text>
             </View>
@@ -1617,8 +1622,8 @@ export default function ExpensesScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  header:      { gap: 3, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
   listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
 
@@ -1658,8 +1663,10 @@ const s = StyleSheet.create({
 
   // FABs
   fabStack:     { position: 'absolute', bottom: 28, right: 20, alignItems: 'center', gap: 12 },
-  fabWrap:      { shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
-  fabMileageWrap:{ shadowColor: Colors.teal, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
+  // borderRadius on the shadow wrapper keeps Android elevation (and web
+  // box-shadow) circular — without it the shadow draws as a square plate.
+  fabWrap:      { borderRadius: 29, shadowColor: Colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 12, elevation: 8 },
+  fabMileageWrap:{ borderRadius: 23, shadowColor: Colors.teal, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
   fab:          { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
   fabSmall:     { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
   fabPlus:      { fontSize: 30, color: '#fff', fontWeight: '300', marginTop: -1 },

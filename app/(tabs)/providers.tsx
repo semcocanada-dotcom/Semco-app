@@ -19,6 +19,7 @@ import Svg, { Path, Rect, Circle, Polygon, Line } from 'react-native-svg';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { AppLogo } from '@components/AppLogo';
+import { SearchArt } from '@components/EmptyArt';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import { geocodeAddress, type Coords } from '@lib/geocoding';
@@ -621,8 +622,13 @@ export default function ProvidersScreen() {
         </View>
       </View>
 
-      {/* Category pills */}
-      <View style={s.catRow}>
+      {/* Category pills — single scrollable row, as in the design mockups */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={s.catRow}
+      >
         {visibleCats.map(cat => {
           const active = activeCategory === cat;
           return (
@@ -649,9 +655,9 @@ export default function ProvidersScreen() {
           activeOpacity={0.75}
         >
           <Text style={s.catPillText}>{showMoreCats ? 'Less' : 'More'}</Text>
-          <Ionicons name={showMoreCats ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.textSecondary} />
+          <Ionicons name={showMoreCats ? 'chevron-back' : 'chevron-forward'} size={14} color={Colors.textSecondary} />
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* Section header */}
       <View style={s.sectionHeader}>
@@ -699,8 +705,8 @@ export default function ProvidersScreen() {
             </View>
           ) : (
             <View style={s.centered}>
-              <Text style={{ fontSize: 40, marginBottom: 12 }}>🔎</Text>
-              <Text style={s.emptyTitle}>No providers found</Text>
+              <SearchArt />
+              <Text style={[s.emptyTitle, { marginTop: 12 }]}>No providers found</Text>
               <Text style={s.emptySubtitle}>Try a different search or category</Text>
             </View>
           )
@@ -736,7 +742,7 @@ const s = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: Colors.textPrimary },
 
   catRow: {
-    flexDirection: 'row', flexWrap: 'wrap',
+    flexDirection: 'row',
     paddingHorizontal: 16, paddingBottom: 8, gap: 8,
   },
   catPill: {

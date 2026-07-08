@@ -11,6 +11,7 @@ import Svg, { Path, Rect, Circle, Polygon, Line, Ellipse } from 'react-native-sv
 import { format, parseISO } from 'date-fns';
 import { AppLogo } from '@components/AppLogo';
 import { DateField } from '@components/DateField';
+import { TripArt } from '@components/EmptyArt';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { MileageLog, Provider, ProviderCategory } from '@lib/types';
@@ -566,7 +567,7 @@ export default function MileageScreen() {
             <ActivityIndicator color={Colors.purple} style={{ marginTop: 40 }} />
           ) : (
             <View style={{ alignItems: 'center', paddingTop: 32, gap: 10 }}>
-              <Ionicons name="map-outline" size={40} color={Colors.textMuted} />
+              <TripArt />
               <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary }}>No trips this month</Text>
               <Text style={{ fontSize: 14, color: Colors.textMuted }}>Tap Add Trip to log your first one</Text>
             </View>
