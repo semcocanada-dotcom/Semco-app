@@ -31,4 +31,10 @@ export interface PigmentRatio {
   mlPerQuart: number;        // mL to add per quart (946 ml) of XBond base
   mlPerGallon: number;       // mL to add per gallon (3.785 L) of XBond base
   mlPerFiveGallon: number;   // mL to add per 5-gallon (18.9 L) of XBond base
+  // Exact paint-dispenser units from the source formulas: total 1/48ths of a
+  // US fluid ounce (standard tint dispenser steps). ml values above are
+  // derived from these at 29.5735 ml per fl oz.
+  oz48PerQuart?: number;
+  oz48PerGallon?: number;
+  oz48PerFiveGallon?: number;
 }

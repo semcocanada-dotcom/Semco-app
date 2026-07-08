@@ -444,7 +444,9 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
   const lines: string[] = [
     `Tint formula for **${color.name}${color.code ? ` (${color.code})` : ''}** — per ${batchLabel(batch)}:`,
     '',
-    ...formula.pigments.map((line) => `- ${line.pigmentName}: **${line.displayAmount}**`),
+    ...formula.pigments.map((line) => line.dispenserAmount
+      ? `- ${line.pigmentName}: **${line.dispenserAmount}** on the dispenser (${line.displayAmount})`
+      : `- ${line.pigmentName}: **${line.displayAmount}**`),
   ];
 
   if (multiplier > 1) {
@@ -461,7 +463,7 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
     '',
     formula.mixingNotes,
     '',
-    'Colour check: the verified formulas also exist per quart and per 5 gallons on the colour card in the app. Always confirm with a cured sample — screens and lighting shift the colour.',
+    'Dispenser amounts are standard paint-tint machine steps: whole fluid ounces plus 1/48-oz clicks. The quart, gallon, and 5-gallon batches are on the colour card in the app. Always confirm with a cured sample — screens and lighting shift the colour.',
   );
 
   return {

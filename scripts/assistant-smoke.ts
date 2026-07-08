@@ -248,14 +248,24 @@ const SCENARIOS: Scenario[] = [
     checks: [lastIncludes('2 1/2 parts', '180-200 rpm')],
   },
   {
-    name: 'Tint formula for Sunny Lemon per gallon',
+    name: 'Tint formula for Sunny Lemon per gallon in dispenser units',
     prompts: ["What's the tint formula for Sunny Lemon?"],
-    checks: [lastIncludes('titanium white', '262 ml', 'cured sample')],
+    checks: [lastIncludes('titanium white', '7 oz + 24/48 oz', '222 ml', 'cured sample')],
   },
   {
     name: 'Tint formula scales to the official 5-gallon batch',
     prompts: ['Tint formula for 2001P for 5 gallons'],
-    checks: [lastIncludes('sunny lemon', '1.31 l')],
+    checks: [lastIncludes('sunny lemon', '37 oz + 24/48 oz', '1.11 l')],
+  },
+  {
+    name: 'New workbook colour Black Pearl is available',
+    prompts: ['Tint formula for Black Pearl'],
+    checks: [lastIncludes('black pearl', 'lamp black', '6 oz', '177 ml')],
+  },
+  {
+    name: 'Sea Moss now has a formula',
+    prompts: ['Tint formula for Sea Moss'],
+    checks: [lastIncludes('sea moss', 'yellow oxide')],
   },
   {
     name: 'Glossary explains efflorescence in plain words',

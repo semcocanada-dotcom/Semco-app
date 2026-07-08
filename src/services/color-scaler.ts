@@ -13,6 +13,8 @@ export interface FormulaLine {
   pigmentName: string;
   mlAmount: number;
   displayAmount: string;
+  /** Paint-dispenser dial amount (fl oz in 1/48 steps), when the source provides it. */
+  dispenserAmount?: string;
 }
 
 export interface BatchFormula {
@@ -29,18 +31,33 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
       case 'five_gallon': return p.mlPerFiveGallon;
     }
   };
+  const getOz48 = (p: PigmentRatio): number | undefined => {
+    switch (batchSize) {
+      case 'quart': return p.oz48PerQuart;
+      case 'gallon': return p.oz48PerGallon;
+      case 'five_gallon': return p.oz48PerFiveGallon;
+    }
+  };
 
   const lines: FormulaLine[] = pigments
-    .filter((p) => getMl(p) > 0)
+    .filter((p) => getMl(p) > 0 || (getOz48(p) ?? 0) > 0)
     .map((p) => {
       const ml = getMl(p);
+      const oz48 = getOz48(p);
       return {
         pigmentCode: p.pigmentCode,
         pigmentName: p.pigmentName,
         mlAmount: ml,
         displayAmount: formatMl(ml),
+        dispenserAmount: oz48 && oz48 > 0 ? formatDispenser(oz48) : undefined,
       };
     });
+
+  // A batch with no amounts is only "no pigment needed" when the colour has
+  // no amounts in ANY batch. Otherwise the source simply does not publish
+  // this batch size (true for ~106 quart formulas).
+  const hasAnyAmounts = pigments.some((p) =>
+    p.mlPerQuart > 0 || p.mlPerGallon > 0 || p.mlPerFiveGallon > 0);
 
   return {
     batchSize,
@@ -48,8 +65,23 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
     mixingNotes:
       lines.length > 0
         ? 'Add all tints to XBond liquid and mix thoroughly before applying to substrate. All tints must be from the same manufacturing lot.'
-        : 'No pigment addition required. Natural cement tone.',
+        : hasAnyAmounts
+          ? `A ${BATCH_SIZES.find((b) => b.key === batchSize)?.label.toLowerCase() ?? batchSize} batch is not published for this colour. Mix the gallon batch instead.`
+          : 'No pigment addition required. Natural cement tone.',
   };
+}
+
+/**
+ * Formats total 1/48-oz steps the way a tint dispenser is dialed:
+ * whole fluid ounces plus remaining 48ths, e.g. "1 oz + 12/48 oz".
+ */
+export function formatDispenser(oz48Total: number): string {
+  const wholeOz = Math.floor(oz48Total / 48);
+  const rest = Math.round((oz48Total - wholeOz * 48) * 100) / 100;
+  const parts: string[] = [];
+  if (wholeOz > 0) parts.push(`${wholeOz} oz`);
+  if (rest > 0) parts.push(`${rest}/48 oz`);
+  return parts.length ? parts.join(' + ') : '0';
 }
 
 function formatMl(ml: number): string {
