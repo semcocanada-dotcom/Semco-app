@@ -13,7 +13,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Opening Semco Pro…</Text>
-      <Text style={styles.subtitle}>Loading preview mode.</Text>
+      <Text style={styles.subtitle}>Loading your workspace.</Text>
     </View>
   );
 }

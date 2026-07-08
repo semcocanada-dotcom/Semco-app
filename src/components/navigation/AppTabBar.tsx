@@ -40,7 +40,8 @@ function getActiveTab(pathname: string): RouteName {
     pathname.startsWith('/admin') ||
     pathname.startsWith('/profile') ||
     pathname.startsWith('/rewards') ||
-    pathname.startsWith('/receipts')
+    pathname.startsWith('/receipts') ||
+    pathname.startsWith('/privacy')
   ) return 'more';
   return 'dashboard';
 }
