@@ -7,7 +7,9 @@ export function useNetworkStatus() {
 
   useEffect(() => {
     // Set initial status
-    getNetworkStatus().then((status) => setOnline(status.isOnline));
+    getNetworkStatus()
+      .then((status) => setOnline(status.isOnline))
+      .catch(console.error);
 
     // Subscribe to changes
     const unsubscribe = subscribeToNetworkChanges((status) => {

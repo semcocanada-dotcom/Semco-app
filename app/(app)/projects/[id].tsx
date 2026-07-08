@@ -35,6 +35,7 @@ import { STOCKED_SEALERS } from '@/constants/stocked-sealers';
 import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
+import { createLocalId } from '@/utils/id';
 
 type DetailTab = 'job' | 'spec' | 'materials' | 'photos' | 'forms';
 
@@ -122,7 +123,7 @@ export default function ProjectDetailScreen() {
     const photo = await captureProgressPhoto();
     if (!photo || !id) return;
 
-    const photoId = `photo-${Date.now()}`;
+    const photoId = createLocalId('photo');
     const photoUrl = photo.localUri;
 
     uploadPhoto(photo.localUri, 'project-photos', `${user?.id ?? 'local'}/${id}/${stage}/${photoId}.jpg`)
@@ -196,7 +197,7 @@ export default function ProjectDetailScreen() {
         .where(eq(warrantyReviews.id, warrantyReview.id));
     } else {
       await db.insert(warrantyReviews).values({
-        id: `warranty-${Date.now()}`,
+        id: createLocalId('warranty'),
         projectId: project.id,
         installerId: project.installerId,
         status: 'in_review',

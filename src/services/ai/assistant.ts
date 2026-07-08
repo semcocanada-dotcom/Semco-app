@@ -128,17 +128,6 @@ async function handleKnowledgeAssistant(
       sources: citations,
     });
 
-    if (retrieval.chunks.length > 0) {
-      return {
-        content,
-        source: 'ai_fallback',
-        isOffline: true,
-        citations,
-        debugId,
-        provider: 'local-documents',
-      };
-    }
-
     return {
       content,
       source: 'ai_fallback',

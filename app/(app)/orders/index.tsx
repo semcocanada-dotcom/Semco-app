@@ -22,6 +22,7 @@ import type { InstallerProfile } from '@/database/schema/installers';
 import { useAuthStore } from '@/store/auth';
 import { sqmToSqft } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
+import { createLocalId } from '@/utils/id';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
   draft: 'primary',
@@ -155,7 +156,7 @@ export default function OrdersScreen() {
     if (!pendingResult) return calculation?.id ?? null;
 
     const created: Calculation = {
-      id: `calc-${Date.now()}`,
+      id: createLocalId('calc'),
       projectId: project.id,
       installerId: project.installerId,
       areaSqm: pendingResult.areaSqm,
@@ -194,7 +195,7 @@ export default function OrdersScreen() {
         setOrderRequest({ ...orderRequest, status, calculationId: latestCalcId, notes: requestNotes, updatedAt: now });
       } else {
         const created = {
-          id: `order-${Date.now()}`,
+          id: createLocalId('order'),
           projectId: project.id,
           calculationId: latestCalcId,
           status,
@@ -264,7 +265,7 @@ export default function OrdersScreen() {
     }
 
     await db.insert(rewardCredits).values({
-      id: `reward-${Date.now()}`,
+      id: createLocalId('reward'),
       installerId: project.installerId,
       projectId: project.id,
       sourceType: 'order_request',

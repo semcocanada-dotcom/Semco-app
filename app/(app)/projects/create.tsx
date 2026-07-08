@@ -25,6 +25,7 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { sqftToSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
+import { createLocalId } from '@/utils/id';
 
 const FINISH_OPTIONS: { id: string; label: string }[] = [
   { id: 'matte', label: 'Matte' },
@@ -84,7 +85,7 @@ export default function CreateProjectScreen() {
 
     try {
       const areaSqft = parseFloat(totalAreaSqft);
-      const projectId = `proj-${Date.now()}`;
+      const projectId = createLocalId('proj');
       const now = new Date().toISOString();
 
       await db.insert(projects).values({

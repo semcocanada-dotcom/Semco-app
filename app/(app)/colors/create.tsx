@@ -19,6 +19,7 @@ import { colors } from '@/database/schema/colors';
 import type { PigmentRatio } from '@/database/schema/colors';
 import { Colors, Layout, Typography, Spacing, Radius } from '@/constants/theme';
 import { useAuthStore } from '@/store/auth';
+import { createLocalId } from '@/utils/id';
 
 // Common XBond tints available to installers for custom mixes
 const AVAILABLE_PIGMENTS = [
@@ -64,7 +65,7 @@ export default function CreateColorScreen() {
     setError(null);
     setIsSaving(true);
 
-    const id = `custom-${Date.now()}`;
+    const id = createLocalId('custom');
     let photoUrl: string | null = null;
     if (localUri) photoUrl = await upload(id);
 
