@@ -72,7 +72,7 @@ export default function ProductRow({ product, showCategory = false }: Props) {
       {/* Add button with confidence flash */}
       <div className="relative flex-shrink-0">
         {showProof && (
-          <div className="animate-proof-flash absolute -top-7 left-1/2 -translate-x-1/2 bg-navy text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap pointer-events-none z-10">
+          <div className="animate-proof-flash absolute -top-7 right-0 bg-navy text-white text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap pointer-events-none z-10">
             Used by {product.prosUsing} pros
           </div>
         )}

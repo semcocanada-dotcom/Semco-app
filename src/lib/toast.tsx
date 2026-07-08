@@ -26,7 +26,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <Ctx.Provider value={{ show }}>
       {children}
-      <div className="fixed bottom-[76px] left-0 right-0 z-[200] flex flex-col items-center gap-2 pointer-events-none px-4">
+      {/* Sits above the bottom nav and the floating "View Toolbox" bar */}
+      <div className="fixed bottom-[140px] left-0 right-0 z-[200] flex flex-col items-center gap-2 pointer-events-none px-4">
         {toasts.map((t) => (
           <div
             key={t.id}
