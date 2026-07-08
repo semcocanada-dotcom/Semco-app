@@ -12,7 +12,7 @@ import {
   type PortalData,
   type PortalRecord,
 } from '@/services/portal-cloud';
-import { getSignoffPdfViewUrl } from '@/services/signoff-pdf';
+import { getSignoffPdfViewUrl } from '@/services/signoffs-cloud';
 import { Badge, Button, Card, EmptyState } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 

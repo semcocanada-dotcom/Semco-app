@@ -18,6 +18,29 @@ type SyncProjectSignoffInput = {
   updatedAt: string;
 };
 
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
+
+// Kept free of pdf-lib imports so the web portal bundle can use it.
+export async function getSignoffPdfViewUrl(pdfUrl: string): Promise<string | null> {
+  // Rows synced before the bucket went private stored a full public URL.
+  if (/^https?:\/\//i.test(pdfUrl)) return pdfUrl;
+
+  try {
+    const { data, error } = await supabase.storage
+      .from('project-signoffs')
+      .createSignedUrl(pdfUrl, SIGNED_URL_TTL_SECONDS);
+
+    if (error) {
+      console.error('[signoffs-cloud] signed url error:', error);
+      return null;
+    }
+    return data.signedUrl;
+  } catch (err) {
+    console.error('[signoffs-cloud] signed url failed:', err);
+    return null;
+  }
+}
+
 export async function syncProjectSignoffToCloud(input: SyncProjectSignoffInput): Promise<boolean> {
   try {
     const { error } = await supabase
