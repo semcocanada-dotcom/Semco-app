@@ -463,7 +463,7 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
     '',
     formula.mixingNotes,
     '',
-    'Dispenser amounts are standard paint-tint machine steps: whole fluid ounces plus 1/48-oz clicks. The quart, gallon, and 5-gallon batches are on the colour card in the app. Always confirm with a cured sample — screens and lighting shift the colour.',
+    'Dispenser amounts are Semco tint machine Y units (1 Y = 35 ml) dialed in 1/48 steps. The quart, gallon, and 5-gallon batches are on the colour card in the app. Always confirm with a cured sample — screens and lighting shift the colour.',
   );
 
   return {

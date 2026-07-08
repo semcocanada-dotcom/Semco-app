@@ -250,17 +250,17 @@ const SCENARIOS: Scenario[] = [
   {
     name: 'Tint formula for Sunny Lemon per gallon in dispenser units',
     prompts: ["What's the tint formula for Sunny Lemon?"],
-    checks: [lastIncludes('titanium white', '7 oz + 24/48 oz', '222 ml', 'cured sample')],
+    checks: [lastIncludes('titanium white', '7 y + 24/48', '263 ml', 'cured sample')],
   },
   {
     name: 'Tint formula scales to the official 5-gallon batch',
     prompts: ['Tint formula for 2001P for 5 gallons'],
-    checks: [lastIncludes('sunny lemon', '37 oz + 24/48 oz', '1.11 l')],
+    checks: [lastIncludes('sunny lemon', '37 y + 24/48', '1.31 l')],
   },
   {
     name: 'New workbook colour Black Pearl is available',
     prompts: ['Tint formula for Black Pearl'],
-    checks: [lastIncludes('black pearl', 'lamp black', '6 oz', '177 ml')],
+    checks: [lastIncludes('black pearl', 'lamp black', '6 y', '210 ml')],
   },
   {
     name: 'Sea Moss now has a formula',

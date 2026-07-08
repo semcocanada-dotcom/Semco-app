@@ -86,9 +86,9 @@ function parsePigments(pigments: unknown): PigmentRatio[] {
         mlPerQuart: Number(raw.mlPerQuart ?? 0),
         mlPerGallon: Number(raw.mlPerGallon ?? 0),
         mlPerFiveGallon: Number(raw.mlPerFiveGallon ?? 0),
-        oz48PerQuart: raw.oz48PerQuart != null ? Number(raw.oz48PerQuart) : undefined,
-        oz48PerGallon: raw.oz48PerGallon != null ? Number(raw.oz48PerGallon) : undefined,
-        oz48PerFiveGallon: raw.oz48PerFiveGallon != null ? Number(raw.oz48PerFiveGallon) : undefined,
+        y48PerQuart: raw.y48PerQuart != null ? Number(raw.y48PerQuart) : undefined,
+        y48PerGallon: raw.y48PerGallon != null ? Number(raw.y48PerGallon) : undefined,
+        y48PerFiveGallon: raw.y48PerFiveGallon != null ? Number(raw.y48PerFiveGallon) : undefined,
       };
     })
     .filter((item): item is PigmentRatio => {

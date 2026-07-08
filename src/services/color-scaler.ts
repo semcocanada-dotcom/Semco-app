@@ -13,7 +13,7 @@ export interface FormulaLine {
   pigmentName: string;
   mlAmount: number;
   displayAmount: string;
-  /** Paint-dispenser dial amount (fl oz in 1/48 steps), when the source provides it. */
+  /** Semco dispenser dial amount (Y units in 1/48 steps), when the source provides it. */
   dispenserAmount?: string;
 }
 
@@ -31,25 +31,25 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
       case 'five_gallon': return p.mlPerFiveGallon;
     }
   };
-  const getOz48 = (p: PigmentRatio): number | undefined => {
+  const getY48 = (p: PigmentRatio): number | undefined => {
     switch (batchSize) {
-      case 'quart': return p.oz48PerQuart;
-      case 'gallon': return p.oz48PerGallon;
-      case 'five_gallon': return p.oz48PerFiveGallon;
+      case 'quart': return p.y48PerQuart;
+      case 'gallon': return p.y48PerGallon;
+      case 'five_gallon': return p.y48PerFiveGallon;
     }
   };
 
   const lines: FormulaLine[] = pigments
-    .filter((p) => getMl(p) > 0 || (getOz48(p) ?? 0) > 0)
+    .filter((p) => getMl(p) > 0 || (getY48(p) ?? 0) > 0)
     .map((p) => {
       const ml = getMl(p);
-      const oz48 = getOz48(p);
+      const y48 = getY48(p);
       return {
         pigmentCode: p.pigmentCode,
         pigmentName: p.pigmentName,
         mlAmount: ml,
         displayAmount: formatMl(ml),
-        dispenserAmount: oz48 && oz48 > 0 ? formatDispenser(oz48) : undefined,
+        dispenserAmount: y48 && y48 > 0 ? formatDispenser(y48) : undefined,
       };
     });
 
@@ -72,15 +72,16 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
 }
 
 /**
- * Formats total 1/48-oz steps the way a tint dispenser is dialed:
- * whole fluid ounces plus remaining 48ths, e.g. "1 oz + 12/48 oz".
+ * Formats total 1/48 steps the way the Semco tint dispenser is dialed:
+ * whole Y units plus remaining 48ths, e.g. "1 Y + 12/48". Per Semco's
+ * Color Formulation Converter, 1 Y = 35 ml.
  */
-export function formatDispenser(oz48Total: number): string {
-  const wholeOz = Math.floor(oz48Total / 48);
-  const rest = Math.round((oz48Total - wholeOz * 48) * 100) / 100;
+export function formatDispenser(y48Total: number): string {
+  const wholeY = Math.floor(y48Total / 48);
+  const rest = Math.round((y48Total - wholeY * 48) * 100) / 100;
   const parts: string[] = [];
-  if (wholeOz > 0) parts.push(`${wholeOz} oz`);
-  if (rest > 0) parts.push(`${rest}/48 oz`);
+  if (wholeY > 0) parts.push(`${wholeY} Y`);
+  if (rest > 0) parts.push(`${rest}/48`);
   return parts.length ? parts.join(' + ') : '0';
 }
 
