@@ -30,6 +30,7 @@ import { useAuth } from '@context/AuthContext';
 import { analyseReceipt, buildMileageProposal, buildMileageProposalFromAddress, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import { AppLogo } from '@components/AppLogo';
 import { DateField } from '@components/DateField';
 import { inferCategoryFromText } from '@lib/ocr';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -1492,8 +1493,11 @@ export default function ExpensesScreen() {
           <View style={{ gap: 10 }}>
             {/* Page title */}
             <View style={s.header}>
-              <Text style={s.headerTitle}>Expenses</Text>
-              {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AppLogo size={30} />
+                <Text style={s.headerTitle}>Expenses</Text>
+              </View>
+              {activeChild && <Text style={s.headerSub}>Tracking for {activeChild.name} 💙</Text>}
             </View>
 
             {/* Budget bar */}
@@ -1617,8 +1621,8 @@ export default function ExpensesScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  header:      { gap: 3, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
   listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
 

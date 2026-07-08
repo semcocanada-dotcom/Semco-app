@@ -14,6 +14,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
+import { AppLogo } from '@components/AppLogo';
 import { supabase } from '@lib/supabase';
 import type { Expense, MileageLog, ProviderCategory, Child, FundingYear } from '@lib/types';
 import { useChild } from '@context/ChildContext';
@@ -412,8 +413,11 @@ export default function ReportsScreen() {
 
         {/* Header */}
         <View style={s.header}>
-          <Text style={s.headerTitle}>Reports</Text>
-          {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <AppLogo size={30} />
+            <Text style={s.headerTitle}>Reports</Text>
+          </View>
+          {activeChild && <Text style={s.headerSub}>Grant summary for {activeChild.name} 💙</Text>}
         </View>
 
         {loading ? (
@@ -572,11 +576,15 @@ export default function ReportsScreen() {
 
 const s = StyleSheet.create({
   scroll:   { paddingHorizontal: 16, paddingBottom: 48, paddingTop: 8, gap: 10 },
-  header:   { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  header:   { gap: 3, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
 
-  empty:      { alignItems: 'center', paddingTop: 80, gap: 6 },
+  empty:      {
+    alignItems: 'center', gap: 6, marginTop: 24,
+    backgroundColor: Colors.surface, borderRadius: 18, padding: 32,
+    borderWidth: 1, borderColor: Colors.border,
+  },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
   emptySub:   { fontSize: 14, color: Colors.textMuted },
 

@@ -41,6 +41,31 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
+      {/* Decorative brand backdrop — soft tinted blobs + confetti dots,
+          matching the Home hero's visual language. Purely presentational. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }}>
+        <View style={{ position: 'absolute', top: -90, left: -70, width: 260, height: 260, borderRadius: 999, backgroundColor: '#EFEAFF' }} />
+        <View style={{ position: 'absolute', top: 40, right: -110, width: 230, height: 230, borderRadius: 999, backgroundColor: '#E8EEFF' }} />
+        <View style={{ position: 'absolute', bottom: -110, right: -60, width: 280, height: 280, borderRadius: 999, backgroundColor: '#EFEAFF' }} />
+        <View style={{ position: 'absolute', bottom: 60, left: -90, width: 190, height: 190, borderRadius: 999, backgroundColor: '#E6F7F1' }} />
+        {[
+          { x: 46,  y: 130, size: 8,  color: '#7C5CFC' },
+          { x: 320, y: 90,  size: 6,  color: '#22C55E' },
+          { x: 360, y: 210, size: 7,  color: '#3B82F6' },
+          { x: 28,  y: 260, size: 6,  color: '#F59E0B' },
+          { x: 300, y: 300, size: 5,  color: '#EC4899' },
+          { x: 70,  y: 350, size: 5,  color: '#EF4444' },
+        ].map((d, i) => (
+          <View
+            key={i}
+            style={{
+              position: 'absolute', left: d.x, top: d.y,
+              width: d.size, height: d.size, borderRadius: 999,
+              backgroundColor: d.color, opacity: 0.55,
+            }}
+          />
+        ))}
+      </View>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

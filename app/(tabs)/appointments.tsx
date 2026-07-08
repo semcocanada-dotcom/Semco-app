@@ -10,6 +10,7 @@ import * as CalendarAPI from 'expo-calendar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO, isFuture, isPast } from 'date-fns';
 import { Colors } from '@constants/colors';
+import { AppLogo } from '@components/AppLogo';
 import { DateField } from '@components/DateField';
 import { supabase } from '@lib/supabase';
 import type { Appointment, Provider, ProviderCategory } from '@lib/types';
@@ -508,8 +509,11 @@ export default function AppointmentsScreen() {
         ListHeaderComponent={() => (
           <View style={{ gap: 10 }}>
             <View style={s.header}>
-              <Text style={s.headerTitle}>Calendar</Text>
-              {activeChild && <Text style={s.headerSub}>{activeChild.name}</Text>}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <AppLogo size={30} />
+                <Text style={s.headerTitle}>Calendar</Text>
+              </View>
+              {activeChild && <Text style={s.headerSub}>Appointments for {activeChild.name} 💙</Text>}
             </View>
 
             {upcoming.length === 0 && !loading && (
@@ -592,8 +596,8 @@ export default function AppointmentsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  header:      { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 8, paddingBottom: 4 },
-  headerTitle: { fontSize: 24, fontWeight: '700', color: Colors.textPrimary },
+  header:      { gap: 3, paddingTop: 8, paddingBottom: 4 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
   headerSub:   { fontSize: 14, color: Colors.textMuted },
   listContent: { paddingHorizontal: 16, paddingBottom: 110, gap: 0, paddingTop: 8 },
   sectionLabel:{ fontSize: 11, fontWeight: '700', color: Colors.textMuted, letterSpacing: 0.6, marginTop: 4 },
