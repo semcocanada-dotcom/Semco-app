@@ -142,6 +142,29 @@ function extractFocusedQuestion(message: string): string {
   return followUp?.[1]?.trim() || message;
 }
 
+/** Routing gate: the profile wants a clarifying question before any answer. */
+export function shouldAskForRequiredInputs(profile: ReasoningProfile): boolean {
+  if (!profile.localAnswer || profile.missingInputs.length === 0) return false;
+
+  return ['prep_decision', 'install_build_up', 'material_estimate'].includes(profile.intent);
+}
+
+/** Routing gate: the intent is covered by a deterministic local field answer. */
+export function shouldUseLocalFieldAnswer(profile: ReasoningProfile): boolean {
+  return [
+    'prep_decision',
+    'install_build_up',
+    'shower_substrate',
+    'x_bond_finish',
+    'liquid_membrane_application',
+    'sealer_application',
+    'membrane_quantity',
+    'warranty_photos',
+    'takeoff_scope',
+    'material_estimate',
+  ].includes(profile.intent) && Boolean(profile.localAnswer);
+}
+
 export function formatReasoningContext(profile: ReasoningProfile): string {
   return profile.contextNotes
     ? `<semco_reasoning>\n${profile.contextNotes}\n</semco_reasoning>`

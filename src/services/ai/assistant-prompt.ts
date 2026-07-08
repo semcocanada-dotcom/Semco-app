@@ -143,9 +143,13 @@ export function buildGroundedPrompt(
   history: ConversationMessage[],
   reasoningContext = '',
   resolvedQuestion?: string,
+  jobContextLine = '',
 ): string {
   return [
     `Installer question:\n${redactPrivateText(question)}`,
+    jobContextLine
+      ? `Current job context (extracted from this conversation — treat these as confirmed by the installer unless the new question changes them):\n${jobContextLine}`
+      : '',
     resolvedQuestion && resolvedQuestion.trim() !== question.trim()
       ? `Resolved follow-up context:\n${redactPrivateText(resolvedQuestion)}`
       : '',
@@ -159,6 +163,8 @@ The installer needs a useful field answer. Avoid vague summaries. Use the most s
 
 Quality bar:
 - The answer should feel like a knowledgeable human instructor is walking the installer through the work.
+- If a current job context is supplied, the installer is continuing the same job. Do not treat the question as brand new, do not re-ask for facts already in the job context, and keep substrate/system/finish consistent with it.
+- If the follow-up is ambiguous even with the job context, ask one short clarifying question instead of guessing or dumping unrelated document text.
 - Make it easy to scan on an iPhone: short step headings, short paragraphs, and no giant bullet walls.
 - Do not start by listing every possible Semco system unless the installer asked for a comparison.
 - If the question is broad, state your working assumption and then give the best confirmed path.

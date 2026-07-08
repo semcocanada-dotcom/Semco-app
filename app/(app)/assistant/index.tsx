@@ -19,6 +19,7 @@ import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
 import { SavedChatsSheet } from '@/components/assistant/SavedChatsSheet';
+import { ReplyChips } from '@/components/assistant/ReplyChips';
 import { getConfiguredProviderStatus } from '@/services/ai/providers';
 import { lightImpactHaptic, mediumImpactHaptic, selectionHaptic } from '@/utils/haptics';
 import { isSemcoAdminUser } from '@/services/admin-access';
@@ -56,6 +57,17 @@ export default function AssistantScreen() {
     setInputText('');
     send(text);
   };
+
+  const handleReplyChip = (reply: string) => {
+    if (isLoading) return;
+    mediumImpactHaptic();
+    send(reply);
+  };
+
+  const lastMessage = messages[messages.length - 1];
+  const chipSource = !isLoading && lastMessage?.role === 'assistant' ? lastMessage : null;
+  const quickReplies = chipSource?.quickReplies ?? [];
+  const followUps = quickReplies.length === 0 ? chipSource?.suggestedFollowUps ?? [] : [];
 
   const handleBack = () => {
     lightImpactHaptic();
@@ -176,7 +188,15 @@ export default function AssistantScreen() {
           renderItem={({ item }) => <ChatBubble message={item} />}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           contentContainerStyle={styles.messageList}
-          ListFooterComponent={isLoading ? <TypingIndicator /> : null}
+          ListFooterComponent={
+            isLoading ? (
+              <TypingIndicator />
+            ) : quickReplies.length > 0 ? (
+              <ReplyChips replies={quickReplies} variant="answer" onSelect={handleReplyChip} />
+            ) : followUps.length > 0 ? (
+              <ReplyChips replies={followUps} variant="suggestion" onSelect={handleReplyChip} />
+            ) : null
+          }
         />
       )}
 

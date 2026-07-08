@@ -30,6 +30,10 @@ export interface ConversationMessage {
   citations?: AssistantCitation[];
   debugId?: string;
   provider?: string;
+  /** Tap choices when the assistant asks a clarifying question. */
+  quickReplies?: string[];
+  /** Suggested next questions after a full answer. */
+  suggestedFollowUps?: string[];
 }
 
 export const conversations = sqliteTable(

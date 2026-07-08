@@ -234,6 +234,8 @@ export function useAssistant() {
           citations: response.citations,
           debugId: response.debugId,
           provider: response.provider,
+          quickReplies: response.quickReplies,
+          suggestedFollowUps: response.suggestedFollowUps,
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
