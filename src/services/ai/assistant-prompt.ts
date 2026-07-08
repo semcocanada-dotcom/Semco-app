@@ -37,7 +37,7 @@ Tone and teaching style:
 - Assume the installer may be new to the trade. The first time a trade term appears (substrate, scratch coat, efflorescence, pot life, mil, dwell time), add a short plain-words explanation in parentheses.
 - Explain in one short sentence why each step matters, so a learner understands the reason and not just the action.
 - Use short sentences. Never leave jargon unexplained.
-- When any math is involved (coverage, mixing, dilution), show the arithmetic in plain steps, e.g. "660 sq ft / 75 sq ft per bag = 8.8, so order 9 bags".
+- When any math is involved (coverage, mixing, dilution), show the arithmetic in plain steps, e.g. "660 sq ft / 75 sq ft finished per bag = 8.8, so order 9 bags".
 - Write in short field-ready sections, not a long datasheet-style bullet dump.
 - Explain what to do, why it matters, and what to check before moving to the next step.
 - Use plain jobsite language instead of datasheet language when possible.

@@ -122,7 +122,7 @@ const MIX_RULES: MixRule[] = [
     needsMixWord: true,
     liquidGalPerBag: 2,
     lines: [
-      'The standard X-Bond Stone mix is **2 gallons of X-Bond Liquid per 50 lb bag of X-Bond Stone**, which finishes about 75 sq ft at 1/8 inch.',
+      'The standard X-Bond Stone mix is **2 gallons of X-Bond Liquid per 50 lb bag of X-Bond Stone**. One bag covers about 75 sq ft of finished system at 1/8 inch — that is the complete build-up with all coats together, not per coat.',
       '',
       'Pour the liquid in first, then add the stone while mixing with a square paddle at low speed (180-200 RPM). Mix until smooth with no dry pockets.',
     ],
@@ -240,7 +240,7 @@ function mixRatioAnswer(normalized: string): MathAnswer | null {
         content: [
           'X-Bond mixes change slightly by coat. All of them: liquid in the bucket first, then stone, square paddle at low speed (180-200 RPM), mix until smooth.',
           '',
-          '**Full bag mix:** 2 gal X-Bond Liquid per 50 lb bag (finishes about 75 sq ft at 1/8 inch).',
+          '**Full bag mix:** 2 gal X-Bond Liquid per 50 lb bag. One bag covers about 75 sq ft of finished system at 1/8 inch — the complete build-up, not per coat.',
           '',
           '**Scratch / base coat:** 1 part Liquid to 2 parts Stone. This coat grabs the substrate.',
           '',
@@ -287,7 +287,9 @@ const COVERAGE_FACTS: { match: string[]; unitWords: string[]; lines: string[] }[
     match: ['x-bond', 'xbond', 'x bond', 'bag'],
     unitWords: ['bag'],
     lines: [
-      'One 50 lb bag of X-Bond Stone finishes about **75 sq ft at 1/8 inch thickness**, mixed with 2 gallons of X-Bond Liquid.',
+      'One 50 lb bag of X-Bond Stone covers about **75 sq ft of finished system at 1/8 inch**, mixed with 2 gallons of X-Bond Liquid.',
+      '',
+      'That 75 sq ft is for the complete build-up — all the X-Bond coats together — not per coat.',
       '',
       'Rougher substrates, thicker builds, and heavy texture eat into that number, which is why orders carry a waste factor.',
     ],
@@ -610,13 +612,15 @@ function quantityAnswer(
       ? `${formatNumber(adjustedSqft)} sq ft ÷ ~${formatNumber(Math.round(perUnit))} sq ft per ${layer.packLabel ?? 'unit'} = ${formatNumber(Math.round(exact * 10) / 10)}`
       : '';
 
+    const coatsNote = layer.productSku === 'XBOND'
+      ? 'Covers the complete system build-up, not per coat.'
+      : layer.coats > 1
+        ? `Applied in ${layer.coats} coats — the coverage number already includes all coats.`
+        : '';
     lines.push(
       '',
       `**${layer.productName}** — ${layer.purchaseLabel ?? layer.quantityLabel}`,
-      [
-        mathLine,
-        layer.coats > 0 ? `${layer.coats} coat${layer.coats > 1 ? 's' : ''}.` : '',
-      ].filter(Boolean).join(' → rounded up to the package size. '),
+      [mathLine, coatsNote].filter(Boolean).join(' → rounded up to the package size. '),
     );
   }
 

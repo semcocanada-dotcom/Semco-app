@@ -206,7 +206,7 @@ const SCENARIOS: Scenario[] = [
   {
     name: 'Bag coverage answers the verified 75 sq ft figure',
     prompts: ['How much area does one bag cover?'],
-    checks: [lastIncludes('75 sq ft')],
+    checks: [lastIncludes('75 sq ft', 'complete', 'not per coat')],
   },
   {
     name: 'Liquid Membrane quantity asks for the area',
