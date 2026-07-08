@@ -10,6 +10,7 @@ import { useCart } from "@/lib/store";
 import { useToast } from "@/lib/toast";
 import ProductImage from "./ProductImage";
 import AvatarStack from "./AvatarStack";
+import Price from "./Price";
 
 interface Props {
   product: Product | null;
@@ -72,7 +73,9 @@ export default function ProofSheet({ product, prosCount, onClose }: Props) {
           <div className="flex-1 min-w-0">
             <p className="text-[16px] font-bold text-text1 leading-snug">{product.name}</p>
             <p className="text-[13px] text-text2 mt-0.5">{product.brand} · {product.unit}</p>
-            <p className="text-[16px] font-bold text-text1 mt-1.5">${product.price.toFixed(2)}</p>
+            <div className="mt-1.5">
+              <Price product={product} size="md" />
+            </div>
           </div>
           <button
             onClick={close}
@@ -97,9 +100,8 @@ export default function ProofSheet({ product, prosCount, onClose }: Props) {
           <button
             onClick={handleAdd}
             className={`spring-tap w-full py-3.5 rounded-2xl text-[16px] font-semibold text-white transition-colors duration-200 ${
-              isAdded ? "bg-success" : ""
+              isAdded ? "bg-success" : "bg-cta"
             }`}
-            style={isAdded ? undefined : { background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
           >
             {isAdded ? (
               <span className="flex items-center justify-center gap-2 animate-pop-in">

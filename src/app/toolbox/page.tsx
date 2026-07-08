@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/store";
+import { storeConfig } from "@/lib/config";
 import ToolboxItem from "@/components/ToolboxItem";
 import SmartSuggestions from "@/components/SmartSuggestions";
 
@@ -11,7 +12,7 @@ type PaymentMethod = "account" | "card";
 type DeliveryMethod = "pickup" | "delivery";
 
 export default function ToolboxPage() {
-  const { items, total, clearCart } = useCart();
+  const { items, total, savedTotal, clearCart } = useCart();
   const router = useRouter();
   const [payment, setPayment] = useState<PaymentMethod>("account");
   const [delivery, setDelivery] = useState<DeliveryMethod>("pickup");
@@ -38,6 +39,9 @@ export default function ToolboxPage() {
     } catch {}
   }, []);
 
+  const deliveryFee = delivery === "delivery" && total < storeConfig.freeDeliveryThreshold ? 25 : 0;
+  const grandTotal = total * (1 + storeConfig.taxRate) + deliveryFee;
+
   function handlePlaceOrder() {
     if (placing || items.length === 0) return;
     setPlacing(true);
@@ -50,7 +54,7 @@ export default function ToolboxPage() {
     return (
       <div className="min-h-screen bg-bg flex flex-col animate-page-in">
         <div className="bg-surface border-b border-separator px-4 pt-14 pb-4">
-          <h1 className="text-[22px] font-bold text-text1">Toolbox</h1>
+          <h1 className="text-[24px] font-bold text-text1">Toolbox</h1>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center py-20 animate-scale-in">
           <div className="w-16 h-16 bg-bg rounded-full flex items-center justify-center mb-4 border border-separator">
@@ -65,7 +69,7 @@ export default function ToolboxPage() {
           <p className="text-[14px] text-text2 mt-1 mb-6">Add items to get started</p>
           <Link
             href="/search"
-            className="spring-tap bg-navy text-white text-[15px] font-semibold px-6 py-3 rounded-full shadow-card"
+            className="spring-tap bg-cta text-white text-[15px] font-semibold px-6 py-3 rounded-full shadow-card"
           >
             Browse Products
           </Link>
@@ -79,7 +83,7 @@ export default function ToolboxPage() {
       {/* Header */}
       <div className="bg-surface border-b border-separator px-4 pt-14 pb-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-[22px] font-bold text-text1">Toolbox</h1>
+          <h1 className="text-[24px] font-bold text-text1">Toolbox</h1>
           <button onClick={clearCart} className="spring-tap text-[14px] text-text2 font-medium">
             Clear
           </button>
@@ -88,7 +92,7 @@ export default function ToolboxPage() {
 
       <div className="py-4 space-y-3">
         {/* Toolbox items */}
-        <div className="bg-surface rounded-2xl mx-4 overflow-hidden border border-separator shadow-card">
+        <div className="bg-surface rounded-3xl mx-4 overflow-hidden border border-separator shadow-card">
           {items.map((item, idx) => (
             <div
               key={item.product.id}
@@ -107,7 +111,7 @@ export default function ToolboxPage() {
         {/* Payment method */}
         <div className="mx-4">
           <p className="text-[12px] font-semibold text-text2 uppercase tracking-widest mb-2">Payment</p>
-          <div className="bg-surface rounded-2xl border border-separator shadow-card overflow-hidden">
+          <div className="bg-surface rounded-3xl border border-separator shadow-card overflow-hidden">
             <div className="flex gap-1.5 p-1.5 bg-bg rounded-2xl m-1">
               <button
                 onClick={() => setPayment("account")}
@@ -125,11 +129,13 @@ export default function ToolboxPage() {
             {payment === "account" ? (
               <div className="px-4 py-3 flex items-center justify-between animate-fade-in">
                 <div>
-                  <p className="text-[14px] font-medium text-text1">Mike&apos;s Drywall</p>
-                  <p className="text-[12px] text-text2">Net-30 account</p>
+                  <p className="text-[14px] font-medium text-text1">{storeConfig.accountCompany}</p>
+                  <p className="text-[12px] text-text2">{storeConfig.accountType} account</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[14px] font-semibold text-success">$4,200.00</p>
+                  <p className="text-[14px] font-semibold text-success">
+                    ${storeConfig.accountCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
                   <p className="text-[11px] text-text2">available</p>
                 </div>
               </div>
@@ -140,8 +146,8 @@ export default function ToolboxPage() {
                     <span className="text-[9px] font-bold text-white">VISA</span>
                   </div>
                   <div>
-                    <p className="text-[14px] font-medium text-text1">•••• 4291</p>
-                    <p className="text-[12px] text-text2">Expires 09/27</p>
+                    <p className="text-[14px] font-medium text-text1">•••• {storeConfig.creditCardLast4}</p>
+                    <p className="text-[12px] text-text2">Expires {storeConfig.creditCardExpiry}</p>
                   </div>
                 </div>
                 <button className="text-[13px] text-brand font-medium">Change</button>
@@ -153,7 +159,7 @@ export default function ToolboxPage() {
         {/* Delivery method */}
         <div className="mx-4">
           <p className="text-[12px] font-semibold text-text2 uppercase tracking-widest mb-2">Delivery</p>
-          <div className="bg-surface rounded-2xl border border-separator shadow-card overflow-hidden">
+          <div className="bg-surface rounded-3xl border border-separator shadow-card overflow-hidden">
             <div className="flex gap-1.5 p-1.5 bg-bg rounded-2xl m-1">
               <button
                 onClick={() => setDelivery("pickup")}
@@ -170,20 +176,22 @@ export default function ToolboxPage() {
             </div>
             {delivery === "pickup" ? (
               <div className="px-4 py-3 animate-fade-in">
-                <p className="text-[14px] font-medium text-text1">6030 50th Street</p>
-                <p className="text-[12px] text-text2">Edmonton, AB · Ready today after 2pm</p>
+                <p className="text-[14px] font-medium text-text1">{storeConfig.pickupLocation}</p>
+                <p className="text-[12px] text-text2">{storeConfig.pickupReady}</p>
               </div>
             ) : (
               <div className="px-4 py-3 animate-fade-in">
                 <p className="text-[14px] font-medium text-text1">12450 Maple Ridge Rd</p>
-                <p className="text-[12px] text-text2">Next business day · Free over $500</p>
+                <p className="text-[12px] text-text2">
+                  {storeConfig.deliveryInfo} · Free over ${storeConfig.freeDeliveryThreshold}
+                </p>
               </div>
             )}
           </div>
         </div>
 
         {/* Order summary */}
-        <div className="mx-4 bg-surface rounded-2xl border border-separator shadow-card overflow-hidden">
+        <div className="mx-4 bg-surface rounded-3xl border border-separator shadow-card overflow-hidden">
           <div className="px-4 py-3 space-y-2">
             <div className="flex justify-between text-[14px]">
               <span className="text-text2">Subtotal</span>
@@ -191,38 +199,43 @@ export default function ToolboxPage() {
                 ${total.toFixed(2)}
               </span>
             </div>
+            {savedTotal > 0 && (
+              <div className="flex justify-between text-[14px]">
+                <span className="text-success font-medium">You&apos;re saving</span>
+                <span key={`save-${totalKey}`} className="font-bold text-success tabular-nums animate-value-update">
+                  −${savedTotal.toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between text-[14px]">
-              <span className="text-text2">GST (5%)</span>
+              <span className="text-text2">GST ({(storeConfig.taxRate * 100).toFixed(0)}%)</span>
               <span key={`gst-${totalKey}`} className="font-medium text-text1 tabular-nums animate-value-update">
-                ${(total * 0.05).toFixed(2)}
+                ${(total * storeConfig.taxRate).toFixed(2)}
               </span>
             </div>
-            {delivery === "delivery" && total < 500 && (
+            {deliveryFee > 0 && (
               <div className="flex justify-between text-[14px]">
                 <span className="text-text2">Delivery</span>
-                <span className="font-medium text-text1">$25.00</span>
+                <span className="font-medium text-text1">${deliveryFee.toFixed(2)}</span>
               </div>
             )}
             <div className="h-px bg-separator" />
             <div className="flex justify-between">
               <span className="text-[16px] font-semibold text-text1">Total</span>
               <span key={`tot-${totalKey}`} className="text-[16px] font-bold text-text1 tabular-nums animate-value-update">
-                ${(
-                  total * 1.05 +
-                  (delivery === "delivery" && total < 500 ? 25 : 0)
-                ).toFixed(2)} CAD
+                ${grandTotal.toFixed(2)} CAD
               </span>
             </div>
           </div>
         </div>
 
-        {/* Place Order */}
+        {/* Place Order — total on the button, one-glance checkout */}
         <div className="mx-4 pb-2">
           <button
             onClick={handlePlaceOrder}
             disabled={placing}
-            className="spring-tap w-full py-4 rounded-2xl text-[17px] font-semibold text-white shadow-card-lg relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)", opacity: placing ? 0.85 : 1 }}
+            className="spring-tap bg-cta w-full py-4 rounded-2xl text-[17px] font-semibold text-white shadow-card-lg relative overflow-hidden"
+            style={{ opacity: placing ? 0.85 : 1 }}
           >
             {placing && (
               <span
@@ -234,7 +247,9 @@ export default function ToolboxPage() {
                 }}
               />
             )}
-            <span className="relative">{placing ? "Placing Order…" : "Place Order"}</span>
+            <span className="relative">
+              {placing ? "Placing Order…" : `Place Order · $${grandTotal.toFixed(2)}`}
+            </span>
           </button>
           <p className="text-[12px] text-text2 text-center mt-2">
             Order will be confirmed via SMS

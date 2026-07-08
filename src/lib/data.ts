@@ -7,19 +7,19 @@ import { Product, CartItem, SavedJob, Kit } from "./types";
 export const products: Product[] = [
   {
     id: 1, name: "All-Purpose Drywall Compound", sku: "BTT-001",
-    price: 24.99, unit: "4.5L pail", category: "Compound",
+    price: 24.99, salePrice: 19.99, badge: "bestseller", unit: "4.5L pail", category: "Compound",
     brand: "CGC", prosUsing: 34, inStock: true,
     description: "Ready-mixed all-purpose compound for taping, topping, and texturing. Smooth consistency, easy sanding.",
   },
   {
     id: 2, name: "Paper Joint Tape", sku: "BTT-002",
-    price: 8.49, unit: "75m roll", category: "Tape",
+    price: 8.49, salePrice: 6.99, badge: "bestseller", unit: "75m roll", category: "Tape",
     brand: "CGC", prosUsing: 41, inStock: true,
     description: "High-strength paper tape for drywall joints. Resists shrinking and cracking.",
   },
   {
     id: 3, name: "Coarse Thread Drywall Screws", sku: "BTT-003",
-    price: 12.99, unit: "1lb box", category: "Fasteners",
+    price: 12.99, salePrice: 9.99, unit: "1lb box", category: "Fasteners",
     brand: "Grabber", prosUsing: 28, inStock: true,
     description: "Coarse thread screws for wood framing. Bugle head, phosphate coated.",
   },
@@ -37,7 +37,7 @@ export const products: Product[] = [
   },
   {
     id: 6, name: "Finishing Trowel 10\"", sku: "BTT-006",
-    price: 34.99, unit: "each", category: "Tools",
+    price: 34.99, salePrice: 27.99, unit: "each", category: "Tools",
     brand: "Marshalltown", prosUsing: 31, inStock: true,
     description: "Professional stainless steel finishing trowel with soft-grip handle. 10\" blade.",
   },
@@ -67,7 +67,7 @@ export const products: Product[] = [
   },
   {
     id: 11, name: "Setting-Type Compound", sku: "BTT-011",
-    price: 18.49, unit: "4kg bag", category: "Compound",
+    price: 18.49, badge: "new", unit: "4kg bag", category: "Compound",
     brand: "Durabond", prosUsing: 20, inStock: true,
     description: "Fast-setting chemical compound. Sets in 20 minutes. Ideal for fills and repairs.",
   },
@@ -152,3 +152,26 @@ export const proTools = [
 
 // ─── Recent items ─────────────────────────────────────────────────────────────
 export const recentItems: Product[] = [products[0], products[1], products[2]];
+
+// ─── Deals — any product with a salePrice shows up here automatically ────────
+export const deals: Product[] = products.filter((p) => p.salePrice !== undefined);
+
+// ─── Promos — swipeable cards on the home screen ─────────────────────────────
+export const promos = [
+  {
+    label: "Deal of the Week",
+    title: "FinishPro Knives",
+    subtitle: "Starting at $2.99 · 5 styles",
+    badge: "Save 40%",
+    gradient: "linear-gradient(135deg, var(--brand-from), var(--brand-to))",
+    href: "/search?category=Tools",
+  },
+  {
+    label: "New Arrival",
+    title: "Setting-Type Compound",
+    subtitle: "$18.49 · sets in 20 minutes",
+    badge: "Just In",
+    gradient: "linear-gradient(135deg, #7C3AED, #4F1D96)",
+    href: "/product/11",
+  },
+];

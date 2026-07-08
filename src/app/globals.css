@@ -5,18 +5,34 @@
 @tailwind utilities;
 
 :root {
+  /* ── Vendor theme — edit these (plus tailwind.config.ts tokens) to re-skin ── */
   --color-navy:        #1C3A6E;
   --color-navy-dark:   #142B52;
   --color-navy-light:  #E8EDF6;
-  --color-brand:       #1A8FA8;
-  --color-brand-dark:  #136F84;
-  --color-brand-light: #E6F5F8;
+  --color-brand:       #1B84AD;
+  --color-brand-dark:  #14688A;
+  --color-brand-light: #E5F3F8;
+  --color-deal:        #E11D48;
   --color-bg:          #F5F5F7;
   --color-surface:     #FFFFFF;
   --color-text1:       #1D1D1F;
   --color-text2:       #6E6E73;
   --color-separator:   #E5E5EA;
   --color-success:     #22C55E;
+
+  /* CTA + hero gradients — one place to change for a new vendor */
+  --cta-from: #1C3A6E;
+  --cta-to:   #142B52;
+  --brand-from: #1B84AD;
+  --brand-to:   #14688A;
+}
+
+/* Primary CTA surface (buttons, hero header) */
+.bg-cta {
+  background: linear-gradient(135deg, var(--cta-from), var(--cta-to));
+}
+.bg-brand-grad {
+  background: linear-gradient(135deg, var(--brand-from), var(--brand-to));
 }
 
 * {

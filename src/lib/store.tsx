@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from "react";
 import { CartItem, Product } from "./types";
 import { lastOrder } from "./data";
+import { effectivePrice, savings } from "./pricing";
 
 interface CartState {
   items: CartItem[];
@@ -20,6 +21,7 @@ interface CartContextValue {
   items: CartItem[];
   itemCount: number;
   total: number;
+  savedTotal: number; // sum of deal savings across the cart
   addItem: (product: Product) => void;
   addMany: (items: CartItem[]) => void;
   removeItem: (productId: number) => void;
@@ -76,12 +78,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart  = useCallback(() => dispatch({ type: "CLEAR_CART" }), []);
   const reorder    = useCallback(() => dispatch({ type: "REORDER" }), []);
 
-  const itemCount = state.items.reduce((sum, i) => sum + i.quantity, 0);
-  const total     = state.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const itemCount  = state.items.reduce((sum, i) => sum + i.quantity, 0);
+  const total      = state.items.reduce((sum, i) => sum + effectivePrice(i.product) * i.quantity, 0);
+  const savedTotal = state.items.reduce((sum, i) => sum + savings(i.product) * i.quantity, 0);
 
   const value = useMemo<CartContextValue>(
-    () => ({ items: state.items, itemCount, total, addItem, addMany, removeItem, setQuantity, clearCart, reorder }),
-    [state.items, itemCount, total, addItem, addMany, removeItem, setQuantity, clearCart, reorder]
+    () => ({ items: state.items, itemCount, total, savedTotal, addItem, addMany, removeItem, setQuantity, clearCart, reorder }),
+    [state.items, itemCount, total, savedTotal, addItem, addMany, removeItem, setQuantity, clearCart, reorder]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

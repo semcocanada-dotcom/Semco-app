@@ -2,16 +2,17 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { CartProvider } from "@/lib/store";
 import { ToastProvider } from "@/lib/toast";
+import { storeConfig } from "@/lib/config";
 import BottomNav from "@/components/BottomNav";
 
 export const metadata: Metadata = {
-  title: "Bart's Taping Tools",
-  description: "Order taping tools and supplies fast",
+  title: storeConfig.nameFull,
+  description: "Order supplies fast",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Bart's",
+    title: storeConfig.name,
   },
 };
 

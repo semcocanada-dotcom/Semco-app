@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/store";
+import { storeConfig } from "@/lib/config";
 
 const statuses = [
   { key: "received", label: "Received", sub: "Just now", active: true },
@@ -14,11 +15,11 @@ export default function ConfirmationPage() {
   const { clearCart } = useCart();
   const router = useRouter();
   const [phase, setPhase] = useState(0);
-  const [orderNumber, setOrderNumber] = useState("BTT-00000");
+  const [orderNumber, setOrderNumber] = useState(`${storeConfig.orderPrefix}-00000`);
 
   // Sequence: 1 = circle + check draw, 2 = headline, 3 = status card + actions
   useEffect(() => {
-    setOrderNumber(`BTT-${Math.floor(10000 + Math.random() * 90000)}`);
+    setOrderNumber(`${storeConfig.orderPrefix}-${Math.floor(10000 + Math.random() * 90000)}`);
     clearCart();
     const t1 = setTimeout(() => setPhase(1), 60);
     const t2 = setTimeout(() => setPhase(2), 480);
@@ -151,8 +152,7 @@ export default function ConfirmationPage() {
           <div className="w-full space-y-3">
             <button
               onClick={() => router.push("/")}
-              className="spring-tap w-full py-4 text-white rounded-2xl text-[17px] font-semibold shadow-card-lg"
-              style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
+              className="spring-tap bg-cta w-full py-4 text-white rounded-2xl text-[17px] font-semibold shadow-card-lg"
             >
               Done
             </button>

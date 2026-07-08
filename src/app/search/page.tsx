@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { products } from "@/lib/data";
-import ProductRow from "@/components/ProductRow";
+import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/lib/store";
 
 const categories = ["All", "Compound", "Tape", "Fasteners", "Beads", "Finishing", "Tools"];
@@ -39,7 +39,7 @@ function SearchContent() {
       {/* Search header */}
       <div className="bg-surface border-b border-separator sticky top-0 z-40">
         <div className="flex items-center gap-3 px-4 pt-14 pb-3">
-          <div className="flex-1 flex items-center gap-2.5 bg-bg rounded-xl px-3.5 py-2.5 border border-separator">
+          <div className="flex-1 flex items-center gap-2.5 bg-bg rounded-2xl px-3.5 py-2.5 border border-separator">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-text2 flex-shrink-0">
               <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
               <path d="M11 11L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -79,7 +79,7 @@ function SearchContent() {
               onClick={() => { setActiveCategory(cat); setAnimKey((k) => k + 1); }}
               className={`spring-tap flex-shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-colors duration-150 ${
                 activeCategory === cat
-                  ? "bg-brand text-white shadow-card"
+                  ? "bg-navy text-white shadow-card"
                   : "bg-bg text-text2 border border-separator"
               }`}
             >
@@ -89,8 +89,8 @@ function SearchContent() {
         </div>
       </div>
 
-      {/* Results — rows re-stagger as the query changes */}
-      <div className="py-2">
+      {/* Results — bold 2-col card grid, re-staggers as the query changes */}
+      <div className="px-4 py-4">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center animate-fade-up">
             <div className="w-14 h-14 bg-bg rounded-full flex items-center justify-center mb-3 border border-separator">
@@ -103,15 +103,14 @@ function SearchContent() {
             <p className="text-[14px] text-text2 mt-1">Try a different name or browse a category</p>
           </div>
         ) : (
-          <div className="bg-surface rounded-2xl mx-4 overflow-hidden border border-separator shadow-card">
+          <div className="grid grid-cols-2 gap-3">
             {filtered.map((product, idx) => (
               <div
                 key={`${animKey}_${product.id}`}
                 className="animate-fade-up"
-                style={{ animationDelay: `${Math.min(idx, 8) * 22}ms` }}
+                style={{ animationDelay: `${Math.min(idx, 8) * 24}ms` }}
               >
-                {idx > 0 && <div className="h-px bg-separator" />}
-                <ProductRow product={product} showCategory={query.trim() === "" && activeCategory === "All"} />
+                <ProductCard product={product} />
               </div>
             ))}
           </div>
@@ -123,8 +122,7 @@ function SearchContent() {
         <div className="fixed bottom-20 left-0 right-0 px-4 pointer-events-none z-30">
           <button
             onClick={() => router.push("/toolbox")}
-            className="spring-tap w-full max-w-lg mx-auto flex items-center justify-between text-white rounded-2xl px-5 py-3.5 shadow-card-lg pointer-events-auto animate-slide-up"
-            style={{ background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
+            className="spring-tap bg-cta w-full max-w-lg mx-auto flex items-center justify-between text-white rounded-2xl px-5 py-3.5 shadow-card-lg pointer-events-auto animate-slide-up"
           >
             <span className="text-[15px] font-bold">View Toolbox</span>
             <span className="bg-white/20 text-white text-[13px] font-bold px-2.5 py-1 rounded-full">

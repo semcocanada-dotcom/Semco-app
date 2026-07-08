@@ -32,14 +32,19 @@ export const storeConfig = {
   // Reorder CTA
   reorderSubtitle: "Takes 30 seconds",
 
-  // Colors (change these to re-skin for another store)
+  // Order numbers
+  orderPrefix: "BTT",
+
+  // Colors — documentation only. The build reads colors from
+  // tailwind.config.ts tokens + the CSS variables in src/app/globals.css.
+  // To re-skin a vendor: update those two files to match these values.
   colors: {
     primary: "#1C3A6E",      // navy – main CTAs
     primaryDark: "#142B52",
     primaryLight: "#E8EDF6",
-    brand: "#1A8FA8",        // teal – logo / brand accent
-    brandDark: "#136F84",
-    brandLight: "#E6F5F8",
+    brand: "#1B84AD",        // Bart's blue – logo / brand accent (from bartstapingtools.ca)
+    brandDark: "#14688A",
+    brandLight: "#E5F3F8",
   },
 } as const;
 

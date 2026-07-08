@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { kits } from "@/lib/data";
 import { useCart } from "@/lib/store";
 import { useToast } from "@/lib/toast";
+import { effectivePrice } from "@/lib/pricing";
 import ProductImage from "@/components/ProductImage";
+import Price from "@/components/Price";
 
 export default function KitsPage() {
   const { addMany } = useCart();
@@ -29,7 +31,7 @@ export default function KitsPage() {
   function kitTotal(kitId: number) {
     const kit = kits.find((k) => k.id === kitId);
     if (!kit) return 0;
-    return kit.items.reduce((s, { product, quantity }) => s + product.price * quantity, 0);
+    return kit.items.reduce((s, { product, quantity }) => s + effectivePrice(product) * quantity, 0);
   }
 
   function kitItemCount(kitId: number) {
@@ -99,7 +101,9 @@ export default function KitsPage() {
                         <ProductImage product={kitItem.product} size="sm" />
                         <div className="flex-1 min-w-0">
                           <p className="text-[14px] font-semibold text-text1 truncate">{kitItem.product.name}</p>
-                          <p className="text-[12px] text-text2">{kitItem.product.brand} · ${kitItem.product.price.toFixed(2)}</p>
+                          <p className="text-[12px] text-text2">
+                            {kitItem.product.brand} · <Price product={kitItem.product} size="sm" />
+                          </p>
                         </div>
                         <span className="text-[14px] font-bold text-text1 flex-shrink-0">×{kitItem.quantity}</span>
                       </div>
@@ -114,9 +118,8 @@ export default function KitsPage() {
                   onClick={() => handleAddAll(kit.id)}
                   disabled={addedKit !== null}
                   className={`spring-tap w-full py-3 rounded-xl text-[15px] font-semibold text-white transition-colors duration-200 ${
-                    isAdded ? "bg-success" : ""
+                    isAdded ? "bg-success" : "bg-cta"
                   }`}
-                  style={isAdded ? undefined : { background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
                 >
                   {isAdded ? (
                     <span className="flex items-center justify-center gap-2 animate-pop-in">

@@ -5,6 +5,7 @@ import { useToast } from "@/lib/toast";
 import { smartSuggestions } from "@/lib/data";
 import { useState } from "react";
 import ProductImage from "./ProductImage";
+import Price from "./Price";
 
 export default function SmartSuggestions() {
   const { addItem, items } = useCart();
@@ -39,9 +40,9 @@ export default function SmartSuggestions() {
               <ProductImage product={product} size="sm" />
               <div className="min-w-0 flex-1">
                 <p className="text-[14px] font-semibold text-text1 truncate">{product.name}</p>
-                <p className="text-[12px] text-text2 mt-0.5">
-                  ${product.price.toFixed(2)} · {product.unit}
-                </p>
+                <div className="mt-0.5">
+                  <Price product={product} size="sm" showUnit />
+                </div>
               </div>
               <button
                 onClick={() => handleAdd(product.id)}

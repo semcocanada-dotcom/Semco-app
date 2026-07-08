@@ -7,6 +7,7 @@ import { useToast } from "@/lib/toast";
 import { useRef, useState } from "react";
 import ProductImage from "./ProductImage";
 import AvatarStack from "./AvatarStack";
+import Price from "./Price";
 
 interface Props {
   product: Product;
@@ -54,8 +55,7 @@ export default function ProductRow({ product, showCategory = false }: Props) {
         <p className="text-[12px] text-text2">{product.brand}</p>
 
         <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-[14px] font-bold text-text1">${product.price.toFixed(2)}</span>
-          <span className="text-[12px] text-text2">{product.unit}</span>
+          <Price product={product} size="sm" showUnit />
           {product.inStock ? (
             <span className="text-[11px] font-semibold text-success">· In Stock</span>
           ) : (
@@ -80,7 +80,7 @@ export default function ProductRow({ product, showCategory = false }: Props) {
           key={addedKey}
           onClick={handleAdd}
           className={`spring-tap-strong w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150 ${
-            isAdded ? "bg-success animate-pop-in" : "bg-navy"
+            isAdded ? "bg-success animate-pop-in" : "bg-cta"
           }`}
         >
           {isAdded ? (

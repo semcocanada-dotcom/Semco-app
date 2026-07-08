@@ -16,11 +16,16 @@ const config: Config = {
           dark:    "#142B52",
           light:   "#E8EDF6",
         },
-        // Brand / accent color
+        // Brand / accent color (matched to the vendor's logo)
         brand: {
-          DEFAULT: "#1A8FA8",
-          dark:    "#136F84",
-          light:   "#E6F5F8",
+          DEFAULT: "#1B84AD",
+          dark:    "#14688A",
+          light:   "#E5F3F8",
+        },
+        // Deal / sale accents
+        deal: {
+          DEFAULT: "#E11D48",
+          light:   "#FDE8ED",
         },
         bg:        "#F5F5F7",
         surface:   "#FFFFFF",

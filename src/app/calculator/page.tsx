@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/store";
 import { useToast } from "@/lib/toast";
 import { products } from "@/lib/data";
+import { effectivePrice } from "@/lib/pricing";
 
 interface MaterialResult {
   productId: number;
@@ -22,12 +23,12 @@ function calculateMaterials(sqft: number): MaterialResult[] {
   const cornerBead = Math.ceil(sqft / 200);
 
   return [
-    { productId: 1, name: "All-Purpose Compound", quantity: Math.max(1, compound), unit: "pails", price: products[0].price },
-    { productId: 8, name: "Lightweight Compound", quantity: Math.max(1, Math.ceil(compound / 2)), unit: "pails", price: products[7].price },
-    { productId: 2, name: "Paper Joint Tape", quantity: Math.max(1, tape), unit: "rolls", price: products[1].price },
-    { productId: 3, name: "Drywall Screws", quantity: Math.max(1, screws), unit: "boxes", price: products[2].price },
-    { productId: 4, name: "Metal Corner Bead", quantity: Math.max(2, cornerBead), unit: "pieces", price: products[3].price },
-    { productId: 5, name: "Sanding Sponge", quantity: Math.max(2, Math.ceil(sqft / 500)), unit: "each", price: products[4].price },
+    { productId: 1, name: "All-Purpose Compound", quantity: Math.max(1, compound), unit: "pails", price: effectivePrice(products[0]) },
+    { productId: 8, name: "Lightweight Compound", quantity: Math.max(1, Math.ceil(compound / 2)), unit: "pails", price: effectivePrice(products[7]) },
+    { productId: 2, name: "Paper Joint Tape", quantity: Math.max(1, tape), unit: "rolls", price: effectivePrice(products[1]) },
+    { productId: 3, name: "Drywall Screws", quantity: Math.max(1, screws), unit: "boxes", price: effectivePrice(products[2]) },
+    { productId: 4, name: "Metal Corner Bead", quantity: Math.max(2, cornerBead), unit: "pieces", price: effectivePrice(products[3]) },
+    { productId: 5, name: "Sanding Sponge", quantity: Math.max(2, Math.ceil(sqft / 500)), unit: "each", price: effectivePrice(products[4]) },
   ];
 }
 
@@ -150,9 +151,8 @@ export default function CalculatorPage() {
               onClick={handleAddAll}
               disabled={added}
               className={`spring-tap w-full py-4 rounded-2xl text-[17px] font-semibold text-white transition-colors duration-200 shadow-card-lg ${
-                added ? "bg-success" : ""
+                added ? "bg-success" : "bg-cta"
               }`}
-              style={added ? undefined : { background: "linear-gradient(135deg, #1C3A6E, #142B52)" }}
             >
               {added ? (
                 <span className="flex items-center justify-center gap-2 animate-pop-in">

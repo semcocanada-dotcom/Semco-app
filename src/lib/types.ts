@@ -3,6 +3,8 @@ export interface Product {
   name: string;
   sku: string;
   price: number;
+  salePrice?: number; // set to run a deal — strikethrough + SAVE badge appear automatically
+  badge?: "bestseller" | "new";
   unit: string;
   category: string;
   brand: string;

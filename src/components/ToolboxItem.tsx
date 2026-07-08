@@ -3,7 +3,9 @@
 import { CartItem } from "@/lib/types";
 import { useCart } from "@/lib/store";
 import { useState } from "react";
+import { effectivePrice } from "@/lib/pricing";
 import ProductImage from "./ProductImage";
+import Price from "./Price";
 
 interface Props {
   item: CartItem;
@@ -30,7 +32,9 @@ export default function ToolboxItem({ item }: Props) {
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-semibold text-text1 leading-tight truncate">{item.product.name}</p>
         <p className="text-[12px] text-text2 mt-0.5">{item.product.brand} · {item.product.unit}</p>
-        <p className="text-[13px] font-bold text-text1 mt-1">${item.product.price.toFixed(2)}</p>
+        <div className="mt-1">
+          <Price product={item.product} size="sm" />
+        </div>
       </div>
 
       {/* Qty stepper */}
@@ -62,7 +66,7 @@ export default function ToolboxItem({ item }: Props) {
 
       {/* Line total — crossfades on qty change */}
       <p key={`total-${qtyKey}`} className="text-[13px] font-bold text-text1 w-14 text-right tabular-nums animate-value-update">
-        ${(item.product.price * item.quantity).toFixed(2)}
+        ${(effectivePrice(item.product) * item.quantity).toFixed(2)}
       </p>
     </div>
   );
