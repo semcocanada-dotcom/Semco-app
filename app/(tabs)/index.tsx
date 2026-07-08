@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 import * as Location from 'expo-location';
 import { Colors } from '@constants/colors';
 import { useAuth } from '@context/AuthContext';
@@ -20,6 +20,7 @@ import { useRecentExpenses } from '@hooks/useExpenses';
 import { BudgetRing } from '@components/BudgetRing';
 import { StatCard, formatCAD } from '@components/StatCard';
 import { AppLogo } from '@components/AppLogo';
+import { ChildArt, ReceiptArt } from '@components/EmptyArt';
 import { ChildSelector } from '@components/ChildSelector';
 import { AlertBanner } from '@components/AlertBanner';
 import { FAB } from '@components/FAB';
@@ -202,8 +203,8 @@ export default function DashboardScreen() {
         {/* No children state */}
         {children.length === 0 && (
           <View style={{ alignItems: 'center', padding: 32 }}>
-            <Text style={{ fontSize: 40, marginBottom: 12 }}>👶</Text>
-            <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary, textAlign: 'center' }}>
+            <ChildArt />
+            <Text style={{ fontSize: 17, fontWeight: '600', color: Colors.textPrimary, textAlign: 'center', marginTop: 12 }}>
               Add your first child
             </Text>
             <Text style={{ fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginTop: 6 }}>
@@ -229,19 +230,19 @@ export default function DashboardScreen() {
 
         {/* Rainbow arc budget card */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 14 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(40)} style={{ paddingHorizontal: 20, marginBottom: 14 }}>
             <BudgetRing
               totalBudget={summary.totalBudget}
               totalSpent={summary.totalSpent}
               remaining={summary.remaining}
               yearLabel={summary.fundingYear?.label}
             />
-          </View>
+          </Animated.View>
         )}
 
         {/* Stat cards */}
         {activeChild && (
-          <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 18 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(110)} style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 18 }}>
             <StatCard
               label="Total Spent"
               value={formatCAD(summary.totalSpent)}
@@ -258,12 +259,12 @@ export default function DashboardScreen() {
               icon="wallet"
               onPress={() => router.push('/(tabs)/reports')}
             />
-          </View>
+          </Animated.View>
         )}
 
         {/* Mileage reimbursement (grant year) */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 18 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(180)} style={{ paddingHorizontal: 20, marginBottom: 18 }}>
             <Pressable
               onPress={() => router.push('/(tabs)/mileage')}
               style={({ pressed }) => [{
@@ -288,12 +289,12 @@ export default function DashboardScreen() {
                 {formatCAD(summary.totalMileage)}
               </Text>
             </Pressable>
-          </View>
+          </Animated.View>
         )}
 
         {/* Recent expenses */}
         {activeChild && (
-          <View style={{ paddingHorizontal: 20 }}>
+          <Animated.View entering={FadeInDown.duration(420).delay(250)} style={{ paddingHorizontal: 20 }}>
             <View style={{
               backgroundColor: Colors.surface,
               borderRadius: 20,
@@ -318,8 +319,8 @@ export default function DashboardScreen() {
 
               {expenses.length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-                  <Text style={{ fontSize: 28, marginBottom: 8 }}>🧾</Text>
-                  <Text style={{ fontSize: 14, color: Colors.textMuted, textAlign: 'center' }}>No expenses yet. Tap + to add one.</Text>
+                  <ReceiptArt size={84} />
+                  <Text style={{ fontSize: 14, color: Colors.textMuted, textAlign: 'center', marginTop: 8 }}>No expenses yet. Tap + to add one.</Text>
                 </View>
               ) : (
                 expenses.map((expense, index) => (
@@ -333,7 +334,7 @@ export default function DashboardScreen() {
                 ))
               )}
             </View>
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
 

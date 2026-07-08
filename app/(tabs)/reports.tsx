@@ -15,6 +15,7 @@ import * as Sharing from 'expo-sharing';
 import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { AppLogo } from '@components/AppLogo';
+import { ChartArt } from '@components/EmptyArt';
 import { supabase } from '@lib/supabase';
 import type { Expense, MileageLog, ProviderCategory, Child, FundingYear } from '@lib/types';
 import { useChild } from '@context/ChildContext';
@@ -424,8 +425,8 @@ export default function ReportsScreen() {
           <ActivityIndicator color={Colors.purple} style={{ marginTop: 60 }} />
         ) : !fy ? (
           <View style={s.empty}>
-            <Text style={{ fontSize: 40, marginBottom: 12 }}>📅</Text>
-            <Text style={s.emptyTitle}>No active funding year</Text>
+            <ChartArt />
+            <Text style={[s.emptyTitle, { marginTop: 8 }]}>No active funding year</Text>
             <Text style={s.emptySub}>Add a funding year to generate reports</Text>
           </View>
         ) : (

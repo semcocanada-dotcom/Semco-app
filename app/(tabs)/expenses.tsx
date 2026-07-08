@@ -31,6 +31,7 @@ import { analyseReceipt, buildMileageProposal, buildMileageProposalFromAddress, 
 import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
 import { AddressAutocomplete } from '@components/AddressAutocomplete';
 import { AppLogo } from '@components/AppLogo';
+import { CalendarArt, ReceiptArt } from '@components/EmptyArt';
 import { DateField } from '@components/DateField';
 import { inferCategoryFromText } from '@lib/ocr';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -1515,8 +1516,8 @@ export default function ExpensesScreen() {
             {/* No funding year message */}
             {!bLoading && !summary.fundingYear && (
               <View style={[s.budgetCard, { alignItems: 'center', paddingVertical: 28 }]}>
-                <Text style={{ fontSize: 32, marginBottom: 8 }}>📅</Text>
-                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16 }}>
+                <CalendarArt />
+                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16, marginTop: 8 }}>
                   No active funding year
                 </Text>
                 <Text style={{ color: Colors.textMuted, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
@@ -1544,7 +1545,7 @@ export default function ExpensesScreen() {
             <ActivityIndicator color={Colors.purple} style={{ marginTop: 40 }} />
           ) : (
             <View style={{ alignItems: 'center', paddingTop: 40, gap: 8 }}>
-              <Text style={{ fontSize: 40 }}>🧾</Text>
+              <ReceiptArt />
               <Text style={{ fontWeight: '600', color: Colors.textPrimary, fontSize: 16 }}>No expenses yet</Text>
               <Text style={{ color: Colors.textMuted, fontSize: 13 }}>Tap + to log your first expense</Text>
             </View>

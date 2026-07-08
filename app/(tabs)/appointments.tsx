@@ -11,6 +11,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { format, parseISO, isFuture, isPast } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { AppLogo } from '@components/AppLogo';
+import { CalendarArt } from '@components/EmptyArt';
 import { DateField } from '@components/DateField';
 import { supabase } from '@lib/supabase';
 import type { Appointment, Provider, ProviderCategory } from '@lib/types';
@@ -518,8 +519,8 @@ export default function AppointmentsScreen() {
 
             {upcoming.length === 0 && !loading && (
               <View style={s.emptyCard}>
-                <Text style={{ fontSize: 36, marginBottom: 8 }}>📅</Text>
-                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16 }}>No upcoming appointments</Text>
+                <CalendarArt />
+                <Text style={{ fontWeight: '700', color: Colors.textPrimary, fontSize: 16, marginTop: 8 }}>No upcoming appointments</Text>
                 <Text style={{ color: Colors.textMuted, fontSize: 13, marginTop: 4 }}>Tap + to schedule one</Text>
               </View>
             )}

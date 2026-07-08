@@ -19,6 +19,7 @@ import Svg, { Path, Rect, Circle, Polygon, Line } from 'react-native-svg';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { AppLogo } from '@components/AppLogo';
+import { SearchArt } from '@components/EmptyArt';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import { geocodeAddress, type Coords } from '@lib/geocoding';
@@ -704,8 +705,8 @@ export default function ProvidersScreen() {
             </View>
           ) : (
             <View style={s.centered}>
-              <Text style={{ fontSize: 40, marginBottom: 12 }}>🔎</Text>
-              <Text style={s.emptyTitle}>No providers found</Text>
+              <SearchArt />
+              <Text style={[s.emptyTitle, { marginTop: 12 }]}>No providers found</Text>
               <Text style={s.emptySubtitle}>Try a different search or category</Text>
             </View>
           )
