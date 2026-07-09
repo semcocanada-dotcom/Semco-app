@@ -159,13 +159,13 @@ function pinnedPageChunk(sourceDocument: string, pageNumber: number, score: numb
   };
 }
 
-function pushPinned(pinned: Array<[string, number]>, sourceDocument: string, pageNumber: number) {
+function pushPinned(pinned: [string, number][], sourceDocument: string, pageNumber: number) {
   if (!pinned.some(([source, page]) => source === sourceDocument && page === pageNumber)) {
     pinned.push([sourceDocument, pageNumber]);
   }
 }
 
-function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
+function addSubstratePrepPages(query: string, pinned: [string, number][]) {
   const normalized = normalizeQuery(query);
   const asksAllPrep = (
     includesAny(normalized, ['all types of surfaces', 'all types surfaces', 'each type surface', 'each type substrate', 'each substrate', 'all substrate', 'all surface', 'all surfaces', 'every surface', 'every substrate', 'surface types', 'substrate types', 'all prep', 'prep procedures', 'cleaning procedures'])
@@ -206,7 +206,7 @@ function addSubstratePrepPages(query: string, pinned: Array<[string, number]>) {
   }
 }
 
-function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) {
+function addXBondProcedurePages(query: string, pinned: [string, number][]) {
   const normalized = normalizeQuery(query);
   const concrete = isConcreteQuestion(query);
   const xbond = isXBondQuestion(query);
@@ -304,7 +304,7 @@ function addXBondProcedurePages(query: string, pinned: Array<[string, number]>) 
   }
 }
 
-function addSealerPages(query: string, pinned: Array<[string, number]>) {
+function addSealerPages(query: string, pinned: [string, number][]) {
   const normalized = normalizeQuery(query);
   const asksSealer = includesAny(normalized, [
     'sealer',
@@ -475,7 +475,7 @@ function stockedSealerPolicyChunk(query: string): RetrievedSemcoChunk[] {
 function getPinnedProcessChunks(query: string): RetrievedSemcoChunk[] {
   if (!isProcessQuestion(query)) return [];
 
-  const pinned: Array<[string, number]> = [];
+  const pinned: [string, number][] = [];
   addSubstratePrepPages(query, pinned);
   const hasPrepPage = pinned.some(([source, page]) => source === SIP_MANUAL && page >= 20 && page <= 24);
   if (!hasPrepPage && isXBondQuestion(query)) {

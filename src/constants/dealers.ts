@@ -79,20 +79,20 @@ export const MODERN_ARC_DEALER: DealerContext = {
 
 export const DIAMOND_ARC_WEST_DEALER: DealerContext = {
   region: 'west',
-  dealerId: 'diamond-arc-west',
-  dealerName: 'Diamond Arc',
-  pricingSourceLabel: 'Diamond Arc western dealer pricing pending',
-  pricingAvailable: false,
-  orderRoutingLabel: 'Dealer request will route to Diamond Arc once western pricing/contact is loaded.',
+  dealerId: 'modern-arc',
+  dealerName: 'Modern Arc',
+  pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
+  pricingAvailable: true,
+  orderRoutingLabel: 'Western dealer routing is not active yet. Orders currently default to Modern Arc.',
 };
 
 export const UNASSIGNED_DEALER_CONTEXT: DealerContext = {
   region: 'unknown',
-  dealerId: null,
-  dealerName: 'Assigned dealer',
-  pricingSourceLabel: 'Complete company profile postal code to assign dealer pricing',
-  pricingAvailable: false,
-  orderRoutingLabel: 'Dealer routing is assigned from the contractor company profile postal code.',
+  dealerId: 'modern-arc',
+  dealerName: 'Modern Arc',
+  pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
+  pricingAvailable: true,
+  orderRoutingLabel: 'Company profile is still recommended, but orders currently default to Modern Arc.',
 };
 
 export function resolveDealerContext(input?: string | DealerProfileInput | null): DealerContext {

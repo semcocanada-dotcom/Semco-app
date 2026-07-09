@@ -153,7 +153,7 @@ function responseText(response: unknown): string {
 }
 
 function responseDebugMessage(response: unknown): string {
-  const candidate = (response as { candidates?: Array<{ finishReason?: string; finishMessage?: string }> })
+  const candidate = (response as { candidates?: { finishReason?: string; finishMessage?: string }[] })
     .candidates?.[0];
   const finishReason = candidate?.finishReason ? ` finishReason=${candidate.finishReason}` : '';
   const finishMessage = candidate?.finishMessage ? ` finishMessage=${candidate.finishMessage}` : '';

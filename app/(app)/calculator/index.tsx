@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -10,7 +10,11 @@ import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
 import { SEALER_OPTIONS, XBOND_FINISH_OPTIONS } from '@/constants/product-coverage';
 import { CURRENT_POOL_SEALER_SKU } from '@/constants/stocked-sealers';
+import { resolveDealerContext } from '@/constants/dealers';
+import type { InstallerProfile } from '@/database/schema/installers';
+import { getInstallerProfile, LOCAL_INSTALLER_ID, profileToDealerInput } from '@/services/installer-profile';
 import { savePendingMaterialRequest } from '@/services/pending-material-request';
+import { useAuthStore } from '@/store/auth';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 const ESTIMATOR_POINTS = [
@@ -22,6 +26,8 @@ const ESTIMATOR_POINTS = [
 
 export default function CalculatorScreen() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const installerId = user?.id ?? LOCAL_INSTALLER_ID;
   const {
     form,
     result,
@@ -34,8 +40,26 @@ export default function CalculatorScreen() {
     runCalculation,
     reset,
   } = useCalculator();
-  const [creatingRequest, setCreatingRequest] = React.useState(false);
+  const [creatingRequest, setCreatingRequest] = useState(false);
+  const [profile, setProfile] = useState<InstallerProfile | null>(null);
   const isPool = form.substrateType === 'pool';
+
+  useEffect(() => {
+    let mounted = true;
+    getInstallerProfile(installerId)
+      .then((row) => {
+        if (mounted) setProfile(row);
+      })
+      .catch(console.error);
+    return () => {
+      mounted = false;
+    };
+  }, [installerId]);
+
+  const dealerContext = useMemo(
+    () => resolveDealerContext(profileToDealerInput(profile)),
+    [profile],
+  );
 
   async function createMaterialRequest() {
     if (!result) return;
@@ -161,7 +185,7 @@ export default function CalculatorScreen() {
             {result ? (
               <View style={styles.resultSection}>
                 <MaterialBreakdownCard result={result} />
-                <MaterialRetailEstimateCard result={result} />
+                <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} />
                 <Button
                   label="Create Material Request"
                   onPress={createMaterialRequest}

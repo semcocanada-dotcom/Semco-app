@@ -30,12 +30,12 @@ const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning
   approved: 'success',
 };
 
-const STATUS_OPTIONS: Array<{
+const STATUS_OPTIONS: {
   value: OrderRequestStatus;
   label: string;
   description: string;
   icon: React.ComponentProps<typeof Ionicons>['name'];
-}> = [
+}[] = [
   {
     value: 'draft',
     label: 'Draft',
