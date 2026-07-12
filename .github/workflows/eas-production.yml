@@ -1,16 +1,31 @@
 name: EAS — Production Build & App Store Submit
 
-# Manual-only: this builds with the production profile (uses a build credit)
-# and uploads the result to App Store Connect for TestFlight/App Review.
+# Manual-only. Two modes:
+# - submit_only=true (default): submits the LATEST finished production build
+#   to App Store Connect. No build credit used.
+# - submit_only=false: builds a new production iOS binary first (uses a
+#   build credit), then submits it.
+# asc_app_id: the numeric Apple ID of the app record in App Store Connect
+# (My Apps -> Semco Pro -> App Information -> General -> Apple ID). Required
+# for non-interactive submission unless already set in eas.json.
 on:
   workflow_dispatch:
+    inputs:
+      submit_only:
+        description: 'Skip the build and submit the latest finished build'
+        type: boolean
+        default: true
+      asc_app_id:
+        description: 'App Store Connect numeric Apple ID for Semco Pro'
+        type: string
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   build-and-submit:
-    name: Build iOS production + submit to App Store Connect
+    name: Build/submit iOS production to App Store Connect
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,9 +54,18 @@ jobs:
           echo "EXPO_TOKEN is set; continuing."
 
       - name: Build iOS production
+        if: ${{ inputs.submit_only != true }}
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build --platform ios --profile production --non-interactive
+
+      - name: Set App Store Connect app id
+        if: ${{ inputs.asc_app_id != '' }}
+        run: |
+          jq --arg id "${{ inputs.asc_app_id }}" \
+            '.submit.production.ios = ((.submit.production.ios // {}) + {ascAppId: $id})' \
+            eas.json > eas.json.tmp && mv eas.json.tmp eas.json
+          echo "ascAppId set in submit profile."
 
       - name: Submit latest build to App Store Connect
         env:
