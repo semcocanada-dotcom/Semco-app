@@ -23,6 +23,7 @@ import { orderRequests, type OrderRequest, type OrderRequestStatus } from '@/dat
 import { resolveDealerContext, type DealerContext } from '@/constants/dealers';
 import { getWarrantyPhotoStatus, type WarrantyPhotoStatus } from '@/services/warranty';
 import { sqmToSqft } from '@/utils/area';
+import { createLocalId } from '@/utils/id';
 
 type CertificationStatus = 'pending' | 'certified' | 'suspended';
 
@@ -244,7 +245,7 @@ export async function setInstallerCertification(
   }
 
   await db.insert(installerProfiles).values({
-    id: `profile-${Date.now()}`,
+    id: createLocalId('profile'),
     installerId,
     companyName: null,
     contactName: null,
@@ -296,7 +297,7 @@ export async function setWarrantyProjectStatus(
       })
       .where(eq(warrantyReviews.id, existing.id));
   } else {
-    const reviewId = `warranty-${Date.now()}`;
+    const reviewId = createLocalId('warranty');
     await db.insert(warrantyReviews).values({
       id: reviewId,
       projectId,
@@ -393,7 +394,7 @@ async function upsertProjectReviewReward(project: Project, now: string) {
   }
 
   await db.insert(rewardCredits).values({
-    id: `reward-${Date.now()}`,
+    id: createLocalId('reward'),
     installerId: project.installerId,
     projectId: project.id,
     sourceType: 'project_review',

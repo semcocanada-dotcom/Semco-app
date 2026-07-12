@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { desc, eq } from 'drizzle-orm';
 import { ActionCard, EmptyState, SearchBar } from '@/components/ui';
 import { ProjectCard } from '@/components/projects/ProjectCard';
@@ -12,7 +11,7 @@ import { rewardCredits } from '@/database/schema/installers';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
-import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
+import { getInstallerProfile, LOCAL_INSTALLER_ID } from '@/services/installer-profile';
 import { useAuthStore } from '@/store/auth';
 
 type LoadState = {
@@ -21,12 +20,21 @@ type LoadState = {
   pendingSqft: number;
 };
 
+// Projects is the primary daily action, so it carries the orange CTA accent;
+// the supporting tools stay on Semco teal.
 const FEATURE_CARDS = [
-  { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'primary' as const, route: '/projects' },
+  { title: 'Projects', description: 'Live jobs', icon: 'folder-open-outline' as const, tone: 'accent' as const, route: '/projects' },
   { title: 'Calculators', description: 'Estimate fast', icon: 'calculator-outline' as const, tone: 'primary' as const, route: '/calculator' },
   { title: 'Materials', description: 'Order review', icon: 'cart-outline' as const, tone: 'primary' as const, route: '/orders' },
   { title: 'Colours', description: 'Fan deck', icon: 'color-palette-outline' as const, tone: 'primary' as const, route: '/colors' },
 ];
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning,';
+  if (hour < 17) return 'Good afternoon,';
+  return 'Good evening,';
+}
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -34,6 +42,13 @@ export default function DashboardScreen() {
   const installerId = user?.id ?? LOCAL_INSTALLER_ID;
   const push = (href: string) => router.push(href as any);
   const [state, setState] = useState<LoadState>({ projects: [], verifiedSqft: 0, pendingSqft: 0 });
+  const [installerName, setInstallerName] = useState<string | null>(null);
+
+  useEffect(() => {
+    getInstallerProfile(installerId)
+      .then((profile) => setInstallerName(profile?.contactName || profile?.companyName || null))
+      .catch(console.error);
+  }, [installerId]);
 
   useEffect(() => {
     Promise.all([
@@ -69,15 +84,11 @@ export default function DashboardScreen() {
                   contentFit="contain"
                 />
               </View>
-              <TouchableOpacity style={styles.notificationButton} accessibilityLabel="Notifications">
-                <Ionicons name="notifications-outline" size={22} color={Colors.navy} />
-                <View style={styles.notificationDot} />
-              </TouchableOpacity>
             </View>
 
             <View style={styles.greetingBlock}>
-              <Text style={styles.greeting}>Good morning,</Text>
-              <Text style={styles.installerName}>Dieter</Text>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.installerName}>{installerName ?? 'Installer'}</Text>
             </View>
 
             <SearchBar
@@ -184,25 +195,6 @@ const styles = StyleSheet.create({
   logoImage: {
     width: '100%',
     height: 42,
-  },
-  notificationButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 12,
-    right: 13,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.semcoOrange,
   },
   greetingBlock: { gap: 2 },
   greeting: {

@@ -64,6 +64,7 @@ export async function createFilledSignoffPdf({
   const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const ink = rgb(0, 0.08, 0.1);
+  const signatureInk = rgb(0, 0, 0);
 
   page.drawImage(formImage, { x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT });
 
@@ -78,8 +79,8 @@ export async function createFilledSignoffPdf({
       const signature = parseSignatureRecord(signatureData);
       const path = getCroppedSignaturePath(signature, 12);
       if (path) {
-        const marginX = Math.min(8, width * 0.025);
-        const marginY = Math.min(2, height * 0.05);
+        const marginX = Math.min(5, width * 0.015);
+        const marginY = Math.min(1, height * 0.03);
         const availableWidth = Math.max(width - (marginX * 2), 1);
         const availableHeight = Math.max(height - (marginY * 2), 1);
         const scale = Math.min(availableWidth / path.width, availableHeight / path.height);
@@ -92,8 +93,8 @@ export async function createFilledSignoffPdf({
           x: drawX,
           y: drawY + drawHeight,
           scale,
-          borderColor: ink,
-          borderWidth: Math.max(1.15, Math.min(2.6, path.strokeWidth * scale * 1.65)),
+          borderColor: signatureInk,
+          borderWidth: Math.max(1.9, Math.min(3.4, path.strokeWidth * scale * 2.1)),
           borderLineCap: LineCapStyle.Round,
         });
       }
@@ -164,8 +165,9 @@ export async function uploadSignoffPdf(
       return null;
     }
 
-    const { data } = supabase.storage.from('project-signoffs').getPublicUrl(storagePath);
-    return data.publicUrl;
+    // The project-signoffs bucket is private; store the storage path and
+    // create a signed URL at view time (see getSignoffPdfViewUrl).
+    return storagePath;
   } catch (err) {
     console.error('[signoff-pdf] upload failed:', err);
     return null;

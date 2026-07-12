@@ -208,7 +208,7 @@ export default function AdminPortalScreen() {
                 />
               ))
             ) : (
-              <EmptyState icon="cart-outline" title="No material requests" body="Requests created from calculator results will queue here." />
+              <EmptyState icon="cart-outline" title="No material requests" body="Calculator orders and odd-item requests will queue here." />
             )}
           </AdminSection>
         ) : null}
@@ -454,6 +454,7 @@ function OrderCard({
       </View>
 
       <Text style={styles.bodyText}>{item.dealer.orderRoutingLabel}</Text>
+      {item.order.notes ? <Text style={styles.bodyText}>{item.order.notes}</Text> : null}
       <View style={styles.buttonRow}>
         <Button label="Open" size="sm" variant="ghost" disabled={!item.project} onPress={onOpenProject} style={styles.thirdButton} />
         <Button

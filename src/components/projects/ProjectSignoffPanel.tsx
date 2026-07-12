@@ -11,6 +11,7 @@ import { EditablePdfForm } from '@/components/projects/EditablePdfForm';
 import { syncProjectSignoffToCloud } from '@/services/signoffs-cloud';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { createLocalId } from '@/utils/id';
 
 type ProjectSignoffPanelProps = {
   project: Project;
@@ -100,7 +101,7 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
     }
 
     const now = new Date().toISOString();
-    const signoffId = existing?.id ?? `signoff-${Date.now()}`;
+    const signoffId = existing?.id ?? createLocalId('signoff');
     const savedFormData: FormValues = {
       ...formData,
       customerName,

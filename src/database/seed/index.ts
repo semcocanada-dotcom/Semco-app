@@ -47,8 +47,17 @@ export async function seedDatabase() {
   }));
 
   const existingColors = await db.select().from(colors);
-  const standardColorCount = existingColors.filter((c) => c.isStandard).length;
-  if (standardColorCount < seededColors.length) {
+  const standardColors = existingColors.filter((c) => c.isStandard);
+  // Reseed when the bundled fan deck changed: different count, or the
+  // sentinel colour carries a different data version (updatedAt stamp).
+  const sentinelSeed = seededColors[0];
+  const sentinelExisting = sentinelSeed
+    ? standardColors.find((c) => c.id === sentinelSeed.id)
+    : undefined;
+  const colorDataChanged =
+    standardColors.length !== seededColors.length
+    || (sentinelExisting != null && sentinelExisting.updatedAt !== sentinelSeed.updatedAt);
+  if (colorDataChanged) {
     await db.delete(colors).where(eq(colors.isStandard, true));
     for (let i = 0; i < seededColors.length; i += SQLITE_INSERT_CHUNK_SIZE) {
       await db.insert(colors).values(seededColors.slice(i, i + SQLITE_INSERT_CHUNK_SIZE));

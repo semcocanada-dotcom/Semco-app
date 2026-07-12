@@ -3,6 +3,7 @@ import { db } from '@/database/client';
 import { installerProfiles, rewardCredits } from '@/database/schema/installers';
 import type { InstallerProfile, NewInstallerProfile } from '@/database/schema/installers';
 import { resolveDealerContext } from '@/constants/dealers';
+import { createLocalId } from '@/utils/id';
 
 export const LOCAL_INSTALLER_ID = 'local';
 
@@ -47,7 +48,7 @@ export async function upsertInstallerProfile(
   }
 
   const created: NewInstallerProfile = {
-    id: `profile-${Date.now()}`,
+    id: createLocalId('profile'),
     installerId,
     companyName: values.companyName ?? null,
     contactName: values.contactName ?? null,

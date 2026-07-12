@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { formatSqft, getRewardProgress } from '@/constants/rewards';
-import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { Colors, Fonts, Radius, Shadows, Spacing, Typography } from '@/constants/theme';
 
 interface RewardTrackerCardProps {
   verifiedSqft: number;
@@ -38,29 +38,40 @@ export function RewardTrackerCard({ verifiedSqft, pendingSqft = 0, onPress }: Re
       accessibilityRole="button"
       accessibilityLabel="Open reward tier progress"
     >
+      <View style={styles.titleRow}>
+        <Text style={styles.eyebrow}>Reward tracker</Text>
+        <Ionicons name="chevron-forward" size={18} color={Colors.semcoOrange} />
+      </View>
+
       <View style={styles.ringWrap}>
         <ProgressRing percent={progress.progressPercent} pendingPercent={pendingProgressPercent} />
         <View style={styles.ringCenter}>
           <Text style={styles.ringTier}>Tier</Text>
           <Text style={styles.ringNumber}>{displayTier?.level ?? 1}</Text>
+          <Text style={styles.ringTierName}>{tierLabel}</Text>
         </View>
       </View>
 
       <View style={styles.copy}>
-        <View style={styles.titleRow}>
-          <Text style={styles.eyebrow}>Reward tracker</Text>
-          <Ionicons name="chevron-forward" size={18} color={Colors.semcoOrange} />
-        </View>
         <Text style={styles.title}>
           {progress.nextTier ? `${progress.progressPercent}% verified to ${targetLabel}` : 'Top tier reached'}
         </Text>
         <Text style={styles.progressText}>
           {formatSqft(verifiedSqft)} verified / {formatSqft(progress.tierTargetSqft)}
         </Text>
-        <Text style={styles.body}>
-          Current: {tierLabel}. Verified square footage is cumulative and moves you to the next reward.
-        </Text>
         {pendingSqft > 0 ? <Text style={styles.pending}>{formatSqft(pendingSqft)} pending review</Text> : null}
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, styles.legendVerified]} />
+            <Text style={styles.legendText}>Verified</Text>
+          </View>
+          {pendingSqft > 0 ? (
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, styles.legendPending]} />
+              <Text style={styles.legendText}>Pending</Text>
+            </View>
+          ) : null}
+        </View>
       </View>
     </Pressable>
   );
@@ -130,25 +141,21 @@ function ProgressRing({ percent, pendingPercent }: { percent: number; pendingPer
   );
 }
 
-const RING_SIZE = 98;
-const RING_WIDTH = 10;
+const RING_SIZE = 150;
+const RING_WIDTH = 13;
+const RING_HUB_SIZE = RING_SIZE - (RING_WIDTH * 2) - 22;
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 148,
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.base,
-    padding: Spacing.base,
+    gap: Spacing.md,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.base,
     borderRadius: Radius.xl,
     backgroundColor: Colors.navy,
     borderWidth: 1,
     borderColor: 'rgba(207,69,31,0.35)',
-    shadowColor: '#000',
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
+    ...Shadows.floating,
   },
   cardPressed: {
     transform: [{ scale: 0.99 }],
@@ -169,19 +176,19 @@ const styles = StyleSheet.create({
   },
   ringGlow: {
     position: 'absolute',
-    width: RING_SIZE - 8,
-    height: RING_SIZE - 8,
-    borderRadius: (RING_SIZE - 8) / 2,
-    backgroundColor: 'rgba(5,186,194,0.08)',
-    shadowColor: Colors.lightTeal,
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
+    width: RING_SIZE - 6,
+    height: RING_SIZE - 6,
+    borderRadius: (RING_SIZE - 6) / 2,
+    backgroundColor: 'rgba(207,69,31,0.07)',
+    shadowColor: Colors.semcoOrange,
+    shadowOpacity: 0.32,
+    shadowRadius: 18,
     shadowOffset: { width: 0, height: 0 },
   },
   ringCenter: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+    width: RING_HUB_SIZE,
+    height: RING_HUB_SIZE,
+    borderRadius: RING_HUB_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.white,
@@ -202,15 +209,22 @@ const styles = StyleSheet.create({
   ringNumber: {
     color: Colors.semcoOrange,
     fontFamily: Fonts.bold,
-    fontSize: 30,
-    lineHeight: 32,
+    fontSize: 34,
+    lineHeight: 36,
     fontWeight: Typography.weight.bold,
   },
+  ringTierName: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.xs,
+  },
   copy: {
-    flex: 1,
+    alignSelf: 'stretch',
+    alignItems: 'center',
     gap: Spacing.xs,
   },
   titleRow: {
+    alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -229,21 +243,43 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: Typography.size.lg,
     fontWeight: Typography.weight.bold,
+    textAlign: 'center',
   },
   progressText: {
-    color: Colors.white,
+    color: 'rgba(255,255,255,0.85)',
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.sm,
-  },
-  body: {
-    color: 'rgba(255,255,255,0.72)',
-    fontFamily: Fonts.regular,
-    fontSize: Typography.size.xs,
-    lineHeight: Typography.size.xs * 1.45,
+    textAlign: 'center',
   },
   pending: {
     color: Colors.offlineAmberMuted,
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.xs,
+    textAlign: 'center',
+  },
+  legendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  legendDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  legendVerified: { backgroundColor: Colors.semcoOrange },
+  legendPending: { backgroundColor: Colors.lightTeal },
+  legendText: {
+    color: 'rgba(255,255,255,0.72)',
+    fontFamily: Fonts.medium,
+    fontSize: 10,
   },
 });

@@ -5,6 +5,7 @@ export type DealerContext = {
   region: DealerRegion;
   dealerId: DealerId | null;
   dealerName: string;
+  orderEmail: string | null;
   pricingSourceLabel: string;
   pricingAvailable: boolean;
   orderRoutingLabel: string;
@@ -72,27 +73,30 @@ export const MODERN_ARC_DEALER: DealerContext = {
   region: 'east',
   dealerId: 'modern-arc',
   dealerName: 'Modern Arc',
+  orderEmail: 'order@modernarc.ca',
   pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
   pricingAvailable: true,
-  orderRoutingLabel: 'Dealer request routes to Modern Arc after review.',
+  orderRoutingLabel: 'Orders currently route to Modern Arc at order@modernarc.ca.',
 };
 
 export const DIAMOND_ARC_WEST_DEALER: DealerContext = {
   region: 'west',
   dealerId: 'modern-arc',
   dealerName: 'Modern Arc',
+  orderEmail: 'order@modernarc.ca',
   pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
   pricingAvailable: true,
-  orderRoutingLabel: 'Western dealer routing is not active yet. Orders currently default to Modern Arc.',
+  orderRoutingLabel: 'Western dealer routing is not active yet. Orders currently default to Modern Arc at order@modernarc.ca.',
 };
 
 export const UNASSIGNED_DEALER_CONTEXT: DealerContext = {
   region: 'unknown',
   dealerId: 'modern-arc',
   dealerName: 'Modern Arc',
+  orderEmail: 'order@modernarc.ca',
   pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
   pricingAvailable: true,
-  orderRoutingLabel: 'Company profile is still recommended, but orders currently default to Modern Arc.',
+  orderRoutingLabel: 'Company profile is still recommended, but orders currently default to Modern Arc at order@modernarc.ca.',
 };
 
 export function resolveDealerContext(input?: string | DealerProfileInput | null): DealerContext {

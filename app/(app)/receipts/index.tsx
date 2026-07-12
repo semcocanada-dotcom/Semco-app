@@ -7,6 +7,7 @@ import { purchaseReceipts, rewardCredits } from '@/database/schema/installers';
 import { useAuthStore } from '@/store/auth';
 import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
+import { createLocalId } from '@/utils/id';
 
 export default function ReceiptSubmissionScreen() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function ReceiptSubmissionScreen() {
     setSaved(false);
     try {
       const now = new Date().toISOString();
-      const receiptId = `receipt-${Date.now()}`;
+      const receiptId = createLocalId('receipt');
       await db.insert(purchaseReceipts).values({
         id: receiptId,
         installerId,
@@ -44,7 +45,7 @@ export default function ReceiptSubmissionScreen() {
       });
 
       await db.insert(rewardCredits).values({
-        id: `reward-${Date.now()}`,
+        id: createLocalId('reward'),
         installerId,
         projectId: null,
         sourceType: 'receipt',

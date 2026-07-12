@@ -9,12 +9,22 @@ import {
 } from '@/services/ai/assistant-cache';
 import { getConfiguredProviderStatus } from '@/services/ai/providers';
 import { Badge, EmptyState } from '@/components/ui';
+import { isSemcoAdminUser } from '@/services/admin-access';
+import { useAuthStore } from '@/store/auth';
 import { Colors, Fonts, Layout, Radius, Spacing, TAP_TARGET_MIN, Typography } from '@/constants/theme';
 
 export default function AssistantDebugScreen() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = isSemcoAdminUser(user);
   const [logs, setLogs] = React.useState<AssistantDebugLog[]>([]);
   const providerStatus = getConfiguredProviderStatus();
+
+  React.useEffect(() => {
+    if (!isAdmin) {
+      router.replace('/assistant' as any);
+    }
+  }, [isAdmin, router]);
 
   const loadLogs = React.useCallback(async () => {
     setLogs(await getAssistantDebugLogs());
@@ -30,6 +40,8 @@ export default function AssistantDebugScreen() {
     await clearAssistantDebugLogs();
     setLogs([]);
   };
+
+  if (!isAdmin) return null;
 
   return (
     <SafeAreaView style={styles.safe}>

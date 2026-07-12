@@ -70,6 +70,13 @@ const MORE_ACTIONS = [
     route: '/projects',
     tone: 'primary' as const,
   },
+  {
+    title: 'Privacy policy',
+    description: 'How installer, project, and customer information is handled.',
+    icon: 'lock-closed-outline' as const,
+    route: '/privacy',
+    tone: 'primary' as const,
+  },
 ] as const;
 
 export default function MoreScreen() {

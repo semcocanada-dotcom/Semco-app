@@ -39,9 +39,16 @@ CREATE TABLE IF NOT EXISTS dealer_accounts (
 
 INSERT INTO dealer_accounts (id, name, region, pricing_label, accepts_app_orders)
 VALUES
-  ('modern-arc', 'Modern Arc', 'east', 'Modern Arc Ontario retail pricing 2026', false),
+  ('modern-arc', 'Modern Arc', 'east', 'Modern Arc Ontario retail pricing 2026', true),
   ('diamond-arc-west', 'Diamond Arc', 'west', 'Western dealer pricing pending', false)
 ON CONFLICT (id) DO NOTHING;
+
+UPDATE dealer_accounts
+SET contact_email = 'order@modernarc.ca',
+    accepts_app_orders = true,
+    pricing_label = 'Modern Arc Ontario retail pricing 2026',
+    updated_at = now()
+WHERE id = 'modern-arc';
 
 CREATE TABLE IF NOT EXISTS installer_profiles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

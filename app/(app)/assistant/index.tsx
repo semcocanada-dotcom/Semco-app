@@ -19,13 +19,18 @@ import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
 import { OfflineBanner } from '@/components/assistant/OfflineBanner';
 import { SavedChatsSheet } from '@/components/assistant/SavedChatsSheet';
+import { ReplyChips } from '@/components/assistant/ReplyChips';
 import { getConfiguredProviderStatus } from '@/services/ai/providers';
 import { lightImpactHaptic, mediumImpactHaptic, selectionHaptic } from '@/utils/haptics';
+import { isSemcoAdminUser } from '@/services/admin-access';
+import { useAuthStore } from '@/store/auth';
 import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 export default function AssistantScreen() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = isSemcoAdminUser(user);
   const {
     messages,
     savedChats,
@@ -52,6 +57,17 @@ export default function AssistantScreen() {
     setInputText('');
     send(text);
   };
+
+  const handleReplyChip = (reply: string) => {
+    if (isLoading) return;
+    mediumImpactHaptic();
+    send(reply);
+  };
+
+  const lastMessage = messages[messages.length - 1];
+  const chipSource = !isLoading && lastMessage?.role === 'assistant' ? lastMessage : null;
+  const quickReplies = chipSource?.quickReplies ?? [];
+  const followUps = quickReplies.length === 0 ? chipSource?.suggestedFollowUps ?? [] : [];
 
   const handleBack = () => {
     lightImpactHaptic();
@@ -128,17 +144,19 @@ export default function AssistantScreen() {
           >
             <Ionicons name="add-circle-outline" size={22} color={Colors.semcoOrange} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              lightImpactHaptic();
-              router.push('/assistant/debug' as any);
-            }}
-            style={styles.iconBtn}
-            accessibilityLabel="Open assistant debug"
-            accessibilityRole="button"
-          >
-            <Ionicons name="analytics-outline" size={20} color={Colors.primary} />
-          </TouchableOpacity>
+          {isAdmin ? (
+            <TouchableOpacity
+              onPress={() => {
+                lightImpactHaptic();
+                router.push('/assistant/debug' as any);
+              }}
+              style={styles.iconBtn}
+              accessibilityLabel="Open assistant debug"
+              accessibilityRole="button"
+            >
+              <Ionicons name="analytics-outline" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+          ) : null}
           {messages.length > 0 && (
             <TouchableOpacity
               onPress={handleClearHistory}
@@ -170,7 +188,15 @@ export default function AssistantScreen() {
           renderItem={({ item }) => <ChatBubble message={item} />}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
           contentContainerStyle={styles.messageList}
-          ListFooterComponent={isLoading ? <TypingIndicator /> : null}
+          ListFooterComponent={
+            isLoading ? (
+              <TypingIndicator />
+            ) : quickReplies.length > 0 ? (
+              <ReplyChips replies={quickReplies} variant="answer" onSelect={handleReplyChip} />
+            ) : followUps.length > 0 ? (
+              <ReplyChips replies={followUps} variant="suggestion" onSelect={handleReplyChip} />
+            ) : null
+          }
         />
       )}
 

@@ -13,6 +13,8 @@ export interface FormulaLine {
   pigmentName: string;
   mlAmount: number;
   displayAmount: string;
+  /** Semco dispenser dial amount (Y units in 1/48 steps), when the source provides it. */
+  dispenserAmount?: string;
 }
 
 export interface BatchFormula {
@@ -29,18 +31,33 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
       case 'five_gallon': return p.mlPerFiveGallon;
     }
   };
+  const getY48 = (p: PigmentRatio): number | undefined => {
+    switch (batchSize) {
+      case 'quart': return p.y48PerQuart;
+      case 'gallon': return p.y48PerGallon;
+      case 'five_gallon': return p.y48PerFiveGallon;
+    }
+  };
 
   const lines: FormulaLine[] = pigments
-    .filter((p) => getMl(p) > 0)
+    .filter((p) => getMl(p) > 0 || (getY48(p) ?? 0) > 0)
     .map((p) => {
       const ml = getMl(p);
+      const y48 = getY48(p);
       return {
         pigmentCode: p.pigmentCode,
         pigmentName: p.pigmentName,
         mlAmount: ml,
         displayAmount: formatMl(ml),
+        dispenserAmount: y48 && y48 > 0 ? formatDispenser(y48) : undefined,
       };
     });
+
+  // A batch with no amounts is only "no pigment needed" when the colour has
+  // no amounts in ANY batch. Otherwise the source simply does not publish
+  // this batch size (true for ~106 quart formulas).
+  const hasAnyAmounts = pigments.some((p) =>
+    p.mlPerQuart > 0 || p.mlPerGallon > 0 || p.mlPerFiveGallon > 0);
 
   return {
     batchSize,
@@ -48,8 +65,24 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
     mixingNotes:
       lines.length > 0
         ? 'Add all tints to XBond liquid and mix thoroughly before applying to substrate. All tints must be from the same manufacturing lot.'
-        : 'No pigment addition required. Natural cement tone.',
+        : hasAnyAmounts
+          ? `A ${BATCH_SIZES.find((b) => b.key === batchSize)?.label.toLowerCase() ?? batchSize} batch is not published for this colour. Mix the gallon batch instead.`
+          : 'No pigment addition required. Natural cement tone.',
   };
+}
+
+/**
+ * Formats total 1/48 steps the way the Semco tint dispenser is dialed:
+ * whole Y units plus remaining 48ths, e.g. "1 Y + 12/48". Per Semco's
+ * Color Formulation Converter, 1 Y = 35 ml.
+ */
+export function formatDispenser(y48Total: number): string {
+  const wholeY = Math.floor(y48Total / 48);
+  const rest = Math.round((y48Total - wholeY * 48) * 100) / 100;
+  const parts: string[] = [];
+  if (wholeY > 0) parts.push(`${wholeY} Y`);
+  if (rest > 0) parts.push(`${rest}/48`);
+  return parts.length ? parts.join(' + ') : '0';
 }
 
 function formatMl(ml: number): string {

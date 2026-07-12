@@ -597,11 +597,9 @@ export function formatLocalGroundedAnswer(
       : 'I cannot confirm that from the approved Semco technical documents.';
   }
 
-  const primary = chunks[0];
-  const sourceLabel = `${primary.documentName}${primary.pageNumber ? ` p. ${primary.pageNumber}` : ''}`;
-  const intro = reason
-    ? `${reason} Showing the closest confirmed Semco document result instead.`
-    : 'AI answer generation is not available right now. Showing the closest confirmed Semco document result instead.';
+  // Never surface raw document/OCR text in the user-facing answer. When a
+  // local rule answer exists it carries the response; otherwise offer the
+  // closest document matches for the installer to open.
   const reasonOnly = reason ?? 'AI answer generation is not available right now.';
 
   if (reasonedAnswer) {
@@ -613,23 +611,28 @@ export function formatLocalGroundedAnswer(
       ].join('\n');
     }
 
+    const primary = chunks[0];
+    const sourceLabel = `${primary.documentName}${primary.pageNumber ? ` p. ${primary.pageNumber}` : ''}`;
     return [
-      intro,
+      reasonOnly,
       '',
       reasonedAnswer,
-      '',
-      'Closest confirmed source:',
-      cleanText(primary.text, 520),
       '',
       `Source: ${sourceLabel}`,
     ].join('\n');
   }
 
+  const matchLines = chunks.slice(0, 3).map((chunk) => {
+    const label = chunk.title && chunk.title !== chunk.documentName
+      ? `${chunk.documentName} - ${chunk.title}`
+      : chunk.documentName;
+    return `- ${label}${chunk.pageNumber ? ` p. ${chunk.pageNumber}` : ''}`;
+  });
+
   return [
-    intro,
+    `${reasonOnly} I cannot build the full guided answer, so here is the closest approved Semco documentation instead.`,
     '',
-    cleanText(primary.text, 520),
-    '',
-    `Source: ${sourceLabel}`,
+    'Semco document matches you can open:',
+    ...matchLines,
   ].join('\n');
 }

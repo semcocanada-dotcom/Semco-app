@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { desc, eq } from 'drizzle-orm';
@@ -22,6 +22,7 @@ import type { InstallerProfile } from '@/database/schema/installers';
 import { useAuthStore } from '@/store/auth';
 import { sqmToSqft } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
+import { createLocalId } from '@/utils/id';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
   draft: 'primary',
@@ -62,9 +63,13 @@ const STATUS_OPTIONS: {
   },
 ];
 
+const INSTALLER_STATUS_ACTIONS = STATUS_OPTIONS.filter((option) =>
+  option.value === 'draft' || option.value === 'in_review'
+);
+
 const STATUS_HELP: Record<OrderRequestStatus, string> = {
   draft: 'Saved as a draft. It will stay editable until it is submitted for dealer review.',
-  in_review: 'Submitted for dealer review. Reward square footage is logged as pending until it is verified.',
+  in_review: 'Submitted for Semco/dealer review. If your mail app opens, review the email and send it to Modern Arc.',
   needs_revision: 'Marked for revision. Update the calculator quantities, then submit it again.',
   approved: 'Approved. This is ready for dealer handoff and Semco review records.',
 };
@@ -88,6 +93,7 @@ export default function OrdersScreen() {
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
   const [savingStatus, setSavingStatus] = useState<OrderRequestStatus | null>(null);
   const [lastSavedStatus, setLastSavedStatus] = useState<OrderRequestStatus | null>(null);
+  const [customItemNotes, setCustomItemNotes] = useState('');
 
   useEffect(() => {
     db.select().from(projects).orderBy(desc(projects.updatedAt)).limit(3).then(setRecentProjects).catch(console.error);
@@ -117,7 +123,9 @@ export default function OrdersScreen() {
       .then(([projectRows, calcRows, requestRows]) => {
         setProject(projectRows[0] ?? null);
         setCalculation(calcRows[0] ?? null);
-        setOrderRequest(requestRows[0] ?? null);
+        const latestRequest = requestRows[0] ?? null;
+        setOrderRequest(latestRequest);
+        setCustomItemNotes(extractCustomItemNotes(latestRequest?.notes));
       })
       .catch(console.error);
   }, [projectId]);
@@ -140,13 +148,15 @@ export default function OrdersScreen() {
     [profile, project],
   );
   const dealerUsesProfile = Boolean(profile?.postalCode);
+  const trimmedCustomItemNotes = customItemNotes.trim();
+  const canSaveRequest = Boolean(result || trimmedCustomItemNotes);
 
   async function savePendingCalculation(now: string): Promise<string | null> {
     if (!project) return null;
     if (!pendingResult) return calculation?.id ?? null;
 
     const created: Calculation = {
-      id: `calc-${Date.now()}`,
+      id: createLocalId('calc'),
       projectId: project.id,
       installerId: project.installerId,
       areaSqm: pendingResult.areaSqm,
@@ -164,26 +174,32 @@ export default function OrdersScreen() {
   }
 
   async function ensureRequest(status: OrderRequestStatus) {
-    if (!project) return;
+    if (!project || !canSaveRequest) return;
     setSavingStatus(status);
 
     try {
       const now = new Date().toISOString();
       const latestCalcId = await savePendingCalculation(now);
+      const requestNotes = buildOrderNotes({
+        dealerName: dealerContext.dealerName,
+        dealerEmail: dealerContext.orderEmail,
+        customItemNotes: trimmedCustomItemNotes,
+        hasCalculator: Boolean(result),
+      });
 
       let requestId = orderRequest?.id;
       if (orderRequest) {
         await db.update(orderRequests)
-          .set({ status, calculationId: latestCalcId, updatedAt: now })
+          .set({ status, calculationId: latestCalcId, notes: requestNotes, updatedAt: now })
           .where(eq(orderRequests.id, orderRequest.id));
-        setOrderRequest({ ...orderRequest, status, calculationId: latestCalcId, updatedAt: now });
+        setOrderRequest({ ...orderRequest, status, calculationId: latestCalcId, notes: requestNotes, updatedAt: now });
       } else {
         const created = {
-          id: `order-${Date.now()}`,
+          id: createLocalId('order'),
           projectId: project.id,
           calculationId: latestCalcId,
           status,
-          notes: null,
+          notes: requestNotes,
           createdAt: now,
           updatedAt: now,
         };
@@ -196,8 +212,32 @@ export default function OrdersScreen() {
         await syncOrderRewardCredit(requestId, result, now);
       }
       setLastSavedStatus(status);
+      if (requestId && status === 'in_review') {
+        await openDealerOrderEmail(requestId, requestNotes);
+      }
     } finally {
       setSavingStatus(null);
+    }
+  }
+
+  async function openDealerOrderEmail(requestId: string, requestNotes: string | null) {
+    if (!project || !dealerContext.orderEmail) return;
+
+    const subject = `Semco material request - ${projectTitle}`;
+    const body = buildDealerEmailBody({
+      requestId,
+      project,
+      projectTitle,
+      profile,
+      result,
+      requestNotes,
+    });
+    const url = `mailto:${dealerContext.orderEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('Could not open dealer email link', error);
     }
   }
 
@@ -225,7 +265,7 @@ export default function OrdersScreen() {
     }
 
     await db.insert(rewardCredits).values({
-      id: `reward-${Date.now()}`,
+      id: createLocalId('reward'),
       installerId: project.installerId,
       projectId: project.id,
       sourceType: 'order_request',
@@ -249,7 +289,7 @@ export default function OrdersScreen() {
           <Text style={styles.body}>
             {pendingResult
               ? 'Calculator quantities are loaded. Choose a project so dealer pricing and routing can be assigned.'
-              : 'No manual entry. Dealer routing comes from the contractor company profile postal code.'}
+              : 'Build a system order from calculator quantities, or request odd items without a full system estimate.'}
           </Text>
           <View style={styles.iconWrap}>
             <Ionicons name="cart-outline" size={26} color={Colors.accent} />
@@ -283,10 +323,10 @@ export default function OrdersScreen() {
                   />
                 </View>
                 <Text style={styles.bodySmall}>
-                  Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? (pendingResult ? 'pending calculator result' : 'none yet')}
+                  Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? (pendingResult ? 'pending calculator result' : trimmedCustomItemNotes ? 'custom item request' : 'none yet')}
                 </Text>
                 <Text style={styles.bodySmall}>
-                  {dealerContext.orderRoutingLabel} {dealerUsesProfile ? 'Assigned from company profile.' : 'Project address is a temporary fallback until the company profile is complete.'}
+                  {dealerContext.orderRoutingLabel} {dealerUsesProfile ? 'Company profile is on file.' : 'Complete the company profile for dealer records, warranty records, and reward tracking.'}
                 </Text>
                 {!dealerUsesProfile ? (
                   <Button label="Complete Company Profile" variant="secondary" onPress={() => router.push('/profile' as any)} fullWidth />
@@ -294,25 +334,26 @@ export default function OrdersScreen() {
               </Card>
             </View>
 
+            <CustomItemRequestCard value={customItemNotes} onChangeText={setCustomItemNotes} hasEstimate={Boolean(result)} />
             {result ? <MaterialBreakdownCard result={result} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
             {result ? <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} /> : null}
 
             <View style={styles.section}>
-              <SectionHeader title="Request status" subtitle="Choose the stage for this material request." />
+              <SectionHeader title="Request actions" subtitle="Save the request or send it to the assigned dealer for review." />
               <View style={styles.statusOptionGrid}>
-                {STATUS_OPTIONS.map((option) => {
+                {INSTALLER_STATUS_ACTIONS.map((option) => {
                   const active = (orderRequest?.status ?? 'draft') === option.value;
                   const loading = savingStatus === option.value;
                   return (
                     <TouchableOpacity
                       key={option.value}
                       activeOpacity={0.78}
-                      disabled={savingStatus !== null || !result}
+                      disabled={savingStatus !== null || !canSaveRequest}
                       onPress={() => ensureRequest(option.value)}
                       style={[
                         styles.statusOption,
                         active && styles.statusOptionActive,
-                        (!result || savingStatus !== null) && styles.statusOptionDisabled,
+                        (!canSaveRequest || savingStatus !== null) && styles.statusOptionDisabled,
                       ]}
                     >
                       <View style={[styles.statusOptionIcon, active && styles.statusOptionIconActive]}>
@@ -337,7 +378,7 @@ export default function OrdersScreen() {
               <Card style={styles.statusHelpCard}>
                 <Ionicons name="information-circle-outline" size={20} color={Colors.darkTeal} />
                 <Text style={styles.statusHelpText}>
-                  {lastSavedStatus ? STATUS_HELP[lastSavedStatus] : result ? STATUS_HELP[(orderRequest?.status ?? 'draft') as OrderRequestStatus] : 'Run the calculator first so this request has quantities to save.'}
+                  {lastSavedStatus ? STATUS_HELP[lastSavedStatus] : canSaveRequest ? STATUS_HELP[(orderRequest?.status ?? 'draft') as OrderRequestStatus] : 'Run the calculator for a full system order or enter odd items above before saving.'}
                 </Text>
               </Card>
             </View>
@@ -371,11 +412,117 @@ function NoEstimateCard({ onOpenCalculator }: { onOpenCalculator: () => void }) 
       </View>
       <View style={styles.noEstimateCopy}>
         <Text style={styles.noEstimateTitle}>No calculator estimate attached</Text>
-        <Text style={styles.noEstimateBody}>Run the calculator first, then create the request from the result.</Text>
+        <Text style={styles.noEstimateBody}>Run the calculator for a full system count, or use the odd-item request box on this page.</Text>
       </View>
       <Button label="Open Calculator" variant="secondary" onPress={onOpenCalculator} fullWidth />
     </Card>
   );
+}
+
+function CustomItemRequestCard({
+  value,
+  onChangeText,
+  hasEstimate,
+}: {
+  value: string;
+  onChangeText: (value: string) => void;
+  hasEstimate: boolean;
+}) {
+  return (
+    <Card style={styles.customCard}>
+      <View style={styles.customHeader}>
+        <View style={styles.customIcon}>
+          <Ionicons name="list-outline" size={20} color={Colors.primary} />
+        </View>
+        <View style={styles.customCopy}>
+          <Text style={styles.customTitle}>Odd item request</Text>
+          <Text style={styles.customBody}>
+            Add products, tools, cleaners, sealers, or small extras that are not part of a full system calculation.
+          </Text>
+        </View>
+      </View>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={hasEstimate ? 'Optional add-ons, notes, or substitutions...' : 'Example: 2 x Stone Soap, 1 x Titan Gloss, 1 replacement trowel...'}
+        placeholderTextColor={Colors.textDisabled}
+        multiline
+        textAlignVertical="top"
+        style={styles.customInput}
+      />
+      <Text style={styles.customHint}>
+        This saves with the request and is included in the Modern Arc email.
+      </Text>
+    </Card>
+  );
+}
+
+function extractCustomItemNotes(notes?: string | null): string {
+  if (!notes) return '';
+  const marker = 'Odd item request:';
+  const index = notes.indexOf(marker);
+  if (index < 0) return '';
+  return notes.slice(index + marker.length).replace(/^Dealer email:.*$/gm, '').trim();
+}
+
+function buildOrderNotes({
+  dealerName,
+  dealerEmail,
+  customItemNotes,
+  hasCalculator,
+}: {
+  dealerName: string;
+  dealerEmail: string | null;
+  customItemNotes: string;
+  hasCalculator: boolean;
+}): string | null {
+  const lines = [
+    `${dealerName} material request.`,
+    dealerEmail ? `Dealer email: ${dealerEmail}` : null,
+    hasCalculator ? 'Includes calculator quantities.' : 'Odd item request only. No full system calculator estimate attached.',
+    customItemNotes ? `Odd item request:\n${customItemNotes}` : null,
+  ].filter(Boolean);
+
+  return lines.length ? lines.join('\n\n') : null;
+}
+
+function buildDealerEmailBody({
+  requestId,
+  project,
+  projectTitle,
+  profile,
+  result,
+  requestNotes,
+}: {
+  requestId: string;
+  project: Project;
+  projectTitle: string;
+  profile: InstallerProfile | null;
+  result?: CalculationResult;
+  requestNotes: string | null;
+}) {
+  const materialLines = result?.layers
+    .filter((layer) => (layer.roundedQuantity ?? layer.quantityPacks ?? 0) > 0)
+    .map((layer) => `- ${layer.productName}: ${layer.purchaseLabel ?? layer.quantityLabel ?? `${layer.roundedQuantity ?? layer.quantityPacks} ${layer.packLabel ?? ''}`.trim()}`);
+
+  return [
+    'Semco material request',
+    '',
+    `Request ID: ${requestId}`,
+    `Project: ${projectTitle}`,
+    `Site: ${project.siteAddress ?? 'Not provided'}`,
+    `Installer company: ${profile?.companyName ?? 'Profile pending'}`,
+    `Contact: ${profile?.contactName ?? profile?.email ?? 'Not provided'}`,
+    `Phone: ${profile?.phone ?? 'Not provided'}`,
+    '',
+    materialLines?.length ? 'Calculator quantities:' : null,
+    ...(materialLines ?? []),
+    '',
+    requestNotes ? 'Request notes:' : null,
+    requestNotes,
+    '',
+    'Please review availability and confirm pricing before the order is finalized.',
+  ].filter((line) => line != null).join('\n');
 }
 
 const styles = StyleSheet.create({
@@ -465,6 +612,55 @@ const styles = StyleSheet.create({
     lineHeight: Typography.size.sm * 1.45,
   },
   projectList: { gap: Spacing.sm },
+  customCard: {
+    gap: Spacing.md,
+    borderColor: Colors.primaryMuted,
+    backgroundColor: Colors.white,
+  },
+  customHeader: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'flex-start',
+  },
+  customIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customCopy: { flex: 1, gap: 2 },
+  customTitle: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
+  customBody: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.regular,
+    fontSize: Typography.size.sm,
+    lineHeight: Typography.size.sm * 1.4,
+  },
+  customInput: {
+    minHeight: 108,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.softGrey,
+    color: Colors.navy,
+    fontFamily: Fonts.regular,
+    fontSize: Typography.size.base,
+    lineHeight: Typography.size.base * 1.35,
+    padding: Spacing.md,
+  },
+  customHint: {
+    color: Colors.textDisabled,
+    fontFamily: Fonts.medium,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.3,
+  },
   noEstimateCard: {
     alignItems: 'stretch',
     gap: Spacing.sm,

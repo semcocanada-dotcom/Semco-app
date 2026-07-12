@@ -142,6 +142,29 @@ function extractFocusedQuestion(message: string): string {
   return followUp?.[1]?.trim() || message;
 }
 
+/** Routing gate: the profile wants a clarifying question before any answer. */
+export function shouldAskForRequiredInputs(profile: ReasoningProfile): boolean {
+  if (!profile.localAnswer || profile.missingInputs.length === 0) return false;
+
+  return ['prep_decision', 'install_build_up', 'material_estimate'].includes(profile.intent);
+}
+
+/** Routing gate: the intent is covered by a deterministic local field answer. */
+export function shouldUseLocalFieldAnswer(profile: ReasoningProfile): boolean {
+  return [
+    'prep_decision',
+    'install_build_up',
+    'shower_substrate',
+    'x_bond_finish',
+    'liquid_membrane_application',
+    'sealer_application',
+    'membrane_quantity',
+    'warranty_photos',
+    'takeoff_scope',
+    'material_estimate',
+  ].includes(profile.intent) && Boolean(profile.localAnswer);
+}
+
 export function formatReasoningContext(profile: ReasoningProfile): string {
   return profile.contextNotes
     ? `<semco_reasoning>\n${profile.contextNotes}\n</semco_reasoning>`
@@ -358,7 +381,7 @@ function isSubmergedLiquidMembraneQuestion(normalized: string, contextNormalized
     'holding water',
   ]);
 
-  return membraneContext && (waterContainmentContext || coatFollowUp);
+  return (membraneContext && (waterContainmentContext || coatFollowUp)) || (coatFollowUp && waterContainmentContext);
 }
 
 function extractSealerSku(normalized: string): string | undefined {
@@ -437,7 +460,6 @@ function materialEstimateAnswer(
   missingInputs: string[],
 ): string {
   return [
-    'Answer:',
     'Use the Calculator for material quantities. Ask Semco should help the installer understand the install decision, but it should not freestyle material counts.',
     '',
     'Why this matters:',
@@ -460,7 +482,6 @@ function materialEstimateAnswer(
 
 function documentGapAnswer(): string {
   return [
-    'Answer:',
     'If the approved Semco documents do not answer the question, do not guess. Say that clearly and keep the installer out of unsupported decisions.',
     '',
     'Use this response:',
@@ -524,7 +545,6 @@ function membraneAnswer(facts: ExtractedJobFacts): string {
 
   if (!facts.areaSqft) {
     return [
-      'Answer:',
       'Use the Calculator for Liquid Membrane quantity. Ask Semco can explain where membrane belongs, but ordering quantity should come from the formula so purchase rounding is consistent.',
       '',
       'Field rule:',
@@ -537,7 +557,6 @@ function membraneAnswer(facts: ExtractedJobFacts): string {
   }
 
   return [
-    'Answer:',
     'Use the Calculator for Liquid Membrane quantity. The material count should come from the built-in formula, not an AI guess.',
     '',
     areaLine,
@@ -626,7 +645,6 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
 
   if (missingInputs.length > 0 || (!facts.substrateType && !facts.prepSurfaceGroup)) {
     return [
-      'Answer:',
       'Prep depends on two things: what the surface is, and what is on it. I need those before I can choose the right Semco cleaning path.',
       '',
       'Quick decision tree:',
@@ -715,7 +733,6 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
 
 function allSurfacePrepAnswer(): string {
   return [
-    'Answer:',
     'Use surface prep as a decision tree. The right cleaner path depends on the substrate and the contamination, not just the square footage.',
     '',
     'Checked prep map:',
@@ -744,7 +761,6 @@ function allSurfacePrepAnswer(): string {
 
 function warrantyPhotoAnswer(): string {
   return [
-    'Answer:',
     'Treat warranty photos like hold points. The installer should not cover a stage until there is a clear photo proving what was done.',
     '',
     'Photo sequence:',
@@ -845,7 +861,9 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
     ],
   };
 
-  const substrateLabel = SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
+  const substrateLabel = substrateType === 'cement_board'
+    ? 'GlasRoc / GlassRoc or similar wet-area board'
+    : SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
   const prep = substratePath[substrateType] ?? substratePath.cement_board;
 
   return [
@@ -884,7 +902,6 @@ function numberedSteps(steps: string[]): string[] {
 
 function formatPrepPathAnswer(substrateLabel: string, steps: string[]): string {
   return [
-    'Answer:',
     `For ${substrateLabel}, prep is the pass/fail step. Use the cleaner path that matches the surface condition, then do not coat until the surface is clean, rinsed, dry, and stable.`,
     '',
     'Jobsite path:',
@@ -897,7 +914,6 @@ function formatPrepPathAnswer(substrateLabel: string, steps: string[]): string {
 
 function formatBuildUpPathAnswer(substrateLabel: string, steps: string[]): string {
   return [
-    'Answer:',
     `For ${substrateLabel}, first prove the surface is sound and bondable. Then follow the build-up in order and take photos before each stage gets covered.`,
     '',
     'Jobsite path:',
@@ -910,7 +926,6 @@ function formatBuildUpPathAnswer(substrateLabel: string, steps: string[]): strin
 
 function concreteBuildUpAnswer(): string {
   return [
-    'Answer:',
     'Yes. For a concrete floor, think of it as five field moves: clean and reset the slab, prime/scratch coat, detail the movement or water-risk areas, build the finish, then seal and document it. Do not move forward until the slab is sound, clean, dry enough, and stable.',
     '',
     '**Step 1: Make the go/no-go call.**',
@@ -994,7 +1009,6 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
 
   if (missingInputs.length > 0 || (!facts.substrateType && !facts.prepSurfaceGroup)) {
     return [
-      'Answer:',
       'I need the substrate before I can give the Semco build-up. The right answer changes a lot depending on what the system is going over.',
       '',
       'Tell me one of these:',
@@ -1185,7 +1199,6 @@ function genericBuildUpForPrepSurface(group: PrepSurfaceGroup, label: string): s
   };
 
   return [
-    'Answer:',
     `For ${label}, prep first, then build only if the surface is sound and bondable. Do not let the product choice outrun the substrate check.`,
     '',
     'Prep first:',
@@ -1209,7 +1222,6 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
 
   if (sku === 'NATURAL-SHIELD') {
     return [
-      'Answer:',
       'For pool, submerged, continuous water-containment, and exterior penetrating-sealer work, use Natural Shield under the current stocked Semco Canada rule. Treat it as a penetrating protection step, not a thick film build.',
       '',
       'Step-by-step:',
@@ -1227,7 +1239,6 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
 
   if (sku === 'SATIN-STONE') {
     return [
-      'Answer:',
       'Use Satin Stone when a stocked satin film finish is specified. This is a controlled coating step, so batch size, pot life, and spray method matter.',
       '',
       'Step-by-step:',
@@ -1244,7 +1255,6 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
 
   if (sku === 'TITAN-SHIELD') {
     return [
-      'Answer:',
       'Use Titan Gloss when a stocked gloss film finish is specified. Keep the surface clean, apply the required film build, and use the Calculator for quantity.',
       '',
       'Step-by-step:',
@@ -1261,7 +1271,6 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
 
   if (sku === 'MATTE-SEALER') {
     return [
-      'Answer:',
       'Matte is a current stocked Semco Canada matte finish. The field rule in this app says it is Titan-like in a matte finish and slightly harder than Titan.',
       '',
       'Use this carefully:',
@@ -1272,8 +1281,25 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
     ].join('\n');
   }
 
+  if (facts.isShower) {
+    return [
+      'For a standard interior shower, use Satin Stone as the current Semco Canada shower sealer/finish.',
+      '',
+      '**Step 1: Confirm the shower build-up first.**',
+      'Do not choose the sealer before the substrate, Liquid Membrane/fabric detail, X-Bond base, and X-Bond finish are ready. If the installer has not named the substrate yet, ask for it first.',
+      '',
+      '**Step 2: Use the standard shower finish rule.**',
+      'Standard interior shower guidance is 2-coat Liquid Membrane/fabric detail before X-Bond, then Satin Stone in 2 coats.',
+      '',
+      '**Step 3: Do not swap sealers by habit.**',
+      'Do not use Natural Shield for a standard interior shower unless the job is pool, submerged, continuous water-containment, exterior penetrating-sealer work, or Semco specifically reviews and approves that change.',
+      '',
+      'Field check:',
+      'If this is actually a pool, pond, fountain, exterior shower, or submerged/water-containment project, say that clearly because the sealer and membrane rules change.',
+    ].join('\n');
+  }
+
   return [
-    'Answer:',
     'Choose the sealer by exposure first, then finish. The installer should not pick only by sheen if the project is exterior, wet, submerged, or high traffic.',
     '',
     'Current stocked Semco Canada options:',
@@ -1290,7 +1316,6 @@ function sealerApplicationAnswer(facts: ExtractedJobFacts): string {
 
 function takeoffAnswer(): string {
   return [
-    'Answer:',
     'Takeoff should mean blueprint/plan reading, not manual material estimating. If the app is not reading drawings and measuring scope, it should not pretend that it is doing takeoff.',
     '',
     'Use this instead:',
@@ -1321,7 +1346,7 @@ function buildContextNotes(
     `Current stocked sealer rule:\n${STOCKED_SEALER_POLICY_TEXT}`,
     `Current standard shower rule:\n${STANDARD_SHOWER_POLICY_TEXT}`,
     localAnswer ? `Local reasoned answer:\n${localAnswer}` : '',
-    'Instruction: answer like a field support conversation. Use the facts and logic above; do not paste source excerpts unless needed. Do not calculate material quantities unless a verified Calculator result is explicitly provided.',
+    'Instruction: answer like a field support conversation. Use the facts and logic above; do not paste source excerpts unless needed. Material quantities must come from the shared Semco Calculator formulas - use a calculator result when one is supplied in this context, and never invent quantities, ratios, or coverage yourself.',
   ]
     .filter(Boolean)
     .join('\n');

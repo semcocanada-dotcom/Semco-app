@@ -15,9 +15,9 @@ const ACTIONS = [
   },
   {
     title: 'Build material request',
-    description: 'Run calculator quantities, then send the request for dealer review.',
+    description: 'Use calculator quantities or add odd items for Modern Arc review.',
     icon: 'cart-outline' as const,
-    route: '/calculator',
+    route: '/orders',
     tone: 'primary',
   },
   {
@@ -66,7 +66,7 @@ export default function AddScreen() {
           <Text style={styles.heroBody}>Use the centre button for new work: project files, material requests, receipts, warranty photos, and customer sign-offs.</Text>
           <View style={styles.heroButtons}>
             <Button label="New project" variant="accent" onPress={() => push('/projects/create')} style={styles.heroButton} />
-            <Button label="Calculator" variant="secondary" onPress={() => push('/calculator')} style={styles.heroButton} />
+            <Button label="Material request" variant="secondary" onPress={() => push('/orders')} style={styles.heroButton} />
           </View>
         </Card>
 

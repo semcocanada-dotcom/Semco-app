@@ -31,4 +31,10 @@ export interface PigmentRatio {
   mlPerQuart: number;        // mL to add per quart (946 ml) of XBond base
   mlPerGallon: number;       // mL to add per gallon (3.785 L) of XBond base
   mlPerFiveGallon: number;   // mL to add per 5-gallon (18.9 L) of XBond base
+  // Exact Semco dispenser units from the source formulas: total 1/48 steps
+  // of one "Y" unit. Per Semco's official Color Formulation Converter,
+  // 1 Y = 35 ml, so ml values above are derived at 35/48 ml per step.
+  y48PerQuart?: number;
+  y48PerGallon?: number;
+  y48PerFiveGallon?: number;
 }

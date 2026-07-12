@@ -49,7 +49,10 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
               <Text style={styles.pigmentName}>{p.pigmentName}</Text>
               <Text style={styles.pigmentCode}>{p.pigmentCode}</Text>
             </View>
-            <Text style={styles.amount}>{p.displayAmount}</Text>
+            <View style={styles.amountWrap}>
+              <Text style={styles.amount}>{p.dispenserAmount ?? p.displayAmount}</Text>
+              {p.dispenserAmount ? <Text style={styles.amountSecondary}>{p.displayAmount}</Text> : null}
+            </View>
           </View>
         ))
       )}
@@ -74,7 +77,7 @@ function parsePigments(pigments: unknown): PigmentRatio[] {
   if (!Array.isArray(value)) return [];
 
   return value
-    .map((item) => {
+    .map((item): PigmentRatio | null => {
       if (!item || typeof item !== 'object') return null;
       const raw = item as Partial<PigmentRatio>;
       return {
@@ -83,6 +86,9 @@ function parsePigments(pigments: unknown): PigmentRatio[] {
         mlPerQuart: Number(raw.mlPerQuart ?? 0),
         mlPerGallon: Number(raw.mlPerGallon ?? 0),
         mlPerFiveGallon: Number(raw.mlPerFiveGallon ?? 0),
+        y48PerQuart: raw.y48PerQuart != null ? Number(raw.y48PerQuart) : undefined,
+        y48PerGallon: raw.y48PerGallon != null ? Number(raw.y48PerGallon) : undefined,
+        y48PerFiveGallon: raw.y48PerFiveGallon != null ? Number(raw.y48PerFiveGallon) : undefined,
       };
     })
     .filter((item): item is PigmentRatio => {
@@ -147,7 +153,9 @@ const styles = StyleSheet.create({
   pigmentInfo: { flex: 1 },
   pigmentName: { color: Colors.textPrimary, fontSize: Typography.size.base },
   pigmentCode: { color: Colors.textDisabled, fontSize: Typography.size.xs, marginTop: 1 },
+  amountWrap: { alignItems: 'flex-end' },
   amount: { color: Colors.primary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
+  amountSecondary: { color: Colors.textDisabled, fontSize: Typography.size.xs, marginTop: 1 },
   noPigment: { color: Colors.textSecondary, fontSize: Typography.size.base, fontStyle: 'italic' },
   notes: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.6 },
 });

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createLocalId } from '@/utils/id';
 
 interface Toast {
   id: string;
@@ -16,7 +17,7 @@ export const useUiStore = create<UiState>((set) => ({
   toasts: [],
 
   showToast: (message, type = 'info') => {
-    const id = Date.now().toString();
+    const id = createLocalId('toast');
     set((s) => ({ toasts: [...s.toasts, { id, message, type }] }));
     setTimeout(() => {
       set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }));

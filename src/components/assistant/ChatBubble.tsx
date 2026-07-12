@@ -1,10 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 import { lightImpactHaptic } from '@/utils/haptics';
-import type { ConversationMessage } from '@/database/schema/conversations';
+import type { AssistantCitation, ConversationMessage } from '@/database/schema/conversations';
 
 const COLLAPSE_THRESHOLD = 900;
 const COLLAPSED_MAX_HEIGHT = 360;
@@ -66,7 +67,29 @@ interface ChatBubbleProps {
   message: ConversationMessage;
 }
 
+const MAX_SOURCE_CHIPS = 3;
+
+function dedupeCitations(citations: AssistantCitation[] | undefined): AssistantCitation[] {
+  if (!citations?.length) return [];
+  const seen = new Set<string>();
+  const unique: AssistantCitation[] = [];
+  for (const citation of citations) {
+    const key = `${citation.documentName}::${citation.pageNumber ?? ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(citation);
+    if (unique.length >= MAX_SOURCE_CHIPS) break;
+  }
+  return unique;
+}
+
+function citationLabel(citation: AssistantCitation): string {
+  const name = citation.title || citation.documentName.replace(/\.pdf$/i, '').replace(/[-_]/g, ' ');
+  return citation.pageNumber ? `${name} · p. ${citation.pageNumber}` : name;
+}
+
 export function ChatBubble({ message }: ChatBubbleProps) {
+  const router = useRouter();
   const isUser = message.role === 'user';
   const displayContent = React.useMemo(
     () => (isUser ? message.content : normalizeDisplayedAnswer(message.content)),
@@ -74,6 +97,16 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   );
   const isLongAssistantAnswer = !isUser && displayContent.length > COLLAPSE_THRESHOLD;
   const [isExpanded, setExpanded] = React.useState(!isLongAssistantAnswer);
+  const sourceChips = React.useMemo(
+    () => (isUser ? [] : dedupeCitations(message.citations)),
+    [isUser, message.citations],
+  );
+
+  const openCitation = (citation: AssistantCitation) => {
+    if (!citation.docId) return;
+    lightImpactHaptic();
+    router.push(`/products/${citation.docId}` as any);
+  };
 
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
@@ -110,6 +143,25 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                   color={Colors.primary}
                 />
               </TouchableOpacity>
+            )}
+            {sourceChips.length > 0 && (
+              <View style={styles.sourceRow}>
+                {sourceChips.map((citation) => (
+                  <TouchableOpacity
+                    key={citation.id}
+                    onPress={() => openCitation(citation)}
+                    disabled={!citation.docId}
+                    style={styles.sourceChip}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open source ${citationLabel(citation)}`}
+                  >
+                    <Ionicons name="document-text-outline" size={12} color={Colors.textSecondary} />
+                    <Text style={styles.sourceChipText} numberOfLines={1}>
+                      {citationLabel(citation)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
           </>
         )}
@@ -250,5 +302,29 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.semibold,
+  },
+  sourceRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  sourceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: 220,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.softGrey,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 5,
+  },
+  sourceChipText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.medium,
+    flexShrink: 1,
   },
 });

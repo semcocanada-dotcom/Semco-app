@@ -91,10 +91,11 @@ CREATE POLICY "dealer_orders_assigned_update" ON order_requests
 CREATE POLICY "dealer_signoffs_assigned_select" ON project_signoffs
   FOR SELECT USING (
     is_semco_admin()
-    OR project_id IN (
-      SELECT p.id
+    OR EXISTS (
+      SELECT 1
       FROM projects p
       JOIN installer_profiles ip ON ip.installer_id = p.installer_id
-      WHERE ip.assigned_dealer_id = current_dealer_id()
+      WHERE p.id::text = project_signoffs.project_id
+        AND ip.assigned_dealer_id = current_dealer_id()
     )
   );
