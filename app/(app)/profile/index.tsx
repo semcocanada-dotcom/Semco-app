@@ -100,7 +100,7 @@ export default function CompanyProfileScreen() {
           </View>
           <Text style={styles.heroTitle}>{companyName.trim() || 'Add company information'}</Text>
           <Text style={styles.heroBody}>
-            Postal code assigns the contractor to Modern Arc for Ontario and east. Western dealer routing is ready once Diamond Arc details are loaded.
+            Postal code keeps the contractor profile clean for warranty, rewards, and dealer routing. Until the western dealer is active, app orders and pricing default to Modern Arc.
           </Text>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${completionPct}%` }]} />
