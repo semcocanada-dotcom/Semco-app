@@ -74,6 +74,10 @@ function getPigmentDisplay(pigment: FormulaLine): { name: string; detail: string
   const code = pigment.pigmentCode.trim();
   const name = pigment.pigmentName.trim();
 
+  if (code === 'I') {
+    return { name: 'Brown Oxide', detail: code };
+  }
+
   if (UNRESOLVED_PIGMENT_CODES.has(code) && (!name || name === code)) {
     return { name: `Tint code ${code}`, detail: 'Semco tint code' };
   }

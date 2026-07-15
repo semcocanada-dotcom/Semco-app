@@ -478,6 +478,9 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
 function formatTintLabel(code: string, name: string): string {
   const cleanCode = code.trim();
   const cleanName = name.trim();
+  if (cleanCode === 'I') {
+    return 'Brown Oxide';
+  }
   if ((cleanCode === 'I' || cleanCode === 'AXN AXX') && (!cleanName || cleanName === cleanCode)) {
     return `Tint code ${cleanCode}`;
   }
