@@ -79,10 +79,17 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
 export function formatDispenser(y48Total: number): string {
   const wholeY = Math.floor(y48Total / 48);
   const rest = Math.round((y48Total - wholeY * 48) * 100) / 100;
+  const restLabel = formatDispenserNumber(rest);
   const parts: string[] = [];
   if (wholeY > 0) parts.push(`${wholeY} Y`);
-  if (rest > 0) parts.push(`${rest}/48`);
+  if (rest > 0) parts.push(wholeY > 0 ? `${restLabel}/48` : `${restLabel}/48 Y`);
   return parts.length ? parts.join(' + ') : '0';
+}
+
+function formatDispenserNumber(value: number): string {
+  return Number.isInteger(value)
+    ? value.toFixed(0)
+    : value.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 function formatMl(ml: number): string {

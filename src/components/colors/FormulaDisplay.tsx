@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import type { PigmentRatio } from '@/database/schema/colors';
-import { getFormulaForBatch, BATCH_SIZES, type BatchSize } from '@/services/color-scaler';
+import { getFormulaForBatch, BATCH_SIZES, type BatchSize, type FormulaLine } from '@/services/color-scaler';
 import { Colors, Typography, Spacing, Radius } from '@/constants/theme';
 
 interface FormulaDisplayProps {
@@ -43,24 +43,50 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
       {formula.pigments.length === 0 ? (
         <Text style={styles.noPigment}>No pigment addition required</Text>
       ) : (
-        formula.pigments.map((p, i) => (
-          <View key={i} style={styles.row}>
-            <View style={styles.pigmentInfo}>
-              <Text style={styles.pigmentName}>{p.pigmentName}</Text>
-              <Text style={styles.pigmentCode}>{p.pigmentCode}</Text>
+        formula.pigments.map((p, i) => {
+          const pigmentDisplay = getPigmentDisplay(p);
+
+          return (
+            <View key={i} style={styles.row}>
+              <View style={styles.pigmentInfo}>
+                <Text style={styles.pigmentName}>{pigmentDisplay.name}</Text>
+                <Text style={styles.pigmentCode}>{pigmentDisplay.detail}</Text>
+              </View>
+              <View style={styles.amountWrap}>
+                <Text style={styles.amount} numberOfLines={2}>
+                  {p.dispenserAmount ?? p.displayAmount}
+                </Text>
+                {p.dispenserAmount ? <Text style={styles.amountSecondary}>{p.displayAmount}</Text> : null}
+              </View>
             </View>
-            <View style={styles.amountWrap}>
-              <Text style={styles.amount}>{p.dispenserAmount ?? p.displayAmount}</Text>
-              {p.dispenserAmount ? <Text style={styles.amountSecondary}>{p.displayAmount}</Text> : null}
-            </View>
-          </View>
-        ))
+          );
+        })
       )}
 
       <View style={styles.divider} />
       <Text style={styles.notes}>{formula.mixingNotes}</Text>
     </Card>
   );
+}
+
+const UNRESOLVED_PIGMENT_CODES = new Set(['I', 'AXN AXX']);
+
+function getPigmentDisplay(pigment: FormulaLine): { name: string; detail: string } {
+  const code = pigment.pigmentCode.trim();
+  const name = pigment.pigmentName.trim();
+
+  if (UNRESOLVED_PIGMENT_CODES.has(code) && (!name || name === code)) {
+    return { name: `Tint code ${code}`, detail: 'Semco tint code' };
+  }
+
+  if (code === 'D + F + B' && (!name || name === code)) {
+    return { name: 'Composite tint', detail: code };
+  }
+
+  return {
+    name: name || `Tint code ${code || 'unknown'}`,
+    detail: code || 'Code not listed',
+  };
 }
 
 function parsePigments(pigments: unknown): PigmentRatio[] {
@@ -153,9 +179,24 @@ const styles = StyleSheet.create({
   pigmentInfo: { flex: 1 },
   pigmentName: { color: Colors.textPrimary, fontSize: Typography.size.base },
   pigmentCode: { color: Colors.textDisabled, fontSize: Typography.size.xs, marginTop: 1 },
-  amountWrap: { alignItems: 'flex-end' },
-  amount: { color: Colors.primary, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
-  amountSecondary: { color: Colors.textDisabled, fontSize: Typography.size.xs, marginTop: 1 },
+  amountWrap: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
+    marginLeft: Spacing.sm,
+    maxWidth: '46%',
+  },
+  amount: {
+    color: Colors.primary,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+    textAlign: 'right',
+  },
+  amountSecondary: {
+    color: Colors.textDisabled,
+    fontSize: Typography.size.xs,
+    marginTop: 1,
+    textAlign: 'right',
+  },
   noPigment: { color: Colors.textSecondary, fontSize: Typography.size.base, fontStyle: 'italic' },
   notes: { color: Colors.textSecondary, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.6 },
 });
