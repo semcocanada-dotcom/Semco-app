@@ -54,9 +54,8 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
               </View>
               <View style={styles.amountWrap}>
                 <Text style={styles.amount} numberOfLines={2}>
-                  {p.dispenserAmount ?? p.displayAmount}
+                  {p.displayAmount}
                 </Text>
-                {p.dispenserAmount ? <Text style={styles.amountSecondary}>{p.displayAmount}</Text> : null}
               </View>
             </View>
           );
@@ -189,12 +188,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.bold,
-    textAlign: 'right',
-  },
-  amountSecondary: {
-    color: Colors.textDisabled,
-    fontSize: Typography.size.xs,
-    marginTop: 1,
     textAlign: 'right',
   },
   noPigment: { color: Colors.textSecondary, fontSize: Typography.size.base, fontStyle: 'italic' },

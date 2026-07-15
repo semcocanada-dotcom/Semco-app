@@ -444,16 +444,14 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
   const lines: string[] = [
     `Tint formula for **${color.name}${color.code ? ` (${color.code})` : ''}** — per ${batchLabel(batch)}:`,
     '',
-    ...formula.pigments.map((line) => line.dispenserAmount
-      ? `- ${line.pigmentName}: **${line.dispenserAmount}** on the dispenser (${line.displayAmount})`
-      : `- ${line.pigmentName}: **${line.displayAmount}**`),
+    ...formula.pigments.map((line) => `- ${formatTintLabel(line.pigmentCode, line.pigmentName)}: **${line.displayAmount}**`),
   ];
 
   if (multiplier > 1) {
     lines.push(
       '',
       `For your batch, mix the ${sizeName} formula ${multiplier} times (${multiplier} separate ${sizeName} batches). Totals across all batches:`,
-      ...formula.pigments.map((line) => `- ${line.pigmentName}: ${formatNumber(line.mlAmount)} ml x ${multiplier} = **${formatNumber(line.mlAmount * multiplier)} ml**`),
+      ...formula.pigments.map((line) => `- ${formatTintLabel(line.pigmentCode, line.pigmentName)}: ${formatNumber(line.mlAmount)} ml x ${multiplier} = **${formatNumber(line.mlAmount * multiplier)} ml**`),
     );
   }
 
@@ -463,7 +461,7 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
     '',
     formula.mixingNotes,
     '',
-    'Dispenser amounts are Semco tint machine Y units (1 Y = 35 ml) dialed in 1/48 steps. The quart, gallon, and 5-gallon batches are on the colour card in the app. Always confirm with a cured sample — screens and lighting shift the colour.',
+    'Use the ml amounts shown here for installer mixing. Always confirm with a cured sample because screens and lighting shift the colour.',
   );
 
   return {
@@ -476,6 +474,18 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
 /* ------------------------------------------------------- */
 /* Material quantities — runs the real Calculator formulas   */
 /* ------------------------------------------------------- */
+
+function formatTintLabel(code: string, name: string): string {
+  const cleanCode = code.trim();
+  const cleanName = name.trim();
+  if ((cleanCode === 'I' || cleanCode === 'AXN AXX') && (!cleanName || cleanName === cleanCode)) {
+    return `Tint code ${cleanCode}`;
+  }
+  if (cleanCode === 'D + F + B' && (!cleanName || cleanName === cleanCode)) {
+    return `Composite tint ${cleanCode}`;
+  }
+  return cleanName || `Tint code ${cleanCode || 'unknown'}`;
+}
 
 const QUANTITY_ASK_WORDS = ['how much', 'how many', 'do i need', 'materials for', 'material for', 'order for', 'quantities for'];
 const QUANTITY_PRODUCT_WORDS = ['x-bond', 'xbond', 'x bond', 'bag', 'bags', 'liquid membrane', 'membrane', 'microbond', 'sealer', 'satin stone', 'natural shield', 'titan', 'matte', 'material', 'materials', 'product', 'stone'];
