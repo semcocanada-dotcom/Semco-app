@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   View,
   Text,
+  FlatList,
   ScrollView,
   StyleSheet,
   SafeAreaView,
@@ -26,6 +28,7 @@ import { useAuthStore } from '@/store/auth';
 import { sqftToSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
+import { syncProjectToCloud } from '@/services/cloud-sync';
 
 const FINISH_OPTIONS: { id: string; label: string }[] = [
   { id: 'matte', label: 'Matte' },
@@ -88,9 +91,10 @@ export default function CreateProjectScreen() {
       const projectId = createLocalId('proj');
       const now = new Date().toISOString();
 
-      await db.insert(projects).values({
+      if (!user) throw new Error('Sign in is required to create a project.');
+      const createdProject = {
         id: projectId,
-        installerId: user?.id ?? 'local',
+        installerId: user.id,
         clientName: clientName.trim(),
         clientEmail: clientEmail.trim() || null,
         clientPhone: clientPhone.trim() || null,
@@ -102,10 +106,19 @@ export default function CreateProjectScreen() {
         sealerProductId,
         status: 'active',
         warrantyIssued: false,
+        completionDate: null,
         notes: notes.trim() || null,
         createdAt: now,
         updatedAt: now,
-      });
+      };
+      await db.insert(projects).values(createdProject);
+      const cloudResult = await syncProjectToCloud(createdProject);
+      if (!cloudResult.ok) {
+        Alert.alert(
+          'Project saved on this device',
+          'The cloud copy is still pending. Keep the app installed and reconnect before submitting photos, forms, or warranty review.',
+        );
+      }
 
       router.replace({ pathname: '/projects/[id]', params: { id: projectId } } as any);
     } catch (saveError) {
@@ -152,26 +165,35 @@ export default function CreateProjectScreen() {
 
         <Text style={styles.label}>Colour</Text>
         <View style={styles.colorPanel}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colorStrip}>
-            <TouchableOpacity
-              activeOpacity={0.78}
-              onPress={() => setSelectedColorId(null)}
-              style={[styles.noColorTile, !selectedColorId && styles.colorTileSelected]}
-              accessibilityRole="button"
-              accessibilityLabel="Select colour later"
-            >
-              <Ionicons name="add" size={22} color={Colors.primary} />
-            </TouchableOpacity>
-            {STANDARD_COLORS.map((color) => (
+          <FlatList
+            horizontal
+            data={STANDARD_COLORS}
+            keyExtractor={(color) => color.id}
+            renderItem={({ item: color }) => (
               <ColorTile
-                key={color.id}
                 color={color}
                 onPress={() => setSelectedColorId(color.id)}
                 size={52}
                 style={selectedColorId === color.id ? styles.colorTileSelected : undefined}
               />
-            ))}
-          </ScrollView>
+            )}
+            ListHeaderComponent={(
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => setSelectedColorId(null)}
+                style={[styles.noColorTile, !selectedColorId && styles.colorTileSelected]}
+                accessibilityRole="button"
+                accessibilityLabel="Select colour later"
+              >
+                <Ionicons name="add" size={22} color={Colors.primary} />
+              </TouchableOpacity>
+            )}
+            initialNumToRender={12}
+            maxToRenderPerBatch={12}
+            windowSize={5}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.colorStrip}
+          />
           <Text style={styles.selectionText}>
             {selectedColor ? `${selectedColor.name}${selectedColor.code ? ` (${selectedColor.code})` : ''}` : 'Select later in the project file'}
           </Text>

@@ -1,6 +1,7 @@
-import { Image } from 'react-native';
+import { Platform } from 'react-native';
+import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system/legacy';
-import { LineCapStyle, PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { LineCapStyle, PDFDocument, StandardFonts, rgb } from 'pdf-lib/dist/pdf-lib.esm.js';
 import type { SignoffTemplate } from '@/constants/project-signoffs';
 import { getCroppedSignaturePath, parseSignatureRecord } from '@/components/projects/SignaturePad';
 import { supabase } from '@/services/supabase';
@@ -12,6 +13,11 @@ type CreateFilledSignoffPdfInput = {
   signatureData?: string | null;
 };
 
+export type FilledSignoffPdf = {
+  bytes: Uint8Array;
+  localUri: string | null;
+};
+
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
 
@@ -20,8 +26,10 @@ function sanitizeFilePart(value: string) {
 }
 
 async function getAssetBytes(source: SignoffTemplate['pdfPage']) {
-  const resolved = Image.resolveAssetSource(source);
-  const response = await fetch(resolved.uri);
+  const asset = Asset.fromModule(source as number);
+  await asset.downloadAsync();
+  const response = await fetch(asset.localUri ?? asset.uri);
+  if (!response.ok) throw new Error(`Could not load ${asset.name || 'sign-off form'} (${response.status}).`);
   return response.arrayBuffer();
 }
 
@@ -53,11 +61,7 @@ export async function createFilledSignoffPdf({
   template,
   values,
   signatureData,
-}: CreateFilledSignoffPdfInput) {
-  if (!FileSystem.documentDirectory) {
-    throw new Error('Document directory is unavailable.');
-  }
-
+}: CreateFilledSignoffPdfInput): Promise<FilledSignoffPdf> {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   const formImage = await pdfDoc.embedJpg(await getAssetBytes(template.pdfPage));
@@ -129,33 +133,38 @@ export async function createFilledSignoffPdf({
     }
   }
 
+  const bytes = await pdfDoc.save();
+  if (Platform.OS === 'web') {
+    return { bytes, localUri: null };
+  }
+
+  if (!FileSystem.documentDirectory) {
+    throw new Error('Document directory is unavailable.');
+  }
+
   const base64 = await pdfDoc.saveAsBase64({ dataUri: false });
   const directory = `${FileSystem.documentDirectory}semco-signoffs/`;
   await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
   const filename = `${sanitizeFilePart(projectId)}-${sanitizeFilePart(template.type)}-${Date.now()}.pdf`;
   const uri = `${directory}${filename}`;
   await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 });
-  return uri;
+  return { bytes, localUri: uri };
 }
 
 export async function uploadSignoffPdf(
-  localUri: string,
+  pdf: FilledSignoffPdf,
   installerId: string,
   projectId: string,
   signoffId: string,
   template: SignoffTemplate,
 ): Promise<string | null> {
   try {
-    const fileInfo = await FileSystem.getInfoAsync(localUri);
-    if (!fileInfo.exists) return null;
-
-    const base64 = await FileSystem.readAsStringAsync(localUri, { encoding: FileSystem.EncodingType.Base64 });
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    if (pdf.bytes.byteLength === 0) return null;
     const storagePath = `${installerId}/${projectId}/${signoffId}/${sanitizeFilePart(template.type)}.pdf`;
 
     const { error } = await supabase.storage
       .from('project-signoffs')
-      .upload(storagePath, bytes, {
+      .upload(storagePath, pdf.bytes, {
         contentType: 'application/pdf',
         upsert: true,
       });

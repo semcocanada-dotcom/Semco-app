@@ -29,6 +29,7 @@ export default function CompanyProfileScreen() {
   const [semcoAccountId, setSemcoAccountId] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     getInstallerProfile(installerId)
@@ -68,6 +69,7 @@ export default function CompanyProfileScreen() {
   async function saveProfile() {
     setSaving(true);
     setSaved(false);
+    setSaveError(null);
     try {
       const nextProfile = await upsertInstallerProfile(installerId, {
         companyName: companyName.trim() || null,
@@ -83,6 +85,13 @@ export default function CompanyProfileScreen() {
       });
       setProfile(nextProfile);
       setSaved(true);
+    } catch (error) {
+      console.error('[profile] save failed', error);
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : 'The profile could not be saved. Check your connection and try again.',
+      );
     } finally {
       setSaving(false);
     }
@@ -100,7 +109,7 @@ export default function CompanyProfileScreen() {
           </View>
           <Text style={styles.heroTitle}>{companyName.trim() || 'Add company information'}</Text>
           <Text style={styles.heroBody}>
-            Postal code keeps the contractor profile clean for warranty, rewards, and dealer routing. Until the western dealer is active, app orders and pricing default to Modern Arc.
+            Postal code keeps the contractor profile clean for warranty, rewards, and dealer routing. Manitoba and western orders route to Innovative Finishes; Ontario and eastern orders route to Modern Arc.
           </Text>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${completionPct}%` }]} />
@@ -139,6 +148,7 @@ export default function CompanyProfileScreen() {
         </Card>
 
         {saved ? <Text style={styles.savedText}>Profile saved.</Text> : null}
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
         <Button label="Save Company Profile" onPress={saveProfile} isLoading={saving} fullWidth size="lg" />
         <Button label="View Reward Progress" variant="secondary" onPress={() => router.push('/rewards' as any)} fullWidth />
       </ScrollView>
@@ -208,6 +218,12 @@ const styles = StyleSheet.create({
   },
   savedText: {
     color: Colors.success,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.sm,
+    textAlign: 'center',
+  },
+  errorText: {
+    color: Colors.danger,
     fontFamily: Fonts.semibold,
     fontSize: Typography.size.sm,
     textAlign: 'center',

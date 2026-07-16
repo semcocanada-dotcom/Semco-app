@@ -94,7 +94,6 @@ function formatDispenserNumber(value: number): string {
 
 function formatMl(ml: number): string {
   if (ml === 0) return '0 ml';
-  if (ml >= 1000) return `${(ml / 1000).toFixed(2)} L`;
   if (ml < 1) return `${ml.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')} ml`;
   return `${Number.isInteger(ml) ? ml.toFixed(0) : ml.toFixed(1)} ml`;
 }

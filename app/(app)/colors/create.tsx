@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   View,
   Text,
   ScrollView,
@@ -20,17 +21,21 @@ import type { PigmentRatio } from '@/database/schema/colors';
 import { Colors, Layout, Typography, Spacing, Radius } from '@/constants/theme';
 import { useAuthStore } from '@/store/auth';
 import { createLocalId } from '@/utils/id';
+import { syncCustomColorToCloud } from '@/services/cloud-sync';
 
 // Common XBond tints available to installers for custom mixes
 const AVAILABLE_PIGMENTS = [
   { code: 'KX', name: 'Titanium White' },
-  { code: 'LAMP-BLK', name: 'Lamp Black' },
-  { code: 'RAW-UMB', name: 'Raw Umber' },
-  { code: 'BRN-UMB', name: 'Burnt Umber' },
-  { code: 'YLW-OCH', name: 'Yellow Ochre' },
-  { code: 'EXT-RED', name: 'Exterior Red' },
-  { code: 'PHTH-BLU', name: 'Phthalo Blue' },
-  { code: 'CHR-GRN', name: 'Chrome Green Oxide' },
+  { code: 'B', name: 'Lamp Black' },
+  { code: 'C', name: 'Yellow Oxide' },
+  { code: 'D', name: 'Phthalo Green' },
+  { code: 'E', name: 'Phthalo Blue' },
+  { code: 'F', name: 'Red Oxide' },
+  { code: 'I', name: 'Brown Oxide' },
+  { code: 'L', name: 'Raw Umber' },
+  { code: 'M V', name: 'Magenta' },
+  { code: 'R S SS', name: 'Exterior Red' },
+  { code: 'T', name: 'Permanent Medium Yellow' },
 ];
 
 export default function CreateColorScreen() {
@@ -65,25 +70,49 @@ export default function CreateColorScreen() {
     setError(null);
     setIsSaving(true);
 
-    const id = createLocalId('custom');
-    let photoUrl: string | null = null;
-    if (localUri) photoUrl = await upload(id);
+    try {
+      const id = createLocalId('custom');
+      const photoUrl: string | null = localUri;
+      let storagePath: string | null = null;
+      if (localUri) {
+        const uploaded = await upload(id);
+        if (!uploaded) {
+          setError('The colour photo could not be uploaded. Check your connection and try again.');
+          return;
+        }
+        storagePath = uploaded.storagePath;
+      }
 
-    await db.insert(colors).values({
-      id,
-      name: name.trim(),
-      code: code.trim() || null,
-      isStandard: false,
-      installerId: user?.id ?? null,
-      pigments: JSON.stringify(pigments),
-      photoUrl,
-      notes: notes.trim() || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+      const createdColor = {
+        id,
+        name: name.trim(),
+        code: code.trim() || null,
+        isStandard: false,
+        installerId: user?.id ?? null,
+        pigments,
+        swatchHex: null,
+        photoUrl,
+        storagePath,
+        notes: notes.trim() || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await db.insert(colors).values(createdColor);
+      const cloudResult = await syncCustomColorToCloud(createdColor);
+      if (!cloudResult.ok) {
+        Alert.alert(
+          'Colour saved on this device',
+          'The cloud copy is still pending and will retry when the app reconnects.',
+        );
+      }
 
-    setIsSaving(false);
-    router.back();
+      router.back();
+    } catch (saveError) {
+      console.error('[colors] custom colour save failed', saveError);
+      setError('The custom colour could not be saved. Try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

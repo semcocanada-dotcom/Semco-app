@@ -2,13 +2,19 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import MarkdownDisplay from 'react-native-markdown-display';
+import MarkdownDisplay, { MarkdownIt } from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 import { lightImpactHaptic } from '@/utils/haptics';
 import type { AssistantCitation, ConversationMessage } from '@/database/schema/conversations';
 
 const COLLAPSE_THRESHOLD = 900;
 const COLLAPSED_MAX_HEIGHT = 360;
+const MAX_RENDERED_ANSWER_LENGTH = 16_000;
+const safeMarkdownParser = MarkdownIt({
+  html: false,
+  linkify: false,
+  typographer: false,
+});
 
 const assistantMarkdownStyles = {
   body: {
@@ -68,6 +74,7 @@ interface ChatBubbleProps {
 }
 
 const MAX_SOURCE_CHIPS = 3;
+const SHOW_INSTALLER_SOURCE_CHIPS = false;
 
 function dedupeCitations(citations: AssistantCitation[] | undefined): AssistantCitation[] {
   if (!citations?.length) return [];
@@ -92,13 +99,13 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   const router = useRouter();
   const isUser = message.role === 'user';
   const displayContent = React.useMemo(
-    () => (isUser ? message.content : normalizeDisplayedAnswer(message.content)),
+    () => (isUser ? message.content : normalizeDisplayedAnswer(message.content)).slice(0, MAX_RENDERED_ANSWER_LENGTH),
     [isUser, message.content],
   );
   const isLongAssistantAnswer = !isUser && displayContent.length > COLLAPSE_THRESHOLD;
   const [isExpanded, setExpanded] = React.useState(!isLongAssistantAnswer);
   const sourceChips = React.useMemo(
-    () => (isUser ? [] : dedupeCitations(message.citations)),
+    () => (isUser || !SHOW_INSTALLER_SOURCE_CHIPS ? [] : dedupeCitations(message.citations)),
     [isUser, message.citations],
   );
 
@@ -122,7 +129,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
               <Text style={styles.answerTitle}>Semco answer</Text>
             </View>
             <View style={!isExpanded && styles.collapsedAnswer}>
-              <MarkdownDisplay style={assistantMarkdownStyles}>{displayContent}</MarkdownDisplay>
+              <MarkdownDisplay style={assistantMarkdownStyles} markdownit={safeMarkdownParser}>{displayContent}</MarkdownDisplay>
             </View>
             {isLongAssistantAnswer && (
               <TouchableOpacity

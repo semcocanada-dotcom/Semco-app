@@ -1,7 +1,8 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card } from '@/components/ui';
+import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, Card } from '@/components/ui';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
+import { PRIVACY_POLICY_URL } from '@/constants/legal';
 
 const SECTIONS: { title: string; body: string }[] = [
   {
@@ -14,7 +15,7 @@ const SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: 'Where it is stored',
-    body: 'Records are stored on this device and, when submitted or synced, in Semco Canada’s secure cloud services (Supabase). Sign-off PDFs and photos are stored in access-controlled cloud storage. Questions sent to Ask Semco are processed by Google Firebase AI services to generate an answer.',
+    body: "Records are stored on this device and, when submitted or synced, in Semco Canada's secure cloud services (Supabase). Sign-off PDFs and photos are stored in access-controlled cloud storage. Questions sent to Ask Semco are processed by Google Firebase AI services to generate an answer.",
   },
   {
     title: 'Who can see it',
@@ -22,7 +23,7 @@ const SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: 'Your choices',
-    body: 'You can edit your company profile in the app at any time. To request correction or deletion of submitted records, contact Semco Canada at semcocanada@gmail.com and include your company name.',
+    body: 'You can edit your company profile in the app at any time. Account deletion can be initiated from More > Account and Security. Semco completes deletion requests within 30 days, subject only to legal recordkeeping requirements for signed customer contracts.',
   },
 ];
 
@@ -45,6 +46,7 @@ export default function PrivacyPolicyScreen() {
         ))}
 
         <View style={styles.footer}>
+          <Button label="Open Public Privacy Policy" variant="secondary" onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} fullWidth />
           <Text style={styles.footerText}>
             Questions about this policy: semcocanada@gmail.com
           </Text>

@@ -23,6 +23,7 @@ export type PortalData = {
   receipts: PortalRecord[];
   rewards: PortalRecord[];
   warranty: PortalRecord[];
+  deletions: PortalRecord[];
 };
 
 const SEMCO_ADMIN_EMAILS = new Set(['semcocanada@gmail.com']);
@@ -75,6 +76,7 @@ export async function getPortalData(profile: PortalProfile): Promise<PortalData>
     receipts,
     rewards,
     warranty,
+    deletions,
   ] = await Promise.all([
     selectAll('installer_profiles', 'updated_at'),
     selectAll('projects', 'updated_at'),
@@ -84,6 +86,7 @@ export async function getPortalData(profile: PortalProfile): Promise<PortalData>
     selectAll('purchase_receipts', 'updated_at'),
     selectAll('reward_credits', 'created_at'),
     selectAll('warranty_reviews', 'updated_at'),
+    selectAll('account_deletion_requests', 'requested_at'),
   ]);
 
   return {
@@ -96,7 +99,104 @@ export async function getPortalData(profile: PortalProfile): Promise<PortalData>
     receipts,
     rewards,
     warranty,
+    deletions,
   };
+}
+
+export async function reviewOrderRequest(id: string, status: 'needs_revision' | 'approved') {
+  const now = new Date().toISOString();
+  const { error } = await supabase.from('order_requests').update({
+    status,
+    dealer_submitted_at: status === 'approved' ? now : null,
+    updated_at: now,
+  }).eq('id', id);
+  if (error) throw error;
+  if (status === 'approved') {
+    const { error: rewardError } = await supabase.from('reward_credits').update({
+      status: 'verified',
+      verified_at: now,
+    }).eq('source_type', 'order_request').eq('source_id', id);
+    if (rewardError) console.warn('[portal-cloud] order approved; reward verification requires Semco admin', rewardError);
+  }
+}
+
+export async function reviewWarranty(id: string, projectId: string, status: 'needs_revision' | 'approved' | 'rejected', reviewerName: string) {
+  const now = new Date().toISOString();
+  const { data: existing, error: fetchError } = await supabase
+    .from('warranty_reviews')
+    .select('warranty_document_url')
+    .eq('id', id)
+    .maybeSingle();
+  if (fetchError) throw fetchError;
+  const hasIssuedDocument = status === 'approved' && Boolean(existing?.warranty_document_url);
+  const { error } = await supabase.from('warranty_reviews').update({
+    status,
+    reviewer_name: reviewerName,
+    effective_date: status === 'approved' ? now.slice(0, 10) : null,
+    reviewed_at: now,
+    updated_at: now,
+  }).eq('id', id);
+  if (error) throw error;
+  const { error: projectError } = await supabase.from('projects').update({
+    warranty_issued: hasIssuedDocument,
+    updated_at: now,
+  }).eq('id', projectId);
+  if (projectError) throw projectError;
+}
+
+export async function issueWarrantyDocument(input: {
+  reviewId: string;
+  projectId: string;
+  installerId: string;
+  reviewerName: string;
+  fileUri: string;
+}) {
+  const fileResponse = await fetch(input.fileUri);
+  if (!fileResponse.ok) throw new Error('The selected warranty PDF could not be read.');
+  const fileBytes = new Uint8Array(await fileResponse.arrayBuffer());
+  const storagePath = `${input.installerId}/${input.projectId}/${input.reviewId}/issued-warranty.pdf`;
+  const { error: uploadError } = await supabase.storage
+    .from('warranty-documents')
+    .upload(storagePath, fileBytes, {
+      contentType: 'application/pdf',
+      upsert: true,
+    });
+  if (uploadError) throw uploadError;
+
+  const now = new Date().toISOString();
+  const { error: reviewError } = await supabase.from('warranty_reviews').update({
+    status: 'approved',
+    reviewer_name: input.reviewerName,
+    effective_date: now.slice(0, 10),
+    reviewed_at: now,
+    warranty_document_url: storagePath,
+    updated_at: now,
+  }).eq('id', input.reviewId);
+  if (reviewError) throw reviewError;
+
+  const { error: projectError } = await supabase.from('projects').update({
+    warranty_issued: true,
+    updated_at: now,
+  }).eq('id', input.projectId);
+  if (projectError) throw projectError;
+}
+
+export async function reviewReceipt(id: string, status: 'verified' | 'rejected') {
+  const now = new Date().toISOString();
+  const { error } = await supabase.from('purchase_receipts').update({ status, reviewed_at: now, updated_at: now }).eq('id', id);
+  if (error) throw error;
+  const { error: rewardError } = await supabase.from('reward_credits').update({
+    status,
+    verified_at: status === 'verified' ? now : null,
+  }).eq('source_type', 'receipt').eq('source_id', id);
+  if (rewardError) throw rewardError;
+}
+
+export async function completeDeletionRequest(id: string) {
+  const { error } = await supabase.from('account_deletion_requests').update({
+    status: 'processing',
+  }).eq('id', id);
+  if (error) throw error;
 }
 
 async function selectAll(table: string, orderColumn: string): Promise<PortalRecord[]> {

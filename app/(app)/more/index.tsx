@@ -29,6 +29,13 @@ const MORE_ACTIONS = [
     tone: 'primary' as const,
   },
   {
+    title: 'Account and security',
+    description: 'Sign out, password help, or request account deletion.',
+    icon: 'person-circle-outline' as const,
+    route: '/account',
+    tone: 'primary' as const,
+  },
+  {
     title: 'Reward tiers',
     description: 'Verified square footage milestones and receipt credits.',
     icon: 'trophy-outline' as const,

@@ -12,6 +12,7 @@ export const colors = sqliteTable(
     pigments: text('pigments', { mode: 'json' }).notNull().default('[]'),
     swatchHex: text('swatch_hex'),
     photoUrl: text('photo_url'),
+    storagePath: text('storage_path'),
     notes: text('notes'),
     createdAt: text('created_at').notNull(),
     updatedAt: text('updated_at').notNull(),

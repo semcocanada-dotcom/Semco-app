@@ -1,5 +1,6 @@
 import { supabase } from '@/services/supabase';
 import type { SignoffTemplate } from '@/constants/project-signoffs';
+import { createPrivateFileUrl } from '@/services/private-storage';
 
 type SyncProjectSignoffInput = {
   id: string;
@@ -26,15 +27,7 @@ export async function getSignoffPdfViewUrl(pdfUrl: string): Promise<string | nul
   if (/^https?:\/\//i.test(pdfUrl)) return pdfUrl;
 
   try {
-    const { data, error } = await supabase.storage
-      .from('project-signoffs')
-      .createSignedUrl(pdfUrl, SIGNED_URL_TTL_SECONDS);
-
-    if (error) {
-      console.error('[signoffs-cloud] signed url error:', error);
-      return null;
-    }
-    return data.signedUrl;
+    return await createPrivateFileUrl('project-signoffs', pdfUrl, SIGNED_URL_TTL_SECONDS);
   } catch (err) {
     console.error('[signoffs-cloud] signed url failed:', err);
     return null;

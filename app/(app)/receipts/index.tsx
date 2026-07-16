@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { AppHeader, Button, Card, Input, SectionHeader } from '@/components/ui';
 import { db } from '@/database/client';
@@ -8,6 +9,9 @@ import { useAuthStore } from '@/store/auth';
 import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
+import { pickReceiptPhoto, uploadPrivatePhoto, type CapturedPhoto } from '@/services/camera';
+import { syncPurchaseReceiptToCloud, syncRewardCreditToCloud } from '@/services/cloud-sync';
+import { Radius } from '@/constants/theme';
 
 export default function ReceiptSubmissionScreen() {
   const router = useRouter();
@@ -19,32 +23,54 @@ export default function ReceiptSubmissionScreen() {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [cloudPending, setCloudPending] = useState(false);
+  const [receiptPhoto, setReceiptPhoto] = useState<CapturedPhoto | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function submitReceipt() {
     const sqft = Number.parseFloat(sqftClaimed);
-    if (!Number.isFinite(sqft) || sqft <= 0) return;
+    if (!Number.isFinite(sqft) || sqft <= 0) {
+      setError('Enter the square feet shown on the purchase record.');
+      return;
+    }
+    if (!receiptPhoto) {
+      setError('Attach a clear receipt photo so Semco can verify the credit.');
+      return;
+    }
 
     setSaving(true);
     setSaved(false);
+    setCloudPending(false);
+    setError(null);
     try {
       const now = new Date().toISOString();
       const receiptId = createLocalId('receipt');
-      await db.insert(purchaseReceipts).values({
+      const upload = await uploadPrivatePhoto(
+        receiptPhoto.localUri,
+        'purchase-receipts',
+        `${installerId}/${receiptId}/receipt.jpg`,
+      );
+      if (!upload) {
+        setError('The receipt photo could not be uploaded. Check your connection and try again.');
+        return;
+      }
+      const createdReceipt = {
         id: receiptId,
         installerId,
         projectId: null,
         dealerName: dealerName.trim() || null,
         receiptNumber: receiptNumber.trim() || null,
-        receiptUrl: null,
+        receiptUrl: upload.storagePath,
         sqftClaimed: sqft,
         status: 'pending',
         notes: notes.trim() || null,
         createdAt: now,
         updatedAt: now,
         reviewedAt: null,
-      });
+      };
+      await db.insert(purchaseReceipts).values(createdReceipt);
 
-      await db.insert(rewardCredits).values({
+      const createdCredit = {
         id: createLocalId('reward'),
         installerId,
         projectId: null,
@@ -55,13 +81,30 @@ export default function ReceiptSubmissionScreen() {
         notes: `Receipt submitted${dealerName.trim() ? ` from ${dealerName.trim()}` : ''}.`,
         createdAt: now,
         verifiedAt: null,
-      });
+      };
+      await db.insert(rewardCredits).values(createdCredit);
+
+      const [receiptCloud, rewardCloud] = await Promise.all([
+        syncPurchaseReceiptToCloud(createdReceipt),
+        syncRewardCreditToCloud(createdCredit),
+      ]);
+      const pendingCloudUpload = !receiptCloud.ok || !rewardCloud.ok;
 
       setSaved(true);
+      setCloudPending(pendingCloudUpload);
       setDealerName('');
       setReceiptNumber('');
       setSqftClaimed('');
       setNotes('');
+      setReceiptPhoto(null);
+      setError(
+        pendingCloudUpload
+          ? 'Saved on this device. The cloud review copy will retry when the app reconnects.'
+          : null,
+      );
+    } catch (submitError) {
+      console.error('[receipts] submission failed', submitError);
+      setError('The receipt could not be saved. Check your connection and try again.');
     } finally {
       setSaving(false);
     }
@@ -85,7 +128,26 @@ export default function ReceiptSubmissionScreen() {
         <Input label="Square Feet Purchased" value={sqftClaimed} onChangeText={setSqftClaimed} keyboardType="decimal-pad" placeholder="e.g. 750" suffix="sq ft" />
         <Input label="Notes" value={notes} onChangeText={setNotes} placeholder="Products, order details, or review notes" multiline />
 
-        {saved ? <Text style={styles.savedText}>Receipt submitted for review.</Text> : null}
+        <View style={styles.attachmentWrap}>
+          {receiptPhoto ? <Image source={{ uri: receiptPhoto.localUri }} style={styles.receiptImage} contentFit="cover" /> : null}
+          <Button
+            label={receiptPhoto ? 'Replace Receipt Photo' : 'Attach Receipt Photo'}
+            variant="secondary"
+            onPress={async () => {
+              const picked = await pickReceiptPhoto();
+              if (picked) { setReceiptPhoto(picked); setError(null); }
+            }}
+            fullWidth
+          />
+          <Text style={styles.attachmentHint}>Use a clear image showing the dealer, products, and purchase details.</Text>
+        </View>
+
+        {saved ? (
+          <Text style={styles.savedText}>
+            {cloudPending ? 'Receipt saved. Cloud upload pending.' : 'Receipt submitted for review.'}
+          </Text>
+        ) : null}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
         <Button label="Submit for Review" onPress={submitReceipt} isLoading={saving} disabled={!sqftClaimed.trim()} fullWidth size="lg" />
         <Button label="View Reward Progress" variant="secondary" onPress={() => router.push('/rewards' as any)} fullWidth />
       </ScrollView>
@@ -122,4 +184,8 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     textAlign: 'center',
   },
+  attachmentWrap: { gap: Spacing.sm },
+  receiptImage: { width: '100%', aspectRatio: 4 / 3, borderRadius: Radius.md, backgroundColor: Colors.softGrey },
+  attachmentHint: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.4 },
+  errorText: { color: Colors.danger, fontFamily: Fonts.semibold, fontSize: Typography.size.sm, textAlign: 'center' },
 });

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,16 +26,18 @@ import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialReta
 import { PhotoTimeline } from '@/components/projects/PhotoTimeline';
 import { ProjectSignoffPanel } from '@/components/projects/ProjectSignoffPanel';
 import { WarrantyPhotoChecklist } from '@/components/projects/WarrantyPhotoChecklist';
-import { captureProgressPhoto, uploadPhoto } from '@/services/camera';
+import { captureProgressPhoto, pickProgressPhoto, persistProjectPhoto, type CapturedPhoto } from '@/services/camera';
 import { getWarrantyPhotoStatus, getWarrantySummaryText } from '@/services/warranty';
 import { useAuthStore } from '@/store/auth';
-import { Badge, BatchCard, Button, Card, EmptyState, StatCard, TabControl } from '@/components/ui';
+import { Badge, BatchCard, Button, Card, EmptyState, Input, StatCard, TabControl } from '@/components/ui';
 import { resolveDealerContext } from '@/constants/dealers';
 import { STOCKED_SEALERS } from '@/constants/stocked-sealers';
 import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
-import { formatSqftFromSqm } from '@/utils/area';
+import { formatSqftFromSqm, sqftToSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
+import { fetchProjectWorkspaceFromCloud, hydrateProjectFromCloud, syncBatchLogToCloud, syncProjectPhotoToCloud, syncProjectToCloud, syncWarrantyReviewToCloud } from '@/services/cloud-sync';
+import { createPrivateFileUrl } from '@/services/private-storage';
 
 type DetailTab = 'job' | 'spec' | 'materials' | 'photos' | 'forms';
 
@@ -66,8 +68,15 @@ const STATUS_BADGE: Record<string, { label: string; variant: 'success' | 'warnin
 
 const STANDARD_COLORS = colorsData as Color[];
 
+function mergeById<T extends { id: string }>(localRows: T[], cloudRows: T[]) {
+  const merged = new Map(localRows.map((row) => [row.id, row]));
+  for (const row of cloudRows) merged.set(row.id, row);
+  return [...merged.values()];
+}
+
 export default function ProjectDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: string | string[] }>();
+  const projectId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
@@ -81,71 +90,147 @@ export default function ProjectDetailScreen() {
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
   const [isLoadingProject, setIsLoadingProject] = useState(true);
   const [tab, setTab] = useState<DetailTab>('job');
+  const [showBatchForm, setShowBatchForm] = useState(false);
+  const [batchProduct, setBatchProduct] = useState('X-Bond Stone');
+  const [batchNumber, setBatchNumber] = useState('');
+  const [batchQuantityKg, setBatchQuantityKg] = useState('');
+  const [batchCoverageSqft, setBatchCoverageSqft] = useState('');
+  const [batchNotes, setBatchNotes] = useState('');
+  const [batchError, setBatchError] = useState<string | null>(null);
+  const [isSavingBatch, setSavingBatch] = useState(false);
+  const [isSubmittingWarranty, setSubmittingWarranty] = useState(false);
 
-  const load = useCallback(() => {
-    if (!id) {
+  const load = useCallback(async () => {
+    if (!projectId) {
       setProject(null);
       setIsLoadingProject(false);
       return;
     }
     setIsLoadingProject(true);
-    Promise.all([
-      db.select().from(projects).where(eq(projects.id, id)).limit(1),
-      db.select().from(projects_photos).where(eq(projects_photos.projectId, id)),
-      db.select().from(batchLogs).where(eq(batchLogs.projectId, id)),
-      db.select().from(calculations).where(eq(calculations.projectId, id)).orderBy(desc(calculations.createdAt)).limit(1),
-      db.select().from(orderRequests).where(eq(orderRequests.projectId, id)).orderBy(desc(orderRequests.createdAt)).limit(1),
-      db.select().from(warrantyReviews).where(eq(warrantyReviews.projectId, id)).orderBy(desc(warrantyReviews.createdAt)).limit(1),
-      db.select().from(projectSignoffs).where(eq(projectSignoffs.projectId, id)).orderBy(desc(projectSignoffs.updatedAt)),
-    ])
-      .then(([projectRows, photoRows, batchRows, calcRows, requestRows, warrantyRows, signoffRows]) => {
-        setProject(projectRows[0] ?? null);
-        setPhotos(photoRows);
-        setBatches(batchRows);
-        setCalculation(calcRows[0] ?? null);
-        setOrderRequest(requestRows[0] ?? null);
-        setWarrantyReview(warrantyRows[0] ?? null);
-        setSignoffs(signoffRows);
-      })
-      .catch((error) => {
-        console.error(error);
-        setProject(null);
-      })
-      .finally(() => setIsLoadingProject(false));
-  }, [id]);
+    try {
+      let projectRow: Project | null = (await db.select().from(projects).where(eq(projects.id, projectId)).limit(1))[0] ?? null;
+      if (!projectRow && user?.id) {
+        projectRow = await hydrateProjectFromCloud(projectId, user.id);
+      }
+      const [photoRows, batchRows, calcRows, requestRows, warrantyRows, signoffRows] = await Promise.all([
+        db.select().from(projects_photos).where(eq(projects_photos.projectId, projectId)),
+        db.select().from(batchLogs).where(eq(batchLogs.projectId, projectId)),
+        db.select().from(calculations).where(eq(calculations.projectId, projectId)).orderBy(desc(calculations.createdAt)).limit(1),
+        db.select().from(orderRequests).where(eq(orderRequests.projectId, projectId)).orderBy(desc(orderRequests.createdAt)).limit(1),
+        db.select().from(warrantyReviews).where(eq(warrantyReviews.projectId, projectId)).orderBy(desc(warrantyReviews.createdAt)).limit(1),
+        db.select().from(projectSignoffs).where(eq(projectSignoffs.projectId, projectId)).orderBy(desc(projectSignoffs.updatedAt)),
+      ]);
+      const cloudWorkspace = user?.id
+        ? await fetchProjectWorkspaceFromCloud(projectId, user.id).catch((error) => {
+          console.error('[project] cloud workspace refresh failed; showing offline records', error);
+          return null;
+        })
+        : null;
+      setProject(projectRow);
+      setPhotos(mergeById(photoRows, cloudWorkspace?.photos ?? []));
+      setBatches(mergeById(batchRows, cloudWorkspace?.batches ?? []));
+      setCalculation(cloudWorkspace?.calculation ?? calcRows[0] ?? null);
+      setOrderRequest(cloudWorkspace?.orderRequest ?? requestRows[0] ?? null);
+      setWarrantyReview(cloudWorkspace?.warrantyReview ?? warrantyRows[0] ?? null);
+      setSignoffs(mergeById(signoffRows, cloudWorkspace?.signoffs ?? []));
+    } catch (error) {
+      console.error(error);
+      setProject(null);
+    } finally {
+      setIsLoadingProject(false);
+    }
+  }, [projectId, user?.id]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     getInstallerProfile(user?.id ?? 'local').then(setProfile).catch(console.error);
   }, [user?.id]);
 
-  const handleAddPhoto = async (stage: PhotoStage) => {
-    const photo = await captureProgressPhoto();
-    if (!photo || !id) return;
+  const saveStagePhoto = async (stage: PhotoStage, photo: CapturedPhoto | null) => {
+    if (!photo || !projectId) return;
+    try {
+      const photoId = createLocalId('photo');
+      const photoUrl = await persistProjectPhoto(photo.localUri, photoId);
+      const createdPhoto = {
+        id: photoId,
+        projectId,
+        installerId: user?.id ?? project?.installerId ?? '',
+        stage,
+        photoUrl,
+        storagePath: null,
+        caption: null,
+        takenAt: new Date().toISOString(),
+      };
+      await db.insert(projects_photos).values(createdPhoto);
+      const syncResult = await syncProjectPhotoToCloud(createdPhoto);
+      await load();
+      if (!syncResult.ok) {
+        Alert.alert(
+          'Photo saved on this device',
+          'The cloud upload is still pending. Keep the app online and retry the warranty submission before leaving the job.',
+        );
+      }
+    } catch (error) {
+      console.error('[project] photo save failed', error);
+      Alert.alert('Photo not saved', 'The stage photo could not be added. Please try again.');
+    }
+  };
 
-    const photoId = createLocalId('photo');
-    const photoUrl = photo.localUri;
+  const handleAddPhoto = (stage: PhotoStage) => {
+    if (Platform.OS === 'web') {
+      void pickProgressPhoto().then((photo) => saveStagePhoto(stage, photo));
+      return;
+    }
 
-    uploadPhoto(photo.localUri, 'project-photos', `${user?.id ?? 'local'}/${id}/${stage}/${photoId}.jpg`)
-      .then((url) => {
-        if (url) {
-          db.update(projects_photos)
-            .set({ photoUrl: url })
-            .where(eq(projects_photos.id, photoId))
-            .execute();
-        }
-      });
+    Alert.alert('Add stage photo', 'Take a new photo or choose one already saved on this device.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Choose Existing', onPress: () => { void pickProgressPhoto().then((photo) => saveStagePhoto(stage, photo)); } },
+      { text: 'Take Photo', onPress: () => { void captureProgressPhoto().then((photo) => saveStagePhoto(stage, photo)); } },
+    ]);
+  };
 
-    await db.insert(projects_photos).values({
-      id: photoId,
-      projectId: id,
-      installerId: user?.id ?? 'local',
-      stage,
-      photoUrl,
-      takenAt: new Date().toISOString(),
-    });
+  const handleSaveBatch = async () => {
+    if (!project) return;
+    if (!batchProduct.trim() || !batchNumber.trim()) {
+      setBatchError('Product and batch or lot number are required.');
+      return;
+    }
 
-    load();
+    setBatchError(null);
+    setSavingBatch(true);
+    try {
+      const quantityKg = Number.parseFloat(batchQuantityKg);
+      const coverageSqft = Number.parseFloat(batchCoverageSqft);
+      const createdBatch: BatchLog = {
+        id: createLocalId('batch'),
+        projectId: project.id,
+        productId: batchProduct.trim(),
+        batchNumber: batchNumber.trim(),
+        quantityKg: Number.isFinite(quantityKg) ? quantityKg : null,
+        coverageAchievedSqm: Number.isFinite(coverageSqft) ? sqftToSqm(coverageSqft) : null,
+        appliedAt: new Date().toISOString(),
+        notes: batchNotes.trim() || null,
+      };
+      await db.insert(batchLogs).values(createdBatch);
+      const cloudResult = await syncBatchLogToCloud(createdBatch);
+      if (!cloudResult.ok) {
+        Alert.alert(
+          'Batch saved on this device',
+          'The cloud copy is still pending. Reconnect before submitting the project for warranty review.',
+        );
+      }
+      setBatchNumber('');
+      setBatchQuantityKg('');
+      setBatchCoverageSqft('');
+      setBatchNotes('');
+      setShowBatchForm(false);
+      load();
+    } catch (error) {
+      console.error('[project] batch save failed', error);
+      setBatchError('This batch could not be saved. Try again.');
+    } finally {
+      setSavingBatch(false);
+    }
   };
 
   const status = project ? STATUS_BADGE[project.status] ?? STATUS_BADGE.active : STATUS_BADGE.active;
@@ -179,7 +264,27 @@ export default function ProjectDetailScreen() {
   );
 
   const submitWarrantyReview = async () => {
-    if (!project) return;
+    if (!project || isSubmittingWarranty) return;
+    if (!warrantyPhotoStatus.isQualified) {
+      Alert.alert('Stage photos incomplete', 'Add one clear photo for every required warranty stage before submitting this project.');
+      return;
+    }
+
+    setSubmittingWarranty(true);
+    try {
+      const pendingUploads = photos.filter((photo) => !photo.storagePath);
+      if (pendingUploads.length > 0) {
+        const uploadResults = await Promise.all(pendingUploads.map(syncProjectPhotoToCloud));
+        if (uploadResults.some((result) => !result.ok)) {
+          await load();
+          Alert.alert(
+            'Photos still uploading',
+            'At least one warranty photo is not in the cloud yet. Check your connection and submit again so Semco receives the complete project record.',
+          );
+          return;
+        }
+      }
+
     const now = new Date().toISOString();
     const products = [
       selectedColor ? `Colour: ${selectedColor.name}${selectedColor.code ? ` (${selectedColor.code})` : ''}` : null,
@@ -188,15 +293,19 @@ export default function ProjectDetailScreen() {
     ].filter(Boolean).join(' | ');
 
     if (warrantyReview) {
+      const updatedReview = {
+        ...warrantyReview,
+        status: 'in_review',
+        productsSummary: products || warrantyReview.productsSummary,
+        updatedAt: now,
+      } as WarrantyReview;
+      const syncResult = await syncWarrantyReviewToCloud(updatedReview);
+      if (!syncResult.ok) throw new Error(syncResult.error || 'Warranty review upload failed');
       await db.update(warrantyReviews)
-        .set({
-          status: 'in_review',
-          productsSummary: products || warrantyReview.productsSummary,
-          updatedAt: now,
-        })
+        .set(updatedReview)
         .where(eq(warrantyReviews.id, warrantyReview.id));
     } else {
-      await db.insert(warrantyReviews).values({
+      const createdReview = {
         id: createLocalId('warranty'),
         projectId: project.id,
         installerId: project.installerId,
@@ -210,14 +319,24 @@ export default function ProjectDetailScreen() {
         createdAt: now,
         updatedAt: now,
         reviewedAt: null,
-      });
+      } as WarrantyReview;
+      const syncResult = await syncWarrantyReviewToCloud(createdReview);
+      if (!syncResult.ok) throw new Error(syncResult.error || 'Warranty review upload failed');
+      await db.insert(warrantyReviews).values(createdReview);
     }
 
-    load();
+      await load();
+      Alert.alert('Submitted for Semco review', 'The complete photo record is now available to Semco for warranty review.');
+    } catch (error) {
+      console.error('[project] warranty submission failed', error);
+      Alert.alert('Warranty review not submitted', 'The project remains on this device. Check your connection and try again.');
+    } finally {
+      setSubmittingWarranty(false);
+    }
   };
 
   const handleMarkComplete = () => {
-    if (!id) return;
+    if (!projectId) return;
     const missingLabels = warrantyPhotoStatus.missingStages.map((stage) => stage.label).join(', ');
     const message = warrantyPhotoStatus.isQualified
       ? 'Mark this project as complete? Warranty photo record is complete.'
@@ -234,9 +353,14 @@ export default function ProjectDetailScreen() {
       {
         text: warrantyPhotoStatus.isQualified ? 'Complete' : 'Complete Anyway',
         onPress: async () => {
+          const updatedProject = { ...project, status: 'complete', updatedAt: new Date().toISOString() } as Project;
           await db.update(projects)
-            .set({ status: 'complete', updatedAt: new Date().toISOString() })
-            .where(eq(projects.id, id));
+            .set({ status: updatedProject.status, updatedAt: updatedProject.updatedAt })
+            .where(eq(projects.id, projectId));
+          const cloudResult = await syncProjectToCloud(updatedProject);
+          if (!cloudResult.ok) {
+            Alert.alert('Cloud update pending', 'The project is complete on this device, but the admin portal has not received the update yet.');
+          }
           load();
         },
       },
@@ -302,9 +426,7 @@ export default function ProjectDetailScreen() {
             <Ionicons name="chevron-back" size={22} color={Colors.darkTeal} />
           </TouchableOpacity>
           <Text style={styles.screenTitle}>Project File</Text>
-          <TouchableOpacity style={styles.roundButton} accessibilityLabel="More project options">
-            <Ionicons name="ellipsis-vertical" size={20} color={Colors.navy} />
-          </TouchableOpacity>
+          <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.hero}>
@@ -480,6 +602,27 @@ export default function ProjectDetailScreen() {
               <Metric label="Batches" value={String(batchSummary.count)} />
               <Metric label="kg Used" value={batchSummary.kg.toFixed(1)} />
             </View>
+            <Button
+              label={showBatchForm ? 'Close Batch Form' : 'Add Batch'}
+              variant={showBatchForm ? 'secondary' : 'primary'}
+              onPress={() => {
+                setBatchError(null);
+                setShowBatchForm((current) => !current);
+              }}
+              fullWidth
+            />
+            {showBatchForm ? (
+              <Card style={styles.batchFormCard}>
+                <Text style={styles.sectionTitle}>Log a product batch</Text>
+                <Text style={styles.bodyText}>Keep the product and lot number with the job record for warranty review.</Text>
+                <Input label="Product" value={batchProduct} onChangeText={setBatchProduct} placeholder="X-Bond Stone" />
+                <Input label="Batch or Lot Number" value={batchNumber} onChangeText={setBatchNumber} placeholder="Enter the number from the package" error={batchError ?? undefined} />
+                <Input label="Quantity Used" value={batchQuantityKg} onChangeText={setBatchQuantityKg} keyboardType="decimal-pad" suffix="kg" />
+                <Input label="Area Covered" value={batchCoverageSqft} onChangeText={setBatchCoverageSqft} keyboardType="decimal-pad" suffix="sq ft" />
+                <Input label="Notes" value={batchNotes} onChangeText={setBatchNotes} placeholder="Optional field notes" multiline />
+                <Button label="Save Batch" onPress={handleSaveBatch} isLoading={isSavingBatch} fullWidth />
+              </Card>
+            ) : null}
             {batches.length > 0 ? (
               batches.map((batch) => (
                 <BatchCard
@@ -523,9 +666,18 @@ export default function ProjectDetailScreen() {
               {!warrantyPhotoStatus.isQualified ? (
                 <Button label="Add Missing Photos" variant="primary" onPress={() => setTab('photos')} fullWidth />
               ) : warrantyReview?.status === 'approved' && warrantyReview.warrantyDocumentUrl ? (
-                <Button label="Download Warranty Document" variant="primary" onPress={() => { Linking.openURL(warrantyReview.warrantyDocumentUrl!).catch(console.error); }} fullWidth />
+                <Button label="Download Warranty Document" variant="primary" onPress={async () => {
+                  const url = await createPrivateFileUrl('warranty-documents', warrantyReview.warrantyDocumentUrl!);
+                  if (url) await Linking.openURL(url);
+                }} fullWidth />
               ) : (
-                <Button label={warrantyReview ? 'Resubmit for Semco Review' : 'Submit for Semco Review'} variant="primary" onPress={submitWarrantyReview} fullWidth />
+                <Button
+                  label={warrantyReview ? 'Resubmit for Semco Review' : 'Submit for Semco Review'}
+                  variant="primary"
+                  onPress={submitWarrantyReview}
+                  isLoading={isSubmittingWarranty}
+                  fullWidth
+                />
               )}
               <Button label="Open Material Request" variant="secondary" onPress={() => router.push({ pathname: '/orders', params: { projectId: project.id } } as any)} fullWidth />
             </Card>
@@ -707,6 +859,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
+  headerSpacer: {
+    width: 42,
+    height: 42,
+  },
   screenTitle: {
     color: Colors.navy,
     fontSize: Typography.size.base,
@@ -747,6 +903,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   infoCard: { gap: Spacing.sm },
+  batchFormCard: { gap: Spacing.md },
   section: { gap: Spacing.md },
   dashboardGrid: {
     flexDirection: 'row',

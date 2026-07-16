@@ -63,6 +63,7 @@ export async function initDatabase() {
       pigments TEXT NOT NULL DEFAULT '[]',
       swatch_hex TEXT,
       photo_url TEXT,
+      storage_path TEXT,
       notes TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
@@ -98,6 +99,7 @@ export async function initDatabase() {
       installer_id TEXT NOT NULL,
       stage TEXT NOT NULL,
       photo_url TEXT NOT NULL,
+      storage_path TEXT,
       caption TEXT,
       taken_at TEXT NOT NULL
     );
@@ -251,6 +253,21 @@ export async function initDatabase() {
   } catch {
     // Existing local databases may already have the column.
   }
+
+  try {
+    await sqlite.execAsync(`ALTER TABLE colors ADD COLUMN storage_path TEXT;`);
+  } catch {
+    // Existing local databases may already have the column.
+  }
+
+  try {
+    await sqlite.execAsync(`ALTER TABLE project_photos ADD COLUMN storage_path TEXT;`);
+  } catch {
+    // Existing local databases may already have the column.
+  }
+
+  const { migrateLegacyIdsForCloud } = await import('./cloud-migrations');
+  await migrateLegacyIdsForCloud();
 }
 
 export { sqlite };

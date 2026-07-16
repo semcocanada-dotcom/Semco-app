@@ -26,6 +26,8 @@ process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ||= easEnv.EXPO_PUBLIC_FIRE
 process.env.EXPO_PUBLIC_FIREBASE_APP_ID ||= easEnv.EXPO_PUBLIC_FIREBASE_APP_ID;
 process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID ||= easEnv.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID;
 process.env.EXPO_PUBLIC_FIREBASE_AI_MODEL ||= easEnv.EXPO_PUBLIC_FIREBASE_AI_MODEL;
+process.env.EXPO_PUBLIC_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY ||=
+  easEnv.EXPO_PUBLIC_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY;
 
 module.exports = ({ config }) => ({
   ...config,
@@ -45,6 +47,7 @@ module.exports = ({ config }) => ({
       appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
       measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
       aiModel: process.env.EXPO_PUBLIC_FIREBASE_AI_MODEL || 'gemini-3.5-flash',
+      appCheckRecaptchaSiteKey: process.env.EXPO_PUBLIC_FIREBASE_APPCHECK_RECAPTCHA_SITE_KEY,
     },
   },
 });

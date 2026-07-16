@@ -12,13 +12,13 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
-import { initDatabase } from '@/database/client';
-import { seedDatabase } from '@/database/seed';
 import { Colors } from '@/constants/theme';
+import { useAuthStore } from '@/store/auth';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
+  const initializeAuth = useAuthStore((state) => state.initialize);
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -27,9 +27,12 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Initialize local SQLite and seed product data for preview mode.
-    initDatabase().then(() => seedDatabase()).catch(console.error);
-  }, []);
+    let unsubscribe: (() => void) | undefined;
+    initializeAuth().then((cleanup) => { unsubscribe = cleanup; }).catch((error) => {
+      console.error('[auth] initialization failed', error);
+    });
+    return () => unsubscribe?.();
+  }, [initializeAuth]);
 
   useEffect(() => {
     if (fontsLoaded) {

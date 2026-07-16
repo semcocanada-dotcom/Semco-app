@@ -1,5 +1,5 @@
 export type DealerRegion = 'east' | 'west' | 'unknown';
-export type DealerId = 'modern-arc' | 'diamond-arc-west';
+export type DealerId = 'modern-arc' | 'innovative-finishes-west';
 
 export type DealerContext = {
   region: DealerRegion;
@@ -45,6 +45,12 @@ const WEST_PROVINCES = [
   'SASKATCHEWAN',
   'MB',
   'MANITOBA',
+  'YT',
+  'YUKON',
+  'NT',
+  'NORTHWEST TERRITORIES',
+  'NU',
+  'NUNAVUT',
 ];
 
 const MODERN_ARC_POSTAL_PREFIXES = new Set([
@@ -67,6 +73,8 @@ const WEST_POSTAL_PREFIXES = new Set([
   'S', // Saskatchewan
   'T', // Alberta
   'V', // British Columbia
+  'X', // Northwest Territories and Nunavut
+  'Y', // Yukon
 ]);
 
 export const MODERN_ARC_DEALER: DealerContext = {
@@ -76,27 +84,27 @@ export const MODERN_ARC_DEALER: DealerContext = {
   orderEmail: 'order@modernarc.ca',
   pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
   pricingAvailable: true,
-  orderRoutingLabel: 'Orders currently route to Modern Arc at order@modernarc.ca.',
+  orderRoutingLabel: 'Ontario and eastern orders route to Modern Arc at order@modernarc.ca.',
 };
 
-export const DIAMOND_ARC_WEST_DEALER: DealerContext = {
+export const INNOVATIVE_FINISHES_WEST_DEALER: DealerContext = {
   region: 'west',
-  dealerId: 'modern-arc',
-  dealerName: 'Modern Arc',
-  orderEmail: 'order@modernarc.ca',
+  dealerId: 'innovative-finishes-west',
+  dealerName: 'Innovative Finishes',
+  orderEmail: 'info@semcocanada.ca',
   pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
   pricingAvailable: true,
-  orderRoutingLabel: 'Western dealer routing is not active yet. Orders currently default to Modern Arc at order@modernarc.ca.',
+  orderRoutingLabel: 'Manitoba and western orders route to Innovative Finishes at info@semcocanada.ca.',
 };
 
 export const UNASSIGNED_DEALER_CONTEXT: DealerContext = {
   region: 'unknown',
-  dealerId: 'modern-arc',
-  dealerName: 'Modern Arc',
-  orderEmail: 'order@modernarc.ca',
+  dealerId: null,
+  dealerName: 'Semco Canada',
+  orderEmail: 'info@semcocanada.ca',
   pricingSourceLabel: 'Modern Arc Ontario retail pricing 2026',
   pricingAvailable: true,
-  orderRoutingLabel: 'Company profile is still recommended, but orders currently default to Modern Arc at order@modernarc.ca.',
+  orderRoutingLabel: 'Add the company postal code for automatic dealer routing. Unassigned requests go to info@semcocanada.ca.',
 };
 
 export function resolveDealerContext(input?: string | DealerProfileInput | null): DealerContext {
@@ -118,11 +126,11 @@ export function resolveDealerContext(input?: string | DealerProfileInput | null)
   }
 
   if (postalPrefix && WEST_POSTAL_PREFIXES.has(postalPrefix)) {
-    return DIAMOND_ARC_WEST_DEALER;
+    return INNOVATIVE_FINISHES_WEST_DEALER;
   }
 
   if (WEST_PROVINCES.some((term) => containsRegionTerm(normalized, term))) {
-    return DIAMOND_ARC_WEST_DEALER;
+    return INNOVATIVE_FINISHES_WEST_DEALER;
   }
 
   if (EAST_PROVINCES.some((term) => containsRegionTerm(normalized, term))) {

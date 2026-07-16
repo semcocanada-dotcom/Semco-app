@@ -103,30 +103,32 @@ export function SavedChatsSheet({
               const isActive = item.id === activeChatId;
 
               return (
-                <TouchableOpacity
-                  onPress={() => handleSelectChat(item.id)}
-                  style={[styles.chatRow, isActive && styles.chatRowActive]}
-                  accessibilityLabel={`Open saved chat ${item.title}`}
-                  accessibilityRole="button"
-                >
-                  <View style={[styles.chatIcon, isActive && styles.chatIconActive]}>
-                    <Ionicons
-                      name="chatbubble-ellipses-outline"
-                      size={20}
-                      color={isActive ? Colors.white : Colors.primary}
-                    />
-                  </View>
-                  <View style={styles.chatText}>
-                    <Text style={styles.chatTitle} numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                    <Text style={styles.chatPreview} numberOfLines={2}>
-                      {item.lastMessagePreview}
-                    </Text>
-                    <Text style={styles.chatMeta}>
-                      {formatChatDate(item.updatedAt)} | {item.messageCount} messages
-                    </Text>
-                  </View>
+                <View style={[styles.chatRow, isActive && styles.chatRowActive]}>
+                  <TouchableOpacity
+                    onPress={() => handleSelectChat(item.id)}
+                    style={styles.chatOpen}
+                    accessibilityLabel={`Open saved chat ${item.title}`}
+                    accessibilityRole="button"
+                  >
+                    <View style={[styles.chatIcon, isActive && styles.chatIconActive]}>
+                      <Ionicons
+                        name="chatbubble-ellipses-outline"
+                        size={20}
+                        color={isActive ? Colors.white : Colors.primary}
+                      />
+                    </View>
+                    <View style={styles.chatText}>
+                      <Text style={styles.chatTitle} numberOfLines={1}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.chatPreview} numberOfLines={2}>
+                        {item.lastMessagePreview}
+                      </Text>
+                      <Text style={styles.chatMeta}>
+                        {formatChatDate(item.updatedAt)} | {item.messageCount} messages
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => confirmDelete(item)}
                     style={styles.deleteBtn}
@@ -135,7 +137,7 @@ export function SavedChatsSheet({
                   >
                     <Ionicons name="trash-outline" size={18} color={Colors.danger} />
                   </TouchableOpacity>
-                </TouchableOpacity>
+                </View>
               );
             }}
           />
@@ -224,13 +226,14 @@ const styles = StyleSheet.create({
   chatRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
     minHeight: 88,
     borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.white,
-    padding: Spacing.md,
+    paddingVertical: Spacing.sm,
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.xs,
   },
   chatRowActive: {
     borderColor: Colors.lightTeal,
@@ -246,6 +249,13 @@ const styles = StyleSheet.create({
   },
   chatIconActive: {
     backgroundColor: Colors.primary,
+  },
+  chatOpen: {
+    flex: 1,
+    minHeight: TAP_TARGET_MIN,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
   },
   chatText: {
     flex: 1,

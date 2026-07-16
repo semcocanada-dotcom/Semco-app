@@ -38,6 +38,12 @@ function findBundledColor(value?: string) {
   );
 }
 
+function getInstallerNote(note?: string | null) {
+  const trimmed = note?.trim();
+  if (!trimmed || /^Semco XBond formula import\b/i.test(trimmed)) return null;
+  return trimmed;
+}
+
 export default function ColorDetailScreen() {
   const params = useLocalSearchParams<{
     id: string | string[];
@@ -56,6 +62,7 @@ export default function ColorDetailScreen() {
   const [color, setColor] = useState<Color | null>(() => findBundledColor(colorId));
   const [isLoading, setIsLoading] = useState(true);
   const [isPreviewOpen, setPreviewOpen] = useState(false);
+  const installerNote = getInstallerNote(color?.notes);
 
   useEffect(() => {
     if (!colorId) {
@@ -188,15 +195,20 @@ export default function ColorDetailScreen() {
 
         <FormulaDisplay pigments={color.pigments} colorName={color.name} />
 
-        {color.notes ? (
+        {installerNote ? (
           <Card>
             <Text style={styles.notesLabel}>Notes</Text>
-            <Text style={styles.notesText}>{color.notes}</Text>
+            <Text style={styles.notesText}>{installerNote}</Text>
           </Card>
         ) : null}
       </ScrollView>
 
-      <Modal visible={isPreviewOpen} transparent animationType="fade" onRequestClose={() => setPreviewOpen(false)}>
+      <Modal
+        visible={isPreviewOpen}
+        animationType="fade"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setPreviewOpen(false)}
+      >
         <View style={styles.modalBackdrop}>
           <TouchableOpacity
             onPress={() => {

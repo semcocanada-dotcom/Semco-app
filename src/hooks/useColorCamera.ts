@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { captureColorSample, uploadPhoto } from '@/services/camera';
+import { captureColorSample, uploadPrivatePhoto, type PrivatePhotoUpload } from '@/services/camera';
 import { useAuthStore } from '@/store/auth';
 
 interface ColorCameraState {
@@ -32,22 +32,22 @@ export function useColorCamera() {
   }, []);
 
   const upload = useCallback(
-    async (colorId: string): Promise<string | null> => {
+    async (colorId: string): Promise<PrivatePhotoUpload | null> => {
       if (!state.localUri || !user) return null;
 
       setState((s) => ({ ...s, isUploading: true, error: null }));
 
       const path = `${user.id}/colors/${colorId}.jpg`;
-      const url = await uploadPhoto(state.localUri, 'color-samples', path);
+      const uploadResult = await uploadPrivatePhoto(state.localUri, 'color-samples', path);
 
       setState((s) => ({
         ...s,
         isUploading: false,
-        remoteUrl: url,
-        error: url ? null : 'Upload failed. Photo saved locally.',
+        remoteUrl: uploadResult?.signedUrl ?? null,
+        error: uploadResult ? null : 'Upload failed. Photo saved locally.',
       }));
 
-      return url;
+      return uploadResult;
     },
     [state.localUri, user],
   );

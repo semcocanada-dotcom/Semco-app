@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
@@ -8,7 +8,7 @@ import type { Project } from '@/database/schema/projects';
 import { PROJECT_SIGNOFF_TEMPLATES, getSignoffTemplate } from '@/constants/project-signoffs';
 import { Badge, Button, Card, Input } from '@/components/ui';
 import { EditablePdfForm } from '@/components/projects/EditablePdfForm';
-import { syncProjectSignoffToCloud } from '@/services/signoffs-cloud';
+import { getSignoffPdfViewUrl, syncProjectSignoffToCloud } from '@/services/signoffs-cloud';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
@@ -68,6 +68,7 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
   const [notes, setNotes] = useState('');
   const [formData, setFormData] = useState<FormValues>({});
   const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [openingPdf, setOpeningPdf] = useState(false);
 
   React.useEffect(() => {
     setCustomerName(existing?.customerName ?? project.clientName ?? '');
@@ -110,23 +111,21 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
     let savedPdfUri = existing ? parseFormData(existing.formData).savedPdfUri : undefined;
     let cloudPdfUrl = existing ? parseFormData(existing.formData).cloudPdfUrl : undefined;
     if (status === 'signed') {
-      if (Platform.OS === 'web') {
-        Alert.alert('PDF file not created', 'Filled PDF generation runs from the mobile app. The signed record will still sync for admin review.');
-      } else {
-        try {
-          const { createFilledSignoffPdf, uploadSignoffPdf } = await import('../../services/signoff-pdf');
-          savedPdfUri = await createFilledSignoffPdf({
-            projectId: project.id,
-            template: selectedTemplate,
-            values: savedFormData,
-            signatureData,
-          });
-          savedFormData.savedPdfUri = savedPdfUri;
-          cloudPdfUrl = await uploadSignoffPdf(savedPdfUri, project.installerId, project.id, signoffId, selectedTemplate) ?? cloudPdfUrl;
-          if (cloudPdfUrl) savedFormData.cloudPdfUrl = cloudPdfUrl;
-        } catch {
-          Alert.alert('PDF file not created', 'The sign-off was saved, but the filled PDF file could not be generated on this device.');
-        }
+      try {
+        const { createFilledSignoffPdf, uploadSignoffPdf } = await import('../../services/signoff-pdf');
+        const filledPdf = await createFilledSignoffPdf({
+          projectId: project.id,
+          template: selectedTemplate,
+          values: savedFormData,
+          signatureData,
+        });
+        savedPdfUri = filledPdf.localUri ?? undefined;
+        if (savedPdfUri) savedFormData.savedPdfUri = savedPdfUri;
+        cloudPdfUrl = await uploadSignoffPdf(filledPdf, project.installerId, project.id, signoffId, selectedTemplate) ?? cloudPdfUrl;
+        if (cloudPdfUrl) savedFormData.cloudPdfUrl = cloudPdfUrl;
+      } catch (error) {
+        console.error('[ProjectSignoffPanel] filled PDF failed:', error);
+        Alert.alert('PDF file not created', 'The sign-off was saved, but the filled PDF file could not be generated on this device.');
       }
     }
     const values = {
@@ -183,6 +182,26 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
           ? `${selectedTemplate.title} is attached to this project and synced for admin review.`
           : `${selectedTemplate.title} is attached to this project. Cloud sync will retry after storage is configured.`,
     );
+  };
+
+  const openSavedPdf = async () => {
+    const storagePath = existing ? parseFormData(existing.formData).cloudPdfUrl : undefined;
+    if (!storagePath || openingPdf) return;
+
+    setOpeningPdf(true);
+    try {
+      const url = await getSignoffPdfViewUrl(storagePath);
+      if (!url) {
+        Alert.alert('PDF unavailable', 'The saved PDF could not be opened. Check your connection and try again.');
+        return;
+      }
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('[ProjectSignoffPanel] open PDF failed:', error);
+      Alert.alert('PDF unavailable', 'The saved PDF could not be opened. Check your connection and try again.');
+    } finally {
+      setOpeningPdf(false);
+    }
   };
 
   return (
@@ -277,6 +296,9 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
           <Button label="Save Draft" variant="secondary" onPress={() => save('draft')} style={styles.actionButton} />
           <Button label="Save Signed" variant="primary" onPress={() => save('signed')} style={styles.actionButton} />
         </View>
+        {existing && parseFormData(existing.formData).cloudPdfUrl ? (
+          <Button label="Open Saved PDF" variant="secondary" onPress={openSavedPdf} isLoading={openingPdf} />
+        ) : null}
       </Card>
     </View>
   );

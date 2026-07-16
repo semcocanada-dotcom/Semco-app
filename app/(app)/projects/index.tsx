@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   FlatList,
   StyleSheet,
   SafeAreaView,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
 import { desc } from 'drizzle-orm';
@@ -13,6 +13,8 @@ import type { Project } from '@/database/schema/projects';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { AppHeader, Button, EmptyState, SearchBar, TabControl } from '@/components/ui';
 import { Colors, Layout, Spacing } from '@/constants/theme';
+import { fetchInstallerProjectsFromCloud } from '@/services/cloud-sync';
+import { useAuthStore } from '@/store/auth';
 
 type ProjectFilter = 'all' | 'active' | 'on_hold' | 'complete';
 
@@ -29,13 +31,34 @@ export default function ProjectsScreen() {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<ProjectFilter>('all');
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
 
-  const load = () => {
-    db.select().from(projects).orderBy(desc(projects.updatedAt))
-      .then(setProjectList).catch(console.error);
-  };
+  const load = useCallback(async () => {
+    const localRows = await db.select().from(projects).orderBy(desc(projects.updatedAt));
+    if (!user?.id) {
+      setProjectList(localRows);
+      return;
+    }
 
-  useEffect(() => { load(); }, []);
+    try {
+      const cloudRows = await fetchInstallerProjectsFromCloud(user.id);
+      const merged = new Map(localRows.map((project) => [project.id, project]));
+      for (const project of cloudRows) {
+        const local = merged.get(project.id);
+        if (!local || Date.parse(project.updatedAt) >= Date.parse(local.updatedAt)) {
+          merged.set(project.id, project);
+        }
+      }
+      setProjectList([...merged.values()].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)));
+    } catch (error) {
+      console.error('[projects] cloud refresh failed; showing offline records', error);
+      setProjectList(localRows);
+    }
+  }, [user?.id]);
+
+  useFocusEffect(useCallback(() => {
+    load();
+  }, [load]));
 
   useEffect(() => {
     const requestedFilter = Array.isArray(params.filter) ? params.filter[0] : params.filter;

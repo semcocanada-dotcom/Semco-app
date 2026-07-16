@@ -6,6 +6,9 @@ import { db } from '@/database/client';
 import { conversations } from '@/database/schema/conversations';
 import { and, desc, eq } from 'drizzle-orm';
 import type { Conversation, ConversationMessage } from '@/database/schema/conversations';
+import { createLocalId } from '@/utils/id';
+import { hydrateCloudConversations, syncConversationToCloud } from '@/services/cloud-sync';
+import { supabase } from '@/services/supabase';
 
 const DEFAULT_CHAT_TITLE = 'New chat';
 
@@ -23,7 +26,7 @@ function generateId(): string {
 }
 
 function generateConversationId(): string {
-  return `conv-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return createLocalId('conversation');
 }
 
 function normalizeMessages(value: unknown): ConversationMessage[] {
@@ -87,20 +90,20 @@ export function useAssistant() {
   }, []);
 
   const createConversation = useCallback(async () => {
+    if (!installerId) return undefined;
     const newConvId = generateConversationId();
     const now = new Date().toISOString();
 
-    await db.insert(conversations).values({
+    const createdConversation: Conversation = {
       id: newConvId,
       installerId,
       title: DEFAULT_CHAT_TITLE,
       messages: [],
       createdAt: now,
       updatedAt: now,
-    });
-
-    const [created] = await db.select().from(conversations).where(eq(conversations.id, newConvId)).limit(1);
-    return created;
+    };
+    await db.insert(conversations).values(createdConversation);
+    return createdConversation;
   }, [installerId]);
 
   const loadConversationList = useCallback(
@@ -114,11 +117,26 @@ export function useAssistant() {
       }
 
       try {
+        let cloudRows: Conversation[] = [];
+        if (isOnline) {
+          try {
+            cloudRows = await hydrateCloudConversations(installerId);
+          } catch (cloudError) {
+            console.warn('[useAssistant] saved chats cloud hydration pending:', cloudError);
+          }
+        }
+
         let rows = await db
           .select()
           .from(conversations)
           .where(eq(conversations.installerId, installerId))
           .orderBy(desc(conversations.updatedAt));
+
+        if (cloudRows.length > 0) {
+          const mergedRows = new Map(rows.map((row) => [row.id, row]));
+          for (const cloudRow of cloudRows) mergedRows.set(cloudRow.id, cloudRow);
+          rows = [...mergedRows.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+        }
 
         if (rows.length === 0) {
           const created = await createConversation();
@@ -127,7 +145,9 @@ export function useAssistant() {
 
         setSavedChats(rows.map(summarizeConversation));
 
-        const selected = rows.find((row) => row.id === preferredId) ?? rows[0];
+        const selected = rows.find((row) => row.id === preferredId)
+          ?? rows.find((row) => normalizeMessages(row.messages).length > 0)
+          ?? rows[0];
         if (selected) applyConversation(selected);
       } catch (err) {
         console.warn('[useAssistant] failed to load conversations:', err);
@@ -137,7 +157,7 @@ export function useAssistant() {
         setMessages([]);
       }
     },
-    [applyConversation, createConversation, installerId],
+    [applyConversation, createConversation, installerId, isOnline],
   );
 
   useEffect(() => {
@@ -156,59 +176,98 @@ export function useAssistant() {
     setSavedChats(rows.map(summarizeConversation));
   }, [installerId]);
 
-  const persistMessage = useCallback(
-    async (msg: ConversationMessage) => {
-      if (!conversationId || !installerId) return;
+  const persistConversationState = useCallback(
+    async (
+      targetConversationId: string,
+      nextMessages: ConversationMessage[],
+      nextTitle: string,
+    ) => {
+      if (!targetConversationId || !installerId) return;
 
       try {
-        const rows = await db
+        const [existing] = await db
           .select()
           .from(conversations)
-          .where(eq(conversations.id, conversationId));
+          .where(and(eq(conversations.id, targetConversationId), eq(conversations.installerId, installerId)))
+          .limit(1);
 
-        if (rows.length > 0) {
-          const conv = rows[0];
-          const msgArray = normalizeMessages(conv.messages);
-          const updated = [...msgArray, msg];
-          const now = new Date().toISOString();
-          const nextTitle = msg.role === 'user' && shouldAutoTitle(conv.title)
-            ? titleFromQuestion(msg.content)
-            : conv.title?.trim() || DEFAULT_CHAT_TITLE;
+        const now = new Date().toISOString();
+        const createdAt = existing?.createdAt ?? now;
+        const normalizedTitle = nextTitle.trim() || DEFAULT_CHAT_TITLE;
+        const normalizedMessages = nextMessages.slice(-80);
 
+        if (existing) {
           await db
             .update(conversations)
             .set({
-              messages: updated,
-              title: nextTitle,
+              messages: normalizedMessages,
+              title: normalizedTitle,
               updatedAt: now,
             })
-            .where(eq(conversations.id, conversationId));
-
-          setConversationTitle(nextTitle);
-          setSavedChats((prev) => {
-            const summary: AssistantConversationSummary = {
-              id: conversationId,
-              title: nextTitle,
-              messageCount: updated.length,
-              lastMessagePreview: msg.content.replace(/\s+/g, ' ').trim().slice(0, 96),
-              updatedAt: now,
-              createdAt: conv.createdAt,
-            };
-            const remaining = prev.filter((item) => item.id !== conversationId);
-            return [summary, ...remaining].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+            .where(and(eq(conversations.id, targetConversationId), eq(conversations.installerId, installerId)));
+        } else {
+          await db.insert(conversations).values({
+            id: targetConversationId,
+            installerId,
+            title: normalizedTitle,
+            messages: normalizedMessages,
+            createdAt,
+            updatedAt: now,
           });
         }
+
+        const conversationSnapshot: Conversation = {
+          id: targetConversationId,
+          installerId,
+          title: normalizedTitle,
+          messages: normalizedMessages,
+          createdAt,
+          updatedAt: now,
+        };
+        const cloudResult = await syncConversationToCloud(conversationSnapshot);
+        if (!cloudResult.ok) console.warn('[useAssistant] conversation cloud sync pending:', cloudResult.error);
+
+        setConversationTitle(normalizedTitle);
+        setSavedChats((prev) => {
+          const lastMessage = normalizedMessages[normalizedMessages.length - 1];
+          const summary: AssistantConversationSummary = {
+            id: targetConversationId,
+            title: normalizedTitle,
+            messageCount: normalizedMessages.length,
+            lastMessagePreview: lastMessage?.content.replace(/\s+/g, ' ').trim().slice(0, 96) || 'No messages yet',
+            updatedAt: now,
+            createdAt,
+          };
+          const remaining = prev.filter((item) => item.id !== targetConversationId);
+          return [summary, ...remaining].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+        });
       } catch (err) {
-        console.warn('[useAssistant] failed to persist message:', err);
+        console.warn('[useAssistant] failed to persist conversation:', err);
       }
     },
-    [conversationId, installerId],
+    [installerId],
   );
 
   const send = useCallback(
     async (text: string) => {
       if (!text.trim() || isLoading) return;
+      setIsLoading(true);
+      setError(null);
 
+      let activeConversationId = conversationId;
+      if (!activeConversationId) {
+        const created = await createConversation();
+        if (!created) {
+          setError('The chat could not be saved. Please try again.');
+          setIsLoading(false);
+          return;
+        }
+        activeConversationId = created.id;
+        applyConversation(created);
+        await refreshSavedChats();
+      }
+
+      const baseMessages = messages.slice(-80);
       const userMsg: ConversationMessage = {
         id: generateId(),
         role: 'user',
@@ -216,14 +275,16 @@ export function useAssistant() {
         source: 'claude',
         timestamp: new Date().toISOString(),
       };
+      const messagesWithUser = [...baseMessages, userMsg].slice(-80);
+      const nextTitle = shouldAutoTitle(conversationTitle)
+        ? titleFromQuestion(userMsg.content)
+        : conversationTitle;
 
-      setMessages((prev) => [...prev, userMsg]);
-      await persistMessage(userMsg);
-      setIsLoading(true);
-      setError(null);
+      setMessages(messagesWithUser);
+      await persistConversationState(activeConversationId, messagesWithUser, nextTitle);
 
       try {
-        const response = await sendMessage(text, messages, isOnline, installerId);
+        const response = await sendMessage(text, baseMessages, isOnline, installerId);
 
         const assistantMsg: ConversationMessage = {
           id: generateId(),
@@ -237,9 +298,10 @@ export function useAssistant() {
           quickReplies: response.quickReplies,
           suggestedFollowUps: response.suggestedFollowUps,
         };
+        const messagesWithAssistant = [...messagesWithUser, assistantMsg].slice(-80);
 
-        setMessages((prev) => [...prev, assistantMsg]);
-        await persistMessage(assistantMsg);
+        setMessages(messagesWithAssistant);
+        await persistConversationState(activeConversationId, messagesWithAssistant, nextTitle);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
         setError(msg);
@@ -247,7 +309,18 @@ export function useAssistant() {
         setIsLoading(false);
       }
     },
-    [messages, isLoading, isOnline, installerId, persistMessage],
+    [
+      applyConversation,
+      conversationId,
+      conversationTitle,
+      createConversation,
+      isLoading,
+      isOnline,
+      installerId,
+      messages,
+      persistConversationState,
+      refreshSavedChats,
+    ],
   );
 
   const startNewChat = useCallback(async () => {
@@ -301,6 +374,7 @@ export function useAssistant() {
         await db
           .delete(conversations)
           .where(and(eq(conversations.id, id), eq(conversations.installerId, installerId)));
+        await supabase.from('conversations').delete().eq('id', id).eq('installer_id', installerId);
 
         const rows = await db
           .select()
@@ -341,6 +415,8 @@ export function useAssistant() {
           updatedAt: now,
         })
         .where(eq(conversations.id, conversationId));
+      const [cleared] = await db.select().from(conversations).where(eq(conversations.id, conversationId)).limit(1);
+      if (cleared) await syncConversationToCloud(cleared);
       setConversationTitle(DEFAULT_CHAT_TITLE);
       await refreshSavedChats();
     } catch (err) {

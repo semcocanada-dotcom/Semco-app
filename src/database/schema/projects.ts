@@ -44,6 +44,7 @@ export const projects_photos = sqliteTable(
     installerId: text('installer_id').notNull(),
     stage: text('stage').notNull(),
     photoUrl: text('photo_url').notNull(),
+    storagePath: text('storage_path'),
     caption: text('caption'),
     takenAt: text('taken_at').notNull(),
   },

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { db, initDatabase } from '@/database/client';
@@ -85,6 +85,7 @@ export default function ColorsScreen() {
   const router = useRouter();
   const listRef = useRef<FlatList<Color>>(null);
   const { width } = useWindowDimensions();
+  const useCompactFilters = width < 560;
   const numColumns = FAN_DECK_COLUMN_COUNT;
   const availableGridWidth = Math.min(width, Layout.colorGridMaxWidth);
   const horizontalPadding = Spacing.base * 2;
@@ -185,11 +186,7 @@ export default function ColorsScreen() {
             <Text style={styles.customButtonText}>Custom</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.seriesRow}
-        >
+        <View style={[styles.seriesRow, useCompactFilters && styles.seriesRowCompact]}>
           {SERIES_OPTIONS.map((option) => {
             const active = option.value === series;
             return (
@@ -197,13 +194,13 @@ export default function ColorsScreen() {
                 key={option.value}
                 onPress={() => setSeries(option.value)}
                 activeOpacity={0.76}
-                style={[styles.seriesChip, active && styles.seriesChipActive]}
+                style={[styles.seriesChip, useCompactFilters && styles.seriesChipCompact, active && styles.seriesChipActive]}
               >
                 <Text style={[styles.seriesText, active && styles.seriesTextActive]}>{option.shortLabel}</Text>
               </TouchableOpacity>
             );
           })}
-        </ScrollView>
+        </View>
       </View>
 
       <FlatList
@@ -291,9 +288,10 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
   },
   seriesRow: {
+    flexDirection: 'row',
     gap: 6,
-    paddingRight: Spacing.base,
   },
+  seriesRowCompact: { flexWrap: 'wrap' },
   seriesChip: {
     minHeight: 34,
     minWidth: 74,
@@ -305,6 +303,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.lightTeal,
   },
+  seriesChipCompact: { flexBasis: '30%', flexGrow: 1 },
   seriesChipActive: {
     backgroundColor: Colors.semcoOrange,
     borderColor: Colors.semcoOrange,

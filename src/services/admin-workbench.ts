@@ -281,7 +281,8 @@ export async function setWarrantyProjectStatus(
 
   const existing = reviewRows[0];
   const approved = status === 'approved';
-  const warrantyDocumentUrl = approved ? `semco-warranty://${projectId}/${existing?.id ?? 'new'}` : existing?.warrantyDocumentUrl ?? null;
+  const warrantyDocumentUrl = existing?.warrantyDocumentUrl ?? null;
+  const hasIssuedDocument = approved && Boolean(warrantyDocumentUrl && !warrantyDocumentUrl.startsWith('semco-warranty://'));
 
   if (existing) {
     await db
@@ -289,7 +290,7 @@ export async function setWarrantyProjectStatus(
       .set({
         status,
         reviewerName: 'Semco Admin',
-        reviewerSignatureUrl: approved ? 'semco-canada-signature' : existing.reviewerSignatureUrl,
+        reviewerSignatureUrl: existing.reviewerSignatureUrl,
         warrantyDocumentUrl,
         effectiveDate: approved ? new Date().toISOString().slice(0, 10) : existing.effectiveDate,
         reviewedAt: now,
@@ -306,8 +307,8 @@ export async function setWarrantyProjectStatus(
       productsSummary: null,
       effectiveDate: approved ? new Date().toISOString().slice(0, 10) : null,
       reviewerName: 'Semco Admin',
-      reviewerSignatureUrl: approved ? 'semco-canada-signature' : null,
-      warrantyDocumentUrl: approved ? `semco-warranty://${projectId}/${reviewId}` : null,
+      reviewerSignatureUrl: null,
+      warrantyDocumentUrl: null,
       notes: null,
       createdAt: now,
       updatedAt: now,
@@ -317,7 +318,7 @@ export async function setWarrantyProjectStatus(
 
   await db
     .update(projects)
-    .set({ warrantyIssued: approved, updatedAt: now })
+    .set({ warrantyIssued: hasIssuedDocument, updatedAt: now })
     .where(eq(projects.id, projectId));
 
   if (approved) {

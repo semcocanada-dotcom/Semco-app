@@ -4,6 +4,8 @@ import { installerProfiles, rewardCredits } from '@/database/schema/installers';
 import type { InstallerProfile, NewInstallerProfile } from '@/database/schema/installers';
 import { resolveDealerContext } from '@/constants/dealers';
 import { createLocalId } from '@/utils/id';
+import { syncInstallerProfileToCloud } from '@/services/cloud-sync';
+import { supabase } from '@/services/supabase';
 
 export const LOCAL_INSTALLER_ID = 'local';
 
@@ -14,7 +16,58 @@ export async function getInstallerProfile(installerId = LOCAL_INSTALLER_ID): Pro
     .where(eq(installerProfiles.installerId, installerId))
     .limit(1);
 
-  return rows[0] ?? null;
+  const local = rows[0] ?? null;
+  if (installerId === LOCAL_INSTALLER_ID) return local;
+
+  try {
+    const { data: cloud, error } = await supabase
+      .from('installer_profiles')
+      .select('*')
+      .eq('installer_id', installerId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!cloud) return local;
+
+    const cloudProfile: InstallerProfile = {
+      id: local?.id ?? createLocalId('profile'),
+      installerId,
+      companyName: cloud.company_name,
+      contactName: cloud.contact_name,
+      email: cloud.email,
+      phone: cloud.phone,
+      companyAddress: cloud.company_address,
+      city: cloud.city,
+      province: cloud.province,
+      postalCode: cloud.postal_code,
+      semcoAccountId: cloud.semco_account_id,
+      certificationStatus: cloud.certification_status ?? 'pending',
+      assignedDealerId: cloud.assigned_dealer_id,
+      createdAt: typeof cloud.created_at === 'string' ? cloud.created_at : new Date().toISOString(),
+      updatedAt: typeof cloud.updated_at === 'string' ? cloud.updated_at : new Date().toISOString(),
+    };
+    if (!local) return cloudProfile;
+
+    const localIsNewer = Date.parse(local.updatedAt) > Date.parse(cloudProfile.updatedAt);
+    const newer = localIsNewer ? local : cloudProfile;
+    const older = localIsNewer ? cloudProfile : local;
+    return {
+      ...newer,
+      companyName: newer.companyName || older.companyName,
+      contactName: newer.contactName || older.contactName,
+      email: newer.email || older.email,
+      phone: newer.phone || older.phone,
+      companyAddress: newer.companyAddress || older.companyAddress,
+      city: newer.city || older.city,
+      province: newer.province || older.province,
+      postalCode: newer.postalCode || older.postalCode,
+      semcoAccountId: newer.semcoAccountId || older.semcoAccountId,
+      assignedDealerId: cloudProfile.assignedDealerId ?? local.assignedDealerId,
+      certificationStatus: cloudProfile.certificationStatus,
+    };
+  } catch (error) {
+    console.error('[profile] cloud lookup failed; using offline profile', error);
+    return local;
+  }
 }
 
 export async function upsertInstallerProfile(
@@ -39,12 +92,17 @@ export async function upsertInstallerProfile(
       })
       .where(eq(installerProfiles.id, existing.id));
 
-    return {
+    const updated = {
       ...existing,
       ...values,
       assignedDealerId: dealer.dealerId,
       updatedAt: now,
     };
+    const cloudResult = await syncInstallerProfileToCloud(updated as InstallerProfile);
+    if (!cloudResult.ok) {
+      throw new Error(cloudResult.error ?? 'Profile saved on this device, but cloud sync is still pending.');
+    }
+    return updated as InstallerProfile;
   }
 
   const created: NewInstallerProfile = {
@@ -66,6 +124,10 @@ export async function upsertInstallerProfile(
   };
 
   await db.insert(installerProfiles).values(created);
+  const cloudResult = await syncInstallerProfileToCloud(created as InstallerProfile);
+  if (!cloudResult.ok) {
+    throw new Error(cloudResult.error ?? 'Profile saved on this device, but cloud sync is still pending.');
+  }
   return created as InstallerProfile;
 }
 

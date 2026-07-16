@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Linking } from 'react-native';
+import { Alert, View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { desc, eq } from 'drizzle-orm';
@@ -23,6 +23,14 @@ import { useAuthStore } from '@/store/auth';
 import { sqmToSqft } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
+import {
+  fetchInstallerProjectsFromCloud,
+  fetchProjectWorkspaceFromCloud,
+  hydrateProjectFromCloud,
+  syncCalculationToCloud,
+  syncOrderRequestToCloud,
+  syncRewardCreditToCloud,
+} from '@/services/cloud-sync';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
   draft: 'primary',
@@ -69,7 +77,7 @@ const INSTALLER_STATUS_ACTIONS = STATUS_OPTIONS.filter((option) =>
 
 const STATUS_HELP: Record<OrderRequestStatus, string> = {
   draft: 'Saved as a draft. It will stay editable until it is submitted for dealer review.',
-  in_review: 'Submitted for Semco/dealer review. If your mail app opens, review the email and send it to Modern Arc.',
+  in_review: 'Submitted for dealer review. The routed email must also be sent from your mail app.',
   needs_revision: 'Marked for revision. Update the calculator quantities, then submit it again.',
   approved: 'Approved. This is ready for dealer handoff and Semco review records.',
 };
@@ -96,8 +104,39 @@ export default function OrdersScreen() {
   const [customItemNotes, setCustomItemNotes] = useState('');
 
   useEffect(() => {
-    db.select().from(projects).orderBy(desc(projects.updatedAt)).limit(3).then(setRecentProjects).catch(console.error);
-  }, []);
+    let cancelled = false;
+
+    async function loadRecentProjects() {
+      const localRows = await db.select().from(projects).orderBy(desc(projects.updatedAt)).limit(3);
+      if (!user?.id) {
+        if (!cancelled) setRecentProjects(localRows);
+        return;
+      }
+
+      try {
+        const cloudRows = await fetchInstallerProjectsFromCloud(user.id);
+        const merged = new Map(localRows.map((item) => [item.id, item]));
+        for (const cloudProject of cloudRows) {
+          const localProject = merged.get(cloudProject.id);
+          if (!localProject || Date.parse(cloudProject.updatedAt) >= Date.parse(localProject.updatedAt)) {
+            merged.set(cloudProject.id, cloudProject);
+          }
+        }
+        const latest = [...merged.values()]
+          .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+          .slice(0, 3);
+        if (!cancelled) setRecentProjects(latest);
+      } catch (error) {
+        console.error('[orders] cloud project refresh failed; showing offline records', error);
+        if (!cancelled) setRecentProjects(localRows);
+      }
+    }
+
+    loadRecentProjects().catch(console.error);
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     getInstallerProfile(installerId).then(setProfile).catch(console.error);
@@ -108,27 +147,57 @@ export default function OrdersScreen() {
   }, [params.source]);
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!projectId) {
       setProject(null);
       setCalculation(null);
       setOrderRequest(null);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
-    Promise.all([
-      db.select().from(projects).where(eq(projects.id, projectId)).limit(1),
-      db.select().from(calculations).where(eq(calculations.projectId, projectId)).orderBy(desc(calculations.createdAt)).limit(1),
-      db.select().from(orderRequests).where(eq(orderRequests.projectId, projectId)).orderBy(desc(orderRequests.createdAt)).limit(1),
-    ])
-      .then(([projectRows, calcRows, requestRows]) => {
-        setProject(projectRows[0] ?? null);
-        setCalculation(calcRows[0] ?? null);
-        const latestRequest = requestRows[0] ?? null;
-        setOrderRequest(latestRequest);
-        setCustomItemNotes(extractCustomItemNotes(latestRequest?.notes));
-      })
-      .catch(console.error);
-  }, [projectId]);
+    async function loadRequestWorkspace() {
+      const [projectRows, calcRows, requestRows] = await Promise.all([
+        db.select().from(projects).where(eq(projects.id, projectId!)).limit(1),
+        db.select().from(calculations).where(eq(calculations.projectId, projectId!)).orderBy(desc(calculations.createdAt)).limit(1),
+        db.select().from(orderRequests).where(eq(orderRequests.projectId, projectId!)).orderBy(desc(orderRequests.createdAt)).limit(1),
+      ]);
+
+      let selectedProject = projectRows[0] ?? null;
+      let selectedCalculation = calcRows[0] ?? null;
+      let selectedRequest = requestRows[0] ?? null;
+
+      if (user?.id) {
+        selectedProject = (await hydrateProjectFromCloud(projectId!, user.id)) ?? selectedProject;
+        try {
+          const cloudWorkspace = await fetchProjectWorkspaceFromCloud(projectId!, user.id);
+          selectedCalculation = cloudWorkspace.calculation ?? selectedCalculation;
+          selectedRequest = cloudWorkspace.orderRequest ?? selectedRequest;
+        } catch (error) {
+          console.error('[orders] cloud workspace refresh failed; showing offline records', error);
+        }
+      }
+
+      if (cancelled) return;
+      setProject(selectedProject);
+      setCalculation(selectedCalculation);
+      setOrderRequest(selectedRequest);
+      setCustomItemNotes(extractCustomItemNotes(selectedRequest?.notes));
+    }
+
+    loadRequestWorkspace().catch((error) => {
+      console.error('[orders] request workspace failed to load', error);
+      if (!cancelled) {
+        Alert.alert('Request unavailable', 'This project request could not be loaded. Check your connection and try again.');
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId, user?.id]);
 
   const result = useMemo(
     () => pendingResult ?? calculation?.result as CalculationResult | undefined,
@@ -153,7 +222,13 @@ export default function OrdersScreen() {
 
   async function savePendingCalculation(now: string): Promise<string | null> {
     if (!project) return null;
-    if (!pendingResult) return calculation?.id ?? null;
+    if (!pendingResult) {
+      if (calculation) {
+        const cloudResult = await syncCalculationToCloud(calculation);
+        if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'The calculation could not be saved to the cloud.');
+      }
+      return calculation?.id ?? null;
+    }
 
     const created: Calculation = {
       id: createLocalId('calc'),
@@ -166,6 +241,8 @@ export default function OrdersScreen() {
       createdAt: now,
     };
 
+    const cloudResult = await syncCalculationToCloud(created);
+    if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'The calculation could not be saved to the cloud.');
     await db.insert(calculations).values(created);
     setCalculation(created);
     setPendingResult(null);
@@ -175,6 +252,10 @@ export default function OrdersScreen() {
 
   async function ensureRequest(status: OrderRequestStatus) {
     if (!project || !canSaveRequest) return;
+    if (status === 'in_review' && !dealerContext.orderEmail) {
+      Alert.alert('Dealer email missing', 'Add the company postal code before submitting this request.');
+      return;
+    }
     setSavingStatus(status);
 
     try {
@@ -188,13 +269,18 @@ export default function OrdersScreen() {
       });
 
       let requestId = orderRequest?.id;
+      let savedRequest: OrderRequest;
       if (orderRequest) {
+        const updatedRequest = { ...orderRequest, status, calculationId: latestCalcId, notes: requestNotes, updatedAt: now } as OrderRequest;
+        const cloudResult = await syncOrderRequestToCloud(updatedRequest, installerId, dealerContext.dealerId);
+        if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'The material request could not be saved to the cloud.');
         await db.update(orderRequests)
           .set({ status, calculationId: latestCalcId, notes: requestNotes, updatedAt: now })
           .where(eq(orderRequests.id, orderRequest.id));
-        setOrderRequest({ ...orderRequest, status, calculationId: latestCalcId, notes: requestNotes, updatedAt: now });
+        setOrderRequest(updatedRequest);
+        savedRequest = updatedRequest;
       } else {
-        const created = {
+        const created: OrderRequest = {
           id: createLocalId('order'),
           projectId: project.id,
           calculationId: latestCalcId,
@@ -203,25 +289,50 @@ export default function OrdersScreen() {
           createdAt: now,
           updatedAt: now,
         };
+        const cloudResult = await syncOrderRequestToCloud(created, installerId, dealerContext.dealerId);
+        if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'The material request could not be saved to the cloud.');
         await db.insert(orderRequests).values(created);
         setOrderRequest(created);
         requestId = created.id;
+        savedRequest = created;
       }
 
+      if (requestId && status === 'in_review') {
+        const emailOpened = await openDealerOrderEmail(requestId, requestNotes);
+        if (!emailOpened) {
+          const revertedAt = new Date().toISOString();
+          const revertedRequest = { ...savedRequest, status: 'draft', updatedAt: revertedAt } as OrderRequest;
+          const revertResult = await syncOrderRequestToCloud(revertedRequest, installerId, dealerContext.dealerId);
+          if (!revertResult.ok) throw new Error(revertResult.error ?? 'The request could not be returned to draft.');
+          await db.update(orderRequests)
+            .set({ status: 'draft', updatedAt: revertedAt })
+            .where(eq(orderRequests.id, requestId));
+          setOrderRequest(revertedRequest);
+          setLastSavedStatus('draft');
+          Alert.alert(
+            'Email not opened',
+            `The request remains a draft. Send it to ${dealerContext.dealerName} at ${dealerContext.orderEmail}.`,
+          );
+          return;
+        }
+      }
       if (requestId && result && (status === 'in_review' || status === 'approved')) {
         await syncOrderRewardCredit(requestId, result, now);
       }
       setLastSavedStatus(status);
-      if (requestId && status === 'in_review') {
-        await openDealerOrderEmail(requestId, requestNotes);
-      }
+    } catch (error) {
+      console.error('[orders] material request save failed', error);
+      Alert.alert(
+        'Request not saved',
+        error instanceof Error ? error.message : 'Check your connection and try again.',
+      );
     } finally {
       setSavingStatus(null);
     }
   }
 
-  async function openDealerOrderEmail(requestId: string, requestNotes: string | null) {
-    if (!project || !dealerContext.orderEmail) return;
+  async function openDealerOrderEmail(requestId: string, requestNotes: string | null): Promise<boolean> {
+    if (!project || !dealerContext.orderEmail) return false;
 
     const subject = `Semco material request - ${projectTitle}`;
     const body = buildDealerEmailBody({
@@ -236,8 +347,10 @@ export default function OrdersScreen() {
 
     try {
       await Linking.openURL(url);
+      return true;
     } catch (error) {
       console.error('Could not open dealer email link', error);
+      return false;
     }
   }
 
@@ -253,18 +366,26 @@ export default function OrdersScreen() {
       .limit(1);
 
     if (existing[0]) {
+      const updatedCredit = {
+        ...existing[0],
+        sqft,
+        projectId: project.id,
+        notes: `${dealerContext.dealerName} material request submitted for review.`,
+      };
       await db
         .update(rewardCredits)
         .set({
-          sqft,
-          projectId: project.id,
-          notes: `${dealerContext.dealerName} material request submitted for review.`,
+          sqft: updatedCredit.sqft,
+          projectId: updatedCredit.projectId,
+          notes: updatedCredit.notes,
         })
         .where(eq(rewardCredits.id, existing[0].id));
+      const cloudResult = await syncRewardCreditToCloud(updatedCredit);
+      if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'Reward progress could not be saved to the cloud.');
       return;
     }
 
-    await db.insert(rewardCredits).values({
+    const createdCredit = {
       id: createLocalId('reward'),
       installerId: project.installerId,
       projectId: project.id,
@@ -275,7 +396,10 @@ export default function OrdersScreen() {
       notes: `${dealerContext.dealerName} material request submitted for review.`,
       createdAt: now,
       verifiedAt: null,
-    });
+    };
+    await db.insert(rewardCredits).values(createdCredit);
+    const cloudResult = await syncRewardCreditToCloud(createdCredit);
+    if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'Reward progress could not be saved to the cloud.');
   }
 
   return (
@@ -334,7 +458,13 @@ export default function OrdersScreen() {
               </Card>
             </View>
 
-            <CustomItemRequestCard value={customItemNotes} onChangeText={setCustomItemNotes} hasEstimate={Boolean(result)} />
+            <CustomItemRequestCard
+              value={customItemNotes}
+              onChangeText={setCustomItemNotes}
+              hasEstimate={Boolean(result)}
+              dealerName={dealerContext.dealerName}
+              dealerEmail={dealerContext.orderEmail}
+            />
             {result ? <MaterialBreakdownCard result={result} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
             {result ? <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} /> : null}
 
@@ -423,10 +553,14 @@ function CustomItemRequestCard({
   value,
   onChangeText,
   hasEstimate,
+  dealerName,
+  dealerEmail,
 }: {
   value: string;
   onChangeText: (value: string) => void;
   hasEstimate: boolean;
+  dealerName: string;
+  dealerEmail: string | null;
 }) {
   return (
     <Card style={styles.customCard}>
@@ -451,7 +585,7 @@ function CustomItemRequestCard({
         style={styles.customInput}
       />
       <Text style={styles.customHint}>
-        This saves with the request and is included in the Modern Arc email.
+        This saves with the request and is included in the email to {dealerName}{dealerEmail ? ` (${dealerEmail})` : ''}.
       </Text>
     </Card>
   );
@@ -512,8 +646,10 @@ function buildDealerEmailBody({
     `Project: ${projectTitle}`,
     `Site: ${project.siteAddress ?? 'Not provided'}`,
     `Installer company: ${profile?.companyName ?? 'Profile pending'}`,
-    `Contact: ${profile?.contactName ?? profile?.email ?? 'Not provided'}`,
+    `Contact: ${profile?.contactName ?? 'Not provided'}`,
+    `Installer email: ${profile?.email ?? 'Not provided'}`,
     `Phone: ${profile?.phone ?? 'Not provided'}`,
+    `Company location: ${[profile?.city, profile?.province, profile?.postalCode].filter(Boolean).join(', ') || 'Not provided'}`,
     '',
     materialLines?.length ? 'Calculator quantities:' : null,
     ...(materialLines ?? []),
