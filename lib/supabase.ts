@@ -1,7 +1,8 @@
 import 'react-native-url-polyfill/auto';
 import * as SecureStore from 'expo-secure-store';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, processLock } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
+import { AppState, Platform } from 'react-native';
 
 // Auth tokens hold a logged-in session to a child's health data, so they
 // are kept in the OS keychain/keystore (encrypted), not plaintext
@@ -9,6 +10,7 @@ import Constants from 'expo-constants';
 // sessions exceed that, so values are transparently chunked.
 const CHUNK_SIZE = 1800;
 const isChunked = /^__chunks__:(\d+)$/;
+const isNativeMobile = Platform.OS === 'ios' || Platform.OS === 'android';
 
 const SecureStorageAdapter = {
   async getItem(key: string): Promise<string | null> {
@@ -67,12 +69,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Untyped client — all query results are explicitly cast at call sites
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: SecureStorageAdapter,
+    storage: isNativeMobile ? SecureStorageAdapter : undefined,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    lock: processLock,
   },
 });
+
+if (isNativeMobile) {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase.auth.startAutoRefresh();
+    } else {
+      supabase.auth.stopAutoRefresh();
+    }
+  });
+}
 
 export const db = {
   profiles:     () => supabase.from('profiles'),

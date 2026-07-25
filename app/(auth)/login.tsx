@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@lib/supabase';
+import { getSignInErrorMessage, normalizeEmail } from '@lib/auth';
 import { Colors } from '@constants/colors';
 import { AppLogo } from '@components/AppLogo';
 
@@ -23,20 +24,48 @@ export default function LoginScreen() {
   const passwordRef = useRef<TextInput>(null);
 
   async function handleSignIn() {
-    if (!email || !password) { setError('Please enter your email and password.'); return; }
-    setError(null); setLoading(true);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) setError(authError.message);
-    setLoading(false);
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+      if (authError) setError(getSignInErrorMessage(authError));
+    } catch (authError) {
+      setError(getSignInErrorMessage(authError));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleSignUp() {
-    if (!email || !password) { setError('Please enter your email and password.'); return; }
-    setError(null); setLoading(true);
-    const { error: authError } = await supabase.auth.signUp({ email, password });
-    if (authError) setError(authError.message);
-    else setError('Check your email to confirm your account.');
-    setLoading(false);
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+    try {
+      const { error: authError } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+      });
+      if (authError) setError(getSignInErrorMessage(authError));
+      else setError('Check your email to confirm your account.');
+    } catch (authError) {
+      setError(getSignInErrorMessage(authError));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
