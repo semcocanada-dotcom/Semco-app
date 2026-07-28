@@ -29,10 +29,19 @@ import { ExpenseListItem } from '@components/ExpenseListItem';
 // ─── Location permission prompt (shown once on first launch) ─────────────────
 
 function LocationPermissionModal({ onDone }: { onDone: () => void }) {
-  const handleAllow = async () => {
-    onDone();
-    await Location.requestForegroundPermissionsAsync();
+  const [requesting, setRequesting] = useState(false);
+
+  const handleContinue = async () => {
+    if (requesting) return;
+
+    setRequesting(true);
+    try {
+      await Location.requestForegroundPermissionsAsync();
+    } finally {
+      onDone();
+    }
   };
+
   return (
     // In-tree absolute overlay (not a native <Modal>) so it never triggers a
     // UIViewController presentation — that presentation path was implicated in
@@ -41,7 +50,7 @@ function LocationPermissionModal({ onDone }: { onDone: () => void }) {
     <Animated.View entering={FadeIn.duration(220)} style={ls.overlay} pointerEvents="auto">
       <Animated.View entering={SlideInDown.springify().damping(18)} style={ls.sheet}>
         <Text style={ls.icon}>📍</Text>
-        <Text style={ls.title}>Allow Location Access</Text>
+        <Text style={ls.title}>How Location Helps</Text>
         <Text style={ls.body}>
           Autism Fund Tracker uses your location for two things:
         </Text>
@@ -60,11 +69,13 @@ function LocationPermissionModal({ onDone }: { onDone: () => void }) {
           </Text>
         </View>
         <Text style={ls.note}>Your location is never stored or shared.</Text>
-        <TouchableOpacity style={ls.allowBtn} onPress={handleAllow} activeOpacity={0.85}>
-          <Text style={ls.allowBtnText}>Allow Location Access</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={ls.skipBtn} onPress={onDone} activeOpacity={0.7}>
-          <Text style={ls.skipBtnText}>Not Now</Text>
+        <TouchableOpacity
+          style={ls.continueBtn}
+          onPress={handleContinue}
+          activeOpacity={0.85}
+          disabled={requesting}
+        >
+          <Text style={ls.continueBtnText}>Continue</Text>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>
@@ -81,10 +92,8 @@ const ls = StyleSheet.create({
   reasonIcon:   { fontSize: 22 },
   reasonText:   { flex: 1, fontSize: 14, color: Colors.textPrimary, lineHeight: 20 },
   note:         { fontSize: 12, color: Colors.textMuted, textAlign: 'center' },
-  allowBtn:     { backgroundColor: Colors.purple, borderRadius: 16, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  allowBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  skipBtn:      { alignItems: 'center', paddingVertical: 10 },
-  skipBtnText:  { fontSize: 14, color: Colors.textMuted, fontWeight: '500' },
+  continueBtn:     { backgroundColor: Colors.purple, borderRadius: 16, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
+  continueBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
