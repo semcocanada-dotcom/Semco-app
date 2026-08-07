@@ -85,11 +85,19 @@ Data linked to the account and used only for App Functionality:
 - Contact Info: Physical Address, when the account holder adds a private provider's street address, city, or postal code
 - Health: child diagnosis date/notes and funding or care records
 - Sensitive Info: optional Saskatchewan Health Services Number and other child/care details
+- Financial Info — Payment Info: only when a user-uploaded receipt image contains merchant-printed payment-method details such as card type or masked digits
 - Financial Info — Other Financial Info: approved funding amounts, expense/reimbursement amounts, and amounts recorded as paid
 - Purchases — Purchase History: purchase receipt details recorded for funding expenses
 - User Content — Photos or Videos: receipt images selected or captured by the account holder
 - User Content — Other User Content: receipt PDFs, notes, private provider details, respite-worker details, and appointment details
 - Identifiers: User ID
+
+Technical data associated with the persistent device installation and used only for App Functionality and Analytics:
+
+- Identifiers: Device ID (a randomized Expo installation token)
+- Usage Data: Product Interaction (app/update checks and downloads)
+- Diagnostics: Crash Data
+- Diagnostics: Other Diagnostic Data (update IDs, failed-update IDs, operating-system and limited error information)
 
 Do not declare Precise Location, Coarse Location, advertising data, or tracking. The current app does not collect the family's home address or device location, but its optional private-provider address fields still require the linked Physical Address declaration above.
 
