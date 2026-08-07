@@ -6,7 +6,8 @@ Prepared: 2026-08-07
 
 - Name: Autism Fund Tracker
 - Version: 1.0
-- Next binary: build 12
+- Selected replacement binary: build 14
+- Legal operator: Innovative Finishes Inc.
 - Primary category: Finance
 - Secondary category: Health & Fitness
 - Price: Free
@@ -39,7 +40,7 @@ Do not delete this account. Apple can inspect the deletion screen with it, but a
 
 ## Reviewer Notes
 
-Autism Fund Tracker is an independent family recordkeeping tool for Saskatchewan Autism Spectrum Disorder Individualized Funding (ASD-IF). It is not affiliated with, endorsed by, or operated by the Government of Saskatchewan, and it does not decide eligibility, approve expenses, or submit claims to government.
+Autism Fund Tracker is operated by Innovative Finishes Inc. and is an independent family recordkeeping tool for Saskatchewan Autism Spectrum Disorder Individualized Funding (ASD-IF). It is not affiliated with, endorsed by, or operated by the Government of Saskatchewan, and it does not decide eligibility, approve expenses, or submit claims to government.
 
 The app lets an authorized adult record a child's approved funding amount, expenses, manually entered mileage, respite records, appointments, private provider records, and receipt attachments. Funding amounts shown during setup are editable estimates based on public program information; the account holder must enter the child's actual approved amount.
 
@@ -114,7 +115,7 @@ Do not declare Precise Location, Coarse Location, advertising data, or tracking.
 
 ## Release Blockers Before Submission
 
-- The current Apple Developer membership is enrolled as an Individual. Because this app requires and stores a child's health and sensitive information, verify or complete submission through the legal organization that provides the service, as required by App Review Guideline 5.1.1(ix).
+- Innovative Finishes Inc. is the confirmed legal operator. The current Apple Developer membership is still enrolled as an Individual; complete the Individual-to-Organization conversion to Innovative Finishes Inc. before review submission, as required by App Review Guideline 5.1.1(ix) for an app that stores a child's health and sensitive information.
 - Publish and verify both public URLs above; the support page must not return 404 and the privacy policy must match this binary.
 - Complete clean-install physical iPhone and iPad tests for login, child/funding creation, JPEG/PDF receipt recognition, permission denial, worksheet export, and account deletion with a disposable account. The August 7 rejection requires the complete deletion test to be recorded on a physical device and attached to App Review Information before resubmission.
 - If official Saskatchewan PDF artwork is ever embedded, reproduced, or automatically filled inside the app again, obtain written Crown copyright and government-logo permission first. Public download availability alone does not grant commercial republication rights.
