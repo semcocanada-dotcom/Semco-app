@@ -23,6 +23,7 @@ yarn-error.*
 .env
 .env.local
 .env.production
+/deno.lock
 ios/
 android/
 .claude/settings.local.json
