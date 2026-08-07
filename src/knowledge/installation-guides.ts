@@ -33,7 +33,7 @@ const defaultSteps = [
   'Follow the layer order shown in the official drawing.',
   'Detail joints, cracks, drains, corners, transitions, and movement-risk areas before covering them.',
   'Capture the required warranty stage photos before each stage gets hidden.',
-  'Ask Semco when the existing surface condition does not match the drawing.',
+  'Use Semco Guide when the existing surface condition does not match the drawing.',
 ];
 
 export const INSTALLATION_GUIDES: InstallationGuide[] = [

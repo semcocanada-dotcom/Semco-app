@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import { Platform } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import { supabase } from './supabase';
 import { createPrivateFileUrl } from './private-storage';
 
@@ -11,9 +11,18 @@ export interface CapturedPhoto {
   mimeType?: string | null;
 }
 
+function showCameraSettingsAlert() {
+  Alert.alert('Camera access needed', 'Camera access is required only when you choose to photograph a project or colour sample. You can enable it in Settings.', [
+    { text: 'Cancel', style: 'cancel' },
+    { text: 'Open Settings', onPress: () => { void Linking.openSettings(); } },
+  ]);
+}
+
 export async function requestCameraPermissions(): Promise<boolean> {
   const { status } = await ImagePicker.requestCameraPermissionsAsync();
-  return status === 'granted';
+  if (status === 'granted') return true;
+  showCameraSettingsAlert();
+  return false;
 }
 
 export async function captureColorSample(): Promise<CapturedPhoto | null> {
@@ -60,31 +69,30 @@ export async function captureProgressPhoto(): Promise<CapturedPhoto | null> {
 }
 
 export async function pickProgressPhoto(): Promise<CapturedPhoto | null> {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== 'granted') return null;
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: false,
-    quality: 0.9,
-  });
-  if (result.canceled || !result.assets[0]) return null;
-  const asset = result.assets[0];
-  return { localUri: asset.uri, width: asset.width, height: asset.height, mimeType: asset.mimeType };
+  return pickPhotoFromLibrary();
 }
 
 export async function pickReceiptPhoto(): Promise<CapturedPhoto | null> {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  if (status !== 'granted') return null;
+  return pickPhotoFromLibrary();
+}
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: false,
-    quality: 0.9,
-  });
-  if (result.canceled || !result.assets[0]) return null;
-  const asset = result.assets[0];
-  return { localUri: asset.uri, width: asset.width, height: asset.height, mimeType: asset.mimeType };
+async function pickPhotoFromLibrary(): Promise<CapturedPhoto | null> {
+  try {
+    // iOS and modern Android present an out-of-process system picker here.
+    // It does not require broad access to the user's photo library.
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.9,
+    });
+    if (result.canceled || !result.assets[0]) return null;
+    const asset = result.assets[0];
+    return { localUri: asset.uri, width: asset.width, height: asset.height, mimeType: asset.mimeType };
+  } catch (error) {
+    console.error('[camera] photo picker failed:', error);
+    Alert.alert('Photo unavailable', 'The photo picker could not be opened. Please try again.');
+    return null;
+  }
 }
 
 export async function persistProjectPhoto(localUri: string, photoId: string): Promise<string> {

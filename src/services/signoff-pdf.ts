@@ -5,6 +5,12 @@ import { LineCapStyle, PDFDocument, StandardFonts, rgb } from 'pdf-lib/dist/pdf-
 import type { SignoffTemplate } from '@/constants/project-signoffs';
 import { getCroppedSignaturePath, parseSignatureRecord } from '@/components/projects/SignaturePad';
 import { supabase } from '@/services/supabase';
+import {
+  CUSTOMER_SIGNOFF_PRIVACY_POLICY_URL,
+  CUSTOMER_SIGNOFF_SUPPORT_URL,
+  readCustomerSignoffConsentAudit,
+} from '@/services/customer-signoff-consent';
+import { SEMCO_PRIVACY_EMAIL } from '@/constants/legal';
 
 type CreateFilledSignoffPdfInput = {
   projectId: string;
@@ -131,6 +137,99 @@ export async function createFilledSignoffPdf({
         maxWidth: width - 6,
       });
     }
+  }
+
+  const privacyAudit = readCustomerSignoffConsentAudit(values);
+  if (privacyAudit) {
+    pdfDoc.setSubject(
+      `Customer privacy acknowledgement ${privacyAudit.version} accepted ${privacyAudit.acceptedAt}`,
+    );
+    pdfDoc.setKeywords([
+      'Semco Pro',
+      'customer privacy acknowledgement',
+      privacyAudit.version,
+      privacyAudit.acceptedAt,
+    ]);
+
+    const auditPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    const margin = 54;
+    const contentWidth = PAGE_WIDTH - (margin * 2);
+    let auditY = PAGE_HEIGHT - 64;
+
+    auditPage.drawText('Customer Privacy Acknowledgement', {
+      x: margin,
+      y: auditY,
+      size: 18,
+      font: bold,
+      color: ink,
+    });
+    auditY -= 30;
+    auditPage.drawText(`Notice version: ${privacyAudit.version}`, {
+      x: margin,
+      y: auditY,
+      size: 10,
+      font: regular,
+      color: ink,
+    });
+    auditY -= 16;
+    auditPage.drawText(`Accepted (UTC): ${privacyAudit.acceptedAt}`, {
+      x: margin,
+      y: auditY,
+      size: 10,
+      font: regular,
+      color: ink,
+    });
+    auditY -= 16;
+    auditPage.drawText(`Project: ${projectId} | Form: ${template.title}`, {
+      x: margin,
+      y: auditY,
+      size: 10,
+      font: regular,
+      color: ink,
+      maxWidth: contentWidth,
+    });
+    auditY -= 30;
+
+    for (const line of wrapText(privacyAudit.notice, 88)) {
+      auditPage.drawText(line, {
+        x: margin,
+        y: auditY,
+        size: 10,
+        font: regular,
+        color: ink,
+        maxWidth: contentWidth,
+      });
+      auditY -= 15;
+    }
+
+    auditY -= 12;
+    for (const line of [
+      `Privacy policy: ${CUSTOMER_SIGNOFF_PRIVACY_POLICY_URL}`,
+      `Privacy contact: ${SEMCO_PRIVACY_EMAIL}`,
+      `Support: ${CUSTOMER_SIGNOFF_SUPPORT_URL}`,
+    ]) {
+      auditPage.drawText(line, {
+        x: margin,
+        y: auditY,
+        size: 8,
+        font: regular,
+        color: ink,
+        maxWidth: contentWidth,
+      });
+      auditY -= 13;
+    }
+
+    auditPage.drawText(
+      'Audit receipt: the customer selected I Agree & Continue before sign-off details or the signature were captured.',
+      {
+        x: margin,
+        y: 44,
+        size: 8,
+        font: bold,
+        color: ink,
+        maxWidth: contentWidth,
+      },
+    );
   }
 
   const bytes = await pdfDoc.save();

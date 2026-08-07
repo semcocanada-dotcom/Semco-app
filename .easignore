@@ -5,8 +5,7 @@ dist-*/
 web-build/
 tmp/
 verification-screenshots/
-.release-check-ios/
-.release-check-web/
+.release*/
 app-store-assets/
 expo-doc-previews-*.log
 expo-*.log

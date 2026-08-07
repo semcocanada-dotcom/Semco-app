@@ -5,6 +5,8 @@ dist-*/
 web-build/
 tmp/
 verification-screenshots/
+.release*/
+app-store-assets/
 expo-doc-previews-*.log
 expo-*.log
 portal-tunnel*.log

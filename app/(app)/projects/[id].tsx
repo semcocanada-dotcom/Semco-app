@@ -359,7 +359,7 @@ export default function ProjectDetailScreen() {
             .where(eq(projects.id, projectId));
           const cloudResult = await syncProjectToCloud(updatedProject);
           if (!cloudResult.ok) {
-            Alert.alert('Cloud update pending', 'The project is complete on this device, but the admin portal has not received the update yet.');
+            Alert.alert('Cloud update pending', 'The project is complete on this device, but Semco has not received the cloud update yet.');
           }
           load();
         },

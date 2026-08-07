@@ -396,7 +396,7 @@ function buildAssumptions(intent: ReasoningIntent, facts: ExtractedJobFacts): st
   const assumptions: string[] = [];
 
   if (intent === 'material_estimate') {
-    assumptions.push('Material quantities are calculated by the built-in Calculator, not by Ask Semco.');
+    assumptions.push('Material quantities are calculated by the built-in Calculator, not by Semco Guide.');
   }
 
   if (facts.isSubmerged) {
@@ -460,10 +460,10 @@ function materialEstimateAnswer(
   missingInputs: string[],
 ): string {
   return [
-    'Use the Calculator for material quantities. Ask Semco should help the installer understand the install decision, but it should not freestyle material counts.',
+    'Use the Calculator for material quantities. Semco Guide can help explain the install decision, but it does not create material counts.',
     '',
     'Why this matters:',
-    'Material counts must come from the built-in formulas so every installer gets the same result. The AI should not guess quantities or override the Calculator.',
+    'Material counts must come from the built-in formulas so every installer gets the same result. Semco Guide does not guess quantities or override the Calculator.',
     '',
     'For the Calculator, enter:',
     '1. area in sq ft',
@@ -545,7 +545,7 @@ function membraneAnswer(facts: ExtractedJobFacts): string {
 
   if (!facts.areaSqft) {
     return [
-      'Use the Calculator for Liquid Membrane quantity. Ask Semco can explain where membrane belongs, but ordering quantity should come from the formula so purchase rounding is consistent.',
+      'Use the Calculator for Liquid Membrane quantity. Semco Guide can explain where membrane belongs, but ordering quantity should come from the formula so purchase rounding is consistent.',
       '',
       'Field rule:',
       'Normal work and pool/submerged work use different membrane assumptions. If the project is pool or submerged, choose that condition in the Calculator.',
@@ -557,12 +557,12 @@ function membraneAnswer(facts: ExtractedJobFacts): string {
   }
 
   return [
-    'Use the Calculator for Liquid Membrane quantity. The material count should come from the built-in formula, not an AI guess.',
+    'Use the Calculator for Liquid Membrane quantity. The material count should come from the built-in formula, not a free-form estimate.',
     '',
     areaLine,
     '',
     'Field rule:',
-    'Normal work and pool/submerged work use different membrane assumptions. Ask Semco can explain where membrane is needed, but quantities come from the Calculator.',
+    'Normal work and pool/submerged work use different membrane assumptions. Semco Guide can explain where membrane is needed, but quantities come from the Calculator.',
   ].join('\n');
 }
 
@@ -1020,7 +1020,7 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
       '6. metal',
       '',
       'Field rule:',
-      'Ask Semco should not approve an assembly without knowing the substrate and surface condition.',
+      'Semco Guide should not confirm an assembly without knowing the substrate and surface condition.',
     ].join('\n');
   }
 

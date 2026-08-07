@@ -1,85 +1,58 @@
 # Semco Pro Release Submission Status
 
-Last updated: 2026-07-16
+Last updated: 2026-08-07
 
 ## Release Goal
 
-Publish Semco Pro for installers on the Apple App Store and Google Play.
+Replace rejected iOS version 1.0 build 22 with a fully tested installer-only build and resubmit after all external requirements are complete.
 
 ## Application
 
 - App name: Semco Pro
-- Version: 1.0.17
+- Marketing version: 1.0
+- Next iOS build: 23 or later (production auto-increment from build 22)
 - iOS bundle identifier: com.semcocanada.semcopro
-- Android package: com.semcocanada.semcopro
+- Apple app ID: 6790031528
 - Expo project: @kitzul88/semco-pro
 - Expo project ID: cc9001d8-b1f9-44b2-b59c-c7b35d8c6129
 
-## Verification Completed
+## Implemented for the Replacement Build
 
-- TypeScript: passed (`npx tsc --noEmit`)
-- ESLint: passed (`npm run lint`)
-- Jest: 4 suites and 9 tests passed
-- Expo Doctor: 18/18 checks passed
-- Web production export: passed
-- Android production bundle export: passed
-- Cloud project-photo upload and signed download: verified
-- Cloud purchase-receipt upload and signed download: verified
-- Cloud signed-form PDF upload and signed download: verified
-- Account creation, password reset, privacy policy, and in-app deletion request flows are present
+- Immediate permanent in-app account deletion, including private files and associated account data.
+- Versioned customer authorization before project customer data is collected or synced.
+- Customer-facing authorization before sign-off fields/signature are collected; the audit notice is stored with the record and PDF.
+- The iOS system photo picker is used without requesting broad Photos-library permission; camera access is requested only after a camera action.
+- Semco Guide is installed and deterministic; remote AI, Firebase AI, semantic retrieval, and cloud conversation sync were removed.
+- Native administrator, dealer-portal, assistant-debug, rewards, prize, and travel-promotion routes were removed.
+- The nonfunctional microphone affordance was removed.
+- App version and runtime are aligned to the active App Store Connect version 1.0.
 
-Receipt images are stored securely, but receipt quantities are currently entered and verified manually. Automatic receipt OCR is not part of version 1.0.
+## Verified Backend State
 
-## Apple App Store
+- Project customer-consent columns are live.
+- The hardened delete-account function is deployed and JWT-protected.
+- The legacy semantic-search endpoint is a JWT-protected 410 tombstone and is not referenced by the mobile app.
+- The dedicated installer reviewer account authenticates successfully and contains a fictional sample project/calculation.
 
-- Apple app ID: 6790031528
-- iOS build: 22
-- EAS build ID: 484b4973-5f24-44aa-8f90-22860831926d
-- EAS submission ID: 63c6acd4-1a19-4e82-bbed-8d8a457e28a6
-- Binary upload: complete
-- Build processing: complete
-- Screenshots: complete for iPhone 6.5-inch and iPad 13-inch
-- Description, keywords, support URL, marketing URL, and promotional text: complete
-- Calculated age rating: 4+
-- Release setting: automatically release after approval
+## Local Validation
 
-### Apple Items Still Requiring Owner Confirmation
+Final release verification completed on 7 August 2026:
 
-- Save the 4+ age-rating declaration
-- Declare that Semco Canada has rights to all third-party content included in the app
-- Publish the app privacy questionnaire and privacy-policy URL
-- Select Business as primary category and Productivity as secondary category
-- Save subtitle: Built for Semco Installers
-- Select free pricing and App Store territory
-- Create a least-privilege Apple reviewer account and provide its credentials to Apple
-- Add reviewer contact name, phone, email, and review notes
-- Add the version for review, then submit it to Apple App Review
+- Jest: 12 suites / 41 tests passed.
+- TypeScript: passed.
+- ESLint: passed with zero warnings.
+- Deno checks: delete-account, privacy-policy, and the disabled embed-and-search tombstone passed.
+- Clean iOS Expo export: passed with 2,057 modules and 113 assets.
+- Generated bundle scan: no executable remote-AI/retrieval, reward/prize, portal/admin, or microphone feature remained.
+- Bundle SHA-256: `34C85DB37E5F5C8DF0B10C39AB48E464F001879CD1356F92E6F0C70723089644`.
 
-Privacy policy URL:
-https://hriocefqjedalnaebeiw.supabase.co/functions/v1/privacy-policy
+## Required Before Build and Submission
 
-Recommended initial availability: Canada only, free. Expand to additional countries later when Semco Canada approves dealer coverage and support.
+- Verify `https://hriocefqjedalnaebeiw.supabase.co/functions/v1/privacy-policy` in mobile Safari immediately before submission and use the same URL in the app and App Store Connect.
+- Replace all eight July screenshots. They show stale Ask Semco AI/reward/microphone content and cannot be reused.
+- Capture new iPhone and iPad screenshots from the exact final build using only fictional data.
+- Complete clean-install iPhone and iPad smoke tests for login, project sync, photo/camera denial, calculations, sign-off PDF upload, material request, and account deletion with a disposable account.
+- Verify the Apple Developer seller/legal entity is authorized to publish the official Semco Canada app and retain written trademark/content authorization.
+- Update App Store Connect privacy labels, review notes, URLs, reviewer credentials, and the replacement build, then obtain fresh confirmation immediately before saving/submitting.
 
-## Google Play
-
-- Android production configuration: ready
-- Android version code: 20
-- Local Android production bundle export: passed
-- Current production AAB: not built yet
-- Google Play developer organization account: not created yet
-- Current browser Google account is not the Semco Canada account
-
-### Android Items Still Requiring Owner Confirmation
-
-- Approve one EAS Android production build credit
-- Create the Google Play organization account under semcocanada@gmail.com
-- Complete Google's organization verification and one-time developer registration payment
-- Create the Semco Pro Play listing
-- Complete Play data-safety, content-rating, app-access, and target-audience declarations
-- Upload the production AAB and submit the release for Google review
-
-## Release Notes for Reviewers
-
-Semco Pro is a field operations app for professional Semco installers. Reviewers can create a test project, add project and customer information, capture or select stage photos, calculate Semco material quantities, browse colour references and official technical documents, use the grounded Ask Semco assistant, complete project sign-off forms, and request account deletion from Account and Security.
-
-Material requests are internal dealer-review requests. The app does not process payments or automatically place external orders. Colour images are references and final selections must be verified with an approved physical sample.
+See `APP_STORE_CONNECT_ANSWERS.md` for the final metadata, Guideline 3.2 explanation, review path, privacy-label inventory, and reviewer-account handling.

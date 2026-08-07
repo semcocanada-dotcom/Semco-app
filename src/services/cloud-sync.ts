@@ -5,17 +5,15 @@ import {
   batchLogs,
   calculations,
   colors,
-  conversations,
   installerProfiles,
   orderRequests,
   projects,
   projects_photos,
   projectSignoffs,
   purchaseReceipts,
-  rewardCredits,
   warrantyReviews,
 } from '@/database/schema';
-import type { BatchLog, Calculation, Color, Conversation, InstallerProfile, OrderRequest, Project, ProjectPhoto, ProjectSignoff, PurchaseReceipt, RewardCredit, WarrantyReview } from '@/database/schema';
+import type { BatchLog, Calculation, Color, InstallerProfile, OrderRequest, Project, ProjectPhoto, ProjectSignoff, PurchaseReceipt, WarrantyReview } from '@/database/schema';
 import { claimPreviewRecords } from '@/database/cloud-migrations';
 import { resolveDealerContext } from '@/constants/dealers';
 import { createLocalId } from '@/utils/id';
@@ -73,6 +71,9 @@ export async function syncProjectToCloud(project: Project): Promise<CloudResult>
     client_email: project.clientEmail,
     client_phone: project.clientPhone,
     site_address: project.siteAddress,
+    customer_data_consent_version: project.customerDataConsentVersion,
+    customer_data_consent_accepted_at: project.customerDataConsentAcceptedAt,
+    customer_data_consent_notice: project.customerDataConsentNotice,
     substrate_type: project.substrateType,
     total_area_sqm: project.totalAreaSqm,
     selected_color_id: null,
@@ -104,6 +105,9 @@ export async function fetchInstallerProjectsFromCloud(installerId: string): Prom
     clientEmail: cloud.client_email,
     clientPhone: cloud.client_phone,
     siteAddress: cloud.site_address,
+    customerDataConsentVersion: cloud.customer_data_consent_version,
+    customerDataConsentAcceptedAt: cloud.customer_data_consent_accepted_at,
+    customerDataConsentNotice: cloud.customer_data_consent_notice,
     substrateType: cloud.substrate_type,
     totalAreaSqm: cloud.total_area_sqm == null ? null : Number(cloud.total_area_sqm),
     selectedColorId: cloud.selected_color_ref,
@@ -138,6 +142,9 @@ export async function hydrateProjectFromCloud(projectId: string, installerId: st
     clientEmail: cloud.client_email,
     clientPhone: cloud.client_phone,
     siteAddress: cloud.site_address,
+    customerDataConsentVersion: cloud.customer_data_consent_version,
+    customerDataConsentAcceptedAt: cloud.customer_data_consent_accepted_at,
+    customerDataConsentNotice: cloud.customer_data_consent_notice,
     substrateType: cloud.substrate_type,
     totalAreaSqm: cloud.total_area_sqm == null ? null : Number(cloud.total_area_sqm),
     selectedColorId: cloud.selected_color_ref,
@@ -345,31 +352,6 @@ export async function syncPurchaseReceiptToCloud(receipt: PurchaseReceipt): Prom
   });
 }
 
-export async function syncRewardCreditToCloud(credit: RewardCredit): Promise<CloudResult> {
-  return cloudUpsert('reward_credits', {
-    id: credit.id,
-    installer_id: credit.installerId,
-    project_id: credit.projectId,
-    source_type: credit.sourceType,
-    source_id: credit.sourceId,
-    sqft: credit.sqft,
-    status: credit.status,
-    notes: credit.notes,
-    created_at: credit.createdAt,
-  });
-}
-
-export async function syncConversationToCloud(conversation: Conversation): Promise<CloudResult> {
-  return cloudUpsert('conversations', {
-    id: conversation.id,
-    installer_id: conversation.installerId,
-    title: conversation.title,
-    messages: conversation.messages,
-    created_at: conversation.createdAt,
-    updated_at: conversation.updatedAt,
-  });
-}
-
 export async function syncBatchLogToCloud(batch: BatchLog): Promise<CloudResult> {
   return cloudUpsert('batch_logs', {
     id: batch.id,
@@ -424,17 +406,15 @@ async function syncSignoffToCloud(signoff: ProjectSignoff): Promise<CloudResult>
 }
 
 export async function syncAllLocalData(installerId: string) {
-  const [profileRows, projectRows, photoRows, batchRows, calculationRows, conversationRows, orderRows, warrantyRows, receiptRows, rewardRows, signoffRows, colorRows] = await Promise.all([
+  const [profileRows, projectRows, photoRows, batchRows, calculationRows, orderRows, warrantyRows, receiptRows, signoffRows, colorRows] = await Promise.all([
     db.select().from(installerProfiles).where(eq(installerProfiles.installerId, installerId)),
     db.select().from(projects).where(eq(projects.installerId, installerId)),
     db.select().from(projects_photos).where(eq(projects_photos.installerId, installerId)),
     db.select().from(batchLogs),
     db.select().from(calculations).where(eq(calculations.installerId, installerId)),
-    db.select().from(conversations).where(eq(conversations.installerId, installerId)),
     db.select().from(orderRequests),
     db.select().from(warrantyReviews).where(eq(warrantyReviews.installerId, installerId)),
     db.select().from(purchaseReceipts).where(eq(purchaseReceipts.installerId, installerId)),
-    db.select().from(rewardCredits).where(eq(rewardCredits.installerId, installerId)),
     db.select().from(projectSignoffs).where(eq(projectSignoffs.installerId, installerId)),
     db.select().from(colors).where(eq(colors.installerId, installerId)),
   ]);
@@ -453,11 +433,9 @@ export async function syncAllLocalData(installerId: string) {
   for (const row of photoRows) await syncProjectPhotoToCloud(row);
   for (const row of ownedBatches) await syncBatchLogToCloud(row);
   for (const row of calculationRows) await syncCalculationToCloud(row);
-  for (const row of conversationRows) await syncConversationToCloud(row);
   for (const row of ownedOrders) if (row.status === 'draft' || row.status === 'in_review') await syncOrderRequestToCloud(row, installerId, dealer.dealerId);
   for (const row of warrantyRows) if (row.status === 'not_submitted' || row.status === 'in_review') await syncWarrantyReviewToCloud(row);
   for (const row of receiptRows) if (row.status === 'pending') await syncPurchaseReceiptToCloud(row);
-  for (const row of rewardRows) if (row.status === 'pending') await syncRewardCreditToCloud(row);
   for (const row of signoffRows) await syncSignoffToCloud(row);
   for (const row of colorRows) if (!row.isStandard) await syncCustomColorToCloud(row);
 }
@@ -468,41 +446,14 @@ async function fetchCloud(table: string, installerId: string, installerColumn = 
   return data ?? [];
 }
 
-async function hydrateConversationRows(installerId: string, conversationRows: any[]) {
-  const hydrated: Conversation[] = [];
-  for (const cloud of conversationRows) {
-    const local = (await db.select().from(conversations).where(eq(conversations.id, cloud.id)).limit(1))[0];
-    const values = {
-      installerId,
-      title: cloud.title,
-      messages: cloud.messages ?? [],
-      createdAt: toIso(cloud.created_at),
-      updatedAt: toIso(cloud.updated_at),
-    };
-    const cloudConversation: Conversation = { id: cloud.id, ...values };
-    hydrated.push(local && !isCloudNewer(cloud.updated_at, local.updatedAt) ? local : cloudConversation);
-    if (local && !isCloudNewer(cloud.updated_at, local.updatedAt)) continue;
-    if (local) await db.update(conversations).set(values).where(eq(conversations.id, cloud.id));
-    else await db.insert(conversations).values(cloudConversation);
-  }
-  return hydrated;
-}
-
-export async function hydrateCloudConversations(installerId: string) {
-  const conversationRows = await fetchCloud('conversations', installerId);
-  return hydrateConversationRows(installerId, conversationRows);
-}
-
 export async function hydrateCloudData(installerId: string) {
-  const [profileRows, projectRows, photoRows, calculationRows, conversationRows, warrantyRows, receiptRows, rewardRows, signoffRows, customColorRows] = await Promise.all([
+  const [profileRows, projectRows, photoRows, calculationRows, warrantyRows, receiptRows, signoffRows, customColorRows] = await Promise.all([
     fetchCloud('installer_profiles', installerId),
     fetchCloud('projects', installerId),
     fetchCloud('project_photos', installerId),
     fetchCloud('calculations', installerId),
-    fetchCloud('conversations', installerId),
     fetchCloud('warranty_reviews', installerId),
     fetchCloud('purchase_receipts', installerId),
-    fetchCloud('reward_credits', installerId),
     fetchCloud('project_signoffs', installerId),
     fetchCloud('colors', installerId),
   ]);
@@ -540,6 +491,9 @@ export async function hydrateCloudData(installerId: string) {
       clientEmail: cloud.client_email,
       clientPhone: cloud.client_phone,
       siteAddress: cloud.site_address,
+      customerDataConsentVersion: cloud.customer_data_consent_version,
+      customerDataConsentAcceptedAt: cloud.customer_data_consent_accepted_at,
+      customerDataConsentNotice: cloud.customer_data_consent_notice,
       substrateType: cloud.substrate_type,
       totalAreaSqm: cloud.total_area_sqm == null ? null : Number(cloud.total_area_sqm),
       selectedColorId: cloud.selected_color_ref,
@@ -579,8 +533,6 @@ export async function hydrateCloudData(installerId: string) {
       wastePct: Number(cloud.waste_pct ?? 10), result: cloud.result, createdAt: toIso(cloud.created_at),
     });
   }
-
-  await hydrateConversationRows(installerId, conversationRows);
 
   const projectIds = projectRows.map((row) => row.id);
   if (projectIds.length) {
@@ -628,13 +580,6 @@ export async function hydrateCloudData(installerId: string) {
     const values = { installerId, projectId: cloud.project_id, dealerName: cloud.dealer_name, receiptNumber: cloud.receipt_number, receiptUrl: cloud.receipt_url, sqftClaimed: Number(cloud.sqft_claimed ?? 0), status: cloud.status, notes: cloud.notes, createdAt: toIso(cloud.created_at), updatedAt: toIso(cloud.updated_at), reviewedAt: cloud.reviewed_at };
     if (local) await db.update(purchaseReceipts).set(values).where(eq(purchaseReceipts.id, cloud.id));
     else await db.insert(purchaseReceipts).values({ id: cloud.id, ...values });
-  }
-
-  for (const cloud of rewardRows) {
-    const local = (await db.select().from(rewardCredits).where(eq(rewardCredits.id, cloud.id)).limit(1))[0];
-    const values = { installerId, projectId: cloud.project_id, sourceType: cloud.source_type, sourceId: cloud.source_id, sqft: Number(cloud.sqft ?? 0), status: cloud.status, notes: cloud.notes, createdAt: toIso(cloud.created_at), verifiedAt: cloud.verified_at };
-    if (local) await db.update(rewardCredits).set(values).where(eq(rewardCredits.id, cloud.id));
-    else await db.insert(rewardCredits).values({ id: cloud.id, ...values });
   }
 
   for (const cloud of signoffRows) {

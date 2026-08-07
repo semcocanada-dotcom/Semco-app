@@ -60,7 +60,7 @@ export default function InstallationGuidesScreen() {
               );
             })}
           </ScrollView>
-          <SectionHeader title="Official diagrams" subtitle="Tap Ask Semco from a guide when you want a direct answer about that system." />
+          <SectionHeader title="Official diagrams" subtitle="Open Semco Guide from a guide when you want to search installed information about that system." />
           {visibleGuides.map((guide) => (
             <SystemGuideCard
               key={guide.id}

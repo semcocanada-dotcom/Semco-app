@@ -10,6 +10,9 @@ export const projects = sqliteTable(
     clientEmail: text('client_email'),
     clientPhone: text('client_phone'),
     siteAddress: text('site_address'),
+    customerDataConsentVersion: text('customer_data_consent_version'),
+    customerDataConsentAcceptedAt: text('customer_data_consent_accepted_at'),
+    customerDataConsentNotice: text('customer_data_consent_notice'),
     // Application spec
     substrateType: text('substrate_type'),
     totalAreaSqm: real('total_area_sqm'),

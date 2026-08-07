@@ -2,14 +2,11 @@ import { sqliteTable, text, index } from 'drizzle-orm/sqlite-core';
 
 export type MessageRole = 'user' | 'assistant';
 export type MessageSource =
-  | 'claude'
+  | 'local_guide'
   | 'offline_fts'
   | 'product_library'
   | 'sip_manual'
-  | 'technical_docs'
-  | 'gemini'
-  | 'ai_cache'
-  | 'ai_fallback';
+  | 'technical_docs';
 
 export interface AssistantCitation {
   id: string;
@@ -18,7 +15,7 @@ export interface AssistantCitation {
   pageNumber?: number;
   docId?: string;
   score?: number;
-  retrieval?: 'semantic' | 'local';
+  retrieval?: 'local';
 }
 
 export interface ConversationMessage {

@@ -71,7 +71,7 @@ export function SystemGuideCard({ guide, compact = false, onPress, onAsk, style 
             {onAsk ? (
               <TouchableOpacity onPress={onAsk} style={styles.askButton} accessibilityRole="button">
                 <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.white} />
-                <Text style={styles.askText}>Ask Semco</Text>
+                <Text style={styles.askText}>Semco Guide</Text>
               </TouchableOpacity>
             ) : null}
           </View>

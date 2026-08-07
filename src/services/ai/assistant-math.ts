@@ -7,12 +7,12 @@ import colorsData from '@/database/seed/colors.json';
 import type { AssistantJobContext } from './job-context';
 
 /**
- * Deterministic in-chat math for Ask Semco.
+ * Deterministic in-chat math for Semco Guide.
  *
  * Every number here comes from the same sources the rest of the app uses:
  * the Calculator engine (calculate/product-coverage), the verified mixing
  * ratios already encoded in the field rules, and the imported X-Bond tint
- * formulas in colors.json. Nothing is generated or estimated by AI, and
+ * formulas in colors.json. Nothing is remotely generated or estimated, and
  * anything this module cannot parse falls through to the normal
  * retrieval/answer path.
  */

@@ -5,9 +5,7 @@ import { useRouter } from 'expo-router';
 import { desc, eq } from 'drizzle-orm';
 import { ActionCard, EmptyState, SearchBar } from '@/components/ui';
 import { ProjectCard } from '@/components/projects/ProjectCard';
-import { RewardTrackerCard } from '@/components/rewards/RewardTrackerCard';
 import { db } from '@/database/client';
-import { rewardCredits } from '@/database/schema/installers';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
@@ -16,8 +14,6 @@ import { useAuthStore } from '@/store/auth';
 
 type LoadState = {
   projects: Project[];
-  verifiedSqft: number;
-  pendingSqft: number;
 };
 
 // Projects is the primary daily action, so it carries the orange CTA accent;
@@ -41,7 +37,7 @@ export default function DashboardScreen() {
   const user = useAuthStore((s) => s.user);
   const installerId = user?.id ?? LOCAL_INSTALLER_ID;
   const push = (href: string) => router.push(href as any);
-  const [state, setState] = useState<LoadState>({ projects: [], verifiedSqft: 0, pendingSqft: 0 });
+  const [state, setState] = useState<LoadState>({ projects: [] });
   const [installerName, setInstallerName] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,21 +47,8 @@ export default function DashboardScreen() {
   }, [installerId]);
 
   useEffect(() => {
-    Promise.all([
-      db.select().from(projects).orderBy(desc(projects.updatedAt)),
-      db.select().from(rewardCredits).where(eq(rewardCredits.installerId, installerId)),
-    ])
-      .then(([projectRows, creditRows]) => {
-        setState({
-          projects: projectRows,
-          verifiedSqft: creditRows
-            .filter((credit) => credit.status === 'verified')
-            .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
-          pendingSqft: creditRows
-            .filter((credit) => credit.status === 'pending')
-            .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
-        });
-      })
+    db.select().from(projects).where(eq(projects.installerId, installerId)).orderBy(desc(projects.updatedAt))
+      .then((projectRows) => setState({ projects: projectRows }))
       .catch(console.error);
   }, [installerId]);
 
@@ -92,8 +75,7 @@ export default function DashboardScreen() {
             </View>
 
             <SearchBar
-              placeholder="Ask a question or search..."
-              showMic
+              placeholder="Search Semco installation guidance..."
               editable={false}
               onPressIn={() => push('/(app)/assistant')}
               containerStyle={styles.askBar}
@@ -117,12 +99,6 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.content}>
-          <RewardTrackerCard
-            verifiedSqft={state.verifiedSqft}
-            pendingSqft={state.pendingSqft}
-            onPress={() => push('/(app)/rewards')}
-          />
-
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Projects</Text>
             <TouchableOpacity onPress={() => push('/(app)/projects')} activeOpacity={0.75}>

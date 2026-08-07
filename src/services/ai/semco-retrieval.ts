@@ -11,12 +11,11 @@ import {
 } from '@/constants/shower-policy';
 import { searchSipManual } from './manual-knowledge';
 import type { AssistantCitation } from '@/database/schema/conversations';
-import type { RagChunk } from './rag';
 
 export interface RetrievedSemcoChunk extends AssistantCitation {
   text: string;
   score: number;
-  retrieval: 'semantic' | 'local';
+  retrieval: 'local';
 }
 
 export interface RetrievalResult {
@@ -28,17 +27,8 @@ export interface RetrievalResult {
 const MAX_CHUNKS = 16;
 const LOCAL_CONTEXT_CHARS = 1800;
 const NEIGHBOR_CONTEXT_CHARS = 520;
-const SEMANTIC_TIMEOUT_MS = 4500;
 const PROCESS_CONTEXT_SCORE = 120;
 const SIP_MANUAL = 'Open SIP manual - master copy v2019-3 2.pdf';
-
-function asString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
-}
-
-function asNumber(value: unknown): number | undefined {
-  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
-}
 
 function cleanText(text: string, maxLength = LOCAL_CONTEXT_CHARS): string {
   const cleaned = text.replace(/\s+/g, ' ').trim();
@@ -119,28 +109,6 @@ function buildLocalContext(sourceDocument: string, pageNumber: number, fallbackE
   ].filter(Boolean);
 
   return parts.join('\n');
-}
-
-function mapSemanticChunk(chunk: RagChunk, index: number): RetrievedSemcoChunk {
-  const documentName =
-    asString(chunk.metadata?.sourceDocument)
-    ?? asString(chunk.metadata?.source)
-    ?? asString(chunk.metadata?.documentName)
-    ?? 'Semco technical document';
-  const title = asString(chunk.metadata?.title) ?? asString(chunk.metadata?.section);
-  const pageNumber = asNumber(chunk.metadata?.pageNumber) ?? asNumber(chunk.metadata?.page);
-  const docId = asString(chunk.metadata?.docId) ?? findDocId(documentName, title);
-
-  return {
-    id: `semantic-${chunk.id || index}`,
-    documentName,
-    title,
-    pageNumber,
-    docId,
-    score: chunk.similarity,
-    retrieval: 'semantic',
-    text: cleanText(chunk.chunkText, LOCAL_CONTEXT_CHARS),
-  };
 }
 
 function pinnedPageChunk(sourceDocument: string, pageNumber: number, score: number): RetrievedSemcoChunk | null {
@@ -501,33 +469,8 @@ function uniqueBySource(chunks: RetrievedSemcoChunk[]): RetrievedSemcoChunk[] {
   });
 }
 
-async function trySemanticSearch(query: string, isOnline: boolean): Promise<RetrievedSemcoChunk[]> {
-  if (!isOnline) return [];
-
-  try {
-    const { retrieveRelevantChunks } = await import('./rag');
-    const chunks = await withTimeout(retrieveRelevantChunks(processSearchQuery(query), MAX_CHUNKS), SEMANTIC_TIMEOUT_MS);
-    return chunks
-      .map(mapSemanticChunk)
-      .filter((chunk) => chunk.text.length > 40 && chunk.score >= 0.18);
-  } catch {
-    return [];
-  }
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('semantic retrieval timed out')), timeoutMs);
-    promise
-      .then(resolve)
-      .catch(reject)
-      .finally(() => clearTimeout(timeout));
-  });
-}
-
 export async function retrieveSemcoChunks(
   query: string,
-  isOnline: boolean,
 ): Promise<RetrievalResult> {
   const retrievalNotes: string[] = [];
   const policyChunks = stockedSealerPolicyChunk(query);
@@ -536,9 +479,6 @@ export async function retrieveSemcoChunks(
   if (showerPolicyChunks.length > 0) retrievalNotes.push('policy:standard-shower');
   const pinnedProcessChunks = getPinnedProcessChunks(query);
   if (pinnedProcessChunks.length > 0) retrievalNotes.push(`process:${pinnedProcessChunks.length}`);
-
-  const semanticChunks = await trySemanticSearch(query, isOnline);
-  if (semanticChunks.length > 0) retrievalNotes.push(`semantic:${semanticChunks.length}`);
 
   const localHits = searchSipManual(processSearchQuery(query), MAX_CHUNKS);
   const localChunks: RetrievedSemcoChunk[] = localHits.map((hit, index) => ({
@@ -553,7 +493,7 @@ export async function retrieveSemcoChunks(
   }));
   if (localChunks.length > 0) retrievalNotes.push(`local:${localChunks.length}`);
 
-  const chunks = uniqueBySource([...policyChunks, ...showerPolicyChunks, ...pinnedProcessChunks, ...semanticChunks, ...localChunks])
+  const chunks = uniqueBySource([...policyChunks, ...showerPolicyChunks, ...pinnedProcessChunks, ...localChunks])
     .sort((a, b) => {
       const policyRank = (id: string) => {
         if (id === 'policy-stocked-sealers') return 0;
@@ -562,7 +502,6 @@ export async function retrieveSemcoChunks(
       };
       const rankDiff = policyRank(a.id) - policyRank(b.id);
       if (rankDiff !== 0) return rankDiff;
-      if (a.retrieval !== b.retrieval) return a.retrieval === 'semantic' ? -1 : 1;
       return b.score - a.score;
     })
     .slice(0, MAX_CHUNKS);
@@ -600,7 +539,7 @@ export function formatLocalGroundedAnswer(
   // Never surface raw document/OCR text in the user-facing answer. When a
   // local rule answer exists it carries the response; otherwise offer the
   // closest document matches for the installer to open.
-  const reasonOnly = reason ?? 'AI answer generation is not available right now.';
+  const reasonOnly = reason ?? 'Semco Guide found the closest matching installed references.';
 
   if (reasonedAnswer) {
     if (options.includeClosestSource === false) {

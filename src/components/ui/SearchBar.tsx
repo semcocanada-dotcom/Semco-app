@@ -4,11 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography, TAP_TARGET_MIN } from '@/constants/theme';
 
 interface SearchBarProps extends Omit<TextInputProps, 'style'> {
-  showMic?: boolean;
   containerStyle?: ViewStyle;
 }
 
-export function SearchBar({ showMic = true, containerStyle, ...rest }: SearchBarProps) {
+export function SearchBar({ containerStyle, ...rest }: SearchBarProps) {
   return (
     <View style={[styles.container, containerStyle]}>
       <Ionicons name="search-outline" size={20} color={Colors.textSecondary} />
@@ -18,7 +17,6 @@ export function SearchBar({ showMic = true, containerStyle, ...rest }: SearchBar
         placeholderTextColor={Colors.textDisabled}
         selectionColor={Colors.darkTeal}
       />
-      {showMic ? <Ionicons name="mic-outline" size={20} color={Colors.textSecondary} /> : null}
     </View>
   );
 }

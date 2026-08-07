@@ -3,6 +3,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -16,6 +17,7 @@ import { Button, Card, Input, TabControl } from '@/components/ui';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 import { useAuthStore } from '@/store/auth';
 import { upsertInstallerProfile } from '@/services/installer-profile';
+import { PRIVACY_POLICY_URL } from '@/constants/legal';
 
 type AuthMode = 'sign_in' | 'create';
 
@@ -140,7 +142,7 @@ export default function LoginScreen() {
             ) : null}
             <Text style={styles.privacy}>By creating an account, you agree that project and warranty records will be stored securely for Semco review.</Text>
             <TouchableOpacity
-              onPress={() => router.push('/privacy' as any)}
+              onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}
               accessibilityRole="link"
               style={styles.privacyLinkButton}
             >

@@ -49,7 +49,7 @@ export default function ProductsScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <AppHeader title="Product Docs" subtitle="Semco sheets grouped by field task." rightIcon="document-text-outline" />
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search sheets, SDS, or system..." showMic={false} />
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search sheets, SDS, or system..." />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.groupRow}>
           {DOC_GROUPS.map((group) => {
             const active = group.id === selectedGroup;
@@ -101,7 +101,7 @@ export default function ProductsScreen() {
                   </View>
                   <Text style={styles.productName}>{item.title}</Text>
                   <Text style={styles.sku}>{item.sourceDocument}</Text>
-                  <Text style={styles.meta}>{hasPreview ? 'Tap to preview official page' : 'Loaded for Ask Semco'}</Text>
+                  <Text style={styles.meta}>{hasPreview ? 'Tap to preview official page' : 'Loaded for Semco Guide'}</Text>
                 </View>
                 <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textDisabled} />
               </TouchableOpacity>
@@ -114,7 +114,7 @@ export default function ProductsScreen() {
                     <View style={styles.noPreview}>
                       <Ionicons name="document-text-outline" size={20} color={Colors.textDisabled} />
                       <Text style={styles.noPreviewText}>
-                        This reference is available for Ask Semco search, but a visual preview is not bundled.
+                        This reference is available for Semco Guide search, but a visual preview is not bundled.
                       </Text>
                     </View>
                   )}

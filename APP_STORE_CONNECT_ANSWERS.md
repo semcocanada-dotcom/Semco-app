@@ -1,6 +1,6 @@
 # Semco Pro App Store Connect Answers
 
-Prepared: 2026-07-16
+Prepared: 2026-08-07
 
 ## App Information
 
@@ -22,6 +22,9 @@ Prepared: 2026-07-16
 Privacy Policy URL:
 https://hriocefqjedalnaebeiw.supabase.co/functions/v1/privacy-policy
 
+Support URL:
+https://www.semcocanada.ca/contact
+
 No data is used for tracking. No data is used for third-party advertising or developer advertising. Semco Pro does not sell personal information.
 
 ### Data Collected and Linked to the Installer Account
@@ -36,14 +39,10 @@ All of the following are used for App Functionality:
 - Purchases: Purchase History, including submitted receipts and material request records
 - User Content: Photos or Videos, including project stages, receipts, and colour samples
 - User Content: Customer Support, when an installer submits support-related information
-- User Content: Other User Content, including project details, customer sign-off forms, signatures, job notes, Ask Semco questions, and saved conversations
-- Search History: Ask Semco questions and technical searches saved in a conversation
+- User Content: Other User Content, including project details, customer sign-off forms, signatures, and job notes
 - Identifiers: User ID
 
-### Data Collected but Not Linked for Service Security or Operation
-
-- Identifiers: Device ID or device-attestation token, used for App Functionality and Fraud Prevention/Security through Firebase App Check
-- Diagnostics: Other Diagnostic Data, including Firebase SDK version, app version, model name, and service-operation metadata used for App Functionality
+Semco Guide questions, searches, and saved guide conversations stay on the device and are not collected by Semco Canada.
 
 ### Tracking
 
@@ -53,22 +52,51 @@ All of the following are used for App Functionality:
 
 ## Reviewer Notes
 
-Semco Pro is a field operations app for professional Semco installers. A review account is provided below. The reviewer can create a test project, enter project and customer information, capture or select stage photos, calculate Semco material quantities, browse colour references and technical documents, use Ask Semco, complete sign-off forms, and request account deletion from More > Account and Security.
+Semco Pro is a field operations app for professional Semco installers. A standard installer review account is provided below. The reviewer can create a test project, enter project and customer information, capture or select stage photos, calculate Semco material quantities, browse colour references and technical documents, use Semco Guide, submit a purchase receipt, complete sign-off forms, and permanently delete the account and its associated app data from More > Account and Security.
 
 Material requests are internal dealer-review requests. The app does not process payments and does not automatically place external material orders. Colour images are references only; installers must verify final selections with an approved physical sample.
 
-Ask Semco answers are grounded in approved Semco technical documents. If Gemini is unavailable or approved documents do not confirm an answer, the app provides a document-search fallback rather than inventing technical quantities.
+Semco Guide is an entirely local reference tool. It uses deterministic calculators, coded field rules, and Semco technical text installed with the app. It does not call a remote model or remote semantic-search service, and its questions and saved conversations are not synced. Material quantities always come from the app's deterministic calculator formulas.
+
+This build contains only installer-facing mobile routes. It does not include an administrator or dealer portal, and it does not include a rewards program.
+
+### Guideline 3.2 — Business Model
+
+Semco Pro is for independent professional installer and contractor businesses that use Semco products; it is not restricted to the employees of one company. Any installer business can create an account in the app using its company/contact details and email/password. A Semco Account ID is optional. Certification and dealer assignment support warranty and dealer workflows but are not required to sign in.
+
+There is no subscription, paid digital content, paywall, in-app purchase, or fee for app access. Material quantities and pricing are estimates only. A material request is sent to a dealer for review and does not place an order or collect payment. Any purchase of physical materials or services is arranged and paid for outside the app.
+
+### Suggested Review Path
+
+1. Sign in with the dedicated installer review account below.
+2. Open the fictional sample project named **Apple Review Sample — No Real Customer**.
+3. Create a separate test project to exercise customer-data consent, calculations, photos, sign-off forms, and material requests. All customer information used for review should be fictional.
+4. Open **Semco Guide** to test the installed, on-device reference answers and deterministic calculators. No question or conversation is sent to an AI or remote search service.
+5. Open **More > Account and Security** to inspect the permanent in-app account-deletion flow. Do not delete the dedicated reviewer account; use a disposable account if deletion must be completed end to end.
+
+## Screenshot and Metadata Replacement Required Before Submission
+
+- Replace every prior dashboard screenshot: the current build removes the nonfunctional microphone icon and all reward-progress UI.
+- Replace every prior assistant screenshot and any metadata that says "Ask Semco AI" or implies generated answers. Use the name "Semco Guide" and show the installed-reference wording from this build.
+- Remove screenshots or promotional text showing reward tiers, prizes, unlocked rewards, administrator tools, or a dealer portal.
 
 ## Reviewer Contact
 
 - First name: Dieter
 - Last name: Kitzul
-- Email: semcocanada@gmail.com
-- Phone: pending owner confirmation
+- Email: info@semcocanada.ca
+- Phone: +1 306-530-7910
 
 ## Reviewer Account
 
-A dedicated least-privilege reviewer account must be created. Do not use an administrator or personal account.
+A dedicated least-privilege installer reviewer account exists and was authenticated successfully against the production backend on 7 August 2026. It does not have administrator or dealer-portal access.
 
-- Username: pending
-- Password: pending
+- Username: apple-review@semcocanada.ca
+- Password: enter the verified reviewer password directly in App Store Connect; do not store it in this repository
+
+## Release Blockers Before Submission
+
+- Verify the privacy-policy URL above in mobile Safari immediately before submission; it must remain readable and must not return an error or raw HTML source.
+- Replace all stale screenshots listed above with captures from the final production build and fictional data.
+- Complete clean-install iPhone and iPad tests for sign-in, project sync, photo selection/camera denial, sign-off PDF upload, material request, and account deletion with a disposable account.
+- Confirm the Apple Developer seller/legal entity is authorized to publish the official Semco Canada app and retain written permission for the SEMCO name, trademarks, manuals, and other supplied content.

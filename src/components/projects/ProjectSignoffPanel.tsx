@@ -9,6 +9,13 @@ import { PROJECT_SIGNOFF_TEMPLATES, getSignoffTemplate } from '@/constants/proje
 import { Badge, Button, Card, Input } from '@/components/ui';
 import { EditablePdfForm } from '@/components/projects/EditablePdfForm';
 import { getSignoffPdfViewUrl, syncProjectSignoffToCloud } from '@/services/signoffs-cloud';
+import {
+  addCustomerSignoffConsentAudit,
+  CUSTOMER_SIGNOFF_PRIVACY_NOTICE,
+  CUSTOMER_SIGNOFF_PRIVACY_POLICY_URL,
+  CUSTOMER_SIGNOFF_SUPPORT_URL,
+  readCustomerSignoffConsentAudit,
+} from '@/services/customer-signoff-consent';
 import { formatSqftFromSqm } from '@/utils/area';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
@@ -68,6 +75,8 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
   const [notes, setNotes] = useState('');
   const [formData, setFormData] = useState<FormValues>({});
   const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [customerPrivacyAcceptedAt, setCustomerPrivacyAcceptedAt] = useState<string | null>(null);
+  const [customerPrivacyAcceptedType, setCustomerPrivacyAcceptedType] = useState<ProjectSignoffType | null>(null);
   const [openingPdf, setOpeningPdf] = useState(false);
 
   React.useEffect(() => {
@@ -75,9 +84,13 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
     setCustomerEmail(existing?.customerEmail ?? project.clientEmail ?? '');
     setSummary(existing?.summary ?? '');
     setNotes(existing?.notes ?? '');
-    setFormData(existing ? parseFormData(existing.formData) : getTemplateDefaults(project, selectedTemplate));
+    const nextFormData = existing ? parseFormData(existing.formData) : getTemplateDefaults(project, selectedTemplate);
+    setFormData(nextFormData);
     setSignatureData(existing?.signatureData ?? null);
-  }, [existing, project, selectedTemplate]);
+    const privacyAudit = readCustomerSignoffConsentAudit(nextFormData);
+    setCustomerPrivacyAcceptedAt(privacyAudit?.acceptedAt ?? null);
+    setCustomerPrivacyAcceptedType(privacyAudit ? selectedType : null);
+  }, [existing, project, selectedTemplate, selectedType]);
 
   const updateField = (id: string, value: string) => {
     if (id === 'customerName') {
@@ -87,6 +100,9 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
     setFormData((current) => ({ ...current, [id]: value }));
   };
   const hasSignature = Boolean(signatureData);
+  const hasCurrentCustomerPrivacyConsent = Boolean(
+    customerPrivacyAcceptedAt && customerPrivacyAcceptedType === selectedType,
+  );
   const formValues = useMemo(
     () => ({
       ...formData,
@@ -96,6 +112,13 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
   );
 
   const save = async (status: 'draft' | 'signed') => {
+    if (!hasCurrentCustomerPrivacyConsent || !customerPrivacyAcceptedAt) {
+      Alert.alert(
+        'Customer privacy acknowledgement required',
+        'The customer must choose I Agree & Continue before any sign-off details can be saved or uploaded.',
+      );
+      return;
+    }
     if (status === 'signed' && !hasSignature) {
       Alert.alert('Signature needed', 'Have the customer sign before saving this as signed.');
       return;
@@ -103,11 +126,11 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
 
     const now = new Date().toISOString();
     const signoffId = existing?.id ?? createLocalId('signoff');
-    const savedFormData: FormValues = {
+    const savedFormData = addCustomerSignoffConsentAudit({
       ...formData,
       customerName,
       signedDate: formData.signedDate || (status === 'signed' ? new Date().toLocaleDateString() : ''),
-    };
+    }, customerPrivacyAcceptedAt);
     let savedPdfUri = existing ? parseFormData(existing.formData).savedPdfUri : undefined;
     let cloudPdfUrl = existing ? parseFormData(existing.formData).cloudPdfUrl : undefined;
     if (status === 'signed') {
@@ -175,11 +198,11 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
     Alert.alert(
       status === 'signed' ? 'Signed form saved' : 'Draft saved',
       status === 'signed' && cloudPdfUrl
-        ? `${selectedTemplate.title} is attached to this project and saved to the cloud for admin review.`
+        ? `${selectedTemplate.title} is attached to this project and saved to the cloud for Semco review.`
         : status === 'signed' && savedPdfUri
           ? `${selectedTemplate.title} is attached to this project and saved as a filled PDF. Cloud upload will need to be retried when storage is available.`
         : syncedToCloud
-          ? `${selectedTemplate.title} is attached to this project and synced for admin review.`
+          ? `${selectedTemplate.title} is attached to this project and synced for Semco review.`
           : `${selectedTemplate.title} is attached to this project. Cloud sync will retry after storage is configured.`,
     );
   };
@@ -249,56 +272,113 @@ export function ProjectSignoffPanel({ project, signoffs, onSaved }: ProjectSigno
           <Badge label={existing?.status === 'signed' ? 'Signed' : existing ? 'Draft' : 'New'} variant={existing?.status === 'signed' ? 'success' : existing ? 'warning' : 'neutral'} />
         </View>
 
-        <EditablePdfForm
-          template={selectedTemplate}
-          values={formValues}
-          signatureData={signatureData}
-          onChangeField={updateField}
-          onChangeSignature={setSignatureData}
-        />
+        {!hasCurrentCustomerPrivacyConsent ? (
+          <View style={styles.privacyGate}>
+            <View style={styles.privacyGateHeader}>
+              <Ionicons name="shield-checkmark-outline" size={24} color={Colors.darkTeal} />
+              <View style={styles.privacyGateHeaderCopy}>
+                <Text style={styles.privacyGateTitle}>Customer privacy acknowledgement</Text>
+                <Text style={styles.privacyGateSubtitle}>Please hand the device to the customer before continuing.</Text>
+              </View>
+            </View>
+            <Text style={styles.privacyGateBody}>{CUSTOMER_SIGNOFF_PRIVACY_NOTICE}</Text>
+            <View style={styles.privacyLinks}>
+              <TouchableOpacity onPress={() => { void Linking.openURL(CUSTOMER_SIGNOFF_PRIVACY_POLICY_URL); }}>
+                <Text style={styles.privacyLink}>Read the Privacy Policy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { void Linking.openURL(CUSTOMER_SIGNOFF_SUPPORT_URL); }}>
+                <Text style={styles.privacyLink}>Privacy support</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.actions}>
+              <Button
+                label="Cancel"
+                variant="secondary"
+                onPress={() => {
+                  setCustomerPrivacyAcceptedAt(null);
+                  setCustomerPrivacyAcceptedType(null);
+                  Alert.alert('Not continued', 'No new sign-off details were captured or uploaded.');
+                }}
+                style={styles.actionButton}
+              />
+              <Button
+                label="I Agree & Continue"
+                variant="primary"
+                onPress={() => {
+                  setCustomerPrivacyAcceptedAt(new Date().toISOString());
+                  setCustomerPrivacyAcceptedType(selectedType);
+                }}
+                style={styles.actionButton}
+              />
+            </View>
+          </View>
+        ) : (
+          <>
+            <View style={styles.privacyAccepted}>
+              <Ionicons name="checkmark-circle" size={18} color={Colors.success} />
+              <View style={styles.privacyAcceptedCopy}>
+                <Text style={styles.privacyAcceptedTitle}>Customer privacy notice accepted</Text>
+                <Text style={styles.privacyAcceptedTime}>
+                  {customerPrivacyAcceptedAt ? new Date(customerPrivacyAcceptedAt).toLocaleString() : ''}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => { void Linking.openURL(CUSTOMER_SIGNOFF_PRIVACY_POLICY_URL); }}>
+                <Text style={styles.privacyLink}>Policy</Text>
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.notice}>
-          <Ionicons name="shield-checkmark-outline" size={18} color={Colors.darkTeal} />
-          <Text style={styles.noticeText}>{selectedTemplate.acknowledgement}</Text>
-        </View>
+            <EditablePdfForm
+              template={selectedTemplate}
+              values={formValues}
+              signatureData={signatureData}
+              onChangeField={updateField}
+              onChangeSignature={setSignatureData}
+            />
 
-        <Input label="Customer email for records" value={customerEmail} onChangeText={setCustomerEmail} placeholder="Customer email" keyboardType="email-address" autoCapitalize="none" />
+            <View style={styles.notice}>
+              <Ionicons name="shield-checkmark-outline" size={18} color={Colors.darkTeal} />
+              <Text style={styles.noticeText}>{selectedTemplate.acknowledgement}</Text>
+            </View>
 
-        <View style={styles.fieldWrap}>
-          <Text style={styles.inputLabel}>Record summary</Text>
-          <TextInput
-            value={summary}
-            onChangeText={setSummary}
-            placeholder="Optional internal summary. The PDF form wording stays unchanged."
-            placeholderTextColor={Colors.textDisabled}
-            selectionColor={Colors.primary}
-            multiline
-            textAlignVertical="top"
-            style={styles.textArea}
-          />
-        </View>
+            <Input label="Customer email (stored with project; no automatic email)" value={customerEmail} onChangeText={setCustomerEmail} placeholder="Customer email" keyboardType="email-address" autoCapitalize="none" />
 
-        <View style={styles.fieldWrap}>
-          <Text style={styles.inputLabel}>Internal notes</Text>
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Optional internal notes for Semco review"
-            placeholderTextColor={Colors.textDisabled}
-            selectionColor={Colors.primary}
-            multiline
-            textAlignVertical="top"
-            style={styles.textArea}
-          />
-        </View>
+            <View style={styles.fieldWrap}>
+              <Text style={styles.inputLabel}>Record summary</Text>
+              <TextInput
+                value={summary}
+                onChangeText={setSummary}
+                placeholder="Optional internal summary. The PDF form wording stays unchanged."
+                placeholderTextColor={Colors.textDisabled}
+                selectionColor={Colors.primary}
+                multiline
+                textAlignVertical="top"
+                style={styles.textArea}
+              />
+            </View>
 
-        <View style={styles.actions}>
-          <Button label="Save Draft" variant="secondary" onPress={() => save('draft')} style={styles.actionButton} />
-          <Button label="Save Signed" variant="primary" onPress={() => save('signed')} style={styles.actionButton} />
-        </View>
-        {existing && parseFormData(existing.formData).cloudPdfUrl ? (
-          <Button label="Open Saved PDF" variant="secondary" onPress={openSavedPdf} isLoading={openingPdf} />
-        ) : null}
+            <View style={styles.fieldWrap}>
+              <Text style={styles.inputLabel}>Internal notes</Text>
+              <TextInput
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Optional internal notes for Semco review"
+                placeholderTextColor={Colors.textDisabled}
+                selectionColor={Colors.primary}
+                multiline
+                textAlignVertical="top"
+                style={styles.textArea}
+              />
+            </View>
+
+            <View style={styles.actions}>
+              <Button label="Save Draft" variant="secondary" onPress={() => save('draft')} style={styles.actionButton} />
+              <Button label="Save Signed" variant="primary" onPress={() => save('signed')} style={styles.actionButton} />
+            </View>
+            {existing && parseFormData(existing.formData).cloudPdfUrl ? (
+              <Button label="Open Saved PDF" variant="secondary" onPress={openSavedPdf} isLoading={openingPdf} />
+            ) : null}
+          </>
+        )}
       </Card>
     </View>
   );
@@ -381,6 +461,34 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
   },
   noticeText: { flex: 1, color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.4 },
+  privacyGate: {
+    gap: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    backgroundColor: Colors.primaryMuted,
+    padding: Spacing.lg,
+  },
+  privacyGateHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
+  privacyGateHeaderCopy: { flex: 1, gap: 2 },
+  privacyGateTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.lg },
+  privacyGateSubtitle: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
+  privacyGateBody: { color: Colors.textPrimary, fontFamily: Fonts.regular, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.55 },
+  privacyLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.lg },
+  privacyLink: { color: Colors.darkTeal, fontFamily: Fonts.bold, fontSize: Typography.size.sm, textDecorationLine: 'underline' },
+  privacyAccepted: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#B9E5D0',
+    backgroundColor: '#F0FBF5',
+    padding: Spacing.md,
+  },
+  privacyAcceptedCopy: { flex: 1, gap: 2 },
+  privacyAcceptedTitle: { color: Colors.navy, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
+  privacyAcceptedTime: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs },
   actions: { flexDirection: 'row', gap: Spacing.sm },
   actionButton: { flex: 1 },
 });

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Semco Pro",
     "slug": "semco-pro",
-    "version": "1.0.17",
+    "version": "1.0",
     "orientation": "default",
     "runtimeVersion": {
       "policy": "appVersion"
@@ -24,7 +24,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.semcocanada.semcopro",
-      "googleServicesFile": "./config/firebase/GoogleService-Info.plist",
       "buildNumber": "22",
       "config": {
         "usesNonExemptEncryption": false
@@ -32,8 +31,6 @@
       "infoPlist": {
         "EXDefaultScreenOrientationMask": "UIInterfaceOrientationMaskAllButUpsideDown",
         "NSCameraUsageDescription": "Used to capture color samples for custom formulas and project progress photos.",
-        "NSPhotoLibraryUsageDescription": "Used to access project and color photos when you choose a saved image.",
-        "NSPhotoLibraryAddUsageDescription": "Used to save project and color photos when you choose to keep them.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
         }
@@ -41,7 +38,6 @@
     },
     "android": {
       "versionCode": 20,
-      "googleServicesFile": "./config/firebase/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -56,27 +52,13 @@
       "output": "static"
     },
     "plugins": [
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useFrameworks": "static",
-            "forceStaticLinking": [
-              "RNFBApp",
-              "RNFBAppCheck"
-            ]
-          }
-        }
-      ],
-      "@react-native-firebase/app",
-      "@react-native-firebase/app-check",
       "expo-router",
       "expo-asset",
       [
         "expo-image-picker",
         {
           "cameraPermission": "Allow Semco Pro to access your camera to capture color samples and project progress photos.",
-          "photosPermission": "Allow Semco Pro to access selected photos for project and color records.",
+          "photosPermission": false,
           "microphonePermission": false
         }
       ],

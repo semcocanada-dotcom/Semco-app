@@ -8,6 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +30,11 @@ import { sqftToSqm } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
 import { syncProjectToCloud } from '@/services/cloud-sync';
+import {
+  PROJECT_CUSTOMER_DATA_CONSENT_VERSION,
+  PROJECT_CUSTOMER_DATA_NOTICE,
+} from '@/services/project-customer-consent';
+import { PRIVACY_POLICY_URL, SEMCO_SUPPORT_URL } from '@/constants/legal';
 
 const FINISH_OPTIONS: { id: string; label: string }[] = [
   { id: 'matte', label: 'Matte' },
@@ -60,6 +66,7 @@ export default function CreateProjectScreen() {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [projectCustomerConsentAcceptedAt, setProjectCustomerConsentAcceptedAt] = useState<string | null>(null);
 
   const selectedColor = STANDARD_COLORS.find((color) => color.id === selectedColorId) ?? null;
 
@@ -78,6 +85,13 @@ export default function CreateProjectScreen() {
   };
 
   const handleSave = async () => {
+    if (!projectCustomerConsentAcceptedAt) {
+      Alert.alert(
+        'Customer data authorization required',
+        'Confirm permission or other legal authority before entering or saving customer project details.',
+      );
+      return;
+    }
     if (!clientName.trim()) {
       setError('Client name is required');
       return;
@@ -99,6 +113,9 @@ export default function CreateProjectScreen() {
         clientEmail: clientEmail.trim() || null,
         clientPhone: clientPhone.trim() || null,
         siteAddress: siteAddress.trim() || null,
+        customerDataConsentVersion: PROJECT_CUSTOMER_DATA_CONSENT_VERSION,
+        customerDataConsentAcceptedAt: projectCustomerConsentAcceptedAt,
+        customerDataConsentNotice: PROJECT_CUSTOMER_DATA_NOTICE,
         substrateType: substrateType ?? null,
         totalAreaSqm: isNaN(areaSqft) ? null : sqftToSqm(areaSqft),
         selectedColorId,
@@ -128,6 +145,49 @@ export default function CreateProjectScreen() {
       setIsSaving(false);
     }
   };
+
+  if (!projectCustomerConsentAcceptedAt) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
+              <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.title}>New Project</Text>
+          </View>
+
+          <View style={styles.consentCard}>
+            <View style={styles.consentHeader}>
+              <Ionicons name="shield-checkmark-outline" size={24} color={Colors.darkTeal} />
+              <View style={styles.consentHeaderCopy}>
+                <Text style={styles.consentTitle}>Permission to store customer project data</Text>
+                <Text style={styles.consentSubtitle}>Required before customer fields are shown</Text>
+              </View>
+            </View>
+            <Text style={styles.consentBody}>{PROJECT_CUSTOMER_DATA_NOTICE}</Text>
+            <View style={styles.consentLinks}>
+              <TouchableOpacity onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}>
+                <Text style={styles.consentLink}>Read the Privacy Policy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { void Linking.openURL(SEMCO_SUPPORT_URL); }}>
+                <Text style={styles.consentLink}>Privacy support</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.consentActions}>
+              <Button label="Cancel" variant="secondary" onPress={() => router.back()} style={styles.consentButton} />
+              <Button
+                label="I Confirm & Continue"
+                variant="primary"
+                onPress={() => setProjectCustomerConsentAcceptedAt(new Date().toISOString())}
+                style={styles.consentButton}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -318,4 +378,21 @@ const styles = StyleSheet.create({
   },
   sealerLabelSelected: { color: Colors.white },
   sealerNameSelected: { color: Colors.white },
+  consentCard: {
+    gap: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: '#C6EEF0',
+    backgroundColor: Colors.primaryMuted,
+    padding: Spacing.lg,
+  },
+  consentHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
+  consentHeaderCopy: { flex: 1, gap: 2 },
+  consentTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.lg },
+  consentSubtitle: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
+  consentBody: { color: Colors.textPrimary, fontFamily: Fonts.regular, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.55 },
+  consentLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.lg },
+  consentLink: { color: Colors.darkTeal, fontFamily: Fonts.bold, fontSize: Typography.size.sm, textDecorationLine: 'underline' },
+  consentActions: { flexDirection: 'row', gap: Spacing.sm },
+  consentButton: { flex: 1 },
 });

@@ -6,7 +6,6 @@ import { desc, eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { calculations } from '@/database/schema/calculations';
 import { orderRequests, type OrderRequestStatus } from '@/database/schema/workflow';
-import { rewardCredits } from '@/database/schema/installers';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
 import type { Calculation, CalculationResult } from '@/database/schema/calculations';
@@ -20,7 +19,6 @@ import { resolveDealerContext, UNASSIGNED_DEALER_CONTEXT } from '@/constants/dea
 import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
 import type { InstallerProfile } from '@/database/schema/installers';
 import { useAuthStore } from '@/store/auth';
-import { sqmToSqft } from '@/utils/area';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
 import {
@@ -29,7 +27,6 @@ import {
   hydrateProjectFromCloud,
   syncCalculationToCloud,
   syncOrderRequestToCloud,
-  syncRewardCreditToCloud,
 } from '@/services/cloud-sync';
 
 const STATUS_VARIANT: Record<OrderRequestStatus, 'primary' | 'accent' | 'warning' | 'success'> = {
@@ -316,9 +313,6 @@ export default function OrdersScreen() {
           return;
         }
       }
-      if (requestId && result && (status === 'in_review' || status === 'approved')) {
-        await syncOrderRewardCredit(requestId, result, now);
-      }
       setLastSavedStatus(status);
     } catch (error) {
       console.error('[orders] material request save failed', error);
@@ -352,54 +346,6 @@ export default function OrdersScreen() {
       console.error('Could not open dealer email link', error);
       return false;
     }
-  }
-
-  async function syncOrderRewardCredit(requestId: string, calcResult: CalculationResult, now: string) {
-    if (!project) return;
-    const sqft = calcResult.areaSqft ?? sqmToSqft(calcResult.areaSqm);
-    if (!Number.isFinite(sqft) || sqft <= 0) return;
-
-    const existing = await db
-      .select()
-      .from(rewardCredits)
-      .where(eq(rewardCredits.sourceId, requestId))
-      .limit(1);
-
-    if (existing[0]) {
-      const updatedCredit = {
-        ...existing[0],
-        sqft,
-        projectId: project.id,
-        notes: `${dealerContext.dealerName} material request submitted for review.`,
-      };
-      await db
-        .update(rewardCredits)
-        .set({
-          sqft: updatedCredit.sqft,
-          projectId: updatedCredit.projectId,
-          notes: updatedCredit.notes,
-        })
-        .where(eq(rewardCredits.id, existing[0].id));
-      const cloudResult = await syncRewardCreditToCloud(updatedCredit);
-      if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'Reward progress could not be saved to the cloud.');
-      return;
-    }
-
-    const createdCredit = {
-      id: createLocalId('reward'),
-      installerId: project.installerId,
-      projectId: project.id,
-      sourceType: 'order_request',
-      sourceId: requestId,
-      sqft,
-      status: 'pending',
-      notes: `${dealerContext.dealerName} material request submitted for review.`,
-      createdAt: now,
-      verifiedAt: null,
-    };
-    await db.insert(rewardCredits).values(createdCredit);
-    const cloudResult = await syncRewardCreditToCloud(createdCredit);
-    if (!cloudResult.ok) throw new Error(cloudResult.error ?? 'Reward progress could not be saved to the cloud.');
   }
 
   return (
@@ -450,7 +396,7 @@ export default function OrdersScreen() {
                   Calculation linked: {orderRequest?.calculationId ?? calculation?.id ?? (pendingResult ? 'pending calculator result' : trimmedCustomItemNotes ? 'custom item request' : 'none yet')}
                 </Text>
                 <Text style={styles.bodySmall}>
-                  {dealerContext.orderRoutingLabel} {dealerUsesProfile ? 'Company profile is on file.' : 'Complete the company profile for dealer records, warranty records, and reward tracking.'}
+                  {dealerContext.orderRoutingLabel} {dealerUsesProfile ? 'Company profile is on file.' : 'Complete the company profile for dealer and warranty records.'}
                 </Text>
                 {!dealerUsesProfile ? (
                   <Button label="Complete Company Profile" variant="secondary" onPress={() => router.push('/profile' as any)} fullWidth />

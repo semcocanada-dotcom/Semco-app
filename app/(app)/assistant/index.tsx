@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -17,20 +17,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAssistant } from '@/hooks/useAssistant';
 import { ChatBubble } from '@/components/assistant/ChatBubble';
 import { TypingIndicator } from '@/components/assistant/TypingIndicator';
-import { OfflineBanner } from '@/components/assistant/OfflineBanner';
 import { SavedChatsSheet } from '@/components/assistant/SavedChatsSheet';
 import { ReplyChips } from '@/components/assistant/ReplyChips';
-import { getConfiguredProviderStatus } from '@/services/ai/providers';
 import { lightImpactHaptic, mediumImpactHaptic, selectionHaptic } from '@/utils/haptics';
-import { isSemcoAdminUser } from '@/services/admin-access';
-import { useAuthStore } from '@/store/auth';
 import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 export default function AssistantScreen() {
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
-  const isAdmin = isSemcoAdminUser(user);
   const {
     messages,
     savedChats,
@@ -43,25 +37,26 @@ export default function AssistantScreen() {
     startNewChat,
     selectChat,
     deleteChat,
-    isOnline,
   } = useAssistant();
   const [inputText, setInputText] = React.useState('');
   const [isChatSheetOpen, setChatSheetOpen] = React.useState(false);
   const listRef = useRef<FlatList<ConversationMessage>>(null);
-  const providerStatus = getConfiguredProviderStatus();
+
+  const submitMessage = useCallback(async (value: string, clearInput: boolean) => {
+    const text = value.trim();
+    if (!text || isLoading) return;
+
+    mediumImpactHaptic();
+    if (clearInput) setInputText('');
+    await send(text);
+  }, [isLoading, send]);
 
   const handleSend = () => {
-    const text = inputText.trim();
-    if (!text) return;
-    mediumImpactHaptic();
-    setInputText('');
-    send(text);
+    void submitMessage(inputText, true);
   };
 
   const handleReplyChip = (reply: string) => {
-    if (isLoading) return;
-    mediumImpactHaptic();
-    send(reply);
+    void submitMessage(reply, false);
   };
 
   const lastMessage = messages[messages.length - 1];
@@ -104,8 +99,6 @@ export default function AssistantScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {!isOnline && <OfflineBanner />}
-
       <View style={styles.header}>
         <TouchableOpacity
           onPress={handleBack}
@@ -117,10 +110,10 @@ export default function AssistantScreen() {
         </TouchableOpacity>
         <View style={styles.headerContent}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>Ask Semco</Text>
+            <Text style={styles.title}>Semco Guide</Text>
           </View>
           <Text style={styles.chatTitle} numberOfLines={1}>
-            {conversationTitle} - {isOnline ? 'Install help' : 'Local'}
+            {conversationTitle} - installed references
           </Text>
         </View>
         <View style={styles.headerActions}>
@@ -144,19 +137,6 @@ export default function AssistantScreen() {
           >
             <Ionicons name="add-circle-outline" size={22} color={Colors.semcoOrange} />
           </TouchableOpacity>
-          {isAdmin ? (
-            <TouchableOpacity
-              onPress={() => {
-                lightImpactHaptic();
-                router.push('/assistant/debug' as any);
-              }}
-              style={styles.iconBtn}
-              accessibilityLabel="Open assistant debug"
-              accessibilityRole="button"
-            >
-              <Ionicons name="analytics-outline" size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          ) : null}
           {messages.length > 0 && (
             <TouchableOpacity
               onPress={handleClearHistory}
@@ -173,9 +153,9 @@ export default function AssistantScreen() {
         <View style={styles.emptyState}>
           <View style={styles.heroCard}>
             <Ionicons name="document-text-outline" size={34} color={Colors.primary} />
-            <Text style={styles.emptyTitle}>Ask a Semco install question</Text>
+            <Text style={styles.emptyTitle}>Search Semco installation guidance</Text>
             <Text style={styles.emptyBody}>
-              Type the exact jobsite question. The assistant uses approved Semco documents first{providerStatus.configured ? ', then AI generation.' : '.'}
+              Semco Guide uses deterministic calculators, coded field rules, and technical references installed with the app. Questions and saved guide conversations stay on this device.
             </Text>
           </View>
         </View>

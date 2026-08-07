@@ -1,116 +1,63 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { eq } from 'drizzle-orm';
 import { Card, SectionHeader, Badge } from '@/components/ui';
-import { RewardTrackerCard } from '@/components/rewards/RewardTrackerCard';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
-import { db } from '@/database/client';
-import { rewardCredits } from '@/database/schema/installers';
-import { isSemcoAdminUser } from '@/services/admin-access';
-import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
-import { useAuthStore } from '@/store/auth';
 
 const MORE_ACTIONS = [
-  {
-    title: 'Semco admin portal',
-    description: 'Review installers, warranties, orders, receipts, and rewards.',
-    icon: 'shield-checkmark-outline' as const,
-    route: '/admin',
-    tone: 'accent' as const,
-    adminOnly: true,
-  },
   {
     title: 'Company profile',
     description: 'Installer account, dealer routing, and warranty identity.',
     icon: 'business-outline' as const,
     route: '/profile',
-    tone: 'primary' as const,
   },
   {
     title: 'Account and security',
-    description: 'Sign out, password help, or request account deletion.',
+    description: 'Sign out, password help, or permanently delete the account.',
     icon: 'person-circle-outline' as const,
     route: '/account',
-    tone: 'primary' as const,
   },
   {
-    title: 'Reward tiers',
-    description: 'Verified square footage milestones and receipt credits.',
-    icon: 'trophy-outline' as const,
-    route: '/rewards',
-    tone: 'primary' as const,
-  },
-  {
-    title: 'Submit receipt',
-    description: 'Send purchase proof for reward review.',
+    title: 'Submit purchase receipt',
+    description: 'Send purchase proof to Semco for record review.',
     icon: 'receipt-outline' as const,
     route: '/receipts',
-    tone: 'primary' as const,
   },
   {
-    title: 'Ask Semco',
-    description: 'Technical install questions and saved chats.',
+    title: 'Semco Guide',
+    description: 'Search installed technical guidance and saved local conversations.',
     icon: 'chatbubble-ellipses-outline' as const,
     route: '/assistant',
-    tone: 'primary' as const,
   },
   {
     title: 'System diagrams',
     description: 'Official layer and process drawings.',
     icon: 'layers-outline' as const,
     route: '/library/guides',
-    tone: 'primary' as const,
   },
   {
     title: 'Product documents',
     description: 'Grouped sheets, details, and source PDFs.',
     icon: 'document-text-outline' as const,
     route: '/products',
-    tone: 'primary' as const,
   },
   {
     title: 'Project warranty records',
     description: 'Review jobs and required stage photos.',
     icon: 'shield-checkmark-outline' as const,
     route: '/projects',
-    tone: 'primary' as const,
   },
   {
     title: 'Privacy policy',
     description: 'How installer, project, and customer information is handled.',
     icon: 'lock-closed-outline' as const,
     route: '/privacy',
-    tone: 'primary' as const,
   },
 ] as const;
 
 export default function MoreScreen() {
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const installerId = user?.id ?? LOCAL_INSTALLER_ID;
-  const [rewardState, setRewardState] = useState({ verifiedSqft: 0, pendingSqft: 0 });
-  const visibleActions = MORE_ACTIONS.filter((item) => !('adminOnly' in item) || !item.adminOnly || isSemcoAdminUser(user));
-  const rewardsAction = useMemo(() => visibleActions.find((item) => item.route === '/rewards'), [visibleActions]);
-  const secondaryActions = useMemo(() => visibleActions.filter((item) => item.route !== '/rewards'), [visibleActions]);
-
-  useEffect(() => {
-    db.select()
-      .from(rewardCredits)
-      .where(eq(rewardCredits.installerId, installerId))
-      .then((creditRows) => {
-        setRewardState({
-          verifiedSqft: creditRows
-            .filter((credit) => credit.status === 'verified')
-            .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
-          pendingSqft: creditRows
-            .filter((credit) => credit.status === 'pending')
-            .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0),
-        });
-      })
-      .catch(console.error);
-  }, [installerId]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -121,37 +68,13 @@ export default function MoreScreen() {
             <Badge label="Support" variant="neutral" />
           </View>
           <Text style={styles.heroTitle}>More tools</Text>
-          <Text style={styles.heroBody}>
-            Support, documents, and warranty records.
-          </Text>
+          <Text style={styles.heroBody}>Support, documents, account settings, and warranty records.</Text>
         </Card>
 
         <View style={styles.section}>
-          <SectionHeader title="Reward progress" subtitle="Verified square footage moves installers through the tier ladder." />
-          <RewardTrackerCard
-            verifiedSqft={rewardState.verifiedSqft}
-            pendingSqft={rewardState.pendingSqft}
-            onPress={() => router.push('/rewards' as any)}
-          />
-          {rewardsAction ? (
-            <TouchableOpacity
-              onPress={() => router.push('/rewards' as any)}
-              activeOpacity={0.78}
-              style={styles.rewardShortcut}
-              accessibilityRole="button"
-              accessibilityLabel="Open reward tiers"
-            >
-              <Ionicons name="trophy-outline" size={20} color={Colors.darkTeal} />
-              <Text style={styles.rewardShortcutText}>View all reward tiers and milestones</Text>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textDisabled} />
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        <View style={styles.section}>
-          <SectionHeader title="Open" subtitle="Secondary surfaces that are useful in the field." />
+          <SectionHeader title="Open" subtitle="Additional tools for field and account workflows." />
           <View style={styles.actionList}>
-            {secondaryActions.map((item) => (
+            {MORE_ACTIONS.map((item) => (
               <TouchableOpacity
                 key={item.title}
                 onPress={() => router.push(item.route as any)}
@@ -160,12 +83,8 @@ export default function MoreScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={item.title}
               >
-                <View style={[styles.actionIcon, item.tone === 'accent' && styles.actionIconAccent]}>
-                  <Ionicons
-                    name={item.icon}
-                    size={20}
-                    color={item.tone === 'accent' ? Colors.semcoOrange : Colors.darkTeal}
-                  />
+                <View style={styles.actionIcon}>
+                  <Ionicons name={item.icon} size={20} color={Colors.darkTeal} />
                 </View>
                 <View style={styles.actionCopy}>
                   <Text style={styles.actionTitle}>{item.title}</Text>
@@ -176,7 +95,6 @@ export default function MoreScreen() {
             ))}
           </View>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -208,24 +126,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
   },
   section: { gap: Spacing.md },
-  rewardShortcut: {
-    minHeight: 58,
-    backgroundColor: Colors.white,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.primaryMuted,
-    paddingHorizontal: Spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  rewardShortcutText: {
-    flex: 1,
-    color: Colors.navy,
-    fontSize: Typography.size.sm,
-    fontFamily: Fonts.bold,
-    fontWeight: Typography.weight.bold,
-  },
   actionList: { gap: Spacing.sm },
   actionRow: {
     minHeight: 74,
@@ -247,10 +147,6 @@ const styles = StyleSheet.create({
     borderColor: '#C6EEF0',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  actionIconAccent: {
-    backgroundColor: Colors.accentMuted,
-    borderColor: '#F5CBBB',
   },
   actionCopy: { flex: 1, gap: 2 },
   actionTitle: {

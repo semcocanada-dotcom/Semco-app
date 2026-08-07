@@ -170,7 +170,7 @@ export default function ColorsScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <AppHeader title="Colour Library" subtitle={resultLabel} rightIcon="color-palette-outline" />
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search colour name, code, or tone..." showMic={false} />
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search colour name, code, or tone..." />
         <View style={styles.filterHeader}>
           <View>
             <Text style={styles.filterLabel}>Fan deck group</Text>

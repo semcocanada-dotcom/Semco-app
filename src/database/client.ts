@@ -78,6 +78,9 @@ export async function initDatabase() {
       client_email TEXT,
       client_phone TEXT,
       site_address TEXT,
+      customer_data_consent_version TEXT,
+      customer_data_consent_accepted_at TEXT,
+      customer_data_consent_notice TEXT,
       substrate_type TEXT,
       total_area_sqm REAL,
       selected_color_id TEXT,
@@ -264,6 +267,18 @@ export async function initDatabase() {
     await sqlite.execAsync(`ALTER TABLE project_photos ADD COLUMN storage_path TEXT;`);
   } catch {
     // Existing local databases may already have the column.
+  }
+
+  for (const column of [
+    'customer_data_consent_version TEXT',
+    'customer_data_consent_accepted_at TEXT',
+    'customer_data_consent_notice TEXT',
+  ]) {
+    try {
+      await sqlite.execAsync(`ALTER TABLE projects ADD COLUMN ${column};`);
+    } catch {
+      // Existing local databases may already have the column.
+    }
   }
 
   const { migrateLegacyIdsForCloud } = await import('./cloud-migrations');

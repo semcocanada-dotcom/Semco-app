@@ -8,7 +8,7 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import type { Project } from '@/database/schema/projects';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { AppHeader, Button, EmptyState, SearchBar, TabControl } from '@/components/ui';
@@ -34,11 +34,15 @@ export default function ProjectsScreen() {
   const user = useAuthStore((state) => state.user);
 
   const load = useCallback(async () => {
-    const localRows = await db.select().from(projects).orderBy(desc(projects.updatedAt));
     if (!user?.id) {
-      setProjectList(localRows);
+      setProjectList([]);
       return;
     }
+    const localRows = await db
+      .select()
+      .from(projects)
+      .where(eq(projects.installerId, user.id))
+      .orderBy(desc(projects.updatedAt));
 
     try {
       const cloudRows = await fetchInstallerProjectsFromCloud(user.id);
@@ -80,7 +84,7 @@ export default function ProjectsScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <AppHeader title="Projects" subtitle="Live jobs, photos, batches, and specs." rightIcon="folder-open-outline" />
-        <SearchBar value={query} onChangeText={setQuery} placeholder="Search projects" showMic={false} />
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Search projects" />
         <TabControl value={filter} options={FILTER_OPTIONS} onChange={setFilter} />
         <Button label="Add Project" variant="primary" onPress={() => router.push('/projects/create' as any)} fullWidth />
       </View>

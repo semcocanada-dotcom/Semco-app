@@ -1,0 +1,6 @@
+import { SEMCO_PRIVACY_EMAIL, SEMCO_SUPPORT_URL } from '@/constants/legal';
+
+export const PROJECT_CUSTOMER_DATA_CONSENT_VERSION = 'project-customer-data-2026-08-07-v1';
+
+export const PROJECT_CUSTOMER_DATA_NOTICE =
+  `Before entering customer details, the installer confirms that the customer has given permission, or the installer has other legal authority, to store the customer's name, email, phone number, site address, notes, and related project records. Semco Pro stores these records on this device and in Supabase-hosted cloud storage. Authorized Semco Canada staff and the installer's assigned dealer may access the project for documentation, review, pricing, material-request support, warranty support, and service or record questions. Records are retained while needed for the installer account, project administration, warranty or material-request support, and legal or business recordkeeping. The installer can permanently delete their account and associated project records in Account and Security. Privacy questions can be sent to ${SEMCO_PRIVACY_EMAIL} or ${SEMCO_SUPPORT_URL}. Do not continue if the customer has not given permission and there is no other legal authority to store the information.`;

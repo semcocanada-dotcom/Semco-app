@@ -3,16 +3,18 @@ import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-n
 import { useRouter } from 'expo-router';
 import { AppHeader, Button, Card, Input, SectionHeader } from '@/components/ui';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
+import { SEMCO_PRIVACY_EMAIL } from '@/constants/legal';
 import { useAuthStore } from '@/store/auth';
-import { supabase } from '@/services/supabase';
+import { deleteCurrentAccount } from '@/services/account-deletion';
 
 export default function AccountScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
   const sendPasswordReset = useAuthStore((state) => state.sendPasswordReset);
-  const [reason, setReason] = useState('');
-  const [requesting, setRequesting] = useState(false);
+  const [confirmation, setConfirmation] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const deletionConfirmed = confirmation.trim().toUpperCase() === 'DELETE';
 
   const handleSignOut = async () => {
     await signOut();
@@ -25,31 +27,41 @@ export default function AccountScreen() {
     Alert.alert(error ? 'Reset could not be sent' : 'Reset email sent', error ?? 'Use the secure link in your email to choose a new password.');
   };
 
+  const completeDeletion = async () => {
+    if (!user || !deletionConfirmed) return;
+    setDeleting(true);
+
+    try {
+      await deleteCurrentAccount();
+      setDeleting(false);
+      await signOut();
+      router.replace('/login' as any);
+      Alert.alert(
+        'Account deleted',
+        'Your Semco Pro account, cloud records, private files, and data stored by this app on this device were permanently deleted.',
+      );
+    } catch (error) {
+      setDeleting(false);
+      Alert.alert(
+        'Account not deleted',
+        error instanceof Error
+          ? error.message
+          : `Please try again or contact ${SEMCO_PRIVACY_EMAIL}.`,
+      );
+    }
+  };
+
   const submitDeletion = () => {
+    if (!deletionConfirmed) return;
     Alert.alert(
-      'Request account deletion?',
-      'This starts deletion of your installer account and personal project data. Semco will review signed contract retention requirements and complete the request within 30 days.',
+      'Permanently delete account?',
+      'This immediately deletes your sign-in, company profile, projects, customer details, photos, receipts, forms, signatures, warranties, and saved conversations. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Request Deletion',
+          text: 'Delete Account',
           style: 'destructive',
-          onPress: async () => {
-            if (!user) return;
-            setRequesting(true);
-            const { error } = await supabase.from('account_deletion_requests').insert({
-              installer_id: user.id,
-              status: 'pending',
-              reason: reason.trim() || null,
-            });
-            setRequesting(false);
-            if (error) {
-              Alert.alert('Request not submitted', 'Please try again or contact semcocanada@gmail.com.');
-              return;
-            }
-            Alert.alert('Deletion requested', 'Your request was recorded. Semco will complete it within 30 days and contact you if a signed record must be retained.');
-            await handleSignOut();
-          },
+          onPress: () => { void completeDeletion(); },
         },
       ],
     );
@@ -66,16 +78,31 @@ export default function AccountScreen() {
             <Text style={styles.title}>{user?.email}</Text>
             <Text style={styles.body}>Your project records sync to this account and remain available when you move between an iPhone and iPad.</Text>
             <Button label="Send Password Reset Email" variant="secondary" onPress={handlePasswordReset} fullWidth />
-            <Button label="Sign Out" variant="ghost" onPress={handleSignOut} fullWidth />
+            <Button label="Sign Out" variant="ghost" onPress={handleSignOut} disabled={deleting} fullWidth />
           </Card>
         </View>
 
         <View style={styles.section}>
-          <SectionHeader title="Delete account" subtitle="You can start an account and data deletion request inside the app." />
+          <SectionHeader title="Delete account" subtitle="Permanently delete your account and its associated app data." />
           <Card style={styles.card}>
-            <Text style={styles.body}>Deletion removes the installer account and associated personal data. Signed customer contracts may be retained only where Semco has a legal recordkeeping obligation.</Text>
-            <Input label="Reason (optional)" value={reason} onChangeText={setReason} multiline placeholder="Anything Semco should know" />
-            <Button label="Request Account Deletion" variant="danger" onPress={submitDeletion} isLoading={requesting} fullWidth />
+            <Text style={styles.body}>This immediately removes your sign-in, company profile, projects, customer details, private photos, receipts, forms, signatures, warranties, and saved conversations from Semco Pro. It cannot be undone.</Text>
+            <Input
+              label="Type DELETE to confirm"
+              value={confirmation}
+              onChangeText={setConfirmation}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              placeholder="DELETE"
+              hint="The final button becomes available after you enter DELETE."
+            />
+            <Button
+              label="Permanently Delete Account"
+              variant="danger"
+              onPress={submitDeletion}
+              isLoading={deleting}
+              disabled={!deletionConfirmed}
+              fullWidth
+            />
           </Card>
         </View>
       </ScrollView>

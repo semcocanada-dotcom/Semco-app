@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
-import { installerProfiles, rewardCredits } from '@/database/schema/installers';
+import { installerProfiles } from '@/database/schema/installers';
 import type { InstallerProfile, NewInstallerProfile } from '@/database/schema/installers';
 import { resolveDealerContext } from '@/constants/dealers';
 import { createLocalId } from '@/utils/id';
@@ -129,17 +129,6 @@ export async function upsertInstallerProfile(
     throw new Error(cloudResult.error ?? 'Profile saved on this device, but cloud sync is still pending.');
   }
   return created as InstallerProfile;
-}
-
-export async function getVerifiedRewardSqft(installerId = LOCAL_INSTALLER_ID): Promise<number> {
-  const rows = await db
-    .select()
-    .from(rewardCredits)
-    .where(eq(rewardCredits.installerId, installerId));
-
-  return rows
-    .filter((credit) => credit.status === 'verified')
-    .reduce((sum, credit) => sum + (credit.sqft ?? 0), 0);
 }
 
 export function profileToDealerInput(profile?: InstallerProfile | null) {

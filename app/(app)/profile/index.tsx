@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AppHeader, Badge, Button, Card, Input, SectionHeader } from '@/components/ui';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
@@ -14,7 +13,6 @@ import {
 import type { InstallerProfile } from '@/database/schema/installers';
 
 export default function CompanyProfileScreen() {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const installerId = user?.id ?? LOCAL_INSTALLER_ID;
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
@@ -100,7 +98,7 @@ export default function CompanyProfileScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <AppHeader title="Company Profile" subtitle="Used for dealer routing, warranty records, and reward tracking." rightIcon="business-outline" />
+        <AppHeader title="Company Profile" subtitle="Used for dealer routing and warranty records." rightIcon="business-outline" />
 
         <Card elevated style={styles.heroCard}>
           <View style={styles.heroTop}>
@@ -109,7 +107,7 @@ export default function CompanyProfileScreen() {
           </View>
           <Text style={styles.heroTitle}>{companyName.trim() || 'Add company information'}</Text>
           <Text style={styles.heroBody}>
-            Postal code keeps the contractor profile clean for warranty, rewards, and dealer routing. Manitoba and western orders route to Innovative Finishes; Ontario and eastern orders route to Modern Arc.
+            Postal code keeps the contractor profile accurate for warranty and dealer routing. Manitoba and western orders route to Innovative Finishes; Ontario and eastern orders route to Modern Arc.
           </Text>
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${completionPct}%` }]} />
@@ -142,7 +140,7 @@ export default function CompanyProfileScreen() {
           <View style={styles.infoCopy}>
             <Text style={styles.infoTitle}>Why this matters</Text>
             <Text style={styles.infoBody}>
-              Warranty documents, project review, dealer orders, and verified square footage rewards all need a clean contractor account record.
+              Warranty documents, project review, and dealer material requests need an accurate contractor account record.
             </Text>
           </View>
         </Card>
@@ -150,7 +148,6 @@ export default function CompanyProfileScreen() {
         {saved ? <Text style={styles.savedText}>Profile saved.</Text> : null}
         {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
         <Button label="Save Company Profile" onPress={saveProfile} isLoading={saving} fullWidth size="lg" />
-        <Button label="View Reward Progress" variant="secondary" onPress={() => router.push('/rewards' as any)} fullWidth />
       </ScrollView>
     </SafeAreaView>
   );

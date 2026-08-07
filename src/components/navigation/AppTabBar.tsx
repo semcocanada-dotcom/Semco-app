@@ -37,9 +37,7 @@ function getActiveTab(pathname: string): RouteName {
   }
   if (
     pathname.startsWith('/more') ||
-    pathname.startsWith('/admin') ||
     pathname.startsWith('/profile') ||
-    pathname.startsWith('/rewards') ||
     pathname.startsWith('/receipts') ||
     pathname.startsWith('/privacy')
   ) return 'more';

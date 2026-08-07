@@ -1,14 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { sendMessage } from '@/services/ai/assistant';
-import { useNetworkStore } from '@/store/network';
 import { useAuthStore } from '@/store/auth';
 import { db } from '@/database/client';
 import { conversations } from '@/database/schema/conversations';
 import { and, desc, eq } from 'drizzle-orm';
 import type { Conversation, ConversationMessage } from '@/database/schema/conversations';
 import { createLocalId } from '@/utils/id';
-import { hydrateCloudConversations, syncConversationToCloud } from '@/services/cloud-sync';
-import { supabase } from '@/services/supabase';
 
 const DEFAULT_CHAT_TITLE = 'New chat';
 
@@ -80,7 +77,6 @@ export function useAssistant() {
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string>('');
   const [conversationTitle, setConversationTitle] = useState(DEFAULT_CHAT_TITLE);
-  const isOnline = useNetworkStore((s) => s.isOnline);
   const installerId = useAuthStore((s) => s.user?.id);
 
   const applyConversation = useCallback((conv: Conversation) => {
@@ -117,26 +113,11 @@ export function useAssistant() {
       }
 
       try {
-        let cloudRows: Conversation[] = [];
-        if (isOnline) {
-          try {
-            cloudRows = await hydrateCloudConversations(installerId);
-          } catch (cloudError) {
-            console.warn('[useAssistant] saved chats cloud hydration pending:', cloudError);
-          }
-        }
-
         let rows = await db
           .select()
           .from(conversations)
           .where(eq(conversations.installerId, installerId))
           .orderBy(desc(conversations.updatedAt));
-
-        if (cloudRows.length > 0) {
-          const mergedRows = new Map(rows.map((row) => [row.id, row]));
-          for (const cloudRow of cloudRows) mergedRows.set(cloudRow.id, cloudRow);
-          rows = [...mergedRows.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-        }
 
         if (rows.length === 0) {
           const created = await createConversation();
@@ -157,7 +138,7 @@ export function useAssistant() {
         setMessages([]);
       }
     },
-    [applyConversation, createConversation, installerId, isOnline],
+    [applyConversation, createConversation, installerId],
   );
 
   useEffect(() => {
@@ -216,17 +197,6 @@ export function useAssistant() {
           });
         }
 
-        const conversationSnapshot: Conversation = {
-          id: targetConversationId,
-          installerId,
-          title: normalizedTitle,
-          messages: normalizedMessages,
-          createdAt,
-          updatedAt: now,
-        };
-        const cloudResult = await syncConversationToCloud(conversationSnapshot);
-        if (!cloudResult.ok) console.warn('[useAssistant] conversation cloud sync pending:', cloudResult.error);
-
         setConversationTitle(normalizedTitle);
         setSavedChats((prev) => {
           const lastMessage = normalizedMessages[normalizedMessages.length - 1];
@@ -272,7 +242,7 @@ export function useAssistant() {
         id: generateId(),
         role: 'user',
         content: text.trim(),
-        source: 'claude',
+        source: 'local_guide',
         timestamp: new Date().toISOString(),
       };
       const messagesWithUser = [...baseMessages, userMsg].slice(-80);
@@ -284,7 +254,7 @@ export function useAssistant() {
       await persistConversationState(activeConversationId, messagesWithUser, nextTitle);
 
       try {
-        const response = await sendMessage(text, baseMessages, isOnline, installerId);
+        const response = await sendMessage(text, baseMessages);
 
         const assistantMsg: ConversationMessage = {
           id: generateId(),
@@ -293,7 +263,6 @@ export function useAssistant() {
           source: response.source,
           timestamp: new Date().toISOString(),
           citations: response.citations,
-          debugId: response.debugId,
           provider: response.provider,
           quickReplies: response.quickReplies,
           suggestedFollowUps: response.suggestedFollowUps,
@@ -315,8 +284,6 @@ export function useAssistant() {
       conversationTitle,
       createConversation,
       isLoading,
-      isOnline,
-      installerId,
       messages,
       persistConversationState,
       refreshSavedChats,
@@ -374,8 +341,6 @@ export function useAssistant() {
         await db
           .delete(conversations)
           .where(and(eq(conversations.id, id), eq(conversations.installerId, installerId)));
-        await supabase.from('conversations').delete().eq('id', id).eq('installer_id', installerId);
-
         const rows = await db
           .select()
           .from(conversations)
@@ -415,8 +380,6 @@ export function useAssistant() {
           updatedAt: now,
         })
         .where(eq(conversations.id, conversationId));
-      const [cleared] = await db.select().from(conversations).where(eq(conversations.id, conversationId)).limit(1);
-      if (cleared) await syncConversationToCloud(cleared);
       setConversationTitle(DEFAULT_CHAT_TITLE);
       await refreshSavedChats();
     } catch (err) {
@@ -437,6 +400,5 @@ export function useAssistant() {
     startNewChat,
     selectChat,
     deleteChat,
-    isOnline,
   };
 }

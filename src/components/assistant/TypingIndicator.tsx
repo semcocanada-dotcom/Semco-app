@@ -64,7 +64,7 @@ export function TypingIndicator() {
           <Animated.View style={[styles.dot, dot3Style]} />
         </View>
         <View style={styles.copy}>
-          <Text style={styles.title}>Ask Semco is checking the manuals</Text>
+          <Text style={styles.title}>Semco Guide is checking installed references</Text>
           <Text style={styles.body}>Reading approved docs before answering.</Text>
         </View>
       </View>

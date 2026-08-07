@@ -1,13 +1,13 @@
 import type { ConversationMessage } from '@/database/schema/conversations';
 
 /**
- * Deterministic job-context tracking for Ask Semco.
+ * Deterministic job-context tracking for Semco Guide.
  *
  * The assistant must understand follow-up questions from the active chat:
  * substrate, application, exposure, system, and finish are extracted from the
  * installer's recent messages and merged newest-wins, so "Then what do I do
  * for finish coats?" keeps pointing at the same job. Everything here is
- * keyword-driven and works offline — no AI call required.
+ * keyword-driven and works entirely on the device.
  */
 
 export type JobSubstrate =

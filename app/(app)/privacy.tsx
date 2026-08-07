@@ -2,28 +2,40 @@ import React from 'react';
 import { Linking, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Card } from '@/components/ui';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
-import { PRIVACY_POLICY_URL } from '@/constants/legal';
+import { PRIVACY_POLICY_URL, SEMCO_PRIVACY_EMAIL, SEMCO_SUPPORT_URL } from '@/constants/legal';
 
 const SECTIONS: { title: string; body: string }[] = [
   {
     title: 'What this app collects',
-    body: 'The Semco Pro app stores installer company profile details (company name, contact name, email, phone, address), project records (site address, customer name and email, job notes), stage photos taken for warranty qualification, filled sign-off forms including customer signatures, purchase receipt submissions, material request details, and reward progress records.',
+    body: 'The Semco Pro app stores installer company profile details (company name, contact name, email, phone, address), project records (site address, customer name, email, phone number, and job notes), stage photos taken for warranty qualification, filled sign-off forms including customer signatures, purchase receipt submissions, and material request details.',
   },
   {
     title: 'Why it is collected',
-    body: 'This information is used to run the core workflows of the app: project tracking, material requests to the assigned Semco dealer, warranty qualification and review, customer sign-off records, purchase receipt verification, and reward tier progress.',
+    body: 'This information is used to run the core workflows of the app: project tracking, material requests to the assigned Semco dealer, warranty qualification and review, customer sign-off records, and purchase receipt review.',
   },
   {
     title: 'Where it is stored',
-    body: "Records are stored on this device and, when submitted or synced, in Semco Canada's secure cloud services (Supabase). Sign-off PDFs and photos are stored in access-controlled cloud storage. Questions sent to Ask Semco are processed by Google Firebase AI services to generate an answer.",
+    body: "Records are stored on this device and, when submitted or synced, in Semco Canada's secure cloud services (Supabase). Sign-off PDFs and photos are stored in access-controlled cloud storage. Semco Guide questions and saved guide conversations are stored only on this device.",
+  },
+  {
+    title: 'Customer project data authorization',
+    body: 'Before customer fields are shown for a new project, the installer must confirm that the customer gave permission, or that the installer has other legal authority, to store the customer name, email, phone number, site address, notes, and related project records. Cancel returns without saving. The notice version, full text, and acceptance time are stored with the project.',
+  },
+  {
+    title: 'Customer sign-off acknowledgement',
+    body: 'Before customer sign-off fields or the signature pad appear, the customer is shown a cloud-storage, access, purpose, retention, deletion, and contact notice and must choose I Agree & Continue. Cancel does not capture or upload new sign-off details. The notice version, full text, and acceptance time are stored with the sign-off and added to a privacy-audit page in a signed PDF. A customer email is stored with the project and is not emailed automatically.',
+  },
+  {
+    title: 'Semco Guide',
+    body: 'Semco Guide is a local reference tool. It uses deterministic calculators, coded field rules, and technical text installed with the app. Questions, recent guide context, searches, and answers are processed on the device and are not sent to an external model or semantic-search service.',
   },
   {
     title: 'Who can see it',
-    body: 'Submitted records are visible to Semco Canada administrators and, where a dealer is assigned, to that dealer for order review and pricing. Customer signatures and sign-off forms are only used for the project record they belong to. Information is not sold or shared with unrelated third parties.',
+    body: 'Submitted project, photo, sign-off, and material-request records are visible to authorized Semco Canada staff and, where a dealer is assigned, to that dealer for project documentation, review, pricing, material-request support, and warranty support. Customer signatures and sign-off forms are only used for the project record they belong to. Information is not sold. Supabase processes only the information needed to provide account, project, storage, and submission services.',
   },
   {
     title: 'Your choices',
-    body: 'You can edit your company profile in the app at any time. Account deletion can be initiated from More > Account and Security. Semco completes deletion requests within 30 days, subject only to legal recordkeeping requirements for signed customer contracts.',
+    body: 'You can edit your company profile in the app at any time. From More > Account and Security, you can permanently delete your account, associated cloud records and private files, and data stored by this app on this device. Deletion is completed immediately after you confirm it and cannot be undone.',
   },
 ];
 
@@ -47,8 +59,9 @@ export default function PrivacyPolicyScreen() {
 
         <View style={styles.footer}>
           <Button label="Open Public Privacy Policy" variant="secondary" onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} fullWidth />
+          <Button label="Contact Semco Canada" variant="ghost" onPress={() => Linking.openURL(SEMCO_SUPPORT_URL)} fullWidth />
           <Text style={styles.footerText}>
-            Questions about this policy: semcocanada@gmail.com
+            Questions about this policy: {SEMCO_PRIVACY_EMAIL}
           </Text>
         </View>
       </ScrollView>

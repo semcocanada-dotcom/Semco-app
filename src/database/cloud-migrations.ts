@@ -57,22 +57,16 @@ export async function migrateLegacyIdsForCloud() {
       { table: 'order_requests', column: 'project_id' },
       { table: 'warranty_reviews', column: 'project_id' },
       { table: 'purchase_receipts', column: 'project_id' },
-      { table: 'reward_credits', column: 'project_id' },
       { table: 'project_signoffs', column: 'project_id' },
     ]);
     await migrateIds('calculations', [{ table: 'order_requests', column: 'calculation_id' }]);
-    await migrateIds('order_requests', [
-      { table: 'reward_credits', column: 'source_id', where: "source_type = 'order_request'" },
-    ]);
-    await migrateIds('purchase_receipts', [
-      { table: 'reward_credits', column: 'source_id', where: "source_type = 'receipt'" },
-    ]);
+    await migrateIds('order_requests');
+    await migrateIds('purchase_receipts');
     await migrateIds('colors', [{ table: 'projects', column: 'selected_color_id' }], 'is_standard = 0');
     await migrateIds('project_photos');
     await migrateIds('batch_logs');
     await migrateIds('conversations');
     await migrateIds('installer_profiles');
-    await migrateIds('reward_credits');
     await migrateIds('warranty_reviews');
     await migrateIds('project_signoffs');
   });
@@ -87,7 +81,6 @@ export async function claimPreviewRecords(installerId: string) {
       'calculations',
       'conversations',
       'installer_profiles',
-      'reward_credits',
       'warranty_reviews',
       'purchase_receipts',
       'project_signoffs',

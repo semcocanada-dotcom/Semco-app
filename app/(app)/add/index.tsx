@@ -22,7 +22,7 @@ const ACTIONS = [
   },
   {
     title: 'Upload purchase receipt',
-    description: 'Log purchased square footage toward installer reward tiers.',
+    description: 'Send purchase proof to Semco for record review.',
     icon: 'receipt-outline' as const,
     route: '/receipts',
     tone: 'primary',
@@ -42,8 +42,8 @@ const ACTIONS = [
     tone: 'primary',
   },
   {
-    title: 'Ask Semco',
-    description: 'Ask an install question before moving forward.',
+    title: 'Semco Guide',
+    description: 'Search installed technical guidance before moving forward.',
     icon: 'chatbubble-ellipses-outline' as const,
     route: '/assistant',
     tone: 'primary',

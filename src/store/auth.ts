@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabase';
+import { clearLocalAccountData } from '@/services/local-account-data';
 
 interface AuthState {
   session: Session | null;
@@ -15,7 +16,7 @@ interface AuthState {
   setSession: (session: Session | null) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   user: null,
   isLoading: false,
@@ -72,7 +73,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
-    await supabase.auth.signOut();
+    const installerId = get().user?.id;
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error('[auth] local sign-out failed', error);
+    }
+
+    if (installerId) {
+      try {
+        await clearLocalAccountData(installerId);
+      } catch (error) {
+        // The auth token has still been removed by AsyncStorage cleanup, and
+        // account-scoped queries also filter by user id as defense in depth.
+        console.error('[auth] device data cleanup failed', error);
+      }
+    }
+
     set({ session: null, user: null, isInitialized: true });
   },
 }));

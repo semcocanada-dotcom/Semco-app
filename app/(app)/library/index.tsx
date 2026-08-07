@@ -61,7 +61,7 @@ export default function LibraryScreen() {
             </View>
           </View>
           <Text style={styles.heroTitle}>Semco Library</Text>
-          <Text style={styles.heroBody}>Install guides, product documents, stage photos, and Ask Semco.</Text>
+          <Text style={styles.heroBody}>Install guides, product documents, stage photos, and Semco Guide.</Text>
         </Card>
 
         <View style={styles.section}>
@@ -85,7 +85,7 @@ export default function LibraryScreen() {
               <Ionicons name="chatbubble-ellipses-outline" size={20} color={Colors.primary} />
             </View>
             <View style={styles.askCopy}>
-              <Text style={styles.askTitle}>Ask Semco</Text>
+              <Text style={styles.askTitle}>Semco Guide</Text>
               <Text style={styles.askBody}>Ask an install question and get a guided answer from the loaded Semco docs.</Text>
             </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.darkTeal} />

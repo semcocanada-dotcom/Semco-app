@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { AppHeader, Button, Card, Input, SectionHeader } from '@/components/ui';
 import { db } from '@/database/client';
-import { purchaseReceipts, rewardCredits } from '@/database/schema/installers';
+import { purchaseReceipts } from '@/database/schema/installers';
 import { useAuthStore } from '@/store/auth';
 import { LOCAL_INSTALLER_ID } from '@/services/installer-profile';
 import { Colors, Fonts, Layout, Spacing, Typography } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
 import { pickReceiptPhoto, uploadPrivatePhoto, type CapturedPhoto } from '@/services/camera';
-import { syncPurchaseReceiptToCloud, syncRewardCreditToCloud } from '@/services/cloud-sync';
+import { syncPurchaseReceiptToCloud } from '@/services/cloud-sync';
 import { Radius } from '@/constants/theme';
 
 export default function ReceiptSubmissionScreen() {
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const installerId = user?.id ?? LOCAL_INSTALLER_ID;
   const [dealerName, setDealerName] = useState('');
   const [receiptNumber, setReceiptNumber] = useState('');
-  const [sqftClaimed, setSqftClaimed] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -28,13 +25,8 @@ export default function ReceiptSubmissionScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function submitReceipt() {
-    const sqft = Number.parseFloat(sqftClaimed);
-    if (!Number.isFinite(sqft) || sqft <= 0) {
-      setError('Enter the square feet shown on the purchase record.');
-      return;
-    }
     if (!receiptPhoto) {
-      setError('Attach a clear receipt photo so Semco can verify the credit.');
+      setError('Attach a clear receipt photo so Semco can review the purchase record.');
       return;
     }
 
@@ -61,7 +53,7 @@ export default function ReceiptSubmissionScreen() {
         dealerName: dealerName.trim() || null,
         receiptNumber: receiptNumber.trim() || null,
         receiptUrl: upload.storagePath,
-        sqftClaimed: sqft,
+        sqftClaimed: 0,
         status: 'pending',
         notes: notes.trim() || null,
         createdAt: now,
@@ -70,31 +62,13 @@ export default function ReceiptSubmissionScreen() {
       };
       await db.insert(purchaseReceipts).values(createdReceipt);
 
-      const createdCredit = {
-        id: createLocalId('reward'),
-        installerId,
-        projectId: null,
-        sourceType: 'receipt',
-        sourceId: receiptId,
-        sqft,
-        status: 'pending',
-        notes: `Receipt submitted${dealerName.trim() ? ` from ${dealerName.trim()}` : ''}.`,
-        createdAt: now,
-        verifiedAt: null,
-      };
-      await db.insert(rewardCredits).values(createdCredit);
-
-      const [receiptCloud, rewardCloud] = await Promise.all([
-        syncPurchaseReceiptToCloud(createdReceipt),
-        syncRewardCreditToCloud(createdCredit),
-      ]);
-      const pendingCloudUpload = !receiptCloud.ok || !rewardCloud.ok;
+      const receiptCloud = await syncPurchaseReceiptToCloud(createdReceipt);
+      const pendingCloudUpload = !receiptCloud.ok;
 
       setSaved(true);
       setCloudPending(pendingCloudUpload);
       setDealerName('');
       setReceiptNumber('');
-      setSqftClaimed('');
       setNotes('');
       setReceiptPhoto(null);
       setError(
@@ -113,19 +87,18 @@ export default function ReceiptSubmissionScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <AppHeader title="Submit Receipt" subtitle="Manual purchase proof for reward review." rightIcon="receipt-outline" />
+        <AppHeader title="Submit Receipt" subtitle="Purchase proof for Semco record review." rightIcon="receipt-outline" />
 
         <Card elevated style={styles.heroCard}>
-          <Text style={styles.heroTitle}>Receipt credit is pending until reviewed.</Text>
+          <Text style={styles.heroTitle}>Receipt is pending until reviewed.</Text>
           <Text style={styles.heroBody}>
-            This records the square footage claim for Semco review. Verified receipts count toward reward tiers.
+            This sends the purchase record to Semco for verification and account support.
           </Text>
         </Card>
 
         <SectionHeader title="Purchase Details" subtitle="Use this when material was bought outside the app order flow." />
         <Input label="Dealer / Store" value={dealerName} onChangeText={setDealerName} placeholder="Modern Arc, Diamond Arc, or dealer name" />
         <Input label="Receipt Number" value={receiptNumber} onChangeText={setReceiptNumber} placeholder="Optional" />
-        <Input label="Square Feet Purchased" value={sqftClaimed} onChangeText={setSqftClaimed} keyboardType="decimal-pad" placeholder="e.g. 750" suffix="sq ft" />
         <Input label="Notes" value={notes} onChangeText={setNotes} placeholder="Products, order details, or review notes" multiline />
 
         <View style={styles.attachmentWrap}>
@@ -148,8 +121,7 @@ export default function ReceiptSubmissionScreen() {
           </Text>
         ) : null}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        <Button label="Submit for Review" onPress={submitReceipt} isLoading={saving} disabled={!sqftClaimed.trim()} fullWidth size="lg" />
-        <Button label="View Reward Progress" variant="secondary" onPress={() => router.push('/rewards' as any)} fullWidth />
+        <Button label="Submit for Review" onPress={submitReceipt} isLoading={saving} disabled={!receiptPhoto} fullWidth size="lg" />
       </ScrollView>
     </SafeAreaView>
   );
