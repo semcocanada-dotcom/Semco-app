@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
 import type { ProviderCategory } from '@lib/types';
 
@@ -11,74 +10,85 @@ export interface OcrResult {
   rawText:       string;
 }
 
+export type ReceiptOcrInvoker = (body: {
+  content: string;
+  mimeType: string;
+}) => Promise<{ data: { rawText?: unknown } | null; error: unknown }>;
+
+export type ReceiptOcrFailureCode =
+  | 'file_read_failed'
+  | 'service_unavailable'
+  | 'invalid_response'
+  | 'no_text_detected';
+
 /**
- * Reads a local file URI (image or PDF) as base64 and sends it to Google Cloud
- * Vision API for DOCUMENT_TEXT_DETECTION. Returns structured receipt data.
+ * A user-safe OCR failure. The original service error is intentionally not
+ * exposed because it may contain implementation details that do not help the
+ * person entering an expense.
+ */
+export class ReceiptOcrError extends Error {
+  readonly code: ReceiptOcrFailureCode;
+
+  constructor(code: ReceiptOcrFailureCode, message: string) {
+    super(message);
+    this.name = 'ReceiptOcrError';
+    this.code = code;
+  }
+}
+
+/**
+ * Reads a local file URI (image or PDF) as base64 and sends it through the
+ * authenticated receipt-ocr Edge Function. The server-only Google credential
+ * is never embedded in the mobile bundle. Returns structured receipt data.
  *
  * Images → images:annotate endpoint (synchronous)
  * PDFs   → files:annotate endpoint (synchronous, first page only)
  *
- * Requires app.json extra.googleVisionApiKey to be set.
- * Fails gracefully (returns empty result) when no key is configured.
+ * Throws a user-safe ReceiptOcrError when the attachment cannot be read, the
+ * authenticated service is unavailable, or no readable text is returned. The
+ * caller can then keep the attachment and offer manual entry without silently
+ * treating the failure as a successful empty scan.
  */
-export async function extractReceiptData(fileUri: string, mimeType = 'image/jpeg'): Promise<OcrResult> {
-  const apiKey: string | undefined =
-    (Constants.expoConfig?.extra as any)?.googleVisionApiKey;
-
-  const empty: OcrResult = { businessName: null, address: null, amount: null, date: null, receiptNumber: null, rawText: '' };
-  if (!apiKey) return empty;
-
+export async function extractReceiptData(
+  fileUri: string,
+  mimeType: string,
+  invokeReceiptOcr: ReceiptOcrInvoker,
+): Promise<OcrResult> {
+  let base64: string;
   try {
-    const base64 = await FileSystem.readAsStringAsync(fileUri, {
+    base64 = await FileSystem.readAsStringAsync(fileUri, {
       encoding: FileSystem.EncodingType.Base64,
     });
-
-    const isPdf = mimeType === 'application/pdf';
-    let rawText = '';
-
-    if (isPdf) {
-      // files:annotate supports base64 PDFs — reads first page only
-      const response = await fetch(
-        `https://vision.googleapis.com/v1/files:annotate?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requests: [{
-              inputConfig: { content: base64, mimeType: 'application/pdf' },
-              features: [{ type: 'DOCUMENT_TEXT_DETECTION' }],
-              pages: [1],
-            }],
-          }),
-        },
-      );
-      if (!response.ok) return empty;
-      const data = await response.json();
-      // files:annotate has a nested responses structure: responses[0].responses[0]
-      rawText = data.responses?.[0]?.responses?.[0]?.fullTextAnnotation?.text ?? '';
-    } else {
-      const response = await fetch(
-        `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            requests: [{
-              image: { content: base64 },
-              features: [{ type: 'DOCUMENT_TEXT_DETECTION', maxResults: 1 }],
-            }],
-          }),
-        },
-      );
-      if (!response.ok) return empty;
-      const data = await response.json();
-      rawText = data.responses?.[0]?.fullTextAnnotation?.text ?? '';
-    }
-
-    return { ...parseReceiptText(rawText), rawText };
   } catch {
-    return empty;
+    throw new ReceiptOcrError('file_read_failed', 'The attached receipt could not be read.');
   }
+
+  if (!base64) {
+    throw new ReceiptOcrError('file_read_failed', 'The attached receipt was empty.');
+  }
+
+  // The caller supplies the authenticated network boundary. This keeps the
+  // parser module usable offline without initializing an auth session.
+  let response: Awaited<ReturnType<ReceiptOcrInvoker>>;
+  try {
+    response = await invokeReceiptOcr({ content: base64, mimeType });
+  } catch {
+    throw new ReceiptOcrError('service_unavailable', 'Receipt text recognition is unavailable.');
+  }
+
+  if (response.error) {
+    throw new ReceiptOcrError('service_unavailable', 'Receipt text recognition is unavailable.');
+  }
+  if (typeof response.data?.rawText !== 'string') {
+    throw new ReceiptOcrError('invalid_response', 'Receipt text recognition returned an invalid response.');
+  }
+
+  const rawText = response.data.rawText;
+  if (!rawText.trim()) {
+    throw new ReceiptOcrError('no_text_detected', 'No readable text was found in the receipt.');
+  }
+
+  return { ...parseReceiptText(rawText), rawText };
 }
 
 // ─── Date extraction (for back-dating receipts to the correct month) ─────────

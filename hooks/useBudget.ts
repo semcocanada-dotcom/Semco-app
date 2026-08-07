@@ -4,11 +4,11 @@ import { db } from '@lib/supabase';
 import type { BudgetSummary, FundingYear } from '@lib/types';
 
 const EMPTY_SUMMARY: BudgetSummary = {
-  totalBudget: 8000,
+  totalBudget: 0,
   totalSpent: 0,
   totalPending: 0,
   totalMileage: 0,
-  remaining: 8000,
+  remaining: 0,
   daysRemaining: 0,
   fundingYear: null,
 };

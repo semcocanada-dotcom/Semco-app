@@ -1,17 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   RefreshControl,
   Pressable,
-  TouchableOpacity,
-  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
-import * as Location from 'expo-location';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors } from '@constants/colors';
 import { useAuth } from '@context/AuthContext';
 import { useChild } from '@context/ChildContext';
@@ -26,76 +23,6 @@ import { AlertBanner } from '@components/AlertBanner';
 import { FAB } from '@components/FAB';
 import { ExpenseListItem } from '@components/ExpenseListItem';
 
-// ─── Location permission prompt (shown once on first launch) ─────────────────
-
-function LocationPermissionModal({ onDone }: { onDone: () => void }) {
-  const [requesting, setRequesting] = useState(false);
-
-  const handleContinue = async () => {
-    if (requesting) return;
-
-    setRequesting(true);
-    try {
-      await Location.requestForegroundPermissionsAsync();
-    } finally {
-      onDone();
-    }
-  };
-
-  return (
-    // In-tree absolute overlay (not a native <Modal>) so it never triggers a
-    // UIViewController presentation — that presentation path was implicated in
-    // the iPad launch crash. Reanimated entering transitions restore the fade
-    // and slide the native sheet used to provide.
-    <Animated.View entering={FadeIn.duration(220)} style={ls.overlay} pointerEvents="auto">
-      <Animated.View entering={SlideInDown.springify().damping(18)} style={ls.sheet}>
-        <Text style={ls.icon}>📍</Text>
-        <Text style={ls.title}>How Location Helps</Text>
-        <Text style={ls.body}>
-          Autism Fund Tracker uses your location for two things:
-        </Text>
-        <View style={ls.reasonRow}>
-          <Text style={ls.reasonIcon}>🚗</Text>
-          <Text style={ls.reasonText}>
-            <Text style={{ fontWeight: '700' }}>Mileage forms</Text>
-            {' — automatically calculate the distance to your child\'s appointments for reimbursement claims.'}
-          </Text>
-        </View>
-        <View style={ls.reasonRow}>
-          <Text style={ls.reasonIcon}>🏥</Text>
-          <Text style={ls.reasonText}>
-            <Text style={{ fontWeight: '700' }}>Nearby providers</Text>
-            {' — show approved therapy providers sorted by how close they are to you.'}
-          </Text>
-        </View>
-        <Text style={ls.note}>Your location is never stored or shared.</Text>
-        <TouchableOpacity
-          style={ls.continueBtn}
-          onPress={handleContinue}
-          activeOpacity={0.85}
-          disabled={requesting}
-        >
-          <Text style={ls.continueBtnText}>Continue</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    </Animated.View>
-  );
-}
-
-const ls = StyleSheet.create({
-  overlay:      { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
-  sheet:        { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 28, paddingBottom: 40, gap: 12 },
-  icon:         { fontSize: 44, textAlign: 'center' },
-  title:        { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, textAlign: 'center' },
-  body:         { fontSize: 14, color: Colors.textSecondary, textAlign: 'center' },
-  reasonRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: Colors.surfaceAlt, borderRadius: 14, padding: 14 },
-  reasonIcon:   { fontSize: 22 },
-  reasonText:   { flex: 1, fontSize: 14, color: Colors.textPrimary, lineHeight: 20 },
-  note:         { fontSize: 12, color: Colors.textMuted, textAlign: 'center' },
-  continueBtn:     { backgroundColor: Colors.purple, borderRadius: 16, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  continueBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
-});
-
 // ─────────────────────────────────────────────────────────────────────────────
 
 function greeting(name: string) {
@@ -109,14 +36,6 @@ export default function DashboardScreen() {
   const { children, activeChild, setActiveChild, refetch: refetchChildren } = useChild();
   const { summary, loading: budgetLoading, refetch: refetchBudget } = useBudget(activeChild?.id ?? null);
   const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useRecentExpenses(activeChild?.id ?? null);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-
-  useEffect(() => {
-    Location.getForegroundPermissionsAsync().then(({ status }) => {
-      if (status === 'undetermined') setShowLocationPrompt(true);
-    });
-  }, []);
-
   const isRefreshing = budgetLoading || expensesLoading;
   const onRefresh = useCallback(async () => {
     await Promise.all([refetchChildren(), refetchBudget(), refetchExpenses()]);
@@ -124,7 +43,7 @@ export default function DashboardScreen() {
 
   const firstName  = profile?.full_name?.split(' ')[0] ?? 'there';
   const isExpired  = summary.daysRemaining === 0 && summary.fundingYear !== null;
-  const isLowBal   = !isExpired && summary.remaining < 500;
+  const isLowBal   = summary.fundingYear !== null && !isExpired && summary.remaining < 500;
   const isLowDays  = !isExpired && summary.daysRemaining > 0 && summary.daysRemaining < 30;
 
   return (
@@ -229,7 +148,7 @@ export default function DashboardScreen() {
               <AlertBanner variant="danger" message="Grant year has ended" subText="Contact Saskatchewan Education to renew your child's funding." />
             )}
             {isLowBal && (
-              <AlertBanner variant="warning" message={`Low balance — ${formatCAD(summary.remaining)} remaining`} subText="You're nearing your $8,000 annual limit." />
+              <AlertBanner variant="warning" message={`Low balance — ${formatCAD(summary.remaining)} remaining`} subText="You're nearing the active funding-year amount you entered." />
             )}
             {isLowDays && (
               <AlertBanner variant="info" message={`${summary.daysRemaining} days left in grant year`} subText="Plan your remaining therapy bookings soon." />
@@ -238,7 +157,7 @@ export default function DashboardScreen() {
         )}
 
         {/* Rainbow arc budget card */}
-        {activeChild && (
+        {activeChild && summary.fundingYear && (
           <Animated.View entering={FadeInDown.duration(420).delay(40)} style={{ paddingHorizontal: 20, marginBottom: 14 }}>
             <BudgetRing
               totalBudget={summary.totalBudget}
@@ -250,7 +169,7 @@ export default function DashboardScreen() {
         )}
 
         {/* Stat cards */}
-        {activeChild && (
+        {activeChild && summary.fundingYear && (
           <Animated.View entering={FadeInDown.duration(420).delay(110)} style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 20, marginBottom: 18 }}>
             <StatCard
               label="Total Spent"
@@ -269,6 +188,19 @@ export default function DashboardScreen() {
               onPress={() => router.push('/(tabs)/reports')}
             />
           </Animated.View>
+        )}
+
+        {activeChild && !budgetLoading && !summary.fundingYear && (
+          <View style={{ marginHorizontal: 20, marginBottom: 18, padding: 18, borderRadius: 16, backgroundColor: Colors.surface }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: Colors.textPrimary }}>Add a funding year</Text>
+            <Text style={{ fontSize: 13, color: Colors.textMuted, marginTop: 5, lineHeight: 19 }}>
+              Enter the amount Saskatchewan actually approved before using budget totals. Any age-based value shown
+              during setup is an editable estimate, not an eligibility or approval decision.
+            </Text>
+            <Pressable onPress={() => router.push('/(tabs)/profile')} hitSlop={8} style={{ marginTop: 10 }}>
+              <Text style={{ fontSize: 14, fontWeight: '700', color: Colors.purple }}>Open Profile</Text>
+            </Pressable>
+          </View>
         )}
 
         {/* Mileage reimbursement (grant year) */}
@@ -349,9 +281,6 @@ export default function DashboardScreen() {
 
       <FAB onPress={() => router.push('/(tabs)/expenses')} />
 
-      {showLocationPrompt && (
-        <LocationPermissionModal onDone={() => setShowLocationPrompt(false)} />
-      )}
     </SafeAreaView>
   );
 }

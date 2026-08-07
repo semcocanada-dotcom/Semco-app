@@ -19,13 +19,9 @@ import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAppointments } from '@hooks/useAppointments';
-import { buildMileageProposal } from '@lib/mileageUtils';
 import { scheduleAppointmentReminder, requestNotificationPermission } from '@lib/notifications';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const CAD = (n: number) =>
-  new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
 
 const CATEGORY_CONFIG: { value: ProviderCategory; label: string; emoji: string }[] = [
   { value: 'aba_ibi',              label: 'ABA / IBI',     emoji: '🧩' },
@@ -110,7 +106,7 @@ function AddAppointmentModal({
   childId: string; fundingYearId: string | null; onSaved: () => void;
   initialProvider?: Provider | null;
 }) {
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const [title,           setTitle]           = useState('');
   const [date,            setDate]            = useState(format(new Date(), 'yyyy-MM-dd'));
   const [time,            setTime]            = useState('09:00');
@@ -118,14 +114,9 @@ function AddAppointmentModal({
   const [providerQuery,   setProviderQuery]   = useState('');
   const [providerResults, setProviderResults] = useState<Provider[]>([]);
   const [selectedProvider,setSelectedProvider]= useState<Provider | null>(null);
-  const [syncCalendar,    setSyncCalendar]    = useState(true);
+  const [syncCalendar,    setSyncCalendar]    = useState(false);
+  const [scheduleReminder,setScheduleReminder]= useState(false);
   const [reminderOffset,  setReminderOffset]  = useState(1440);
-  const [addMileage,      setAddMileage]      = useState(false);
-  const [mileageLoading,  setMileageLoading]  = useState(false);
-  const [mileageKm,       setMileageKm]       = useState<number | null>(null);
-  const [mileageRate,     setMileageRate]     = useState<number | null>(null);
-  const [mileageNorth,    setMileageNorth]    = useState(false);
-  const [isRoundTrip,     setIsRoundTrip]     = useState(true);
   const [saving,          setSaving]          = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -134,44 +125,30 @@ function AddAppointmentModal({
       setTitle(initialProvider?.name ?? '');
       setDate(format(new Date(), 'yyyy-MM-dd')); setTime('09:00');
       setNotes(''); setProviderQuery(''); setSelectedProvider(initialProvider ?? null);
-      setProviderResults([]); setSyncCalendar(true); setReminderOffset(1440); setAddMileage(false);
-      setMileageKm(null); setMileageRate(null); setSaving(false); setIsRoundTrip(true);
+      setProviderResults([]); setSyncCalendar(false); setScheduleReminder(false); setReminderOffset(1440);
+      setSaving(false);
     }
   }, [visible, initialProvider]);
 
   const searchProviders = useCallback((q: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (!q.trim()) { setProviderResults([]); return; }
+    if (!q.trim() || !session) { setProviderResults([]); return; }
     searchTimer.current = setTimeout(async () => {
       const { data } = await supabase
         .from('providers')
         .select('id, name, category, city, address')
+        .eq('parent_id', session.user.id)
         .ilike('name', `%${q}%`)
         .limit(6);
       setProviderResults((data ?? []) as Provider[]);
     }, 250);
-  }, []);
+  }, [session]);
 
-  async function onProviderSelect(p: Provider) {
+  function onProviderSelect(p: Provider) {
     setSelectedProvider(p);
     if (!title) setTitle(p.name);
     setProviderQuery('');
     setProviderResults([]);
-    // auto-calc mileage if home address available
-    if (profile?.home_address) {
-      setMileageLoading(true);
-      try {
-        const proposal = await buildMileageProposal(profile.home_address, p);
-        if (proposal) {
-          setMileageKm(proposal.distanceKm);
-          setMileageRate(proposal.ratePerKm);
-          setMileageNorth(proposal.isNorthern);
-          setAddMileage(true);
-        }
-      } catch {} finally {
-        setMileageLoading(false);
-      }
-    }
   }
 
   async function handleSave() {
@@ -182,10 +159,10 @@ function AddAppointmentModal({
       let calendarEventId: string | null = null;
 
       if (syncCalendar) {
-        const calId = await getWritableCalendarId();
-        if (calId) {
-          const end = new Date(scheduledAt.getTime() + 60 * 60 * 1000); // +1h
-          try {
+        try {
+          const calId = await getWritableCalendarId();
+          if (calId) {
+            const end = new Date(scheduledAt.getTime() + 60 * 60 * 1000); // +1h
             calendarEventId = await CalendarAPI.createEventAsync(calId, {
               title: title.trim(),
               startDate: scheduledAt,
@@ -193,8 +170,8 @@ function AddAppointmentModal({
               notes: notes.trim() || undefined,
               alarms: [{ relativeOffset: -reminderOffset }],
             });
-          } catch {}
-        }
+          }
+        } catch {}
       }
 
       const { data: row, error } = await supabase
@@ -211,22 +188,15 @@ function AddAppointmentModal({
 
       if (error || !row) throw error;
 
-      // Schedule push reminder
-      await requestNotificationPermission();
-      await scheduleAppointmentReminder(row.id, title.trim(), scheduledAt, reminderOffset);
-
-      // Log mileage if requested and a funding year exists
-      if (addMileage && mileageKm && mileageRate && fundingYearId) {
-        const km = isRoundTrip ? mileageKm * 2 : mileageKm;
-        await supabase.from('mileage_logs').insert({
-          child_id:        childId,
-          funding_year_id: fundingYearId,
-          description:     `${isRoundTrip ? 'Round trip' : 'Trip'} to ${selectedProvider?.name ?? title.trim()}`,
-          distance_km:     km,
-          rate_per_km:     mileageRate,
-          trip_date:       date,
-          is_round_trip:   isRoundTrip,
-        });
+      // Notification access is requested only after the user explicitly opts in.
+      // Denial or scheduling failure never prevents the appointment from saving.
+      if (scheduleReminder) {
+        try {
+          const granted = await requestNotificationPermission();
+          if (granted) {
+            await scheduleAppointmentReminder(row.id, scheduledAt, reminderOffset);
+          }
+        } catch {}
       }
 
       onSaved(); onClose();
@@ -236,9 +206,6 @@ function AddAppointmentModal({
       setSaving(false);
     }
   }
-
-  const tripKm   = mileageKm ? (isRoundTrip ? mileageKm * 2 : mileageKm) : null;
-  const mileageTotal = tripKm && mileageRate ? tripKm * mileageRate : null;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -272,7 +239,7 @@ function AddAppointmentModal({
             {selectedProvider ? (
               <View style={s.selectedProv}>
                 <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
-                <TouchableOpacity onPress={() => { setSelectedProvider(null); setProviderQuery(''); setMileageKm(null); setAddMileage(false); }}>
+                <TouchableOpacity onPress={() => { setSelectedProvider(null); setProviderQuery(''); }}>
                   <Text style={{ color: Colors.textMuted, fontSize: 18 }}>✕</Text>
                 </TouchableOpacity>
               </View>
@@ -346,83 +313,54 @@ function AddAppointmentModal({
             >
               <View style={{ flex: 1 }}>
                 <Text style={s.toggleLabel}>📅 Add to Device Calendar</Text>
-                <Text style={s.toggleSub}>Creates a calendar event with a 24h reminder</Text>
+                <Text style={s.toggleSub}>Off by default · asks only when you choose this</Text>
               </View>
               <View style={[s.toggle, syncCalendar && s.toggleOn]}>
                 <View style={[s.toggleThumb, syncCalendar && s.toggleThumbOn]} />
               </View>
             </TouchableOpacity>
 
-            {/* Reminder timing */}
-            <Text style={[s.fieldLabel, { marginTop: 18 }]}>Remind me</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {([
-                { label: '1 hr before', value: 60 },
-                { label: '2 hrs before', value: 120 },
-                { label: 'Day before', value: 1440 },
-              ] as const).map(opt => (
-                <TouchableOpacity
-                  key={opt.value}
-                  style={[s.reminderChip, reminderOffset === opt.value && s.reminderChipActive]}
-                  onPress={() => setReminderOffset(opt.value)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[s.reminderChipText, reminderOffset === opt.value && s.reminderChipTextActive]}>
-                    {opt.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Mileage section */}
-            {mileageLoading && (
-              <View style={s.mileageBanner}>
-                <ActivityIndicator size="small" color={Colors.teal} />
-                <Text style={s.mileageBannerText}>Calculating mileage…</Text>
+            <TouchableOpacity
+              style={s.toggleRow}
+              onPress={() => setScheduleReminder(!scheduleReminder)}
+              activeOpacity={0.7}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={s.toggleLabel}>🔔 Schedule Notification Reminder</Text>
+                <Text style={s.toggleSub}>Off by default · lock-screen text stays private</Text>
               </View>
-            )}
+              <View style={[s.toggle, scheduleReminder && s.toggleOn]}>
+                <View style={[s.toggleThumb, scheduleReminder && s.toggleThumbOn]} />
+              </View>
+            </TouchableOpacity>
 
-            {mileageKm && mileageRate && !mileageLoading && (
+            {(syncCalendar || scheduleReminder) && (
               <>
-                <TouchableOpacity
-                  style={s.toggleRow}
-                  onPress={() => setAddMileage(!addMileage)}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.toggleLabel}>🚗 Log Mileage for this Trip</Text>
-                    <Text style={s.toggleSub}>
-                      {mileageKm} km · {mileageNorth ? 'Northern' : 'Southern'} rate
-                    </Text>
-                  </View>
-                  <View style={[s.toggle, addMileage && s.toggleOn]}>
-                    <View style={[s.toggleThumb, addMileage && s.toggleThumbOn]} />
-                  </View>
-                </TouchableOpacity>
-
-                {addMileage && (
-                  <View style={s.mileageCard}>
+                <Text style={[s.fieldLabel, { marginTop: 18 }]}>Reminder timing</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {([
+                    { label: '1 hr before', value: 60 },
+                    { label: '2 hrs before', value: 120 },
+                    { label: 'Day before', value: 1440 },
+                  ] as const).map(opt => (
                     <TouchableOpacity
-                      style={s.roundTripRow}
-                      onPress={() => setIsRoundTrip(!isRoundTrip)}
+                      key={opt.value}
+                      style={[s.reminderChip, reminderOffset === opt.value && s.reminderChipActive]}
+                      onPress={() => setReminderOffset(opt.value)}
                       activeOpacity={0.7}
                     >
-                      <View style={[s.checkbox, isRoundTrip && s.checkboxOn]}>
-                        {isRoundTrip && <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✓</Text>}
-                      </View>
-                      <Text style={s.roundTripLabel}>Round trip (×2 distance)</Text>
+                      <Text style={[s.reminderChipText, reminderOffset === opt.value && s.reminderChipTextActive]}>
+                        {opt.label}
+                      </Text>
                     </TouchableOpacity>
-                    <Text style={s.mileageCalc}>
-                      {tripKm} km × ${mileageRate.toFixed(4)} = <Text style={{ fontWeight: '700', color: '#15803D' }}>{CAD(mileageTotal!)}</Text>
-                    </Text>
-                  </View>
-                )}
+                  ))}
+                </View>
               </>
             )}
 
-            {!profile?.home_address && selectedProvider && !mileageLoading && (
+            {selectedProvider && (
               <View style={s.homePrompt}>
-                <Text style={s.homePromptText}>📍 Set your home address in Profile to auto-calculate mileage</Text>
+                <Text style={s.homePromptText}>Mileage can be logged manually from the Mileage tab.</Text>
               </View>
             )}
 
@@ -451,6 +389,7 @@ function AddAppointmentModal({
 
 export default function AppointmentsScreen() {
   const { activeChild }                              = useChild();
+  const { session }                                  = useAuth();
   const { summary }                                  = useBudget(activeChild?.id ?? null);
   const { appointments, loading, refetch }           = useAppointments(activeChild?.id ?? null);
   const [showAdd, setShowAdd]                        = useState(false);
@@ -460,11 +399,12 @@ export default function AppointmentsScreen() {
   const router                                       = useRouter();
 
   useEffect(() => {
-    if (!preselectId || !activeChild) return;
+    if (!preselectId || !activeChild || !session) return;
     supabase
       .from('providers')
       .select('*')
       .eq('id', preselectId)
+      .eq('parent_id', session.user.id)
       .single()
       .then(({ data }) => {
         if (data) {
@@ -474,7 +414,7 @@ export default function AppointmentsScreen() {
       });
     // Clear the param after handling so re-visiting the tab doesn't re-open
     router.setParams({ preselectId: undefined });
-  }, [preselectId, activeChild]);
+  }, [preselectId, activeChild, router, session]);
 
   const upcoming = appointments.filter(a => isFuture(parseISO(a.scheduled_at)));
   const past     = appointments.filter(a => isPast(parseISO(a.scheduled_at)));

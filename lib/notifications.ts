@@ -26,19 +26,17 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
 export async function scheduleAppointmentReminder(
   appointmentId: string,
-  title: string,
   scheduledAt: Date,
   offsetMinutes = 1440,
 ): Promise<string | null> {
   const fireAt = scheduledAt.getTime() - offsetMinutes * 60 * 1000;
   const secondsUntil = Math.floor((fireAt - Date.now()) / 1000);
   if (secondsUntil <= 0) return null;
-  const label = offsetMinutes >= 1440 ? 'Tomorrow' : offsetMinutes >= 120 ? 'In 2 hours' : 'In 1 hour';
   try {
     return await Notifications.scheduleNotificationAsync({
       content: {
-        title: `📅 Appointment ${label}`,
-        body: title,
+        title: 'Autism Fund Tracker reminder',
+        body: 'Open the app to view your scheduled reminder.',
         data: { appointmentId },
       },
       trigger: { seconds: secondsUntil } as any,
@@ -52,12 +50,16 @@ export async function cancelNotification(identifier: string) {
   try { await Notifications.cancelScheduledNotificationAsync(identifier); } catch {}
 }
 
-export async function scheduleBudgetWarning(childName: string, remaining: number) {
+export async function clearScheduledAccountNotifications(): Promise<void> {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+export async function scheduleBudgetWarning(_childName: string, _remaining: number) {
   try {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: `⚠️ Grant Alert — ${childName}`,
-        body: `Only ${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(remaining)} remaining. Log more expenses to maximize your grant.`,
+        title: 'Autism Fund Tracker update',
+        body: 'Open the app to review your funding records.',
       },
       trigger: null,
     });

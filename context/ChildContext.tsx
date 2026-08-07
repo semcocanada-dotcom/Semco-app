@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@lib/supabase';
+import { ACTIVE_CHILD_STORAGE_KEY } from '@lib/localStorageKeys';
 import type { Child } from '@lib/types';
 import { useAuth } from './AuthContext';
-
-const ACTIVE_CHILD_KEY = 'aft:activeChildId';
 
 interface ChildContextValue {
   children: Child[];
@@ -28,7 +27,7 @@ export function ChildProvider({ children: reactChildren }: { children: React.Rea
   const [activeChild, setActiveChildState] = useState<Child | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function fetchChildren() {
+  const fetchChildren = useCallback(async () => {
     if (!session) return;
     setLoading(true);
     const { data } = await db.children()
@@ -39,19 +38,27 @@ export function ChildProvider({ children: reactChildren }: { children: React.Rea
     setChildList(list);
 
     // Restore last active child from storage
-    const savedId = await AsyncStorage.getItem(ACTIVE_CHILD_KEY);
+    const savedId = await AsyncStorage.getItem(ACTIVE_CHILD_STORAGE_KEY);
     const restored = list.find((c) => c.id === savedId) ?? list[0] ?? null;
     setActiveChildState(restored);
     setLoading(false);
-  }
+  }, [session]);
 
   useEffect(() => {
+    if (!session) {
+      // Do not retain the previous account's child records in memory after
+      // sign-out or permanent account deletion.
+      setChildList([]);
+      setActiveChildState(null);
+      setLoading(false);
+      return;
+    }
     fetchChildren();
-  }, [session]);
+  }, [fetchChildren, session]);
 
   async function setActiveChild(child: Child) {
     setActiveChildState(child);
-    await AsyncStorage.setItem(ACTIVE_CHILD_KEY, child.id);
+    await AsyncStorage.setItem(ACTIVE_CHILD_STORAGE_KEY, child.id);
   }
 
   return (

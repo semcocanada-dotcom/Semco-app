@@ -43,6 +43,8 @@ export interface Child {
   health_card_number: string | null;
   diagnosis_date: string | null;
   diagnosis_notes: string | null;
+  data_consent_version: string | null;
+  data_consent_accepted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -118,6 +120,8 @@ export interface RespiteWorker {
   phone: string | null;
   default_rate_per_hour: number | null;
   notes: string | null;
+  data_consent_version: string | null;
+  data_consent_accepted_at: string | null;
   created_at: string;
 }
 
@@ -133,6 +137,8 @@ export interface RespiteSession {
   amount_paid: number;
   notes: string | null;
   worker_id: string | null;
+  data_consent_version: string | null;
+  data_consent_accepted_at: string | null;
   logged_by: string;
   created_at: string;
 }

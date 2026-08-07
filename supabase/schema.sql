@@ -1,7 +1,7 @@
 -- ============================================================
 -- Semco App — Supabase Schema
 -- Saskatchewan Individualized Autism Funding Grant Tracker
--- Child-centric model: each child has their own $8,000/yr grant
+-- Child-centric model: each child can have an explicitly entered approved funding amount.
 --
 -- This file is the single source of truth. Running it provisions a
 -- complete database. The supabase/add_*.sql and monthly_claims.sql
@@ -58,6 +58,18 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "profiles: own row" ON profiles
   FOR ALL USING (id = auth.uid());
 
+-- Short-lived server-managed lock used while an account's receipt objects are
+-- being removed. Client roles have no access to this table.
+CREATE TABLE account_deletion_locks (
+  user_id      UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  lock_token   UUID NOT NULL,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE account_deletion_locks ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE account_deletion_locks FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE account_deletion_locks TO service_role;
+
 -- Auto-create profile on sign-up. SECURITY DEFINER so the trigger can
 -- insert into profiles, but EXECUTE is revoked from API roles so it can
 -- never be invoked directly via PostgREST RPC.
@@ -88,6 +100,8 @@ CREATE TABLE children (
   health_card_number TEXT,
   diagnosis_date    DATE,
   diagnosis_notes   TEXT,
+  data_consent_version TEXT,
+  data_consent_accepted_at TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -101,14 +115,14 @@ CREATE POLICY "children: own records" ON children
 
 -- ============================================================
 -- FUNDING YEARS
--- Each child gets their own $8,000 grant per year
+-- Each funding year records the amount actually entered for that child's approval.
 -- ============================================================
 
 CREATE TABLE funding_years (
   id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   child_id     UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   label        TEXT NOT NULL,                     -- e.g. "2024–2025"
-  total_budget NUMERIC(10,2) NOT NULL DEFAULT 8000.00,
+  total_budget NUMERIC(10,2) NOT NULL,
   start_date   DATE NOT NULL,
   end_date     DATE NOT NULL,
   is_active    BOOLEAN NOT NULL DEFAULT false,
@@ -127,8 +141,7 @@ CREATE POLICY "funding_years: own children" ON funding_years
 
 -- ============================================================
 -- PROVIDERS
--- Global pre-seeded rows have parent_id = NULL (visible to all)
--- Custom parent rows have parent_id = auth.uid()
+-- Every provider is a private user-created row owned by parent_id.
 -- ============================================================
 
 CREATE TABLE providers (
@@ -144,10 +157,10 @@ CREATE TABLE providers (
   province       TEXT NOT NULL DEFAULT 'SK',
   postal_code    TEXT,
   notes          TEXT,
-  is_approved_sk BOOLEAN NOT NULL DEFAULT true,
-  parent_id      UUID REFERENCES auth.users(id) ON DELETE CASCADE,  -- NULL = global seed
+  is_approved_sk BOOLEAN NOT NULL DEFAULT false,
+  parent_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  lat            DOUBLE PRECISION,  -- geocoded from address (server-side)
+  lat            DOUBLE PRECISION,
   lng            DOUBLE PRECISION
 );
 
@@ -156,21 +169,18 @@ CREATE INDEX idx_providers_parent ON providers(parent_id);
 
 ALTER TABLE providers ENABLE ROW LEVEL SECURITY;
 
--- Global directory rows (parent_id IS NULL) are read-only to clients;
--- only the service role may seed/modify them. Custom rows belong to the
--- creating parent for all operations.
-CREATE POLICY "providers: read global or own" ON providers
-  FOR SELECT USING (parent_id IS NULL OR parent_id = auth.uid());
+CREATE POLICY "providers: read own" ON providers
+  FOR SELECT TO authenticated USING (parent_id = (SELECT auth.uid()));
 
 CREATE POLICY "providers: insert own" ON providers
-  FOR INSERT WITH CHECK (parent_id = auth.uid());
+  FOR INSERT TO authenticated WITH CHECK (parent_id = (SELECT auth.uid()));
 
 CREATE POLICY "providers: update own" ON providers
-  FOR UPDATE USING (parent_id = auth.uid())
-             WITH CHECK (parent_id = auth.uid());
+  FOR UPDATE TO authenticated USING (parent_id = (SELECT auth.uid()))
+             WITH CHECK (parent_id = (SELECT auth.uid()));
 
 CREATE POLICY "providers: delete own" ON providers
-  FOR DELETE USING (parent_id = auth.uid());
+  FOR DELETE TO authenticated USING (parent_id = (SELECT auth.uid()));
 
 -- ============================================================
 -- EXPENSES
@@ -188,7 +198,7 @@ CREATE TABLE expenses (
   status          expense_status NOT NULL DEFAULT 'pending',
   receipt_urls    TEXT[] NOT NULL DEFAULT '{}',
   receipt_number  TEXT,
-  logged_by       UUID NOT NULL REFERENCES auth.users(id),
+  logged_by       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -197,6 +207,7 @@ CREATE INDEX idx_expenses_child_year ON expenses(child_id, funding_year_id);
 CREATE INDEX idx_expenses_child_date ON expenses(child_id, expense_date DESC);
 CREATE INDEX idx_expenses_status ON expenses(child_id, status);
 CREATE INDEX idx_expenses_receipt_number ON expenses(child_id, receipt_number);
+CREATE INDEX idx_expenses_logged_by ON expenses(logged_by);
 
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
@@ -246,6 +257,8 @@ CREATE TABLE respite_workers (
   phone                 TEXT,
   default_rate_per_hour NUMERIC(10,2),
   notes                 TEXT,
+  data_consent_version  TEXT,
+  data_consent_accepted_at TIMESTAMPTZ,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -271,12 +284,15 @@ CREATE TABLE respite_sessions (
   amount_paid     NUMERIC(10,2) NOT NULL CHECK (amount_paid >= 0),
   notes           TEXT,
   worker_id       UUID REFERENCES respite_workers(id) ON DELETE SET NULL,
-  logged_by       UUID NOT NULL REFERENCES auth.users(id),
+  data_consent_version TEXT,
+  data_consent_accepted_at TIMESTAMPTZ,
+  logged_by       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_respite_child_year ON respite_sessions(child_id, funding_year_id);
 CREATE INDEX idx_respite_child_date ON respite_sessions(child_id, session_date DESC);
+CREATE INDEX idx_respite_sessions_logged_by ON respite_sessions(logged_by);
 
 ALTER TABLE respite_sessions ENABLE ROW LEVEL SECURITY;
 
@@ -357,15 +373,49 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('receipts', 'receipts', false)
 ON CONFLICT (id) DO UPDATE SET public = false;
 
+-- A private SECURITY DEFINER helper lets the Storage policy read the
+-- server-only deletion lock without exposing the lock table through the Data
+-- API. It only answers for the authenticated caller's own account.
+CREATE SCHEMA IF NOT EXISTS private;
+REVOKE ALL ON SCHEMA private FROM PUBLIC;
+GRANT USAGE ON SCHEMA private TO authenticated;
+
+CREATE OR REPLACE FUNCTION private.account_allows_receipt_access()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT
+    (SELECT auth.uid()) IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = (SELECT auth.uid())
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM public.account_deletion_locks
+      WHERE user_id = (SELECT auth.uid())
+        AND requested_at > NOW() - INTERVAL '15 minutes'
+    );
+$$;
+
+REVOKE EXECUTE ON FUNCTION private.account_allows_receipt_access() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.account_allows_receipt_access() TO authenticated;
+
 -- Each user may only touch objects under their own {auth.uid()}/ prefix.
 CREATE POLICY "receipts: own files" ON storage.objects
-  FOR ALL USING (
+  FOR ALL
+  TO authenticated
+  USING (
     bucket_id = 'receipts'
-    AND (auth.uid())::text = (storage.foldername(name))[1]
+    AND (SELECT auth.uid())::text = (storage.foldername(name))[1]
+    AND private.account_allows_receipt_access()
   )
   WITH CHECK (
     bucket_id = 'receipts'
-    AND (auth.uid())::text = (storage.foldername(name))[1]
+    AND (SELECT auth.uid())::text = (storage.foldername(name))[1]
+    AND private.account_allows_receipt_access()
   );
 
 -- ============================================================

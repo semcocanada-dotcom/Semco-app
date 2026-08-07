@@ -1,11 +1,11 @@
 2026-04-26T06:34:56Z — trigger native build with expo-updates
 2026-05-18T07:00:00Z — rebuild with all features: Claims tab, mileage log, expense PDF, OCR address mileage
-2026-05-18T10:30:00Z — add expo-location for proximity sorting and mileage auto-fill
+2026-05-18T10:30:00Z — historical proximity sorting and mileage auto-fill build
 2026-05-18T16:45:00Z — retrigger: standalone commit to ensure build job fires
 2026-05-18T17:20:00Z — fix workflow to use paths: filter; retrigger native build
 2026-05-19T00:55:00Z — rebuild: all builds expired, fresh install needed for phone
 2026-05-19T01:10:00Z — retrigger: plan upgraded, build credits available
-2026-05-19T23:05:00Z — rebuild with visual redesign baked in (puzzle-heart, rainbow arc, vector icons) + expo-location native module
+2026-05-19T23:05:00Z — rebuild with visual redesign baked in (puzzle-heart, rainbow arc, vector icons)
 2026-05-20T14:00:00Z — rebuild: OCR provider matching, remove pending status, expense tap-through, status badge cleanup
 
 2026-05-21T02:55:00Z — rebuild: add Respite tab, official PDF export for mileage + respite

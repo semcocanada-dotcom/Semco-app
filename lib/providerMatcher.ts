@@ -8,7 +8,8 @@ export interface ProviderMatch {
 }
 
 /**
- * Fuzzy-matches one or more candidate strings against the providers table.
+ * Fuzzy-matches one or more candidate strings against the signed-in user's
+ * private provider list.
  * When given an array (e.g. all lines from a receipt), makes a single DB call
  * and returns the best score per provider across all candidates.
  * Returns up to 3 ranked matches (score descending).
@@ -31,9 +32,13 @@ export async function matchProviders(input: string | string[]): Promise<Provider
   // Cap OR filter to 15 words to avoid overwhelming PostgREST
   const filterWords = [...wordSet].slice(0, 15);
 
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) return [];
+
   const { data } = await supabase
     .from('providers')
     .select('*')
+    .eq('parent_id', authData.user.id)
     .or(filterWords.map(w => `name.ilike.%${w}%`).join(','))
     .limit(30);
 

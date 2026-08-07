@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,9 +28,7 @@ import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear, M
 import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
-import { analyseReceipt, buildMileageProposal, buildMileageProposalFromAddress, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
-import type { ReceiptAnalysis, MileageProposal } from '@lib/mileageUtils';
-import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import { analyseReceipt, AUTO_SELECT_THRESHOLD, SOUTHERN_RATE_PER_KM } from '@lib/mileageUtils';
 import { AppLogo } from '@components/AppLogo';
 import { CalendarArt, ReceiptArt } from '@components/EmptyArt';
 import { DateField } from '@components/DateField';
@@ -75,14 +74,6 @@ const STATUS_STYLE: Record<ExpenseStatus, { bg: string; text: string; label: str
   approved:  { bg: '#F0FDF4', text: '#15803D', label: 'Approved'  },
   rejected:  { bg: '#FFF1F2', text: '#BE123C', label: 'Rejected'  },
 };
-
-// In-person services worth a mileage trip. Excludes assistive_technology and
-// other (typically mail-order/retail, where a receipt address is a shipping
-// address, not somewhere you drove).
-const TRAVEL_CATEGORIES = new Set<ProviderCategory>([
-  'aba_ibi', 'speech_language', 'occupational_therapy', 'physical_therapy',
-  'psychology', 'swimming', 'social_skills', 'music_therapy', 'art_therapy', 'respite',
-]);
 
 const catEmoji = (cat: ProviderCategory) =>
   CATEGORY_CONFIG.find(c => c.value === cat)?.emoji ?? '📋';
@@ -222,7 +213,7 @@ function QuickAddModal({
   visible: boolean; onClose: () => void;
   childId: string; fundingYearId: string; currentRemaining: number; onSaved: () => void;
 }) {
-  const { session, profile, refetchProfile } = useAuth();
+  const { session } = useAuth();
   const [amount,          setAmount]          = useState('');
   const [category,        setCategory]        = useState<ProviderCategory>('speech_language');
   const [description,     setDescription]     = useState('');
@@ -236,13 +227,8 @@ function QuickAddModal({
   const [saving,          setSaving]          = useState(false);
   const [ocrLoading,      setOcrLoading]      = useState(false);
   const [ocrBizName,      setOcrBizName]      = useState<string | null>(null);
+  const [ocrFailed,       setOcrFailed]       = useState(false);
   const [receiptNumber,   setReceiptNumber]   = useState<string | null>(null);
-  const [providerMatches, setProviderMatches] = useState<ReceiptAnalysis['allMatches']>([]);
-  const [mileageProposal, setMileageProposal] = useState<MileageProposal | null>(null);
-  const [mileageLoading,  setMileageLoading]  = useState(false);
-  const [includeMileage,  setIncludeMileage]  = useState(false);
-  const [homeAddress,     setHomeAddress]     = useState(profile?.home_address ?? '');
-  const [savingHome,      setSavingHome]      = useState(false);
   const amountRef  = useRef<TextInput>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -251,77 +237,45 @@ function QuickAddModal({
       setAmount(''); setDescription(''); setDate(format(new Date(), 'yyyy-MM-dd'));
       setReceiptUri(null); setProviderQuery(''); setSelectedProvider(null);
       setProviderResults([]); setSaving(false);
-      setOcrLoading(false); setOcrBizName(null); setReceiptNumber(null); setProviderMatches([]);
-      setMileageProposal(null); setMileageLoading(false); setIncludeMileage(false);
-      setHomeAddress(profile?.home_address ?? '');
+      setOcrLoading(false); setOcrBizName(null); setOcrFailed(false); setReceiptNumber(null);
       setTimeout(() => amountRef.current?.focus(), 350);
     }
   }, [visible]);
 
   const searchProviders = useCallback((q: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (!q.trim()) { setProviderResults([]); return; }
+    if (!q.trim() || !session) { setProviderResults([]); return; }
     searchTimer.current = setTimeout(async () => {
       const { data } = await supabase
         .from('providers')
         .select('id, name, category, city, organization, address')
+        .eq('parent_id', session.user.id)
         .or(`name.ilike.%${q}%,organization.ilike.%${q}%`)
         .limit(8);
       setProviderResults((data ?? []) as Provider[]);
     }, 250);
-  }, []);
+  }, [session]);
 
-  function homeAddr(): string | null {
-    const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : null;
-  }
-
-  // Always save as round trip — SK ASD-IF mileage is claimed both ways.
-  function applyProposalAsRoundTrip(proposal: MileageProposal) {
-    setMileageProposal({
-      ...proposal,
-      distanceKm: Math.round(proposal.distanceKm * 2 * 10) / 10,
-      amount:     Math.round(proposal.distanceKm * 2 * proposal.ratePerKm * 100) / 100,
-    });
-    setIncludeMileage(true);
-  }
-
-  async function tryMileage(provider: Provider, ocrAddress?: string | null) {
-    const addr = homeAddr();
-    if (!addr) return;
-    setMileageLoading(true);
-    try {
-      const proposal = await buildMileageProposal(addr, provider, ocrAddress);
-      if (proposal) applyProposalAsRoundTrip(proposal);
-    } catch { /* geocoding failed silently */ } finally {
-      setMileageLoading(false);
-    }
-  }
-
-  // Fallback when the provider name can't be matched but the receipt has an
-  // address — mileage depends on the destination, not on naming the therapist.
-  async function tryMileageFromAddress(destination: string, label: string) {
-    const addr = homeAddr();
-    if (!addr) return;
-    setMileageLoading(true);
-    try {
-      const proposal = await buildMileageProposalFromAddress(addr, destination, label);
-      if (proposal) applyProposalAsRoundTrip(proposal);
-    } catch { /* geocoding failed silently */ } finally {
-      setMileageLoading(false);
-    }
-  }
-
-  async function handleReceiptCaptured(uri: string, mime: string, name?: string) {
+  function attachReceipt(uri: string, mime: string, name?: string) {
     setReceiptUri(uri);
     setReceiptMime(mime);
     setReceiptName(sanitizeReceiptFilename(name ?? `receipt.${mime === 'application/pdf' ? 'pdf' : 'jpg'}`));
+    setOcrBizName(null);
+    setOcrFailed(false);
+    setReceiptNumber(null);
+  }
+
+  async function recognizeReceipt(uri: string, mime: string) {
     setOcrLoading(true);
+    setOcrFailed(false);
     try {
-      const analysis = await analyseReceipt(uri, mime);
+      const analysis = await analyseReceipt(
+        uri,
+        mime,
+        body => supabase.functions.invoke('receipt-ocr', { body }),
+      );
       setOcrBizName(analysis.ocrResult.businessName ?? null);
       setReceiptNumber(analysis.ocrResult.receiptNumber ?? null);
-      setProviderMatches(analysis.allMatches);
       if (analysis.ocrResult.amount !== null) {
         setAmount(String(analysis.ocrResult.amount));
       }
@@ -335,45 +289,89 @@ function QuickAddModal({
       const inferred = inferCategoryFromText(analysis.ocrResult.rawText);
       if (inferred) setCategory(inferred);
       const top = analysis.topMatch;
-      const cat = inferred ?? category;
       if (top && top.score >= AUTO_SELECT_THRESHOLD) {
         setSelectedProvider(top.provider);
         // Only let the matched provider set the category when the receipt text
         // gave us nothing more specific.
         if (!inferred) setCategory(top.provider.category);
-        await tryMileage(top.provider, analysis.ocrResult.address);
-      } else if (analysis.ocrResult.address && TRAVEL_CATEGORIES.has(cat)) {
-        // No confident provider match, but the receipt is for an in-person
-        // service and carries an address — compute mileage from that address.
-        await tryMileageFromAddress(
-          analysis.ocrResult.address,
-          analysis.ocrResult.businessName ?? 'appointment',
-        );
       }
-    } catch { /* OCR failed silently */ } finally {
+    } catch {
+      // Keep the selected attachment. Manual entry and the eventual receipt
+      // upload remain available even when the optional recognition service is
+      // offline, cannot read the file, or finds no usable text.
+      setOcrFailed(true);
+      Alert.alert(
+        'Text recognition unavailable',
+        'Your receipt is still attached. Enter the expense details manually. To try text recognition again, choose Review text recognition and confirm the disclosure again.',
+        [{ text: 'OK' }],
+      );
+    } finally {
       setOcrLoading(false);
     }
+  }
+
+  function promptForReceiptRecognition(uri: string, mime: string) {
+    Alert.alert(
+      'Receipt text recognition',
+      'Trying again sends this receipt image or PDF to Google Cloud Vision to read text and fill expense details. It is only sent if you choose Use text recognition.',
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Use text recognition', onPress: () => { void recognizeReceipt(uri, mime); } },
+      ],
+    );
+  }
+
+  function handleReceiptCaptured(uri: string, mime: string, name?: string) {
+    Alert.alert(
+      'Receipt text recognition',
+      'If you use text recognition, this receipt image or PDF is sent to Google Cloud Vision to read text and fill expense details. You can attach it without recognition and enter details manually.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Attach without recognition',
+          onPress: () => attachReceipt(uri, mime, name),
+        },
+        {
+          text: 'Use text recognition',
+          onPress: () => {
+            attachReceipt(uri, mime, name);
+            void recognizeReceipt(uri, mime);
+          },
+        },
+      ],
+    );
+  }
+
+  function showPermissionSettingsAlert(title: string, message: string) {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Open Settings', onPress: () => { void Linking.openSettings(); } },
+    ]);
   }
 
   async function pickCamera() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Camera access needed', 'Allow camera access in Settings.'); return;
+      showPermissionSettingsAlert(
+        'Camera access needed',
+        'Camera access is required only when you choose to photograph a receipt. You can enable it in Settings.',
+      );
+      return;
     }
     const r = await ImagePicker.launchCameraAsync({ quality: 0.8, allowsEditing: false });
     if (!r.canceled && r.assets[0]) {
-      await handleReceiptCaptured(r.assets[0].uri, 'image/jpeg');
+      handleReceiptCaptured(r.assets[0].uri, 'image/jpeg');
     }
   }
 
   async function pickGallery() {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Gallery access needed', 'Allow photo access in Settings.'); return;
-    }
-    const r = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
-    if (!r.canceled && r.assets[0]) {
-      await handleReceiptCaptured(r.assets[0].uri, 'image/jpeg');
+    try {
+      const r = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
+      if (!r.canceled && r.assets[0]) {
+        handleReceiptCaptured(r.assets[0].uri, 'image/jpeg');
+      }
+    } catch {
+      Alert.alert('Error', 'Could not open photo picker.');
     }
   }
 
@@ -385,7 +383,7 @@ function QuickAddModal({
       });
       if (!r.canceled && r.assets[0]) {
         const a = r.assets[0];
-        await handleReceiptCaptured(a.uri, a.mimeType ?? 'application/octet-stream', a.name ?? undefined);
+        handleReceiptCaptured(a.uri, a.mimeType ?? 'application/octet-stream', a.name ?? undefined);
       }
     } catch {
       Alert.alert('Error', 'Could not open file picker.');
@@ -493,19 +491,6 @@ function QuickAddModal({
         }
       }
 
-      if (includeMileage && mileageProposal) {
-        await supabase.from('mileage_logs').insert({
-          child_id:        childId,
-          funding_year_id: fundingYearId,
-          description:     `Round trip to ${mileageProposal.providerName}`,
-          distance_km:     mileageProposal.distanceKm,
-          rate_per_km:     mileageProposal.ratePerKm,
-          trip_date:       date,
-          is_round_trip:   true,
-          expense_id:      row.id,   // deleting the expense removes this trip
-        });
-      }
-
       const newRemaining = Math.max(currentRemaining - parsed, 0);
       onSaved();
       onClose();
@@ -563,15 +548,27 @@ function QuickAddModal({
             {/* ── Receipt capture ── */}
             <Text style={[s.fieldLabel, { marginTop: 20 }]}>Receipt</Text>
             <View style={s.receiptRow}>
-              <TouchableOpacity style={s.receiptBtn} onPress={pickCamera} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={s.receiptBtn}
+                onPress={() => { void pickCamera(); }}
+                activeOpacity={0.8}
+              >
                 <Text style={s.receiptIcon}>📷</Text>
                 <Text style={s.receiptBtnLabel}>Camera</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.receiptBtn} onPress={pickGallery} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={s.receiptBtn}
+                onPress={() => { void pickGallery(); }}
+                activeOpacity={0.8}
+              >
                 <Text style={s.receiptIcon}>🖼️</Text>
                 <Text style={s.receiptBtnLabel}>Gallery</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={s.receiptBtn} onPress={pickFile} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={s.receiptBtn}
+                onPress={() => { void pickFile(); }}
+                activeOpacity={0.8}
+              >
                 <Text style={s.receiptIcon}>📄</Text>
                 <Text style={s.receiptBtnLabel}>File / PDF</Text>
               </TouchableOpacity>
@@ -587,19 +584,25 @@ function QuickAddModal({
                 ) : (
                   <Image source={{ uri: receiptUri }} style={s.previewImg} resizeMode="cover" />
                 )}
-                <TouchableOpacity style={s.clearBtn} onPress={() => setReceiptUri(null)}>
+                <TouchableOpacity
+                  style={s.clearBtn}
+                  onPress={() => {
+                    setReceiptUri(null);
+                    setOcrBizName(null);
+                    setOcrFailed(false);
+                    setReceiptNumber(null);
+                  }}
+                >
                   <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>✕</Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            {/* ── OCR status & mileage proposal ── */}
-            {(ocrLoading || mileageLoading) && (
+            {/* ── OCR status ── */}
+            {ocrLoading && (
               <View style={s.ocrBanner}>
                 <ActivityIndicator size="small" color={Colors.purple} />
-                <Text style={s.ocrBannerText}>
-                  {ocrLoading ? 'Reading receipt…' : 'Calculating mileage…'}
-                </Text>
+                <Text style={s.ocrBannerText}>Reading receipt…</Text>
               </View>
             )}
 
@@ -611,50 +614,18 @@ function QuickAddModal({
               </View>
             )}
 
-            {mileageProposal && !mileageLoading && (
-              <View style={s.mileageCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.mileageTitle}>🚗 Auto-Mileage</Text>
-                    <Text style={s.mileageSub}>
-                      {mileageProposal.distanceKm} km round trip · {mileageProposal.isNorthern ? 'Northern' : 'Southern'} rate ${mileageProposal.ratePerKm.toFixed(4)}/km
-                    </Text>
-                    <Text style={s.mileageAmount}>{CAD(mileageProposal.amount)}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={[s.mileageToggle, includeMileage && s.mileageToggleOn]}
-                    onPress={() => setIncludeMileage(!includeMileage)}
-                  >
-                    <Text style={{ color: includeMileage ? '#fff' : Colors.textMuted, fontSize: 12, fontWeight: '600' }}>
-                      {includeMileage ? 'Included ✓' : 'Include'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {!profile?.home_city && !mileageProposal && selectedProvider && !mileageLoading && (
-              <View style={s.homePrompt}>
-                <Text style={s.homePromptText}>📍 Add your home address to auto-calculate mileage</Text>
-                <AddressAutocomplete
-                  value={homeAddress}
-                  onChangeText={setHomeAddress}
-                  placeholder="Start typing your address…"
-                  onSelect={async suggestion => {
-                    if (!session) return;
-                    setSavingHome(true);
-                    setHomeAddress(suggestion.street);
-                    await supabase.from('profiles').update({
-                      home_address:     suggestion.street,
-                      home_city:        suggestion.city || null,
-                      home_postal_code: suggestion.postal || null,
-                    }).eq('id', session.user.id);
-                    await refetchProfile();
-                    setSavingHome(false);
-                    await tryMileage(selectedProvider);
-                  }}
-                />
-                {savingHome && <ActivityIndicator size="small" color={Colors.purple} style={{ marginTop: 6 }} />}
+            {ocrFailed && receiptUri && !ocrLoading && (
+              <View style={s.ocrFailureBanner}>
+                <Text style={s.ocrFailureText}>
+                  Receipt attached. Text recognition did not complete, so enter the expense details manually.
+                </Text>
+                <TouchableOpacity
+                  style={s.ocrRetryBtn}
+                  onPress={() => promptForReceiptRecognition(receiptUri, receiptMime)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.ocrRetryText}>Review text recognition</Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -715,7 +686,7 @@ function QuickAddModal({
                       <TouchableOpacity
                         key={p.id}
                         style={[s.dropItem, i < providerResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]}
-                        onPress={() => { setSelectedProvider(p); setCategory(p.category); setProviderQuery(''); setProviderResults([]); tryMileage(p); }}
+                        onPress={() => { setSelectedProvider(p); setCategory(p.category); setProviderQuery(''); setProviderResults([]); }}
                       >
                         <Text style={s.dropName}>{p.name}</Text>
                         <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.organization ?? p.city}</Text>
@@ -776,15 +747,11 @@ function ExpenseDetailModal({
   expense: Expense | null; visible: boolean;
   onClose: () => void; onUpdated: () => void;
 }) {
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [receiptIsPdf, setReceiptIsPdf] = useState(false);
   const [mileage, setMileage] = useState<MileageLog | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  const [addingMileage, setAddingMileage] = useState(false);
-  const [mProvQuery, setMProvQuery] = useState('');
-  const [mProvResults, setMProvResults] = useState<Provider[]>([]);
-  const [savingMileage, setSavingMileage] = useState(false);
   // Edit mode
   const [editing, setEditing] = useState(false);
   const [eAmount, setEAmount] = useState('');
@@ -800,7 +767,6 @@ function ExpenseDetailModal({
   useEffect(() => {
     if (!visible || !expense) {
       setReceiptUrl(null); setReceiptIsPdf(false); setMileage(null);
-      setAddingMileage(false); setMProvQuery(''); setMProvResults([]);
       setEditing(false); setEProvQuery(''); setEProvResults([]);
       return;
     }
@@ -845,53 +811,6 @@ function ExpenseDetailModal({
     ]);
   }
 
-  async function searchMileageProviders(q: string) {
-    if (!q.trim()) { setMProvResults([]); return; }
-    const { data } = await supabase
-      .from('providers')
-      .select('id, name, category, city, organization, address, lat, lng')
-      .or(`name.ilike.%${q}%,organization.ilike.%${q}%`)
-      .limit(6);
-    setMProvResults((data ?? []) as Provider[]);
-  }
-
-  // Calculate and save a round-trip mileage log linked to this expense.
-  async function addMileageForProvider(p: Provider) {
-    const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
-    if (!parts.length) {
-      Alert.alert('Add your home address', 'Set your home address in the Profile tab so trips can be calculated.');
-      return;
-    }
-    setSavingMileage(true);
-    try {
-      const proposal = await buildMileageProposal(parts.join(', '), p);
-      if (!proposal) {
-        Alert.alert('Could not calculate', 'Distance lookup failed. Please try again.');
-        return;
-      }
-      const km = Math.round(proposal.distanceKm * 2 * 10) / 10; // round trip
-      const { error } = await supabase.from('mileage_logs').insert({
-        child_id:        expense!.child_id,
-        funding_year_id: expense!.funding_year_id,
-        description:     `Round trip to ${p.name}`,
-        distance_km:     km,
-        rate_per_km:     proposal.ratePerKm,
-        trip_date:       expense!.expense_date,
-        is_round_trip:   true,
-        expense_id:      expense!.id,
-      });
-      if (error) { Alert.alert('Save failed', error.message); return; }
-      const { data } = await supabase
-        .from('mileage_logs').select('*').eq('expense_id', expense!.id)
-        .order('created_at', { ascending: false }).limit(1);
-      setMileage((data?.[0] as MileageLog) ?? null);
-      setAddingMileage(false); setMProvQuery(''); setMProvResults([]);
-      onUpdated();
-    } finally {
-      setSavingMileage(false);
-    }
-  }
-
   function startEdit() {
     setEAmount(String(expense!.amount));
     setECategory(expense!.category);
@@ -904,10 +823,11 @@ function ExpenseDetailModal({
   }
 
   async function searchEditProviders(q: string) {
-    if (!q.trim()) { setEProvResults([]); return; }
+    if (!q.trim() || !session) { setEProvResults([]); return; }
     const { data } = await supabase
       .from('providers')
-      .select('id, name, category, city, organization, address, lat, lng')
+      .select('id, name, category, city, organization, address')
+      .eq('parent_id', session.user.id)
       .or(`name.ilike.%${q}%,organization.ilike.%${q}%`)
       .limit(6);
     setEProvResults((data ?? []) as Provider[]);
@@ -1092,41 +1012,14 @@ function ExpenseDetailModal({
                   {CAD(Number(mileage.reimbursement_amount))} reimbursement
                 </Text>
               </>
-            ) : addingMileage ? (
-              <View style={{ marginTop: 8 }}>
-                <View style={s.searchBox}>
-                  <Text style={{ fontSize: 14 }}>🔍</Text>
-                  <TextInput
-                    style={s.searchInput}
-                    placeholder="Search the provider you drove to…"
-                    placeholderTextColor={Colors.textMuted}
-                    value={mProvQuery}
-                    onChangeText={q => { setMProvQuery(q); searchMileageProviders(q); }}
-                    autoCorrect={false}
-                    autoFocus
-                  />
-                </View>
-                {savingMileage && <ActivityIndicator color={Colors.purple} style={{ marginTop: 10 }} />}
-                {!savingMileage && mProvResults.length > 0 && (
-                  <View style={[s.dropdown, { marginTop: 6 }]}>
-                    {mProvResults.map((p, i) => (
-                      <TouchableOpacity
-                        key={p.id}
-                        style={[s.dropItem, i < mProvResults.length - 1 && { borderBottomWidth: 1, borderColor: Colors.border }]}
-                        onPress={() => addMileageForProvider(p)}
-                      >
-                        <Text style={s.dropName}>{p.name}</Text>
-                        <Text style={s.dropSub}>{catEmoji(p.category)} {catLabel(p.category)} · {p.organization ?? p.city}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
             ) : (
               <>
                 <Text style={[s.detailValue, { color: Colors.textMuted }]}>No trip logged for this date</Text>
-                <TouchableOpacity onPress={() => setAddingMileage(true)} style={s.addMileageBtn}>
-                  <Text style={s.addMileageBtnText}>+ Add mileage</Text>
+                <TouchableOpacity
+                  onPress={() => { onClose(); router.push('/(tabs)/mileage'); }}
+                  style={s.addMileageBtn}
+                >
+                  <Text style={s.addMileageBtnText}>Enter mileage manually</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -1274,7 +1167,7 @@ function MileageOnlyModal({
   visible: boolean; onClose: () => void;
   childId: string; fundingYearId: string; onSaved: () => void;
 }) {
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const [date,            setDate]            = useState(format(new Date(), 'yyyy-MM-dd'));
   const [notes,           setNotes]           = useState('');
   const [providerQuery,   setProviderQuery]   = useState('');
@@ -1283,8 +1176,6 @@ function MileageOnlyModal({
   const [distanceKm,      setDistanceKm]      = useState('');
   const [ratePerKm,       setRatePerKm]       = useState('');
   const [isRoundTrip,     setIsRoundTrip]     = useState(false);
-  const [calcLoading,     setCalcLoading]     = useState(false);
-  const [isNorthern,      setIsNorthern]      = useState(false);
   const [saving,          setSaving]          = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1298,27 +1189,19 @@ function MileageOnlyModal({
 
   const searchProviders = useCallback((q: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (!q.trim()) { setProviderResults([]); return; }
+    if (!q.trim() || !session) { setProviderResults([]); return; }
     searchTimer.current = setTimeout(async () => {
-      const { data } = await supabase.from('providers').select('id,name,category,city,address').ilike('name', `%${q}%`).limit(6);
+      const { data } = await supabase.from('providers')
+        .select('id,name,category,city,address')
+        .eq('parent_id', session.user.id)
+        .ilike('name', `%${q}%`)
+        .limit(6);
       setProviderResults((data ?? []) as Provider[]);
     }, 250);
-  }, []);
+  }, [session]);
 
-  async function onProviderSelect(p: Provider) {
+  function onProviderSelect(p: Provider) {
     setSelectedProvider(p); setProviderQuery(''); setProviderResults([]);
-    const homeParts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
-    if (homeParts.length > 0) {
-      setCalcLoading(true);
-      try {
-        const proposal = await buildMileageProposal(homeParts.join(', '), p);
-        if (proposal) {
-          setDistanceKm(String(proposal.distanceKm));
-          setRatePerKm(String(proposal.ratePerKm));
-          setIsNorthern(proposal.isNorthern);
-        }
-      } catch {} finally { setCalcLoading(false); }
-    }
   }
 
   async function handleSave() {
@@ -1390,10 +1273,6 @@ function MileageOnlyModal({
               </>
             )}
 
-            {calcLoading && (
-              <View style={s.ocrBanner}><ActivityIndicator size="small" color={Colors.teal} /><Text style={s.ocrBannerText}>Calculating distance…</Text></View>
-            )}
-
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 18 }}>
               <View style={{ flex: 1 }}>
                 <Text style={s.fieldLabel}>Distance (km) *</Text>
@@ -1404,7 +1283,9 @@ function MileageOnlyModal({
                 <TextInput style={s.textField} value={ratePerKm} onChangeText={setRatePerKm} placeholder="0.6410" placeholderTextColor={Colors.textMuted} keyboardType="decimal-pad" />
               </View>
             </View>
-            {isNorthern && <Text style={{ fontSize: 11, color: Colors.teal, marginTop: 4 }}>🌲 Northern rate applied (north of 54°N)</Text>}
+            <Text style={{ fontSize: 11, color: Colors.textMuted, marginTop: 6 }}>
+              Enter the distance and applicable rate manually; no address is sent to a mapping service.
+            </Text>
 
             <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 }} onPress={() => setIsRoundTrip(!isRoundTrip)} activeOpacity={0.7}>
               <View style={[s.checkbox, isRoundTrip && s.checkboxOn]}>
@@ -1747,6 +1628,10 @@ const s = StyleSheet.create({
   // OCR banner
   ocrBanner:     { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: Colors.surfaceAlt, borderRadius: 10, padding: 10 },
   ocrBannerText: { fontSize: 13, color: Colors.textSecondary, flex: 1 },
+  ocrFailureBanner: { marginTop: 10, backgroundColor: '#FFF7ED', borderRadius: 10, borderWidth: 1, borderColor: '#FED7AA', padding: 12 },
+  ocrFailureText:   { fontSize: 13, lineHeight: 19, color: '#9A3412' },
+  ocrRetryBtn:      { alignSelf: 'flex-start', marginTop: 9, borderRadius: 9, borderWidth: 1, borderColor: Colors.purple, paddingHorizontal: 12, paddingVertical: 8 },
+  ocrRetryText:     { color: Colors.purple, fontSize: 13, fontWeight: '700' },
 
   // Mileage proposal card
   mileageCard:     { marginTop: 10, backgroundColor: '#F0FDF4', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#86EFAC' },
@@ -1759,4 +1644,6 @@ const s = StyleSheet.create({
   // Home address prompt
   homePrompt:     { marginTop: 10, backgroundColor: '#FFFBEB', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#FDE68A' },
   homePromptText: { fontSize: 13, color: '#92400E', fontWeight: '500' },
+  outlineBtn:     { borderRadius: 12, borderWidth: 1, borderColor: Colors.purple, paddingVertical: 12, alignItems: 'center' },
+  outlineBtnText: { color: Colors.purple, fontSize: 14, fontWeight: '700' },
 });

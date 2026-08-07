@@ -13,11 +13,17 @@ jest.mock('expo-router', () => {
 
   const Stack = ({ children }: { children: React.ReactNode }) =>
     React.createElement('Stack', null, children);
-  Stack.Screen = ({ name }: { name: string }) => React.createElement('StackScreen', { name });
+  const StackScreen: React.FC<{ name: string }> = ({ name }) => React.createElement('StackScreen', { name });
+  Stack.Screen = StackScreen;
+  Stack.displayName = 'MockStack';
+  StackScreen.displayName = 'MockStackScreen';
 
   const Tabs = ({ children }: { children: React.ReactNode }) =>
     React.createElement('Tabs', null, children);
-  Tabs.Screen = ({ name }: { name: string }) => React.createElement('TabsScreen', { name });
+  const TabsScreen: React.FC<{ name: string }> = ({ name }) => React.createElement('TabsScreen', { name });
+  Tabs.Screen = TabsScreen;
+  Tabs.displayName = 'MockTabs';
+  TabsScreen.displayName = 'MockTabsScreen';
 
   return {
     Redirect: ({ href }: { href: string }) => React.createElement('Redirect', { href }),

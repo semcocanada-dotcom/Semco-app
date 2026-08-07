@@ -82,7 +82,7 @@ export function BudgetRing({
   const scale = useSharedValue(0);
   useEffect(() => {
     scale.value = withDelay(500, withSpring(1, { damping: 14, stiffness: 160 }));
-  }, []);
+  }, [scale]);
 
   const dotAnim = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

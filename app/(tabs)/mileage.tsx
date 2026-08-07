@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Modal, ScrollView,
   TextInput, StyleSheet, Alert, ActivityIndicator,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Path, Rect, Circle, Polygon, Line, Ellipse } from 'react-native-svg';
+import Svg, { Path, Rect, Circle, Ellipse } from 'react-native-svg';
 import { format, parseISO } from 'date-fns';
 import { AppLogo } from '@components/AppLogo';
 import { DateField } from '@components/DateField';
@@ -18,8 +18,10 @@ import type { MileageLog, Provider, ProviderCategory } from '@lib/types';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
-import { buildMileageProposal } from '@lib/mileageUtils';
-import { fillAndShareOfficialMileagePdf } from '@lib/pdfForms';
+import {
+  generateAndShareMileageWorksheetPdf,
+  OFFICIAL_MILEAGE_FORM_URL,
+} from '@lib/pdfForms';
 import { SOUTHERN_RATE_PER_KM } from '@constants/mileage';
 
 const CAD = (n: number) =>
@@ -40,7 +42,7 @@ const CATEGORY_LABELS: Record<ProviderCategory, string> = {
   other: 'Other',
 };
 
-// "Speech & Language — Pathways Clinic, Saskatoon" for the PDF "Purpose of Travel" column.
+// "Speech & Language — Pathways Clinic, Saskatoon" for the worksheet trip-purpose column.
 function composeTripPurpose(p: Provider): string {
   const label = CATEGORY_LABELS[p.category] ?? 'Appointment';
   return p.city ? `${label} — ${p.name}, ${p.city}` : `${label} — ${p.name}`;
@@ -54,7 +56,7 @@ function AddTripModal({
   visible: boolean; onClose: () => void;
   childId: string; fundingYearId: string; onSaved: () => void;
 }) {
-  const { profile } = useAuth();
+  const { session } = useAuth();
   const [date,            setDate]            = useState(format(new Date(), 'yyyy-MM-dd'));
   const [providerQuery,   setProviderQuery]   = useState('');
   const [providerResults, setProviderResults] = useState<Provider[]>([]);
@@ -63,7 +65,6 @@ function AddTripModal({
   const [ratePerKm,       setRatePerKm]       = useState(String(SOUTHERN_RATE_PER_KM));
   const [isRoundTrip,     setIsRoundTrip]     = useState(true);
   const [notes,           setNotes]           = useState('');
-  const [calcLoading,     setCalcLoading]     = useState(false);
   const [saving,          setSaving]          = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -78,28 +79,19 @@ function AddTripModal({
 
   const searchProviders = useCallback((q: string) => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (!q.trim()) { setProviderResults([]); return; }
+    if (!q.trim() || !session) { setProviderResults([]); return; }
     searchTimer.current = setTimeout(async () => {
       const { data } = await supabase.from('providers')
         .select('id, name, category, city, address')
+        .eq('parent_id', session.user.id)
         .ilike('name', `%${q}%`).limit(6);
       setProviderResults((data ?? []) as Provider[]);
     }, 250);
-  }, []);
+  }, [session]);
 
-  async function onProviderSelect(p: Provider) {
+  function onProviderSelect(p: Provider) {
     setSelectedProvider(p); setProviderQuery(''); setProviderResults([]);
     setNotes(prev => (prev.trim() ? prev : composeTripPurpose(p)));
-    const parts = [profile?.home_address, profile?.home_city, profile?.home_postal_code].filter(Boolean);
-    if (!parts.length) return;
-    setCalcLoading(true);
-    try {
-      const proposal = await buildMileageProposal(parts.join(', '), p);
-      if (proposal) {
-        setDistanceKm(String(proposal.distanceKm));
-        setRatePerKm(String(proposal.ratePerKm));
-      }
-    } catch {} finally { setCalcLoading(false); }
   }
 
   async function handleSave() {
@@ -145,7 +137,7 @@ function AddTripModal({
             <Text style={s.label}>Date</Text>
             <DateField value={date} onChange={setDate} />
 
-            <Text style={[s.label, { marginTop: 18 }]}>Provider (optional — auto-calculates km)</Text>
+            <Text style={[s.label, { marginTop: 18 }]}>Private provider (optional)</Text>
             {selectedProvider ? (
               <View style={s.selectedProv}>
                 <Text style={s.selectedProvText}>{selectedProvider.name}</Text>
@@ -185,14 +177,10 @@ function AddTripModal({
               </>
             )}
 
-            {calcLoading && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                <ActivityIndicator size="small" color={Colors.teal} />
-                <Text style={{ fontSize: 13, color: Colors.textSecondary }}>Calculating distance…</Text>
-              </View>
-            )}
-
             <Text style={[s.label, { marginTop: 18 }]}>One-way distance (km)</Text>
+            <Text style={{ fontSize: 12, color: Colors.textMuted, marginBottom: 6 }}>
+              Enter the distance manually; the app does not send addresses to a mapping service.
+            </Text>
             <TextInput
               style={s.field} value={distanceKm} onChangeText={setDistanceKm}
               placeholder="e.g. 22.4" placeholderTextColor={Colors.textMuted}
@@ -414,7 +402,7 @@ export default function MileageScreen() {
     if (!activeChild || logs.length === 0) return;
     setExporting(true);
     try {
-      await fillAndShareOfficialMileagePdf({
+      await generateAndShareMileageWorksheetPdf({
         childName:           activeChild.name,
         healthServicesNumber: activeChild.health_card_number,
         parentName:          profile?.full_name ?? '',
@@ -429,10 +417,18 @@ export default function MileageScreen() {
         })),
         total: totalAmt,
       });
-    } catch (e) {
-      Alert.alert('Export failed', 'Could not generate the invoice. Please try again.');
+    } catch {
+      Alert.alert('Export failed', 'Could not generate the mileage worksheet. Please try again.');
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function openOfficialMileageForm() {
+    try {
+      await Linking.openURL(OFFICIAL_MILEAGE_FORM_URL);
+    } catch {
+      Alert.alert('Could not open form', 'Please try again or visit Saskatchewan.ca in your browser.');
     }
   }
 
@@ -518,7 +514,7 @@ export default function MileageScreen() {
               </View>
             </View>
 
-            {/* Add Trip + Export Invoice buttons */}
+            {/* Add Trip + Export Worksheet buttons */}
             {activeChild && fundingYearId && (
               <View style={{ paddingHorizontal: 16, marginBottom: 20, gap: 10 }}>
                 <TouchableOpacity onPress={() => setShowAdd(true)} activeOpacity={0.88} style={s.addBtn}>
@@ -541,9 +537,20 @@ export default function MileageScreen() {
                         <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
                       </View>
                     )}
-                    <Text style={[s.addBtnText, { color: '#15803D' }]}>Export Invoice</Text>
+                    <Text style={[s.addBtnText, { color: '#15803D' }]}>Export Worksheet</Text>
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity
+                  onPress={openOfficialMileageForm}
+                  activeOpacity={0.88}
+                  style={[s.addBtn, { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB', shadowOpacity: 0, elevation: 0 }]}
+                >
+                  <View style={[s.addBtnCircle, { backgroundColor: '#2563EB', borderColor: '#2563EB' }]}>
+                    <Ionicons name="open-outline" size={17} color="#FFFFFF" />
+                  </View>
+                  <Text style={[s.addBtnText, { color: '#1D4ED8', fontSize: 15, flex: 1, textAlign: 'center' }]}>Open Official Mileage Form</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+                </TouchableOpacity>
               </View>
             )}
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Modal, TextInput,
-  StyleSheet, Alert, ActivityIndicator, Platform, KeyboardAvoidingView,
+  StyleSheet, Alert, ActivityIndicator, Platform, KeyboardAvoidingView, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,11 +9,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { differenceInYears, parseISO, isValid } from 'date-fns';
 import { Colors } from '@constants/colors';
+import {
+  ACCOUNT_DELETION_CONFIRMATION,
+  ACCOUNT_DELETION_ERROR_MESSAGE,
+} from '@lib/accountDeletion';
 import { supabase } from '@lib/supabase';
 import { useAuth } from '@context/AuthContext';
 import { useChildren } from '@hooks/useChildren';
 import type { Child, FundingYear } from '@lib/types';
-import { AddressAutocomplete } from '@components/AddressAutocomplete';
+import {
+  CHILD_DATA_ATTESTATION,
+  CHILD_DATA_CONSENT_VERSION,
+  PRIVACY_POLICY_URL,
+} from '@lib/privacyConsent';
+import { SASKATCHEWAN_AUTISM_SERVICES_URL } from '@lib/officialLinks';
+
+const SUPPORT_URL = 'https://semcocanada-dotcom.github.io/Semco-app/support.html';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,23 +52,25 @@ function isoToDateDisplay(iso: string | null | undefined): string {
   return iso.replace(/-/g, '/');
 }
 
-// SK ASD-IF tiered amounts: <6 → $8,000 | 6–11 → $6,000 | 12+ → ineligible
-function calcASDIFAmount(dobISO: string | null, atISO?: string): number {
-  if (!dobISO) return 8000;
+// Estimates based on the Saskatchewan program page, checked August 2026.
+// The account holder remains responsible for entering their actual approved amount.
+function calcASDIFEstimate(dobISO: string | null, atISO?: string): number | null {
+  if (!dobISO) return null;
   try {
     const dob = parseISO(dobISO);
     const ref = atISO ? parseISO(atISO) : new Date();
     const age = differenceInYears(ref, dob);
+    if (age < 0) return null;
     if (age < 6) return 8000;
     if (age < 12) return 6000;
-    return 0;
+    return null;
   } catch {
-    return 8000;
+    return null;
   }
 }
 
-// Returns eligibility info string from a YYYY/MM/DD display value
-function grantEligibilityText(dobDisplay: string): string | null {
+// Provides a non-binding estimate; the app never decides eligibility or approval.
+function grantEstimateText(dobDisplay: string): string | null {
   const iso = dateDisplayToISO(dobDisplay);
   if (!iso) return null;
   try {
@@ -65,11 +78,13 @@ function grantEligibilityText(dobDisplay: string): string | null {
     if (!isValid(dob)) return null;
     const age = differenceInYears(new Date(), dob);
     if (age < 0 || age > 25) return null;
-    if (age < 2) return `${age} year${age !== 1 ? 's' : ''} old · ASD-IF eligibility requires an ASD diagnosis`;
-    if (age < 6) return `${age} years old · $8,000/year ASD-IF (under 6 tier)`;
-    if (age < 12) return `${age} years old · $6,000/year ASD-IF (ages 6–11 tier)`;
-    if (age < 18) return `${age} years old · ASD-IF childhood funding ends at age 12 — check Saskatchewan.ca for other programs`;
-    return `${age} years old · ASD-IF program is for children under 12`;
+    if (age < 6) {
+      return `Estimate: up to $8,000/year based on age ${age} (program information current as of Aug 2026). Confirm actual approval and amount with Saskatchewan.`;
+    }
+    if (age < 12) {
+      return `Estimate: up to $6,000/year based on age ${age} (program information current as of Aug 2026). Confirm actual approval and amount with Saskatchewan.`;
+    }
+    return `No automatic ASD-IF amount estimate is shown for age ${age}. Confirm current eligibility and any approved amount with Saskatchewan.`;
   } catch {
     return null;
   }
@@ -91,6 +106,7 @@ function ChildModal({
   const [healthCard,  setHealthCard]  = useState('');
   const [diagDate,    setDiagDate]    = useState('');
   const [diagNotes,   setDiagNotes]   = useState('');
+  const [childConsentAccepted, setChildConsentAccepted] = useState(false);
   const [fundingYears,setFundingYears]= useState<FundingYear[]>([]);
   const [saving,      setSaving]      = useState(false);
   const [showAddYear, setShowAddYear] = useState(false);
@@ -99,7 +115,7 @@ function ChildModal({
   const [fyLabel,  setFyLabel]  = useState('');
   const [fyStart,  setFyStart]  = useState('');
   const [fyEnd,    setFyEnd]    = useState('');
-  const [fyBudget, setFyBudget] = useState('8000');
+  const [fyBudget, setFyBudget] = useState('');
   const [fyActive, setFyActive] = useState(true);
   const [savingFY, setSavingFY] = useState(false);
 
@@ -108,8 +124,8 @@ function ChildModal({
     if (!child?.date_of_birth || !fyStart) return;
     const startISO = dateDisplayToISO(fyStart);
     if (!startISO) return;
-    const suggested = calcASDIFAmount(child.date_of_birth, startISO);
-    setFyBudget(String(suggested));
+    const suggested = calcASDIFEstimate(child.date_of_birth, startISO);
+    setFyBudget(suggested === null ? '' : String(suggested));
   }, [fyStart, child?.date_of_birth]);
 
   useEffect(() => {
@@ -119,6 +135,7 @@ function ChildModal({
     setHealthCard(child?.health_card_number ?? '');
     setDiagDate(isoToDateDisplay(child?.diagnosis_date));
     setDiagNotes(child?.diagnosis_notes ?? '');
+    setChildConsentAccepted(false);
     setShowAddYear(false);
     if (child) fetchFundingYears(child.id);
     else setFundingYears([]);
@@ -135,28 +152,39 @@ function ChildModal({
 
   async function handleSave() {
     if (!name.trim()) { Alert.alert('Name required'); return; }
+    if (!child && !childConsentAccepted) {
+      Alert.alert(
+        'Authorization required',
+        'Confirm that you are authorized to store this child\'s information and agree to the Privacy Policy.',
+      );
+      return;
+    }
     if (!session) return;
     setSaving(true);
     try {
       const dobISO = dateDisplayToISO(dob);
       const diagDateISO = dateDisplayToISO(diagDate);
       if (child) {
-        await supabase.from('children').update({
+        const { error } = await supabase.from('children').update({
           name: name.trim(),
           date_of_birth: dobISO,
           health_card_number: healthCard || null,
           diagnosis_date: diagDateISO,
           diagnosis_notes: diagNotes || null,
         }).eq('id', child.id);
+        if (error) throw error;
       } else {
-        await supabase.from('children').insert({
+        const { error } = await supabase.from('children').insert({
           parent_id: session.user.id,
           name: name.trim(),
           date_of_birth: dobISO,
           health_card_number: healthCard || null,
           diagnosis_date: diagDateISO,
           diagnosis_notes: diagNotes || null,
+          data_consent_version: CHILD_DATA_CONSENT_VERSION,
+          data_consent_accepted_at: new Date().toISOString(),
         });
+        if (error) throw error;
       }
       onSaved(); onClose();
     } catch (err: any) {
@@ -187,6 +215,11 @@ function ChildModal({
       Alert.alert('Fill in all funding year fields', 'Use YYYY/MM/DD format for dates.');
       return;
     }
+    const enteredBudget = Number(fyBudget);
+    if (!Number.isFinite(enteredBudget) || enteredBudget <= 0) {
+      Alert.alert('Grant amount required', 'Enter the actual amount approved for this funding year.');
+      return;
+    }
     setSavingFY(true);
     try {
       if (fyActive) {
@@ -195,12 +228,12 @@ function ChildModal({
       await supabase.from('funding_years').insert({
         child_id:     child.id,
         label:        fyLabel.trim(),
-        total_budget: parseFloat(fyBudget) || 8000,
+        total_budget: enteredBudget,
         start_date:   startISO,
         end_date:     endISO,
         is_active:    fyActive,
       });
-      setFyLabel(''); setFyStart(''); setFyEnd(''); setFyBudget('8000'); setFyActive(true);
+      setFyLabel(''); setFyStart(''); setFyEnd(''); setFyBudget(''); setFyActive(true);
       setShowAddYear(false);
       fetchFundingYears(child.id);
     } catch (err: any) {
@@ -246,9 +279,12 @@ function ChildModal({
                   keyboardType="number-pad"
                   maxLength={10}
                 />
-                {!!grantEligibilityText(dob) && (
+                {!!grantEstimateText(dob) && (
                   <View style={s.eligibilityBanner}>
-                    <Text style={s.eligibilityText}>{grantEligibilityText(dob)}</Text>
+                    <Text style={s.eligibilityText}>{grantEstimateText(dob)}</Text>
+                    <TouchableOpacity onPress={() => { void Linking.openURL(SASKATCHEWAN_AUTISM_SERVICES_URL); }}>
+                      <Text style={s.consentLink}>Check the official Saskatchewan program page</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -282,6 +318,33 @@ function ChildModal({
               placeholderTextColor={Colors.textMuted}
               multiline
             />
+
+            {!child && (
+              <View style={s.consentCard}>
+                <Text style={s.consentTitle}>Adult authorization required</Text>
+                <Text style={s.consentDisclosure}>
+                  Child information is stored in your private cloud account. Health Services Number, diagnosis date,
+                  and diagnosis notes are optional.
+                </Text>
+                <TouchableOpacity
+                  style={s.consentRow}
+                  onPress={() => setChildConsentAccepted(value => !value)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: childConsentAccepted }}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons
+                    name={childConsentAccepted ? 'checkbox' : 'square-outline'}
+                    size={24}
+                    color={childConsentAccepted ? Colors.purple : Colors.textMuted}
+                  />
+                  <Text style={s.consentText}>{CHILD_DATA_ATTESTATION}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}>
+                  <Text style={s.consentLink}>Read the Privacy Policy</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <TouchableOpacity style={{ marginTop: 20 }} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
               <LinearGradient
@@ -318,8 +381,14 @@ function ChildModal({
                       </View>
                     </View>
                     <Text style={[s.fieldLabel, { marginTop: 10 }]}>Grant Amount</Text>
-                    <TextInput style={s.textField} value={fyBudget} onChangeText={setFyBudget} keyboardType="decimal-pad" placeholder="8000" placeholderTextColor={Colors.textMuted} />
-                    <Text style={s.fieldHint}>SK ASD-IF: $8,000/yr (under 6) · $6,000/yr (ages 6–11) · auto-set from child's age</Text>
+                    <TextInput style={s.textField} value={fyBudget} onChangeText={setFyBudget} keyboardType="decimal-pad" placeholder="Enter approved amount" placeholderTextColor={Colors.textMuted} />
+                    <Text style={s.fieldHint}>
+                      The age-based value is only an estimate from Saskatchewan program information current as of
+                      Aug 2026. Edit it to match the amount actually approved for this funding year.
+                    </Text>
+                    <TouchableOpacity onPress={() => { void Linking.openURL(SASKATCHEWAN_AUTISM_SERVICES_URL); }}>
+                      <Text style={s.consentLink}>Official Saskatchewan ASD-IF information</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={{ marginTop: 12 }} onPress={handleAddFundingYear} disabled={savingFY} activeOpacity={0.85}>
                       <LinearGradient colors={Colors.gradients.teal as unknown as string[]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.saveBtn}>
                         {savingFY ? <ActivityIndicator color="#fff" /> : <Text style={s.saveBtnText}>Create Funding Year</Text>}
@@ -364,35 +433,25 @@ function ChildModal({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
-  const { session, profile, refetchProfile, signOut } = useAuth();
+  const { session, profile, refetchProfile, signOut, deleteAccount } = useAuth();
   const { children, refetch: refetchChildren }         = useChildren();
   const [editName,        setEditName]        = useState(profile?.full_name ?? '');
-  const [editAddress,     setEditAddress]     = useState(profile?.home_address ?? '');
-  const [editCity,        setEditCity]        = useState(profile?.home_city ?? '');
-  const [editPostal,      setEditPostal]      = useState(profile?.home_postal_code ?? '');
   const [savingProfile,   setSavingProfile]   = useState(false);
   const [profileDirty,    setProfileDirty]    = useState(false);
   const [childModal,      setChildModal]      = useState<{ visible: boolean; child: Child | null }>({ visible: false, child: null });
+  const [deleteAccountVisible, setDeleteAccountVisible] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     setEditName(profile?.full_name ?? '');
-    setEditAddress(profile?.home_address ?? '');
-    setEditCity(profile?.home_city ?? '');
-    setEditPostal(profile?.home_postal_code ?? '');
   }, [profile]);
 
   async function saveProfile() {
     if (!session) return;
-    if (!editCity.trim()) {
-      Alert.alert('City required', 'Enter your home city — it is needed to auto-calculate mileage.');
-      return;
-    }
     setSavingProfile(true);
     await supabase.from('profiles').update({
       full_name:         editName.trim() || null,
-      home_address:      editAddress.trim() || null,
-      home_city:         editCity.trim() || null,
-      home_postal_code:  editPostal.trim().toUpperCase() || null,
     }).eq('id', session.user.id);
     await refetchProfile();
     setSavingProfile(false);
@@ -404,6 +463,32 @@ export default function ProfileScreen() {
       { text: 'Cancel', style: 'cancel' },
       { text: 'Sign Out', style: 'destructive', onPress: signOut },
     ]);
+  }
+
+  function openDeleteAccountConfirmation() {
+    setDeleteConfirmation('');
+    setDeleteAccountVisible(true);
+  }
+
+  function closeDeleteAccountConfirmation() {
+    if (deletingAccount) return;
+    setDeleteConfirmation('');
+    setDeleteAccountVisible(false);
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirmation !== ACCOUNT_DELETION_CONFIRMATION || deletingAccount) return;
+
+    setDeletingAccount(true);
+    try {
+      await deleteAccount();
+      setDeleteAccountVisible(false);
+      setDeleteConfirmation('');
+    } catch {
+      Alert.alert('Account not deleted', ACCOUNT_DELETION_ERROR_MESSAGE);
+    } finally {
+      setDeletingAccount(false);
+    }
   }
 
   return (
@@ -436,47 +521,6 @@ export default function ProfileScreen() {
             placeholderTextColor={Colors.textMuted}
             returnKeyType="next"
           />
-
-          <Text style={[s.fieldLabel, { marginTop: 14 }]}>Home Address <Text style={{ color: Colors.textMuted, fontWeight: '400', fontSize: 12 }}>(used to auto-calculate mileage)</Text></Text>
-          <AddressAutocomplete
-            value={editAddress}
-            onChangeText={v => { setEditAddress(v); setProfileDirty(true); }}
-            onSelect={suggestion => {
-              setEditAddress(suggestion.street);
-              if (suggestion.city)   setEditCity(suggestion.city);
-              if (suggestion.postal) setEditPostal(suggestion.postal);
-              setProfileDirty(true);
-            }}
-            placeholder="123 Main St"
-          />
-          <Text style={s.fieldHint}>Type your address and pick from the suggestions. City and postal code are the minimum needed for mileage.</Text>
-
-          <View style={{ flexDirection: 'row', gap: 12, marginTop: 14 }}>
-            <View style={{ flex: 2 }}>
-              <Text style={s.fieldLabel}>Home City <Text style={{ color: '#ef4444' }}>*</Text></Text>
-              <TextInput
-                style={s.textField}
-                value={editCity}
-                onChangeText={v => { setEditCity(v); setProfileDirty(true); }}
-                placeholder="Saskatoon"
-                placeholderTextColor={Colors.textMuted}
-                returnKeyType="next"
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={s.fieldLabel}>Postal Code</Text>
-              <TextInput
-                style={s.textField}
-                value={editPostal}
-                onChangeText={v => { setEditPostal(v); setProfileDirty(true); }}
-                placeholder="S7K 1A1"
-                placeholderTextColor={Colors.textMuted}
-                autoCapitalize="characters"
-                returnKeyType="done"
-                maxLength={7}
-              />
-            </View>
-          </View>
 
           {profileDirty && (
             <TouchableOpacity style={{ marginTop: 16 }} onPress={saveProfile} disabled={savingProfile} activeOpacity={0.85}>
@@ -537,7 +581,31 @@ export default function ProfileScreen() {
           <View style={[s.actionIcon, { backgroundColor: Colors.purple + '1A' }]}>
             <Ionicons name="bar-chart" size={18} color={Colors.purple} />
           </View>
-          <Text style={s.actionBtnText}>Generate Grant Report</Text>
+          <Text style={s.actionBtnText}>Generate Grant Worksheet</Text>
+          <Text style={{ color: Colors.textMuted, fontSize: 18 }}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={s.actionBtn}
+          onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}
+          activeOpacity={0.8}
+        >
+          <View style={[s.actionIcon, { backgroundColor: Colors.teal + '1A' }]}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={Colors.teal} />
+          </View>
+          <Text style={s.actionBtnText}>Privacy Policy</Text>
+          <Text style={{ color: Colors.textMuted, fontSize: 18 }}>›</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={s.actionBtn}
+          onPress={() => { void Linking.openURL(SUPPORT_URL); }}
+          activeOpacity={0.8}
+        >
+          <View style={[s.actionIcon, { backgroundColor: Colors.blue + '1A' }]}>
+            <Ionicons name="help-circle-outline" size={18} color={Colors.blue} />
+          </View>
+          <Text style={s.actionBtnText}>Support</Text>
           <Text style={{ color: Colors.textMuted, fontSize: 18 }}>›</Text>
         </TouchableOpacity>
 
@@ -549,7 +617,21 @@ export default function ProfileScreen() {
           <Text style={[s.actionBtnText, { color: '#BE123C' }]}>Sign Out</Text>
         </TouchableOpacity>
 
-        <Text style={s.version}>Autism Fund Tracker v1.0 · Saskatchewan ASD-IF</Text>
+        {/* Account deletion is deliberately visible in-app for App Store
+            Guideline 5.1.1(v), with a separate destructive confirmation. */}
+        <TouchableOpacity
+          style={s.deleteAccountEntry}
+          onPress={openDeleteAccountConfirmation}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Delete account"
+          accessibilityHint="Permanently deletes your account and all associated data"
+        >
+          <Ionicons name="trash-outline" size={18} color="#BE123C" />
+          <Text style={s.deleteAccountEntryText}>Delete Account</Text>
+        </TouchableOpacity>
+
+        <Text style={s.version}>Autism Fund Tracker v1.0 · Independent ASD-IF recordkeeping</Text>
       </ScrollView>
 
       <ChildModal
@@ -558,6 +640,72 @@ export default function ProfileScreen() {
         onClose={() => setChildModal({ visible: false, child: null })}
         onSaved={() => { refetchChildren(); setChildModal({ visible: false, child: null }); }}
       />
+
+      <Modal
+        visible={deleteAccountVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeDeleteAccountConfirmation}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={s.deleteAccountBackdrop}
+        >
+          <View
+            style={s.deleteAccountDialog}
+            accessibilityViewIsModal
+            accessibilityRole="alert"
+          >
+            <View style={s.deleteAccountIcon}>
+              <Ionicons name="warning-outline" size={28} color="#BE123C" />
+            </View>
+            <Text style={s.deleteAccountTitle}>Permanently delete account?</Text>
+            <Text style={s.deleteAccountBody}>
+              This permanently deletes your profile, children, funding years, expenses,
+              mileage, respite records, appointments, claims, custom providers, and receipt
+              files. This cannot be undone.
+            </Text>
+            <Text style={s.deleteAccountPrompt}>
+              Type <Text style={{ fontWeight: '800' }}>{ACCOUNT_DELETION_CONFIRMATION}</Text> to confirm
+            </Text>
+            <TextInput
+              style={s.deleteAccountInput}
+              value={deleteConfirmation}
+              onChangeText={setDeleteConfirmation}
+              placeholder={ACCOUNT_DELETION_CONFIRMATION}
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              editable={!deletingAccount}
+              accessibilityLabel="Type DELETE to confirm account deletion"
+            />
+            <View style={s.deleteAccountActions}>
+              <TouchableOpacity
+                style={s.deleteAccountCancel}
+                onPress={closeDeleteAccountConfirmation}
+                disabled={deletingAccount}
+                accessibilityRole="button"
+              >
+                <Text style={s.deleteAccountCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  s.deleteAccountConfirm,
+                  deleteConfirmation !== ACCOUNT_DELETION_CONFIRMATION && s.deleteAccountConfirmDisabled,
+                ]}
+                onPress={handleDeleteAccount}
+                disabled={deleteConfirmation !== ACCOUNT_DELETION_CONFIRMATION || deletingAccount}
+                accessibilityRole="button"
+                accessibilityLabel="Permanently delete account"
+              >
+                {deletingAccount
+                  ? <ActivityIndicator color="#FFFFFF" />
+                  : <Text style={s.deleteAccountConfirmText}>Delete Account</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -585,6 +733,13 @@ const s = StyleSheet.create({
   eligibilityBanner: { marginTop: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#86EFAC' },
   eligibilityText: { fontSize: 12, color: '#15803D', fontWeight: '500' },
 
+  consentCard: { marginTop: 16, padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#C4B5FD', backgroundColor: '#F5F3FF', gap: 9 },
+  consentTitle: { fontSize: 14, fontWeight: '800', color: Colors.textPrimary },
+  consentDisclosure: { fontSize: 12, lineHeight: 18, color: Colors.textSecondary },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  consentText: { flex: 1, fontSize: 12, lineHeight: 18, color: Colors.textPrimary },
+  consentLink: { color: Colors.purple, fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
+
   saveBtn:    { borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   saveBtnText:{ fontSize: 16, fontWeight: '700', color: '#fff' },
 
@@ -603,6 +758,54 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   actionBtnText: { flex: 1, fontSize: 15, fontWeight: '600', color: Colors.textPrimary },
+
+  deleteAccountEntry: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 12,
+  },
+  deleteAccountEntryText: { color: '#BE123C', fontSize: 14, fontWeight: '600' },
+
+  deleteAccountBackdrop: {
+    flex: 1, justifyContent: 'center', padding: 24,
+    backgroundColor: 'rgba(30, 27, 75, 0.45)',
+  },
+  deleteAccountDialog: {
+    backgroundColor: Colors.surface, borderRadius: 20, padding: 22,
+    borderWidth: 1, borderColor: '#FECDD3',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2, shadowRadius: 24, elevation: 10,
+  },
+  deleteAccountIcon: {
+    width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#FFF1F2', alignSelf: 'center', marginBottom: 12,
+  },
+  deleteAccountTitle: {
+    color: Colors.textPrimary, fontSize: 20, fontWeight: '800', textAlign: 'center',
+  },
+  deleteAccountBody: {
+    color: Colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', marginTop: 10,
+  },
+  deleteAccountPrompt: {
+    color: Colors.textPrimary, fontSize: 13, textAlign: 'center', marginTop: 18, marginBottom: 8,
+  },
+  deleteAccountInput: {
+    backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: '#FDA4AF',
+    borderRadius: 12, paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 9,
+    color: Colors.textPrimary, fontSize: 15, textAlign: 'center', letterSpacing: 1.5,
+  },
+  deleteAccountActions: { flexDirection: 'row', gap: 10, marginTop: 18 },
+  deleteAccountCancel: {
+    flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
+  },
+  deleteAccountCancelText: { color: Colors.textPrimary, fontSize: 14, fontWeight: '700' },
+  deleteAccountConfirm: {
+    flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center',
+    borderRadius: 12, backgroundColor: '#BE123C',
+  },
+  deleteAccountConfirmDisabled: { opacity: 0.4 },
+  deleteAccountConfirmText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
 
   version: { textAlign: 'center', fontSize: 12, color: Colors.textMuted, marginTop: 8 },
 

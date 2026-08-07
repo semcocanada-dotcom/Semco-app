@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, Modal, ScrollView,
   TextInput, StyleSheet, Alert, ActivityIndicator,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,10 +16,26 @@ import type { RespiteSession, RespiteWorker } from '@lib/types';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
-import { fillAndShareOfficialRespitePdf } from '@lib/pdfForms';
+import {
+  generateAndShareRespiteWorksheetPdf,
+  OFFICIAL_RESPITE_FORM_URL,
+} from '@lib/pdfForms';
+import {
+  PRIVACY_POLICY_URL,
+  RESPITE_WORKER_DATA_ATTESTATION,
+  RESPITE_WORKER_DATA_CONSENT_VERSION,
+} from '@lib/privacyConsent';
 
 const CAD = (n: number) =>
   new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(n);
+
+type WorkerFormValue = {
+  name: string;
+  phone: string;
+  rate: string;
+  notes: string;
+  consentAccepted: boolean;
+};
 
 // ─── Manage Workers Modal ──────────────────────────────────────────────────────
 
@@ -28,7 +44,7 @@ function WorkerForm({
 }: {
   initial: { name: string; phone: string; rate: string; notes: string };
   submitLabel: string;
-  onSubmit: (v: { name: string; phone: string; rate: string; notes: string }) => void;
+  onSubmit: (v: WorkerFormValue) => void;
   onCancel: () => void;
   saving: boolean;
 }) {
@@ -36,6 +52,7 @@ function WorkerForm({
   const [phone, setPhone] = useState(initial.phone);
   const [rate,  setRate]  = useState(initial.rate);
   const [notes, setNotes] = useState(initial.notes);
+  const [consentAccepted, setConsentAccepted] = useState(false);
   return (
     <View style={{ gap: 12 }}>
       <View>
@@ -62,12 +79,41 @@ function WorkerForm({
         <TextInput style={m.input} value={notes} onChangeText={setNotes}
           placeholder="Relationship, availability..." placeholderTextColor={Colors.textMuted} />
       </View>
+      <View style={m.consentCard}>
+        <Text style={m.consentTitle}>Permission to store this person's details</Text>
+        <Text style={m.consentDisclosure}>
+          Their details will be stored in your private cloud account and used for respite records and worksheets.
+        </Text>
+        <TouchableOpacity
+          style={m.consentRow}
+          onPress={() => setConsentAccepted(value => !value)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: consentAccepted }}
+          activeOpacity={0.75}
+        >
+          <Ionicons
+            name={consentAccepted ? 'checkbox' : 'square-outline'}
+            size={24}
+            color={consentAccepted ? Colors.purple : Colors.textMuted}
+          />
+          <Text style={m.consentText}>{RESPITE_WORKER_DATA_ATTESTATION}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}>
+          <Text style={m.consentLink}>Read the Privacy Policy</Text>
+        </TouchableOpacity>
+      </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <TouchableOpacity style={[m.btn, m.btnSecondary, { flex: 1 }]} onPress={onCancel}>
           <Text style={m.btnSecondaryTxt}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[m.btn, m.btnPrimary, { flex: 1 }]}
-          onPress={() => onSubmit({ name, phone, rate, notes })} disabled={saving}>
+          onPress={() => {
+            if (!consentAccepted) {
+              Alert.alert('Permission required', 'Confirm you have permission or authority to store this person\'s details.');
+              return;
+            }
+            onSubmit({ name, phone, rate, notes, consentAccepted });
+          }} disabled={saving}>
           {saving
             ? <ActivityIndicator color="#fff" size="small" />
             : <Text style={m.btnPrimaryTxt}>{submitLabel}</Text>}
@@ -91,8 +137,9 @@ function ManageWorkersModal({
   const [saving,    setSaving]    = useState(false);
   const [deleting,  setDeleting]  = useState<string | null>(null);
 
-  async function handleAdd(v: { name: string; phone: string; rate: string; notes: string }) {
+  async function handleAdd(v: WorkerFormValue) {
     if (!v.name.trim()) { Alert.alert('Name required', 'Please enter the worker\'s name.'); return; }
+    if (!v.consentAccepted) { Alert.alert('Permission required'); return; }
     setSaving(true);
     const { error } = await supabase.from('respite_workers').insert({
       parent_id:             session!.user.id,
@@ -100,20 +147,25 @@ function ManageWorkersModal({
       phone:                 v.phone.trim() || null,
       default_rate_per_hour: parseFloat(v.rate) || null,
       notes:                 v.notes.trim() || null,
+      data_consent_version:  RESPITE_WORKER_DATA_CONSENT_VERSION,
+      data_consent_accepted_at: new Date().toISOString(),
     });
     setSaving(false);
     if (error) { Alert.alert('Error', error.message); return; }
     setAdding(false); onChanged();
   }
 
-  async function handleEdit(id: string, v: { name: string; phone: string; rate: string; notes: string }) {
+  async function handleEdit(id: string, v: WorkerFormValue) {
     if (!v.name.trim()) { Alert.alert('Name required', 'Please enter the worker\'s name.'); return; }
+    if (!v.consentAccepted) { Alert.alert('Permission required'); return; }
     setSaving(true);
     const { error } = await supabase.from('respite_workers').update({
       name:                  v.name.trim(),
       phone:                 v.phone.trim() || null,
       default_rate_per_hour: parseFloat(v.rate) || null,
       notes:                 v.notes.trim() || null,
+      data_consent_version:  RESPITE_WORKER_DATA_CONSENT_VERSION,
+      data_consent_accepted_at: new Date().toISOString(),
     }).eq('id', id);
     setSaving(false);
     if (error) { Alert.alert('Error', error.message); return; }
@@ -253,12 +305,14 @@ function LogSessionModal({
   const [flatAmount,    setFlatAmount]    = useState('');
   const [notes,         setNotes]         = useState('');
   const [saving,        setSaving]        = useState(false);
+  const [sessionConsentAccepted, setSessionConsentAccepted] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setDate(format(new Date(), 'yyyy-MM-dd'));
       setSelectedWorker(null); setManualName(''); setManualPhone('');
       setUseHourly(true); setHours(''); setRate(''); setFlatAmount(''); setNotes('');
+      setSessionConsentAccepted(false);
     }
   }, [visible]);
 
@@ -279,6 +333,10 @@ function LogSessionModal({
   async function handleSave() {
     if (!providerName.trim()) { Alert.alert('Missing info', 'Please select or enter a provider name.'); return; }
     if (computedAmount <= 0)  { Alert.alert('Missing info', 'Please enter a valid amount.'); return; }
+    if (!sessionConsentAccepted) {
+      Alert.alert('Permission required', 'Confirm you have permission or authority to store this person\'s session details.');
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from('respite_sessions').insert({
@@ -292,6 +350,8 @@ function LogSessionModal({
         amount_paid:     computedAmount,
         worker_id:       selectedWorker?.id ?? null,
         notes:           notes.trim() || null,
+        data_consent_version: RESPITE_WORKER_DATA_CONSENT_VERSION,
+        data_consent_accepted_at: new Date().toISOString(),
         logged_by:       session!.user.id,
       });
       if (error) throw error;
@@ -442,6 +502,30 @@ function LogSessionModal({
                 value={notes} onChangeText={setNotes}
                 placeholder="Activities, location, etc." placeholderTextColor={Colors.textMuted} multiline />
             </View>
+
+            <View style={m.consentCard}>
+              <Text style={m.consentTitle}>Permission to store session details</Text>
+              <Text style={m.consentDisclosure}>
+                The named provider's contact, rate, and session notes will be stored in your private cloud account.
+              </Text>
+              <TouchableOpacity
+                style={m.consentRow}
+                onPress={() => setSessionConsentAccepted(value => !value)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: sessionConsentAccepted }}
+                activeOpacity={0.75}
+              >
+                <Ionicons
+                  name={sessionConsentAccepted ? 'checkbox' : 'square-outline'}
+                  size={24}
+                  color={sessionConsentAccepted ? Colors.purple : Colors.textMuted}
+                />
+                <Text style={m.consentText}>{RESPITE_WORKER_DATA_ATTESTATION}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}>
+                <Text style={m.consentLink}>Read the Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -523,7 +607,7 @@ export default function RespiteScreen() {
     if (!activeChild || sessions.length === 0) return;
     setExporting(true);
     try {
-      await fillAndShareOfficialRespitePdf({
+      await generateAndShareRespiteWorksheetPdf({
         childName:            activeChild.name,
         healthServicesNumber: activeChild.health_card_number,
         parentName:           profile?.full_name ?? '',
@@ -538,9 +622,17 @@ export default function RespiteScreen() {
         total: totalAmt,
       });
     } catch {
-      Alert.alert('Export failed', 'Could not generate the invoice. Please try again.');
+      Alert.alert('Export failed', 'Could not generate the respite worksheet. Please try again.');
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function openOfficialRespiteForm() {
+    try {
+      await Linking.openURL(OFFICIAL_RESPITE_FORM_URL);
+    } catch {
+      Alert.alert('Could not open form', 'Please try again or visit Saskatchewan.ca in your browser.');
     }
   }
 
@@ -558,7 +650,7 @@ export default function RespiteScreen() {
                 <AppLogo size={36} />
                 <Text style={s.pageTitle}>Respite</Text>
               </View>
-              <Text style={s.pageSubtitle}>Log sessions and pay your support workers. 🏡</Text>
+              <Text style={s.pageSubtitle}>Log sessions and amounts paid to support workers. 🏡</Text>
             </View>
 
             {/* Child selector (multi-child families) */}
@@ -676,9 +768,20 @@ export default function RespiteScreen() {
                       : <View style={[s.addBtnCircle, { backgroundColor: '#16A34A' }]}>
                           <Ionicons name="document-text-outline" size={18} color="#FFFFFF" />
                         </View>}
-                    <Text style={[s.addBtnText, { color: '#15803D' }]}>Export Invoice</Text>
+                    <Text style={[s.addBtnText, { color: '#15803D' }]}>Export Worksheet</Text>
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity
+                  onPress={openOfficialRespiteForm}
+                  activeOpacity={0.88}
+                  style={[s.addBtn, { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#2563EB' }]}
+                >
+                  <View style={[s.addBtnCircle, { backgroundColor: '#2563EB' }]}>
+                    <Ionicons name="open-outline" size={17} color="#FFFFFF" />
+                  </View>
+                  <Text style={[s.addBtnText, { color: '#1D4ED8' }]}>Open Official Respite Form</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#2563EB" />
+                </TouchableOpacity>
               </View>
             )}
 
@@ -810,6 +913,13 @@ const m = StyleSheet.create({
 
   inputHighlight: { borderColor: Colors.purple, borderWidth: 2 },
   inputHint:      { fontSize: 11, color: Colors.purple, marginTop: 4, fontWeight: '500' },
+
+  consentCard: { padding: 13, borderRadius: 12, borderWidth: 1, borderColor: '#C4B5FD', backgroundColor: '#F5F3FF', gap: 8 },
+  consentTitle: { fontSize: 13, fontWeight: '800', color: Colors.textPrimary },
+  consentDisclosure: { fontSize: 12, lineHeight: 18, color: Colors.textSecondary },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  consentText: { flex: 1, fontSize: 12, lineHeight: 18, color: Colors.textPrimary },
+  consentLink: { color: Colors.purple, fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
 
   totalPreview:      { backgroundColor: '#F0FDF4', borderRadius: 12, padding: 14,
                        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

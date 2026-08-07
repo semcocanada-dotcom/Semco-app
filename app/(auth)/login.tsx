@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +16,9 @@ import { supabase } from '@lib/supabase';
 import { getSignInErrorMessage, normalizeEmail } from '@lib/auth';
 import { Colors } from '@constants/colors';
 import { AppLogo } from '@components/AppLogo';
+
+const PRIVACY_POLICY_URL = 'https://semcocanada-dotcom.github.io/Semco-app/';
+const SUPPORT_URL = 'https://semcocanada-dotcom.github.io/Semco-app/support.html';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -127,7 +131,7 @@ export default function LoginScreen() {
               Autism Fund Tracker
             </Text>
             <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 8, textAlign: 'center' }}>
-              Saskatchewan ASD-IF Grant Management
+              Independent ASD-IF Recordkeeping
             </Text>
           </View>
 
@@ -243,6 +247,18 @@ export default function LoginScreen() {
               <Text style={{ color: Colors.purple, fontWeight: '600', fontSize: 14 }}>
                 Don't have an account? Create one
               </Text>
+            </Pressable>
+          </View>
+
+          <Text style={{ color: Colors.textMuted, fontSize: 12, lineHeight: 17, textAlign: 'center', marginTop: 20 }}>
+            Independent tool &mdash; not affiliated with or endorsed by the Government of Saskatchewan.
+          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 10 }}>
+            <Pressable onPress={() => { void Linking.openURL(PRIVACY_POLICY_URL); }}>
+              <Text style={{ color: Colors.purple, fontSize: 13, fontWeight: '600' }}>Privacy Policy</Text>
+            </Pressable>
+            <Pressable onPress={() => { void Linking.openURL(SUPPORT_URL); }}>
+              <Text style={{ color: Colors.purple, fontSize: 13, fontWeight: '600' }}>Support</Text>
             </Pressable>
           </View>
         </ScrollView>

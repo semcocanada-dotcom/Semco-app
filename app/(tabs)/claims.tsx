@@ -12,15 +12,21 @@ import {
   RefreshControl,
   Alert,
   TextInput,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
-import { supabase, db } from '@lib/supabase';
+import { db } from '@lib/supabase';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import type { Expense, MileageLog, MonthlyClaim, FundingYear, Provider } from '@lib/types';
-import { generateAndShareMileagePdf, generateAndShareExpensePdf } from '@lib/pdfForms';
+import {
+  generateAndShareExpenseWorksheetPdf,
+  generateAndShareMileageWorksheetPdf,
+} from '@lib/pdfForms';
+
+const OFFICIAL_ASD_IF_EXPENSE_PORTAL = 'https://autismfunding.saskatchewan.ca/';
 
 const CATEGORY_LABELS: Record<string, string> = {
   aba_ibi: 'ABA/IBI',
@@ -162,41 +168,30 @@ export default function ClaimsScreen() {
     return Array.from(map.values()).sort((a, b) => b.month.localeCompare(a.month));
   }, [expenses, mileageLogs, claims]);
 
-  async function handleSubmit(group: MonthGroup) {
-    if (!activeChild || !fundingYear || !session) return;
-
-    setSubmitting(true);
-
-    try {
-      // The function re-derives every emailed value (names, health card,
-      // amounts) from the database under the caller's ownership — we only
-      // send identifiers, never the PII itself.
-      const payload = {
-        child_id: activeChild.id,
-        funding_year_id: fundingYear.id,
-        month: group.month,
-        month_label: group.monthLabel,
-        expense_ids: group.expenses.map((e) => e.id),
-        mileage_ids: group.mileage.map((m) => m.id),
-      };
-
-      const { error } = await supabase.functions.invoke('submit-claim', { body: payload });
-
-      if (error) throw error;
-
-      setJustSubmitted(true);
-      fetchData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      Alert.alert(
-        'Submission Failed',
-        msg.includes('RESEND_API_KEY')
-          ? 'Email service not configured yet. Provide your Resend API key to enable submissions.'
-          : `Could not send claim: ${msg}`,
-      );
-    } finally {
-      setSubmitting(false);
-    }
+  function handleSubmit(_group: MonthGroup) {
+    Alert.alert(
+      'Continue on the Saskatchewan government website',
+      'Autism Fund Tracker is an independent app and does not submit claims for the Government of Saskatchewan. The government ASD-IF expense portal will open so you can complete any required submission there. Generate and save any worksheets you need before continuing.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Open Government Portal',
+          onPress: async () => {
+            setSubmitting(true);
+            try {
+              await Linking.openURL(OFFICIAL_ASD_IF_EXPENSE_PORTAL);
+            } catch {
+              Alert.alert(
+                'Could not open portal',
+                `Visit ${OFFICIAL_ASD_IF_EXPENSE_PORTAL} in your browser.`,
+              );
+            } finally {
+              setSubmitting(false);
+            }
+          },
+        },
+      ],
+    );
   }
 
   function openGroup(group: MonthGroup) {
@@ -341,12 +336,12 @@ function ClaimDetail({
 
   async function handleGenerateExpensePdf() {
     if (group.expenses.length === 0) {
-      Alert.alert('No Expenses', 'This month has no expenses to include in the form.');
+      Alert.alert('No Expenses', 'This month has no expenses to include in the worksheet.');
       return;
     }
     setGeneratingExpensePdf(true);
     try {
-      await generateAndShareExpensePdf({
+      await generateAndShareExpenseWorksheetPdf({
         childName,
         healthServicesNumber,
         parentName,
@@ -370,12 +365,12 @@ function ClaimDetail({
 
   async function handleGeneratePdf() {
     if (group.mileage.length === 0) {
-      Alert.alert('No Mileage', 'This month has no mileage entries to include in the form.');
+      Alert.alert('No Mileage', 'This month has no mileage entries to include in the worksheet.');
       return;
     }
     setGeneratingPdf(true);
     try {
-      await generateAndShareMileagePdf({
+      await generateAndShareMileageWorksheetPdf({
         childName,
         healthServicesNumber,
         parentName,
@@ -413,7 +408,7 @@ function ClaimDetail({
               >
                 {generatingExpensePdf
                   ? <ActivityIndicator size="small" color={Colors.purple} />
-                  : <Text style={s.pdfBtnText}>📄 SK Form PDF</Text>
+                  : <Text style={s.pdfBtnText}>📄 Expense Worksheet</Text>
                 }
               </TouchableOpacity>
             </View>
@@ -448,7 +443,7 @@ function ClaimDetail({
               >
                 {generatingPdf
                   ? <ActivityIndicator size="small" color={Colors.purple} />
-                  : <Text style={s.pdfBtnText}>📄 SK Form PDF</Text>
+                  : <Text style={s.pdfBtnText}>📄 Mileage Worksheet</Text>
                 }
               </TouchableOpacity>
             </View>
@@ -482,7 +477,7 @@ function ClaimDetail({
               <Text style={s.successIcon}>✅</Text>
               <Text style={s.successText}>
                 {justSubmitted
-                  ? 'Claim submitted! A copy was sent to you and the Saskatchewan ASD-IF program.'
+                  ? 'This month is marked as submitted in your records.'
                   : `Submitted ${group.claim?.submitted_at
                       ? format(parseISO(group.claim.submitted_at), 'MMMM d, yyyy')
                       : ''}`}
@@ -519,10 +514,12 @@ function ClaimDetail({
               {submitting ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={s.submitBtnText}>Submit Claim to Government</Text>
+                <Text style={s.submitBtnText}>Open Government Portal</Text>
               )}
             </TouchableOpacity>
-            <Text style={s.submitNote}>Sends directly to Saskatchewan ASD-IF program</Text>
+            <Text style={s.submitNote}>
+              Opens autismfunding.saskatchewan.ca. Autism Fund Tracker is independent and is not affiliated with the Government of Saskatchewan.
+            </Text>
           </>
         )}
         <TouchableOpacity

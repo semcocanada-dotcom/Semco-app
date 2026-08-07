@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { deleteCurrentAccount } from '@lib/accountDeletion';
 import { supabase, db } from '@lib/supabase';
 import type { Profile } from '@lib/types';
 
@@ -8,6 +9,7 @@ interface AuthContextValue {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   refetchProfile: () => Promise<void>;
 }
 
@@ -16,6 +18,7 @@ const AuthContext = createContext<AuthContextValue>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  deleteAccount: async () => {},
   refetchProfile: async () => {},
 });
 
@@ -57,12 +60,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   }
 
+  async function deleteAccount() {
+    await deleteCurrentAccount();
+    // signOut normally emits SIGNED_OUT. Clear the in-memory identity
+    // explicitly as well so a post-deletion network error can never leave the
+    // deleted account visible until the next app launch.
+    setSession(null);
+    setProfile(null);
+  }
+
   async function refetchProfile() {
     if (session) await fetchProfile(session.user.id);
   }
 
   return (
-    <AuthContext.Provider value={{ session, profile, loading, signOut, refetchProfile }}>
+    <AuthContext.Provider value={{ session, profile, loading, signOut, deleteAccount, refetchProfile }}>
       {children}
     </AuthContext.Provider>
   );

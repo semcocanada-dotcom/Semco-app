@@ -4,11 +4,11 @@
 
 ## What this is
 Expo **SDK 51** / React Native / TypeScript / Supabase **iOS app** for tracking
-Saskatchewan's **$8,000/yr ASD-IF autism funding grant** (one parent account,
+Saskatchewan's **ASD-IF autism funding program** (one parent account,
 multiple children, each with their own grant). Handles **children's health card
 numbers and PII** — treat data protection as critical.
 
-- **Active branch:** `claude/autism-grant-app-eUE6R` (all work here; CI/OTA wired to it)
+- **Release branch:** `agent/fix-autism-review-login`; legacy CI and GitHub Pages still follow `claude/autism-grant-app-eUE6R`, so fast-forward that branch only after the release commit is verified.
 - **Supabase project ref:** `wowlxyxaltgxbbsbcxao` (region ca-central-1)
 - Secrets come from `.env` via `app.config.ts` (fallback to `app.json`). Copy
   `.env.example` → `.env` locally.
@@ -41,14 +41,14 @@ app/(tabs)/
   _layout.tsx               Tab bar: Home Expenses Calendar Providers Mileage (Profile via header)
   index.tsx                 Dashboard: greeting + BudgetRing rainbow arc + stat cards + recent expenses
   expenses.tsx              Expense logging, receipt camera/PDF, OCR, FABs
-  mileage.tsx               Mileage tab: month nav, km/$ stats, Add Trip, trip list
-  providers.tsx             Provider directory: search, category pills, cards, Call/Email/Book
+  mileage.tsx               Mileage tab: manual distance/rate entry, month nav, km/$ stats
+  providers.tsx             Private provider records + official Saskatchewan registry link
   appointments.tsx          Calendar / reminders
   claims.tsx                Monthly claims (tab hidden via href:null)
-  profile.tsx               Parent profile (home address for mileage)
+  profile.tsx               Parent profile and account/privacy controls
 components/                 BudgetRing (SVG rainbow arc), AppLogo (SVG), StatCard,
-                            AlertBanner, FAB, ChildSelector, ExpenseListItem, AddressAutocomplete
-lib/                        supabase.ts (SecureStore-backed auth), types.ts, geocoding.ts,
+                            AlertBanner, FAB, ChildSelector, ExpenseListItem
+lib/                        supabase.ts (SecureStore-backed auth), types.ts,
                             ocr.ts, mileageUtils.ts, providerMatcher.ts, textMatch.ts (pure),
                             pdfForms.ts, notifications.ts
 hooks/                      useBudget, useChildren, useExpenses, useAppointments
@@ -65,10 +65,8 @@ Clean, friendly, pastel; purple `#7C5CFC`, bg `#FAF8FF`; rounded cards, soft sha
 - **Home:** "Good Evening, <name> 💙", "Annual Grant Progress" card with a
   **rainbow arc** (BudgetRing) + % pill, Remaining/Spent/Pending/Total Grant,
   three summary cards, Recent Expenses list.
-- **Providers:** hero title + subtitle, search, category pills (All/Speech/OT/
-  Behaviour/More), "Nearby Approved Providers" + location, provider cards with
-  tinted icon circle, category label, "Approved Provider" badge, Call/Email/Book,
-  footer "All providers are approved by the Autism Funding Program."
+- **Providers:** official Government of Saskatchewan registry link plus private,
+  user-created provider records. The app does not reproduce the public directory.
 - **Mileage:** hero, "This Month" card (km + estimated reimbursement + rate
   badge), Add Trip button, Recent Trips list, secure footer.
 
