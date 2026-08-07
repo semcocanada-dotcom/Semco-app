@@ -55,6 +55,10 @@ The app provides one-tap links to the untouched official Saskatchewan mileage an
 
 Permanent account deletion is available in **Profile > Delete Account**. The user must type `DELETE` and confirm. The authenticated deletion service removes private receipt files, the authentication account, and associated app data. A disposable test account was deleted successfully in production.
 
+### Required physical-device evidence for the August 7 rejection
+
+Apple explicitly requires a physical-device screen recording that shows: (1) creating an account or signing in, (2) navigating to **Profile > Delete Account**, and (3) the complete deletion flow through final confirmation. Attach that recording under **App Review Information > Attachment** and reference it in **Notes** before resubmitting. Use a disposable account; never delete the dedicated review account.
+
 ## Response to Guideline 5.1.1(iv) — Location Permission
 
 The location issue is resolved in this binary. The automatic custom location message and location permission request were removed. The app no longer includes a location purpose string, location permission, location SDK, current-position request, address autocomplete, geocoding, routing, nearby-provider sorting, or automatic distance calculation. Mileage is entered manually. No screen can request location access.
@@ -112,5 +116,5 @@ Do not declare Precise Location, Coarse Location, advertising data, or tracking.
 
 - The current Apple Developer membership is enrolled as an Individual. Because this app requires and stores a child's health and sensitive information, verify or complete submission through the legal organization that provides the service, as required by App Review Guideline 5.1.1(ix).
 - Publish and verify both public URLs above; the support page must not return 404 and the privacy policy must match this binary.
-- Complete clean-install physical iPhone and iPad tests for login, child/funding creation, JPEG/PDF receipt recognition, permission denial, worksheet export, and account deletion with a disposable account. Record the deletion test if Apple requests evidence.
+- Complete clean-install physical iPhone and iPad tests for login, child/funding creation, JPEG/PDF receipt recognition, permission denial, worksheet export, and account deletion with a disposable account. The August 7 rejection requires the complete deletion test to be recorded on a physical device and attached to App Review Information before resubmission.
 - If official Saskatchewan PDF artwork is ever embedded, reproduced, or automatically filled inside the app again, obtain written Crown copyright and government-logo permission first. Public download availability alone does not grant commercial republication rights.
