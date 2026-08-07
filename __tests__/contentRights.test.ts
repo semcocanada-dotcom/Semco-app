@@ -7,7 +7,7 @@ const read = (...parts: string[]) => fs.readFileSync(path.join(root, ...parts), 
 const pdfFormsSource = read('lib', 'pdfForms.ts');
 const mileageSource = read('app', '(tabs)', 'mileage.tsx');
 const respiteSource = read('app', '(tabs)', 'respite.tsx');
-const claimsSource = read('app', '(tabs)', 'claims.tsx');
+const tabLayoutSource = read('app', '(tabs)', '_layout.tsx');
 const reportsSource = read('app', '(tabs)', 'reports.tsx');
 const privacySource = read('docs', 'index.html');
 const supportSource = read('docs', 'support.html');
@@ -31,9 +31,6 @@ describe('independent worksheet and content-rights safeguards', () => {
   it('uses worksheet language and keeps government submission separate', () => {
     expect(mileageSource).toContain('Export Worksheet');
     expect(respiteSource).toContain('Export Worksheet');
-    expect(claimsSource).toContain('Expense Worksheet');
-    expect(claimsSource).toContain('Mileage Worksheet');
-    expect(claimsSource).toContain('Open Government Portal');
     expect(reportsSource).toContain('Generate PDF Worksheet');
     expect(mileageSource).toContain('Open Official Mileage Form');
     expect(mileageSource).toContain('OFFICIAL_MILEAGE_FORM_URL');
@@ -49,7 +46,6 @@ describe('independent worksheet and content-rights safeguards', () => {
     const userFacingSources = [
       mileageSource,
       respiteSource,
-      claimsSource,
       reportsSource,
       pdfFormsSource,
     ].join('\n');
@@ -57,6 +53,11 @@ describe('independent worksheet and content-rights safeguards', () => {
     expect(userFacingSources).not.toContain('Export Invoice');
     expect(userFacingSources).not.toContain('Saskatchewan IAF Grant Report');
     expect(userFacingSources).not.toContain('For grant submission & audit');
+  });
+
+  it('does not bundle the dormant monthly-claims route', () => {
+    expect(fs.existsSync(path.join(root, 'app', '(tabs)', 'claims.tsx'))).toBe(false);
+    expect(tabLayoutSource).not.toContain('name="claims"');
   });
 
   it('does not bundle or reference copied Saskatchewan form assets', () => {

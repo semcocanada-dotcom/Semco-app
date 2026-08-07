@@ -82,12 +82,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="claims"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
         name="appointments"
         options={{
           title: 'Calendar',

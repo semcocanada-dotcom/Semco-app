@@ -26,7 +26,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "ca.semco.app",
       "appleTeamId": "9M779XQXAW",
-      "buildNumber": "10",
+      "buildNumber": "11",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSAppTransportSecurity": {
