@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-07 — App Review scope hardening
+
+- Removed the dormant government-submission route and client helpers from the mobile app.
+- Replaced the former outbound-email Edge Function with a non-networked HTTP 410 tombstone.
+- Replaced expense review-state language with neutral Recorded/Excluded recordkeeping language.
+- Clarified that mileage amounts are user-recorded estimates and do not guarantee payment.
+
 ## Audit & Cleanup Pass
 
 A focused audit to bring the app to a clean, stable, production-ready state.
@@ -88,11 +95,9 @@ attacker would actually exploit against the (public) anon key.
 - **Session tokens**: replaced plaintext `AsyncStorage` with an encrypted,
   chunked `expo-secure-store` adapter (Keychain/Keystore) — defeats token
   theft from a lost/rooted device or Android backup extraction.
-- **`submit-claim` edge function** (not yet deployed): all interpolated
-  email fields HTML-escaped (was HTML-injectable); health card, line items
-  and totals re-derived from the DB under verified ownership instead of
-  trusting the client; CC restricted to the caller's own account email
-  (was an authenticated open email relay); generic error responses.
+- **Former outbound submission function (historical):** its earlier security
+  hardening was superseded by the App Review scope cleanup above. The checked-in
+  function is now a non-networked HTTP 410 tombstone.
 
 ### Manual follow-ups (cannot be done in-repo)
 - **Enable Supabase "Leaked Password Protection"** (Auth settings) — last
@@ -109,4 +114,3 @@ attacker would actually exploit against the (public) anon key.
   restrict it by API + app and move the value to an EAS/CI env var.
 - Full native EAS build + on-device testing (camera/OCR, location,
   notifications, calendar) still required.
-- `submit-claim` edge function deploy remains pending (out of scope).

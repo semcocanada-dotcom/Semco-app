@@ -30,9 +30,8 @@ export const Colors = {
   danger: '#EF4444',
   info: '#3B82F6',
 
-  // Budget ring — purple = available, grey = spent, amber = pending
+  // Budget ring
   ringSpent: '#C4C4C4',
-  ringPending: '#FBBF24',
   ringTrack: '#7C5CFC',
 
   // Gradient pairs [start, end] for LinearGradient

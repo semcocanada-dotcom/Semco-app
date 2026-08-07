@@ -6,7 +6,7 @@ Prepared: 2026-08-07
 
 - Name: Autism Fund Tracker
 - Version: 1.0
-- Next binary: build 10 or later
+- Next binary: build 12
 - Primary category: Finance
 - Secondary category: Health & Fitness
 - Price: Free
@@ -42,6 +42,8 @@ Do not delete this account. Apple can inspect the deletion screen with it, but a
 Autism Fund Tracker is an independent family recordkeeping tool for Saskatchewan Autism Spectrum Disorder Individualized Funding (ASD-IF). It is not affiliated with, endorsed by, or operated by the Government of Saskatchewan, and it does not decide eligibility, approve expenses, or submit claims to government.
 
 The app lets an authorized adult record a child's approved funding amount, expenses, manually entered mileage, respite records, appointments, private provider records, and receipt attachments. Funding amounts shown during setup are editable estimates based on public program information; the account holder must enter the child's actual approved amount.
+
+Expense labels are neutral private-recordkeeping terms: **Recorded** and **Excluded**. They are not government approval, review, pending, or submission states. Mileage amounts are explicitly identified as user-recorded estimates and do not guarantee eligibility or payment.
 
 The app does not request or use device location. It does not provide a copied public provider directory or automatically calculate distance. The Providers screen contains private, user-created entries and a link that opens the official Saskatchewan registry in the system browser.
 

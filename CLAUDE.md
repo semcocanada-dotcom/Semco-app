@@ -44,7 +44,6 @@ app/(tabs)/
   mileage.tsx               Mileage tab: manual distance/rate entry, month nav, km/$ stats
   providers.tsx             Private provider records + official Saskatchewan registry link
   appointments.tsx          Calendar / reminders
-  claims.tsx                Monthly claims (tab hidden via href:null)
   profile.tsx               Parent profile and account/privacy controls
 components/                 BudgetRing (SVG rainbow arc), AppLogo (SVG), StatCard,
                             AlertBanner, FAB, ChildSelector, ExpenseListItem
@@ -54,8 +53,9 @@ lib/                        supabase.ts (SecureStore-backed auth), types.ts,
 hooks/                      useBudget, useChildren, useExpenses, useAppointments
 context/                    AuthContext (session+profile), ChildContext (active child)
 constants/                  colors.ts, mileage.ts (SK rates + getRateForLatitude)
-supabase/                   schema.sql is the SINGLE SOURCE OF TRUTH (RLS, policies,
-                            buckets, monthly_claims all folded in). functions/submit-claim
+  supabase/                   schema.sql is the SINGLE SOURCE OF TRUTH (RLS, policies,
+                            buckets, and legacy deletion-compatible tables). The former
+                            submit endpoint is a non-networked HTTP 410 tombstone.
 __tests__/                  Jest unit tests (pure logic only)
 ```
 Path aliases: `@lib/* @components/* @hooks/* @context/* @constants/*`
@@ -63,11 +63,11 @@ Path aliases: `@lib/* @components/* @hooks/* @context/* @constants/*`
 ## Design intent (the 3 reference mockups)
 Clean, friendly, pastel; purple `#7C5CFC`, bg `#FAF8FF`; rounded cards, soft shadows.
 - **Home:** "Good Evening, <name> 💙", "Annual Grant Progress" card with a
-  **rainbow arc** (BudgetRing) + % pill, Remaining/Spent/Pending/Total Grant,
+  **rainbow arc** (BudgetRing) + % pill, Remaining/Recorded/Mileage Estimate/Total Grant,
   three summary cards, Recent Expenses list.
 - **Providers:** official Government of Saskatchewan registry link plus private,
   user-created provider records. The app does not reproduce the public directory.
-- **Mileage:** hero, "This Month" card (km + estimated reimbursement + rate
+- **Mileage:** hero, "This Month" card (km + recorded mileage estimate + rate
   badge), Add Trip button, Recent Trips list, secure footer.
 
 **Current visual gap:** layout/copy match the mockups, but hero illustrations

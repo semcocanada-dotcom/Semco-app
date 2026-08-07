@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { differenceInDays, parseISO } from 'date-fns';
 import { db } from '@lib/supabase';
 import type { BudgetSummary, FundingYear } from '@lib/types';
+import { totalRecordedExpenses } from '@lib/expenseRecordState';
 
 const EMPTY_SUMMARY: BudgetSummary = {
   totalBudget: 0,
   totalSpent: 0,
-  totalPending: 0,
   totalMileage: 0,
   remaining: 0,
   daysRemaining: 0,
@@ -55,10 +55,7 @@ export function useBudget(childId: string | null) {
       const expenses = expensesRes.data ?? [];
       const mileageLogs = mileageRes.data ?? [];
 
-      const totalSpent = expenses
-        .reduce((sum, e) => sum + Number(e.amount), 0);
-
-      const totalPending = 0;
+      const totalSpent = totalRecordedExpenses(expenses);
 
       const totalMileage = mileageLogs.reduce(
         (sum, m) => sum + Number(m.reimbursement_amount),
@@ -75,7 +72,6 @@ export function useBudget(childId: string | null) {
       setSummary({
         totalBudget,
         totalSpent,
-        totalPending,
         totalMileage,
         remaining,
         daysRemaining,

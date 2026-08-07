@@ -24,7 +24,11 @@ import { base64ToBytes } from '@lib/base64';
 import { format, parseISO } from 'date-fns';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
-import type { Expense, Provider, ProviderCategory, ExpenseStatus, FundingYear, MileageLog } from '@lib/types';
+import type { Expense, Provider, ProviderCategory, FundingYear, MileageLog } from '@lib/types';
+import {
+  expenseRecordPresentation,
+  RECORDED_EXPENSE_STORAGE_STATUS,
+} from '@lib/expenseRecordState';
 import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
@@ -68,13 +72,6 @@ const CATEGORY_CONFIG: { value: ProviderCategory; label: string; emoji: string }
   { value: 'other',                label: 'Other',         emoji: '📋' },
 ];
 
-const STATUS_STYLE: Record<ExpenseStatus, { bg: string; text: string; label: string }> = {
-  pending:   { bg: '#FFF7ED', text: '#C2410C', label: 'Pending'   },
-  submitted: { bg: '#EFF6FF', text: '#1D4ED8', label: 'Submitted' },
-  approved:  { bg: '#F0FDF4', text: '#15803D', label: 'Approved'  },
-  rejected:  { bg: '#FFF1F2', text: '#BE123C', label: 'Rejected'  },
-};
-
 const catEmoji = (cat: ProviderCategory) =>
   CATEGORY_CONFIG.find(c => c.value === cat)?.emoji ?? '📋';
 const catLabel = (cat: ProviderCategory) =>
@@ -83,15 +80,14 @@ const catLabel = (cat: ProviderCategory) =>
 // ─── BudgetBar ────────────────────────────────────────────────────────────────
 
 function BudgetBar({
-  totalBudget, totalSpent, totalPending, totalMileage, remaining, fundingYear,
+  totalBudget, totalSpent, totalMileage, remaining, fundingYear,
 }: {
-  totalBudget: number; totalSpent: number; totalPending: number;
+  totalBudget: number; totalSpent: number;
   totalMileage: number; remaining: number; fundingYear: FundingYear;
 }) {
   const spentPct   = Math.min((totalSpent   / totalBudget) * 100, 100);
-  const pendingPct = Math.min((totalPending / totalBudget) * 100, 100 - spentPct);
-  const milagePct  = Math.min((totalMileage / totalBudget) * 100, 100 - spentPct - pendingPct);
-  const usedTotal  = totalSpent + totalPending + totalMileage;
+  const milagePct  = Math.min((totalMileage / totalBudget) * 100, 100 - spentPct);
+  const usedTotal  = totalSpent + totalMileage;
 
   return (
     <View style={s.budgetCard}>
@@ -110,7 +106,6 @@ function BudgetBar({
 
       <View style={s.track}>
         <View style={[s.fill, { width: `${spentPct}%`, backgroundColor: Colors.purple }]} />
-        <View style={[s.fill, { width: `${pendingPct}%`, backgroundColor: Colors.amber }]} />
         {milagePct > 0 && (
           <View style={[s.fill, { width: `${milagePct}%`, backgroundColor: Colors.teal }]} />
         )}
@@ -119,11 +114,7 @@ function BudgetBar({
       <View style={s.legend}>
         <View style={s.legendItem}>
           <View style={[s.dot, { backgroundColor: Colors.purple }]} />
-          <Text style={s.legendText}>Approved</Text>
-        </View>
-        <View style={s.legendItem}>
-          <View style={[s.dot, { backgroundColor: Colors.amber }]} />
-          <Text style={s.legendText}>Pending</Text>
+          <Text style={s.legendText}>Recorded expenses</Text>
         </View>
         {milagePct > 0 && (
           <View style={s.legendItem}>
@@ -146,7 +137,7 @@ function PaceAlert({ remaining, daysRemaining, totalBudget }: { remaining: numbe
     return (
       <View style={[s.paceBox, { backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }]}>
         <Text style={[s.paceText, { color: '#15803D' }]}>
-          🎉 Grant fully utilized — you're in an excellent position for next year's approval!
+          Recorded balance is $0 for this funding year.
         </Text>
       </View>
     );
@@ -179,7 +170,7 @@ function PaceAlert({ remaining, daysRemaining, totalBudget }: { remaining: numbe
 // ─── ExpenseRow ───────────────────────────────────────────────────────────────
 
 function ExpenseRow({ expense, onPress }: { expense: Expense; onPress: () => void }) {
-  const st         = STATUS_STYLE[expense.status];
+  const st         = expenseRecordPresentation(expense.status);
   const hasReceipt = (expense.receipt_urls?.length ?? 0) > 0;
   const name       = (expense as any).providers?.name ?? catLabel(expense.category);
 
@@ -472,7 +463,7 @@ function QuickAddModal({
           amount:          parsed,
           description:     description.trim() || null,
           expense_date:    date,
-          status:          'approved' as ExpenseStatus,
+          status:          RECORDED_EXPENSE_STORAGE_STATUS,
           receipt_urls:    [],
           receipt_number:  receiptNumber,
           logged_by:       session.user.id,
@@ -853,7 +844,7 @@ function ExpenseDetailModal({
     }
   }
 
-  const st   = STATUS_STYLE[expense.status];
+  const st   = expenseRecordPresentation(expense.status);
   const prov = (expense as any).providers;
 
   return (
@@ -1009,7 +1000,7 @@ function ExpenseDetailModal({
                   {mileage.is_round_trip ? ' · round trip' : ''}
                 </Text>
                 <Text style={[s.detailValue, { color: '#15803D', fontWeight: '700', marginTop: 2 }]}>
-                  {CAD(Number(mileage.reimbursement_amount))} reimbursement
+                  {CAD(Number(mileage.reimbursement_amount))} estimated mileage amount
                 </Text>
               </>
             ) : (
@@ -1139,9 +1130,12 @@ function MileageLogModal({
                     {l.is_round_trip ? ' · round trip' : ''}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 16, fontWeight: '700', color: '#15803D' }}>
-                  {CAD(Number(l.reimbursement_amount))}
-                </Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#15803D' }}>
+                    {CAD(Number(l.reimbursement_amount))}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: Colors.textMuted }}>recorded estimate</Text>
+                </View>
               </View>
             )}
           />
@@ -1387,7 +1381,6 @@ export default function ExpensesScreen() {
               <BudgetBar
                 totalBudget={summary.totalBudget}
                 totalSpent={summary.totalSpent}
-                totalPending={summary.totalPending}
                 totalMileage={summary.totalMileage}
                 remaining={summary.remaining}
                 fundingYear={summary.fundingYear}

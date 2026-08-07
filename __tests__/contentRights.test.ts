@@ -97,7 +97,7 @@ describe('independent worksheet and content-rights safeguards', () => {
     expect(privacySource).toContain('Mileage distance is entered manually');
 
     expect(supportSource).toContain('unbranded Autism Fund Tracker worksheet');
-    expect(supportSource).toContain('not a government form, claim, application, approval, or official submission');
+    expect(supportSource).toContain('not a government form, application, approval, or official submission');
     expect(supportSource).toContain('Open the official Saskatchewan mileage form');
     expect(supportSource).toContain('Open the official Saskatchewan respite form');
     expect(supportSource).toContain('does not embed, alter, or');

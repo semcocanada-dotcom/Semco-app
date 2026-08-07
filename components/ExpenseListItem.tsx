@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Colors } from '@constants/colors';
-import type { Expense, ExpenseStatus, ProviderCategory } from '@lib/types';
+import type { Expense, ProviderCategory } from '@lib/types';
+import { expenseRecordPresentation } from '@lib/expenseRecordState';
 import { format, parseISO } from 'date-fns';
 
 const CATEGORY_LABELS: Record<ProviderCategory, string> = {
@@ -34,13 +35,6 @@ const CATEGORY_ICONS: Record<ProviderCategory, string> = {
   other: '📋',
 };
 
-const STATUS_STYLES: Record<ExpenseStatus, { bg: string; text: string; label: string }> = {
-  pending:   { bg: '#FFF7ED', text: '#C2410C', label: 'Pending' },
-  submitted: { bg: '#EFF6FF', text: '#1D4ED8', label: 'Submitted' },
-  approved:  { bg: '#F0FDF4', text: '#15803D', label: 'Approved' },
-  rejected:  { bg: '#FFF1F2', text: '#BE123C', label: 'Rejected' },
-};
-
 function formatCAD(amount: number) {
   return new Intl.NumberFormat('en-CA', {
     style: 'currency',
@@ -55,7 +49,7 @@ interface ExpenseListItemProps {
 }
 
 export function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
-  const status = STATUS_STYLES[expense.status];
+  const status = expenseRecordPresentation(expense.status);
   const icon = CATEGORY_ICONS[expense.category];
   const categoryLabel = CATEGORY_LABELS[expense.category];
   const providerName = expense.providers?.name;
@@ -95,7 +89,7 @@ export function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
         </Text>
       </View>
 
-      {/* Amount + rejected badge */}
+      {/* Amount + excluded badge */}
       <View style={{ alignItems: 'flex-end' }}>
         <Text style={{ fontSize: 15, fontWeight: '700', color: Colors.textPrimary }}>
           {formatCAD(expense.amount)}

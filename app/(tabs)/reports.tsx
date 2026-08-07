@@ -22,6 +22,11 @@ import { useChild } from '@context/ChildContext';
 import { useBudget } from '@hooks/useBudget';
 import { useAuth } from '@context/AuthContext';
 import { INDEPENDENCE_NOTICE, UNOFFICIAL_WORKSHEET_NOTICE } from '@lib/pdfForms';
+import {
+  expenseRecordPresentation,
+  isRecordedExpense,
+  totalRecordedExpenses,
+} from '@lib/expenseRecordState';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -62,8 +67,7 @@ const CATEGORY_EMOJI: Record<ProviderCategory, string> = {
 
 interface CategorySummary {
   category: ProviderCategory;
-  approved: number;
-  pending: number;
+  recorded: number;
   count: number;
 }
 
@@ -76,39 +80,41 @@ function buildPDF(
   mileageLogs: MileageLog[],
   parentName: string,
 ): string {
-  const approved  = expenses.filter(e => e.status === 'approved');
-  const pending   = expenses.filter(e => e.status === 'pending' || e.status === 'submitted');
-  const totalApproved = approved.reduce((s, e) => s + Number(e.amount), 0);
-  const totalPending  = pending.reduce((s, e) => s + Number(e.amount), 0);
+  const recorded      = expenses.filter(isRecordedExpense);
+  const totalRecorded = totalRecordedExpenses(expenses);
   const totalMileage  = mileageLogs.reduce((s, m) => s + Number(m.reimbursement_amount), 0);
-  const totalUsed     = totalApproved + totalPending + totalMileage;
+  const totalUsed     = totalRecorded + totalMileage;
   const remaining     = Number(fundingYear.total_budget) - totalUsed;
+  const totalBudget   = Number(fundingYear.total_budget);
+  const recordedPct   = totalBudget > 0
+    ? Math.min((totalRecorded / totalBudget) * 100, 100)
+    : 0;
+  const mileagePct    = totalBudget > 0
+    ? Math.min((totalMileage / totalBudget) * 100, Math.max(100 - recordedPct, 0))
+    : 0;
 
   // Category breakdown
-  const catMap: Partial<Record<ProviderCategory, { approved: number; pending: number; count: number }>> = {};
-  for (const e of expenses.filter(e => e.status !== 'rejected')) {
-    if (!catMap[e.category]) catMap[e.category] = { approved: 0, pending: 0, count: 0 };
+  const catMap: Partial<Record<ProviderCategory, { recorded: number; count: number }>> = {};
+  for (const e of recorded) {
+    if (!catMap[e.category]) catMap[e.category] = { recorded: 0, count: 0 };
     catMap[e.category]!.count++;
-    if (e.status === 'approved') catMap[e.category]!.approved += Number(e.amount);
-    else catMap[e.category]!.pending += Number(e.amount);
+    catMap[e.category]!.recorded += Number(e.amount);
   }
 
   const catRows = Object.entries(catMap)
-    .sort((a, b) => (b[1].approved + b[1].pending) - (a[1].approved + a[1].pending))
+    .sort((a, b) => b[1].recorded - a[1].recorded)
     .map(([cat, data]) => `
       <tr>
         <td>${CATEGORY_LABELS[cat as ProviderCategory] ?? cat}</td>
         <td class="num">${data.count}</td>
-        <td class="num green">${CAD(data.approved)}</td>
-        <td class="num amber">${CAD(data.pending)}</td>
-        <td class="num bold">${CAD(data.approved + data.pending)}</td>
+        <td class="num green">${CAD(data.recorded)}</td>
       </tr>`)
     .join('');
 
   const expRows = [...expenses]
     .sort((a, b) => b.expense_date.localeCompare(a.expense_date))
     .map(e => {
-      const statusColor = e.status === 'approved' ? '#15803D' : e.status === 'rejected' ? '#BE123C' : '#92400E';
+      const recordState = expenseRecordPresentation(e.status);
       const provName = (e as any).providers?.name ?? '—';
       return `
       <tr>
@@ -117,14 +123,14 @@ function buildPDF(
         <td>${esc(CATEGORY_LABELS[e.category] ?? e.category)}</td>
         <td>${esc(e.description ?? '—')}</td>
         <td class="num bold">${CAD(Number(e.amount))}</td>
-        <td style="color:${statusColor};font-weight:600;text-transform:capitalize">${e.status}</td>
+        <td style="color:${recordState.text};font-weight:600">${recordState.label}</td>
       </tr>`;
     }).join('');
 
   const mileageRows = mileageLogs.length > 0 ? `
     <h2>Mileage Log</h2>
     <table>
-      <thead><tr><th>Date</th><th>Description</th><th class="num">Distance (km)</th><th class="num">Rate/km</th><th class="num">Reimbursement</th></tr></thead>
+      <thead><tr><th>Date</th><th>Description</th><th class="num">Distance (km)</th><th class="num">Rate/km</th><th class="num">Estimated Amount</th></tr></thead>
       <tbody>
         ${mileageLogs.map(m => `
           <tr>
@@ -135,7 +141,7 @@ function buildPDF(
             <td class="num bold">${CAD(Number(m.reimbursement_amount))}</td>
           </tr>`).join('')}
         <tr class="total-row">
-          <td colspan="4"><strong>Total Mileage Reimbursement</strong></td>
+          <td colspan="4"><strong>Total Recorded Mileage Estimate</strong></td>
           <td class="num bold green">${CAD(totalMileage)}</td>
         </tr>
       </tbody>
@@ -185,8 +191,8 @@ function buildPDF(
   .total-row td { background: #F3F0FF; font-weight: 700; }
   .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #E8E4F3; font-size: 11px; color: #9CA3AF; text-align: center; }
   .utilization-bar { background: #E8E4F3; border-radius: 6px; height: 12px; margin: 10px 0 6px; overflow: hidden; display: flex; }
-  .util-approved { background: #7C5CFC; height: 100%; }
-  .util-pending  { background: #F59E0B; height: 100%; }
+  .util-recorded { background: #7C5CFC; height: 100%; }
+  .util-mileage  { background: #14B8A6; height: 100%; }
   @media print { body { padding: 20px; } }
 </style>
 </head>
@@ -229,12 +235,12 @@ function buildPDF(
     <div class="label">Total Budget</div>
   </div>
   <div class="summary-card green">
-    <div class="amount">${CAD(totalApproved)}</div>
-    <div class="label">Approved</div>
+    <div class="amount">${CAD(totalRecorded)}</div>
+    <div class="label">Recorded Expenses</div>
   </div>
   <div class="summary-card amber">
-    <div class="amount">${CAD(totalPending + totalMileage)}</div>
-    <div class="label">Pending / Mileage</div>
+    <div class="amount">${CAD(totalMileage)}</div>
+    <div class="label">Recorded Mileage Estimate</div>
   </div>
   <div class="summary-card ${remaining > 0 ? 'red' : 'green'}">
     <div class="amount">${CAD(Math.max(remaining, 0))}</div>
@@ -248,8 +254,8 @@ function buildPDF(
     <span>${CAD(totalUsed)} of ${CAD(Number(fundingYear.total_budget))}</span>
   </div>
   <div class="utilization-bar">
-    <div class="util-approved" style="width:${Math.min((totalApproved / Number(fundingYear.total_budget)) * 100, 100)}%"></div>
-    <div class="util-pending"  style="width:${Math.min((totalPending / Number(fundingYear.total_budget)) * 100, 100 - (totalApproved / Number(fundingYear.total_budget)) * 100)}%"></div>
+    <div class="util-recorded" style="width:${recordedPct}%"></div>
+    <div class="util-mileage" style="width:${mileagePct}%"></div>
   </div>
 </div>
 
@@ -258,21 +264,17 @@ function buildPDF(
   <thead>
     <tr>
       <th>Category</th>
-      <th class="num">Sessions</th>
-      <th class="num">Approved</th>
-      <th class="num">Pending</th>
-      <th class="num">Total</th>
+      <th class="num">Entries</th>
+      <th class="num">Recorded</th>
     </tr>
   </thead>
   <tbody>
     ${catRows}
-    ${totalMileage > 0 ? `<tr><td>Mileage Reimbursement</td><td class="num">${mileageLogs.length}</td><td class="num green">${CAD(totalMileage)}</td><td class="num">—</td><td class="num bold">${CAD(totalMileage)}</td></tr>` : ''}
+    ${totalMileage > 0 ? `<tr><td>Recorded Mileage Estimate</td><td class="num">${mileageLogs.length}</td><td class="num green">${CAD(totalMileage)}</td></tr>` : ''}
     <tr class="total-row">
       <td><strong>TOTAL</strong></td>
-      <td class="num">${expenses.length}</td>
-      <td class="num green">${CAD(totalApproved)}</td>
-      <td class="num amber">${CAD(totalPending)}</td>
-      <td class="num bold">${CAD(totalUsed)}</td>
+      <td class="num">${recorded.length + mileageLogs.length}</td>
+      <td class="num green">${CAD(totalUsed)}</td>
     </tr>
   </tbody>
 </table>
@@ -286,7 +288,7 @@ function buildPDF(
       <th>Category</th>
       <th>Description</th>
       <th class="num">Amount</th>
-      <th>Status</th>
+      <th>Record State</th>
     </tr>
   </thead>
   <tbody>
@@ -310,7 +312,7 @@ ${mileageRows}
 // ─── CategoryCard ─────────────────────────────────────────────────────────────
 
 function CategoryCard({ cat, totalBudget }: { cat: CategorySummary; totalBudget: number }) {
-  const total = cat.approved + cat.pending;
+  const total = cat.recorded;
   const pct   = Math.min((total / totalBudget) * 100, 100);
   return (
     <View style={s.catCard}>
@@ -323,12 +325,10 @@ function CategoryCard({ cat, totalBudget }: { cat: CategorySummary; totalBudget:
         <Text style={s.catTotal}>{CAD(total)}</Text>
       </View>
       <View style={s.miniTrack}>
-        <View style={[s.miniApproved, { width: `${Math.min((cat.approved / totalBudget) * 100, 100)}%` }]} />
-        <View style={[s.miniPending,  { width: `${Math.min((cat.pending  / totalBudget) * 100, 100)}%` }]} />
+        <View style={[s.miniRecorded, { width: `${Math.min((cat.recorded / totalBudget) * 100, 100)}%` }]} />
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-        {cat.approved > 0 && <Text style={s.miniLabel}>✓ {CAD(cat.approved)} approved</Text>}
-        {cat.pending  > 0 && <Text style={[s.miniLabel, { color: Colors.amber }]}>◷ {CAD(cat.pending)} pending</Text>}
+        {cat.recorded > 0 && <Text style={s.miniLabel}>{CAD(cat.recorded)} recorded</Text>}
         <Text style={[s.miniLabel, { marginLeft: 'auto' }]}>{pct.toFixed(1)}% of grant</Text>
       </View>
     </View>
@@ -373,13 +373,12 @@ export default function ReportsScreen() {
   // Build category summaries
   const catSummaries: CategorySummary[] = (() => {
     const map: Partial<Record<ProviderCategory, CategorySummary>> = {};
-    for (const e of expenses.filter(e => e.status !== 'rejected')) {
-      if (!map[e.category]) map[e.category] = { category: e.category, approved: 0, pending: 0, count: 0 };
+    for (const e of expenses.filter(isRecordedExpense)) {
+      if (!map[e.category]) map[e.category] = { category: e.category, recorded: 0, count: 0 };
       map[e.category]!.count++;
-      if (e.status === 'approved') map[e.category]!.approved += Number(e.amount);
-      else map[e.category]!.pending += Number(e.amount);
+      map[e.category]!.recorded += Number(e.amount);
     }
-    return Object.values(map).sort((a, b) => (b.approved + b.pending) - (a.approved + a.pending)) as CategorySummary[];
+    return Object.values(map).sort((a, b) => b.recorded - a.recorded) as CategorySummary[];
   })();
 
   async function generatePDF() {
@@ -414,7 +413,16 @@ export default function ReportsScreen() {
   const loading = bLoading || loadingData;
   const fy      = summary.fundingYear;
   const utilizationPct = fy
-    ? Math.min(((summary.totalSpent + summary.totalPending + summary.totalMileage) / summary.totalBudget) * 100, 100)
+    ? Math.min(((summary.totalSpent + summary.totalMileage) / summary.totalBudget) * 100, 100)
+    : 0;
+  const recordedPct = fy
+    ? Math.min((summary.totalSpent / summary.totalBudget) * 100, 100)
+    : 0;
+  const mileagePct = fy
+    ? Math.min(
+        (summary.totalMileage / summary.totalBudget) * 100,
+        Math.max(100 - recordedPct, 0),
+      )
     : 0;
 
   return (
@@ -466,8 +474,8 @@ export default function ReportsScreen() {
             <View style={s.summaryGrid}>
               {[
                 { label: 'Total Budget',  value: summary.totalBudget,  color: Colors.purple },
-                { label: 'Approved',      value: summary.totalSpent,   color: Colors.green  },
-                { label: 'Pending',       value: summary.totalPending, color: Colors.amber  },
+                { label: 'Recorded',      value: summary.totalSpent,   color: Colors.green  },
+                { label: 'Mileage Estimate', value: summary.totalMileage, color: Colors.teal },
                 { label: 'Remaining',     value: Math.max(summary.remaining, 0), color: summary.remaining > 0 ? Colors.coral : Colors.green },
               ].map(item => (
                 <View key={item.label} style={s.summaryCard}>
@@ -486,14 +494,13 @@ export default function ReportsScreen() {
                 </Text>
               </View>
               <View style={s.utilTrack}>
-                <View style={[s.utilApproved, { width: `${Math.min((summary.totalSpent / summary.totalBudget) * 100, 100)}%` }]} />
-                <View style={[s.utilPending,  { width: `${Math.min((summary.totalPending / summary.totalBudget) * 100, 100)}%` }]} />
+                <View style={[s.utilRecorded, { width: `${recordedPct}%` }]} />
+                <View style={[s.utilMileage, { width: `${mileagePct}%` }]} />
               </View>
               <View style={{ flexDirection: 'row', gap: 16, marginTop: 8 }}>
-                <View style={s.legendRow}><View style={[s.dot, { backgroundColor: Colors.purple }]} /><Text style={s.legendText}>Approved</Text></View>
-                <View style={s.legendRow}><View style={[s.dot, { backgroundColor: Colors.amber  }]} /><Text style={s.legendText}>Pending</Text></View>
+                <View style={s.legendRow}><View style={[s.dot, { backgroundColor: Colors.purple }]} /><Text style={s.legendText}>Recorded</Text></View>
                 {summary.totalMileage > 0 && (
-                  <View style={s.legendRow}><View style={[s.dot, { backgroundColor: Colors.teal }]} /><Text style={s.legendText}>Mileage {CAD(summary.totalMileage)}</Text></View>
+                  <View style={s.legendRow}><View style={[s.dot, { backgroundColor: Colors.teal }]} /><Text style={s.legendText}>Mileage estimate {CAD(summary.totalMileage)}</Text></View>
                 )}
               </View>
               <Text style={s.utilHint}>
@@ -516,7 +523,7 @@ export default function ReportsScreen() {
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                         <Text style={{ fontSize: 22 }}>🚗</Text>
                         <View style={{ flex: 1 }}>
-                          <Text style={s.catName}>Mileage Reimbursement</Text>
+                          <Text style={s.catName}>Recorded Mileage Estimate</Text>
                           <Text style={s.catCount}>{mileageLogs.length} trip{mileageLogs.length !== 1 ? 's' : ''}</Text>
                         </View>
                         <Text style={s.catTotal}>{CAD(summary.totalMileage)}</Text>
@@ -533,10 +540,10 @@ export default function ReportsScreen() {
               {[
                 'Child name, date of birth & health card number',
                 'Funding year dates and total budget',
-                'Budget utilization bar (approved vs pending)',
+                'Recorded expense and mileage-estimate totals',
                 'Spending breakdown table by category',
                 'Full itemized expense list with dates & providers',
-                'Mileage log with distance, rate & reimbursement',
+                'Mileage log with distance, rate & estimated amount',
                 'Link to the official government portal',
               ].map((item, i) => (
                 <View key={i} style={[s.pdfItem, i > 0 && { borderTopWidth: 1, borderColor: Colors.border }]}>
@@ -569,7 +576,7 @@ export default function ReportsScreen() {
                     <Text style={s.generateIcon}>📤</Text>
                     <View>
                       <Text style={s.generateTitle}>Share / Save Worksheet</Text>
-                      <Text style={s.generateSub}>{expenses.length} expense{expenses.length !== 1 ? 's' : ''} · {CAD(summary.totalSpent + summary.totalPending)} logged</Text>
+                      <Text style={s.generateSub}>{expenses.length} expense{expenses.length !== 1 ? 's' : ''} · {CAD(summary.totalSpent)} recorded</Text>
                     </View>
                   </>
                 )}
@@ -621,8 +628,8 @@ const s = StyleSheet.create({
   utilTitle: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
   utilPct:   { fontSize: 16, fontWeight: '800' },
   utilTrack: { height: 12, backgroundColor: Colors.border, borderRadius: 6, flexDirection: 'row', overflow: 'hidden' },
-  utilApproved: { height: '100%', backgroundColor: Colors.purple },
-  utilPending:  { height: '100%', backgroundColor: Colors.amber  },
+  utilRecorded: { height: '100%', backgroundColor: Colors.purple },
+  utilMileage:  { height: '100%', backgroundColor: Colors.teal },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   dot:       { width: 8, height: 8, borderRadius: 4 },
   legendText:{ fontSize: 12, color: Colors.textSecondary },
@@ -634,8 +641,7 @@ const s = StyleSheet.create({
   catCount: { fontSize: 11, color: Colors.textMuted, marginTop: 1 },
   catTotal: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
   miniTrack:    { height: 6, backgroundColor: Colors.border, borderRadius: 3, flexDirection: 'row', overflow: 'hidden' },
-  miniApproved: { height: '100%', backgroundColor: Colors.purple },
-  miniPending:  { height: '100%', backgroundColor: Colors.amber  },
+  miniRecorded: { height: '100%', backgroundColor: Colors.purple },
   miniLabel:    { fontSize: 11, color: Colors.textSecondary },
 
   // PDF contents

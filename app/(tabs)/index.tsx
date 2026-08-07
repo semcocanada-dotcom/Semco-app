@@ -145,7 +145,11 @@ export default function DashboardScreen() {
         {(isExpired || isLowBal || isLowDays) && (
           <View style={{ paddingHorizontal: 20, gap: 8, marginBottom: 16 }}>
             {isExpired && (
-              <AlertBanner variant="danger" message="Grant year has ended" subText="Contact Saskatchewan Education to renew your child's funding." />
+              <AlertBanner
+                variant="danger"
+                message="Grant year has ended"
+                subText="Check the official ASD-IF page or contact the Ministry of Social Services about renewal."
+              />
             )}
             {isLowBal && (
               <AlertBanner variant="warning" message={`Low balance — ${formatCAD(summary.remaining)} remaining`} subText="You're nearing the active funding-year amount you entered." />
@@ -203,7 +207,7 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Mileage reimbursement (grant year) */}
+        {/* User-recorded mileage estimate (grant year) */}
         {activeChild && (
           <Animated.View entering={FadeInDown.duration(420).delay(180)} style={{ paddingHorizontal: 20, marginBottom: 18 }}>
             <Pressable
@@ -220,7 +224,7 @@ export default function DashboardScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 12, fontWeight: '800', color: '#0F766E', textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  Mileage Reimbursement
+                  Recorded Mileage Estimate
                 </Text>
                 <Text style={{ fontSize: 13, color: Colors.textMuted, marginTop: 1 }}>
                   This grant year

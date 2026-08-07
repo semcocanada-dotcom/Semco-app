@@ -662,7 +662,7 @@ export default function ProfileScreen() {
             <Text style={s.deleteAccountTitle}>Permanently delete account?</Text>
             <Text style={s.deleteAccountBody}>
               This permanently deletes your profile, children, funding years, expenses,
-              mileage, respite records, appointments, claims, custom providers, and receipt
+              mileage, respite records, appointments, custom providers, and receipt
               files. This cannot be undone.
             </Text>
             <Text style={s.deleteAccountPrompt}>

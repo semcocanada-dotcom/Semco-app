@@ -249,7 +249,10 @@ function TripRow({ log, onPress }: { log: MileageLog; onPress: () => void }) {
         <Text style={s.tripTitle} numberOfLines={1}>{desc}</Text>
         <Text style={s.tripMeta}>{format(parseISO(log.trip_date), 'MMM d, yyyy')}  ·  {Number(log.distance_km).toFixed(1)} km</Text>
       </View>
-      <Text style={s.tripAmount}>{CAD(Number(log.reimbursement_amount))}</Text>
+      <View style={{ alignItems: 'flex-end' }}>
+        <Text style={s.tripAmount}>{CAD(Number(log.reimbursement_amount))}</Text>
+        <Text style={{ fontSize: 10, color: Colors.textMuted }}>recorded estimate</Text>
+      </View>
       <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} style={{ marginLeft: 6 }} />
     </TouchableOpacity>
   );
@@ -292,7 +295,7 @@ function TripDetailModal({
             <Text style={{ fontSize: 40, fontWeight: '800', color: '#15803D' }}>
               {CAD(Number(log.reimbursement_amount))}
             </Text>
-            <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 4 }}>reimbursement</Text>
+            <Text style={{ fontSize: 15, color: Colors.textSecondary, marginTop: 4 }}>recorded mileage estimate</Text>
           </View>
 
           <View style={s.detailRow}>
@@ -450,7 +453,7 @@ export default function MileageScreen() {
                   <AppLogo size={36} />
                   <Text style={s.pageTitle}>Mileage</Text>
                 </View>
-                <Text style={s.pageSubtitle}>Track your trips for appointments{'\n'}and get reimbursed. 💙</Text>
+                <Text style={s.pageSubtitle}>Record appointment travel and{'\n'}estimated mileage amounts. 💙</Text>
               </View>
               <View style={{ marginTop: -4, marginRight: -8 }}>
                 <CarArt />
@@ -494,12 +497,12 @@ export default function MileageScreen() {
 
                 <View style={s.statDivider} />
 
-                {/* Reimbursement */}
+                {/* User-recorded estimate */}
                 <View style={s.statBox}>
                   <View style={[s.statIconCircle, { backgroundColor: '#DCFCE7' }]}>
                     <Ionicons name="cash" size={24} color="#16A34A" />
                   </View>
-                  <Text style={s.statCaption}>Estimated Reimbursement</Text>
+                  <Text style={s.statCaption}>Recorded Mileage Estimate</Text>
                   <Text style={[s.statBig, { color: '#15803D' }]}>{CAD(totalAmt)}</Text>
                   <View style={s.rateBadge}>
                     <Text style={s.rateBadgeText}>Rate: ${Number(avgRate).toFixed(2)} / km</Text>
@@ -509,7 +512,7 @@ export default function MileageScreen() {
 
               {/* Grant-year total */}
               <View style={s.yearTotalRow}>
-                <Text style={s.yearTotalLabel}>This grant year</Text>
+                <Text style={s.yearTotalLabel}>Recorded estimate this grant year</Text>
                 <Text style={s.yearTotalValue}>{CAD(summary.totalMileage)}</Text>
               </View>
             </View>

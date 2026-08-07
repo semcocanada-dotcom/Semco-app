@@ -13,6 +13,7 @@ import { DateField } from '@components/DateField';
 import { Colors } from '@constants/colors';
 import { supabase } from '@lib/supabase';
 import type { RespiteSession, RespiteWorker } from '@lib/types';
+import { RECORDED_EXPENSE_STORAGE_STATUS } from '@lib/expenseRecordState';
 import { useChild } from '@context/ChildContext';
 import { useAuth } from '@context/AuthContext';
 import { useBudget } from '@hooks/useBudget';
@@ -362,7 +363,7 @@ function LogSessionModal({
         category:        'respite',
         amount:          computedAmount,
         expense_date:    date,
-        status:          'approved',
+        status:          RECORDED_EXPENSE_STORAGE_STATUS,
         description:     `Respite — ${providerName.trim()}${notes.trim() ? `: ${notes.trim()}` : ''}`,
         logged_by:       session!.user.id,
       });

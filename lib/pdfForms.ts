@@ -226,7 +226,7 @@ function buildWorksheetHtml(input: WorksheetInput): string {
   <div class="brand">Autism Fund Tracker</div>
   <h1>${esc(input.title)}</h1>
   <div class="period">${esc(input.monthLabel)}</div>
-  <p class="purpose">${esc(input.recordkeepingNote)} This worksheet is for personal recordkeeping only. It is not a claim, application, invoice, approval, or proof of eligibility, and it is not submitted automatically.</p>
+  <p class="purpose">${esc(input.recordkeepingNote)} This worksheet is for personal recordkeeping only. It is not a government form, application, invoice, approval, proof of eligibility, or official submission, and it is not sent automatically.</p>
   <div class="identity">
     ${identityRows.map(([label, value]) => `<div class="field"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`).join('')}
   </div>
@@ -249,7 +249,7 @@ export async function generateAndShareMileageWorksheetPdf(data: MileagePdfInput)
       { label: 'Trip purpose and destination' },
       { label: 'Distance (km)', align: 'right', width: '14%' },
       { label: 'Rate / km', align: 'right', width: '13%' },
-      { label: 'Calculated amount', align: 'right', width: '16%' },
+      { label: 'Recorded estimate', align: 'right', width: '16%' },
     ],
     rows: data.rows.map((row) => [
       fmtDate(row.trip_date),
@@ -259,7 +259,7 @@ export async function generateAndShareMileageWorksheetPdf(data: MileagePdfInput)
       cad(Number(row.reimbursement_amount)),
     ]),
     total: data.total,
-    totalLabel: 'Recorded mileage amount',
+    totalLabel: 'Total recorded estimate',
     recordkeepingNote: 'Use this independent worksheet to review the mileage trips you recorded in Autism Fund Tracker.',
     officialFormLabel: 'Government of Saskatchewan mileage form (opens externally)',
     officialFormUrl: OFFICIAL_MILEAGE_FORM_URL,

@@ -33,7 +33,6 @@ module.exports = {
           danger: '#EF4444',
           info: '#3B82F6',
           ringSpent: '#7C5CFC',
-          ringPending: '#FBBF24',
           ringTrack: '#E8E4F3',
         },
       },

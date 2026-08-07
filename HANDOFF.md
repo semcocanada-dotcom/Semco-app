@@ -28,7 +28,6 @@ app/(tabs)/
   providers.tsx    Official Saskatchewan registry link + private provider records
   profile.tsx      Parent profile and account/privacy controls
   reports.tsx      Hidden (href:null), accessible from Profile
-  claims.tsx       Hidden (href:null), never built
 
 components/        BudgetRing, AppLogo, StatCard, FAB, ChildSelector, ExpenseListItem,
                    AlertBanner
@@ -52,7 +51,7 @@ constants/         colors.ts (purple #7C5CFC, bg #FAF8FF), mileage.ts (SK rates)
 ## DB Tables (all RLS-secured, mirrored in supabase/schema.sql)
 - `profiles` · `children` · `funding_years` · `expenses` · `providers`
 - `mileage_logs` (reimbursement_amount is a generated column — never set it)
-- `appointments` · `monthly_claims`
+- `appointments` · legacy `monthly_claims` (deletion compatibility only; no app route/client)
 - `respite_workers` (parent_id-scoped: name, phone, default_rate_per_hour, notes)
 - `respite_sessions` (child_id-scoped: session_date, provider_name, provider_phone,
   hours, rate_per_hour, amount_paid, worker_id FK→respite_workers)
@@ -61,7 +60,7 @@ constants/         colors.ts (purple #7C5CFC, bg #FAF8FF), mileage.ts (SK rates)
 Workers are added once (parent-level, reusable). When logging a session, pick a worker
 from a chip picker → name, phone, and default rate all auto-fill → enter date + hours →
 amount calculates automatically. On save: inserts into respite_sessions AND creates a
-matching expense (category='respite', status='approved') so the budget ring counts it.
+matching recorded expense so the budget ring counts it. The existing database enum value is an internal compatibility detail and is never presented as a government decision.
 Export Worksheet generates an independent, unbranded respite record worksheet for the selected month.
 It is prominently labeled unofficial and is not submitted to the government.
 Open Official Respite Form launches the untouched PDF hosted on publications.saskatchewan.ca externally.
@@ -72,9 +71,6 @@ Trips auto-populate from logged data, and the trip-purpose column comes from the
 the user typed when logging. The worksheet is prominently labeled unofficial and is not a
 Government of Saskatchewan form or submission.
 Open Official Mileage Form launches the untouched PDF hosted on publications.saskatchewan.ca externally.
-
-## Open follow-ups (priority order)
-6. claims.tsx is dead code — build it out or delete it
 
 ### Done
 1. ✅ Mileage trip description now auto-composes from the selected provider as
