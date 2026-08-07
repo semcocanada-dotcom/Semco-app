@@ -34,7 +34,7 @@ describe('location privacy', () => {
     expect(providersSource).not.toContain('Registry-Listed Provider');
   });
 
-  it('keeps unrelated native purpose strings factual and minimal', () => {
+  it('keeps native purpose strings factual and minimal', () => {
     const imagePickerPlugin = appConfig.expo.plugins.find(
       (plugin: unknown) => Array.isArray(plugin) && plugin[0] === 'expo-image-picker',
     )[1];
@@ -43,7 +43,12 @@ describe('location privacy', () => {
     )[1];
 
     expect(imagePickerPlugin.microphonePermission).toBe(false);
-    expect(imagePickerPlugin.photosPermission).toBe(false);
+    expect(imagePickerPlugin.photosPermission).toBe(
+      'Autism Fund Tracker uses only the photos you select to attach as receipt records.',
+    );
+    expect(appConfig.expo.ios.infoPlist.NSPhotoLibraryUsageDescription).toBe(
+      imagePickerPlugin.photosPermission,
+    );
     expect(calendarPlugin.remindersPermission).toBe(false);
     expect(appConfig.expo.ios.infoPlist.NSAppTransportSecurity.NSAllowsArbitraryLoads).toBe(false);
   });

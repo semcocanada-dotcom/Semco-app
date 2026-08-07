@@ -29,6 +29,7 @@
       "buildNumber": "13",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Autism Fund Tracker uses only the photos you select to attach as receipt records.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false
         }
@@ -59,7 +60,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": false,
+          "photosPermission": "Autism Fund Tracker uses only the photos you select to attach as receipt records.",
           "cameraPermission": "Allow Autism Fund Tracker to use your camera to capture receipts.",
           "microphonePermission": false
         }
