@@ -10,9 +10,9 @@ INFORMATION WE COLLECT
 
 Semco Pro may collect installer account and company information, including name, business name, email address, phone number, business address, and postal code.
 
-Project records may include a customer's name, email address, phone number, site address, surface details, colours, products, material estimates, job notes, and project status. The app may also collect stage photos, purchase receipts, signed project forms, customer signatures, warranty submissions, and material requests when an installer chooses to create or submit those records. Project and sign-off records also store the version, full text, and acceptance time of the applicable privacy or authorization notice.
+Project records may include a customer's name, email address, phone number, site address, surface details, colours, products, material estimates, job notes, and project status. The app may also collect custom colour formulas and notes, colour-sample photos, stage photos, purchase receipts, signed project forms, customer signatures, warranty submissions, and material requests when an installer chooses to create or submit those records. A receipt image may show payment-method information printed by the merchant, such as a card type or masked digits. Project and sign-off records also store the version, full text, and acceptance time of the applicable privacy or authorization notice.
 
-Basic technical and security information may be processed when needed to authenticate an account, operate cloud services, and investigate errors or misuse.
+Basic technical and security information may be processed when needed to authenticate an account, deliver app updates, operate cloud services, and investigate errors or misuse.
 
 HOW WE USE INFORMATION
 
@@ -34,7 +34,7 @@ Semco Guide is a local reference tool. It uses deterministic calculators, coded 
 
 STORAGE AND SERVICE PROVIDERS
 
-Semco Pro uses Supabase for account authentication, database records, and access-controlled file storage. Semco Guide conversations are not synced to Supabase. Semco Canada does not sell personal information and does not use personal information for third-party advertising or tracking.
+Semco Pro uses Supabase for account authentication, database records, and access-controlled file storage. It uses Expo Application Services to check for and deliver app updates. Expo may process the device operating system, a randomized installation token used to determine whether an update was downloaded, update interactions, and limited error, performance, or failed-update information. Semco Pro does not link that Expo token or technical information to the installer's Supabase account. This information is used only for update delivery, app functionality, analytics, and diagnostics, not advertising or tracking. Semco Guide conversations are not synced to Supabase. Semco Canada does not sell personal information and does not use personal information for third-party advertising or tracking.
 
 WHO CAN ACCESS RECORDS
 

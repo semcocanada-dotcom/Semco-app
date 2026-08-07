@@ -35,14 +35,23 @@ All of the following are used for App Functionality:
 - Contact Info: Email Address
 - Contact Info: Phone Number
 - Contact Info: Physical Address
-- Contact Info: Other User Contact Info, including company name and postal code
+- Contact Info: Other User Contact Info, including company or business name
+- Financial Info: Payment Info, only when a user-uploaded purchase receipt image contains merchant-printed payment-method details such as card type or masked digits
 - Purchases: Purchase History, including submitted receipts and material request records
 - User Content: Photos or Videos, including project stages, receipts, and colour samples
-- User Content: Customer Support, when an installer submits support-related information
 - User Content: Other User Content, including project details, customer sign-off forms, signatures, and job notes
 - Identifiers: User ID
 
 Semco Guide questions, searches, and saved guide conversations stay on the device and are not collected by Semco Canada.
+
+### Technical Data Linked to the Device Installation
+
+Expo Application Services processes the following only to check for and deliver app updates and to measure update reliability. Declare these as linked because the randomized persistent installation token can associate the technical events with the device installation, even though Semco Pro does not attach the installer's Supabase account UUID:
+
+- Identifiers: Device ID (a randomized Expo installation token), used for App Functionality and Analytics
+- Usage Data: Product Interaction (app/update checks and downloads), used for App Functionality and Analytics
+- Diagnostics: Crash Data, used for App Functionality and Analytics
+- Diagnostics: Other Diagnostic Data (update IDs, failed-update IDs, OS and limited error/performance information), used for App Functionality and Analytics
 
 ### Tracking
 
