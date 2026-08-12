@@ -37,7 +37,7 @@
       }
     },
     "android": {
-      "versionCode": 20,
+      "versionCode": 22,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
@@ -45,6 +45,10 @@
       "package": "com.semcocanada.semcopro",
       "permissions": [
         "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
