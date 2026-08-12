@@ -911,8 +911,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   dashboardStat: {
-    width: '48%',
+    flexBasis: 140,
     flexGrow: 1,
+    minWidth: 140,
   },
   nextStepCard: {
     gap: Spacing.md,

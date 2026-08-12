@@ -2,6 +2,10 @@ import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/services/supabase';
 import { clearLocalAccountData } from '@/services/local-account-data';
+import {
+  AUTH_EMAIL_CONFIRM_REDIRECT,
+  AUTH_PASSWORD_RESET_REDIRECT,
+} from '@/constants/auth';
 
 interface AuthState {
   session: Session | null;
@@ -50,6 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       email: email.trim(),
       password,
       options: {
+        emailRedirectTo: AUTH_EMAIL_CONFIRM_REDIRECT,
         data: {
           company_name: profile.companyName.trim(),
           contact_name: profile.contactName.trim(),
@@ -67,7 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   sendPasswordReset: async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: 'semco://reset-password',
+      redirectTo: AUTH_PASSWORD_RESET_REDIRECT,
     });
     return error?.message ?? null;
   },

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button, Input } from '@/components/ui';
-import { supabase } from '@/services/supabase';
 import { Colors, Typography, Spacing } from '@/constants/theme';
+import { useAuthStore } from '@/store/auth';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
@@ -11,14 +11,15 @@ export default function ForgotPasswordScreen() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const sendPasswordReset = useAuthStore((state) => state.sendPasswordReset);
 
   const handleReset = async () => {
     setError(null);
     if (!email.trim()) { setError('Enter your email address'); return; }
     setIsLoading(true);
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const resetError = await sendPasswordReset(email);
     setIsLoading(false);
-    if (err) { setError(err.message); return; }
+    if (resetError) { setError(resetError); return; }
     setSent(true);
   };
 

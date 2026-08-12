@@ -49,7 +49,11 @@ export default function LoginScreen() {
     if (mode === 'sign_in') {
       const signInError = await signIn(email, password);
       if (signInError) {
-        setError(signInError);
+        setError(
+          signInError === 'Invalid login credentials'
+            ? "Email or password is incorrect. If you've used this email before, tap Forgot password."
+            : signInError,
+        );
         return;
       }
       router.replace('/dashboard' as any);
@@ -88,8 +92,8 @@ export default function LoginScreen() {
     }
 
     Alert.alert(
-      'Check your email',
-      'Open the confirmation email from Semco Pro, then return here and sign in to finish your company profile.',
+      'Check email or sign in',
+      "If this is a new account, open the confirmation email from Semco Pro. If you've used this email before, choose Sign In and tap Forgot password.",
     );
     setMode('sign_in');
   };
