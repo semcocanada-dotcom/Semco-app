@@ -37,7 +37,11 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
             <Text style={styles.lineName}>{line.price?.product ?? line.layer.productName}</Text>
             <Text style={styles.lineMeta}>
               {line.quantity} x {line.price?.size ?? line.priceSku}
+              {showPrices && line.price ? ` @ ${formatCad(line.price.retailPriceCad)}` : ''}
             </Text>
+            {line.layer.category === 'prep' && line.price?.coverageRate ? (
+              <Text style={styles.lineCoverage}>{line.price.coverageRate}</Text>
+            ) : null}
           </View>
           <Text style={styles.lineValue}>
             {showPrices && line.lineTotalCad != null ? formatCad(line.lineTotalCad) : 'Dealer price pending'}
@@ -108,6 +112,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontFamily: Fonts.regular,
     fontSize: Typography.size.xs,
+  },
+  lineCoverage: {
+    color: Colors.textDisabled,
+    fontFamily: Fonts.regular,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.3,
   },
   lineValue: {
     minWidth: 92,

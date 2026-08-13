@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/database/client';
 import { installerProfiles } from '@/database/schema/installers';
 import type { InstallerProfile, NewInstallerProfile } from '@/database/schema/installers';
-import { resolveDealerContext } from '@/constants/dealers';
+import { normalizeCanadianProvince, resolveDealerContext } from '@/constants/dealers';
 import { createLocalId } from '@/utils/id';
 import { syncInstallerProfileToCloud } from '@/services/cloud-sync';
 import { supabase } from '@/services/supabase';
@@ -76,17 +76,18 @@ export async function upsertInstallerProfile(
 ): Promise<InstallerProfile> {
   const existing = await getInstallerProfile(installerId);
   const now = new Date().toISOString();
+  const normalizedValues = normalizeProfileValues(values);
   const dealer = resolveDealerContext({
-    companyPostalCode: values.postalCode,
-    companyProvince: values.province,
-    companyAddress: values.companyAddress,
+    companyPostalCode: normalizedValues.postalCode === undefined ? existing?.postalCode : normalizedValues.postalCode,
+    companyProvince: normalizedValues.province === undefined ? existing?.province : normalizedValues.province,
+    companyAddress: normalizedValues.companyAddress === undefined ? existing?.companyAddress : normalizedValues.companyAddress,
   });
 
   if (existing) {
     await db
       .update(installerProfiles)
       .set({
-        ...values,
+        ...normalizedValues,
         assignedDealerId: dealer.dealerId,
         updatedAt: now,
       })
@@ -94,7 +95,7 @@ export async function upsertInstallerProfile(
 
     const updated = {
       ...existing,
-      ...values,
+      ...normalizedValues,
       assignedDealerId: dealer.dealerId,
       updatedAt: now,
     };
@@ -108,16 +109,16 @@ export async function upsertInstallerProfile(
   const created: NewInstallerProfile = {
     id: createLocalId('profile'),
     installerId,
-    companyName: values.companyName ?? null,
-    contactName: values.contactName ?? null,
-    email: values.email ?? null,
-    phone: values.phone ?? null,
-    companyAddress: values.companyAddress ?? null,
-    city: values.city ?? null,
-    province: values.province ?? null,
-    postalCode: values.postalCode ?? null,
-    semcoAccountId: values.semcoAccountId ?? null,
-    certificationStatus: values.certificationStatus ?? 'pending',
+    companyName: normalizedValues.companyName ?? null,
+    contactName: normalizedValues.contactName ?? null,
+    email: normalizedValues.email ?? null,
+    phone: normalizedValues.phone ?? null,
+    companyAddress: normalizedValues.companyAddress ?? null,
+    city: normalizedValues.city ?? null,
+    province: normalizedValues.province ?? null,
+    postalCode: normalizedValues.postalCode ?? null,
+    semcoAccountId: normalizedValues.semcoAccountId ?? null,
+    certificationStatus: normalizedValues.certificationStatus ?? 'pending',
     assignedDealerId: dealer.dealerId,
     createdAt: now,
     updatedAt: now,
@@ -136,5 +137,17 @@ export function profileToDealerInput(profile?: InstallerProfile | null) {
     companyPostalCode: profile?.postalCode,
     companyProvince: profile?.province,
     companyAddress: profile?.companyAddress,
+  };
+}
+
+function normalizeProfileValues(
+  values: Partial<Omit<NewInstallerProfile, 'id' | 'installerId' | 'createdAt' | 'updatedAt'>>,
+) {
+  if (values.province === undefined) return values;
+
+  const trimmedProvince = values.province?.trim() ?? '';
+  return {
+    ...values,
+    province: normalizeCanadianProvince(trimmedProvince) ?? (trimmedProvince || null),
   };
 }

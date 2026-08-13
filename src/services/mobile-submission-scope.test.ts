@@ -98,7 +98,7 @@ describe('App Store mobile submission scope', () => {
     const gitIgnore = readFileSync(path.join(REPO_ROOT, '.gitignore'), 'utf8');
     const easIgnore = readFileSync(path.join(REPO_ROOT, '.easignore'), 'utf8');
 
-    expect(appJson.expo.version).toBe('1.0.1');
+    expect(appJson.expo.version).toBe('1.0.2');
     expect(gitIgnore).toContain('.release*/');
     expect(easIgnore).toContain('.release*/');
   });

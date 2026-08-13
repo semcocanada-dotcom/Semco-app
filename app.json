@@ -2,7 +2,7 @@
   "expo": {
     "name": "Semco Pro",
     "slug": "semco-pro",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "default",
     "runtimeVersion": {
       "policy": "appVersion"

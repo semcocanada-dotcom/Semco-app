@@ -1,4 +1,5 @@
 import { sqliteTable, text, real, index } from 'drizzle-orm/sqlite-core';
+import type { InstallationScope, PrepConditionId } from '@/constants/prep-systems';
 
 export interface MaterialLayer {
   productId: string;
@@ -19,6 +20,10 @@ export interface MaterialLayer {
   sourceNote?: string;
   exactQuantity?: number;
   roundedQuantity?: number;
+  quantityRangeMin?: number;
+  quantityRangeMax?: number;
+  prepStep?: number;
+  dilutionLabel?: string;
 }
 
 export interface CalculationResult {
@@ -28,6 +33,10 @@ export interface CalculationResult {
   areaSqm: number;
   areaSqft?: number;
   sourceSummary?: string;
+  prepCondition?: PrepConditionId;
+  prepSystemLabel?: string;
+  liquidMembraneRequired?: boolean;
+  installationScope?: InstallationScope;
 }
 
 export const calculations = sqliteTable(

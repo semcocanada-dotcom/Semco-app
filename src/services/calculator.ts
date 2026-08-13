@@ -1,6 +1,20 @@
 import type { SubstrateId } from '@/constants/substrates';
 import { SUBSTRATE_MAP } from '@/constants/substrates';
 import {
+  CLEANER_COVERAGE_CAVEAT,
+  CLEANER_COVERAGE_SOURCE,
+  SIP_PREP_SOURCE,
+  getPrepSystem,
+  isLiquidMembraneRequired,
+  resolvePrepCondition,
+} from '@/constants/prep-systems';
+import type {
+  InstallationScope,
+  PrepCleanerStep,
+  PrepConditionId,
+  PrepSystem,
+} from '@/constants/prep-systems';
+import {
   COVERAGE_PRODUCTS,
   SQFT_PER_SQM,
   estimateCoverage,
@@ -16,7 +30,7 @@ import {
 import type { CoverageEstimate, WaterproofingMode, XBondFinishSku } from '@/constants/product-coverage';
 import type { CalculationResult, MaterialLayer } from '@/database/schema/calculations';
 
-interface CalculatorInput {
+export interface CalculatorInput {
   areaSqft?: number;
   areaSqm?: number;
   substrateType: SubstrateId;
@@ -24,6 +38,8 @@ interface CalculatorInput {
   sealerSku?: string;
   waterproofingMode?: WaterproofingMode;
   finishSku?: XBondFinishSku;
+  prepCondition?: PrepConditionId;
+  installationScope?: InstallationScope;
 }
 
 export function calculate(input: CalculatorInput): CalculationResult {
@@ -31,7 +47,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     substrateType,
     wastePct,
     sealerSku,
-    waterproofingMode = 'above_grade',
+    waterproofingMode = 'none',
     finishSku = 'XBOND-STANDARD',
   } = input;
   const areaSqft = input.areaSqft ?? (input.areaSqm ? input.areaSqm * SQFT_PER_SQM : 0);
@@ -44,13 +60,37 @@ export function calculate(input: CalculatorInput): CalculationResult {
     throw new Error('Please enter a valid area greater than 0');
   }
 
+  const prepCondition = resolvePrepCondition(substrateType, input.prepCondition);
+  const prepSystem = getPrepSystem(prepCondition);
+  const installationScope: InstallationScope = substrateType === 'pool'
+    ? 'submerged'
+    : input.installationScope ?? 'floor_or_other';
+
+  if (substrateType === 'gypsum_board' && installationScope === 'wet_area') {
+    throw new Error(
+      'Regular drywall/gypsum board is not supported in wet areas. Select a wet-area board or cement board substrate.',
+    );
+  }
+
+  const membraneRequired = isLiquidMembraneRequired(
+    substrateType,
+    prepCondition,
+    installationScope,
+  );
+
   const sealerProduct = getSealerProduct(getSealerSkuForSubstrate(substrateType, sealerSku));
   const estimates: CoverageEstimate[] = [
     estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqft, wastePct),
     estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getXBondLiquidRange(), areaSqft, wastePct),
   ];
 
-  const membraneMode = substrateType === 'pool' ? 'submerged' : waterproofingMode;
+  const membraneMode: WaterproofingMode = installationScope === 'submerged'
+    ? 'submerged'
+    : installationScope === 'wet_area'
+      ? 'above_grade'
+      : membraneRequired && waterproofingMode === 'none'
+        ? 'above_grade'
+        : waterproofingMode;
   const membraneRange = getLiquidMembraneRange(membraneMode);
   if (membraneRange) {
     estimates.push(estimateCoverage(COVERAGE_PRODUCTS.LIQUID_MEMBRANE, membraneRange, areaSqft, wastePct));
@@ -66,230 +106,121 @@ export function calculate(input: CalculatorInput): CalculationResult {
   estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct, substrateType), areaSqft, wastePct));
 
   return {
-    layers: [...getPrepLayers(substrateType), ...estimates.map(toMaterialLayer)],
+    layers: [...getPrepLayers(prepSystem, areaSqft, wastePct), ...estimates.map(toMaterialLayer)],
     totalKg: 0,
     wastePct,
     areaSqm,
     areaSqft,
-    sourceSummary: 'Material quantities include Liquid Membrane by default because the checked Semco X-Bond, shower, pool, tile, wood, cove, and drain details show it inside the assembly. Cleaner prep rows follow SIP prep types and should be staged only when the substrate condition calls for them.',
+    prepCondition,
+    prepSystemLabel: prepSystem.sipType ? `SIP Type ${prepSystem.sipType}: ${prepSystem.label}` : prepSystem.label,
+    liquidMembraneRequired: membraneRequired,
+    installationScope,
+    sourceSummary: buildSourceSummary(
+      prepSystem,
+      membraneMode,
+      membraneRequired,
+      installationScope,
+    ),
   };
 }
 
-function getPrepLayers(substrateType: SubstrateId): MaterialLayer[] {
-  const base: MaterialLayer[] = [];
-
-  if (substrateType === 'plywood') {
-    base.push(createPrepLayer({
-      sku: 'PREP-WOOD',
-      name: 'Wood substrate prep',
-      label: 'Sweep, secure, membrane, fabric',
-      note: 'SIP Preparation Type E: wood surfaces start with Liquid Membrane and anti-fracture fabric before X-Bond.',
-      sourcePage: 24,
-      purchaseLabel: 'No cleaner quantity; stage membrane/fabric in material rows',
-    }));
-    return base;
+function getPrepLayers(prepSystem: PrepSystem, areaSqft: number, wastePct: number): MaterialLayer[] {
+  if (prepSystem.cleanerSteps.length > 0) {
+    return prepSystem.cleanerSteps.map((step) => createCleanerLayer(step, areaSqft, wastePct));
   }
 
-  if (substrateType === 'concrete') {
-    base.push(
-      createPrepLayer({
-        sku: 'NU-LIFT',
-        name: 'SEMCO Nu-Lift Cleaner',
-        label: 'Concrete pH / mineral reset',
-        note: 'Semco Canada field rule stages Nu-Lift before Stone Soap on concrete. SIP prep uses Nu-Lift for mineral, alkali, magnesium, and efflorescence conditions.',
-        sourcePage: 23,
-        purchaseLabel: 'Stage Nu-Lift before Stone Soap for concrete prep',
-      }),
-      createPrepLayer({
-        sku: 'STONE-SOAP',
-        name: 'SEMCO Stone Soap',
-        label: 'Final wash before coating',
-        note: 'SIP Type A and Type D use Stone Soap solution 1:4. On concrete, use it as the final wash after Nu-Lift before coating.',
-        sourcePage: 20,
-        purchaseLabel: 'Stage Stone Soap for final wash',
-      }),
-    );
-    return base;
-  }
-
-  if (substrateType === 'metal') {
-    base.push(
-      createPrepLayer({
-        sku: 'STONE-SOAP',
-        name: 'SEMCO Stone Soap',
-        label: 'Standard wash for clean metal',
-        note: 'SIP Type A includes metal and uses Stone Soap solution 1:4 for clean, non-waxed surfaces.',
-        sourcePage: 20,
-        purchaseLabel: 'Stage Stone Soap for standard wash',
-      }),
-      createPrepLayer({
-        sku: 'POWER-CLEANER',
-        name: 'SEMCO Power Cleaner',
-        label: 'Use if oil / grease is present',
-        note: 'Use when oil, wax, grease, sealer, paint, or other bond-breaking residue is present. Confirm metal profile and adhesion before coating.',
-        sourcePage: 21,
-        purchaseLabel: 'Stage only if surface has oil, grease, coating, or shop residue',
-      }),
-    );
-    return base;
-  }
-
-  if (substrateType === 'existing_tile' || substrateType === 'pool') {
-    base.push(
-      createPrepLayer({
-        sku: 'NU-LIFT',
-        name: 'SEMCO Nu-Lift Cleaner',
-        label: 'Mineral / efflorescence prep',
-        note: 'SIP Type D uses Nu-Lift for tile, magnesium, efflorescence, exterior block/stucco, and below-grade plaster conditions.',
-        sourcePage: 23,
-        purchaseLabel: 'Stage if mineral, calcium, efflorescence, or pool residue is present',
-      }),
-      createPrepLayer({
-        sku: 'STONE-SOAP',
-        name: 'SEMCO Stone Soap',
-        label: 'Final clean after Nu-Lift',
-        note: 'SIP Type D follows Nu-Lift with Stone Soap solution 1:4 to clean chemical residue.',
-        sourcePage: 23,
-        purchaseLabel: 'Stage Stone Soap for final wash',
-      }),
-    );
-    return base;
-  }
-
-  if (substrateType === 'concrete_block') {
-    base.push(
-      createPrepLayer({
-        sku: 'NU-LIFT',
-        name: 'SEMCO Nu-Lift Cleaner',
-        label: 'Mineral / efflorescence prep',
-        note: 'SIP Type D uses non-diluted Nu-Lift for exterior block wall, stucco, below-grade plaster, tile, magnesium, and efflorescence contaminated surfaces.',
-        sourcePage: 23,
-        purchaseLabel: 'Stage Nu-Lift for block, stucco, plaster, or mineral residue',
-      }),
-      createPrepLayer({
-        sku: 'STONE-SOAP',
-        name: 'SEMCO Stone Soap',
-        label: 'Final clean after Nu-Lift',
-        note: 'SIP Type D follows Nu-Lift with Stone Soap solution 1:4 to clean chemical residue and pH-balance the surface.',
-        sourcePage: 23,
-        purchaseLabel: 'Stage Stone Soap for final wash',
-      }),
-    );
-    return base;
-  }
-
-  if (substrateType === 'existing_paint') {
-    base.push(
-      createPrepLayer({
-        sku: 'POWER-CLEANER',
-        name: 'SEMCO Power Cleaner',
-        label: 'Coating / residue prep',
-        note: 'SIP Type B uses Power Cleaner solution 1:4 for epoxy, terrazzo, carpet glue, waxed surfaces, water-based glue, paint, sealers, and non-permanent topical coatings.',
-        sourcePage: 21,
-        purchaseLabel: 'Stage Power Cleaner for coating residue',
-      }),
-      createPrepLayer({
-        sku: 'STONE-SOAP',
-        name: 'SEMCO Stone Soap',
-        label: 'Final clean after Power Cleaner',
-        note: 'SIP Type B follows Power Cleaner with Stone Soap solution 1:4 to clean chemical residue and pH-balance the surface.',
-        sourcePage: 21,
-        purchaseLabel: 'Stage Stone Soap for final wash',
-      }),
-    );
-    return base;
-  }
-
-  if (substrateType === 'icf') {
-    base.push(
-      createPrepLayer({
-        sku: 'STONE-SOAP',
-        name: 'SEMCO Stone Soap',
-        label: 'Standard wash',
-        note: 'SIP Type A uses Stone Soap solution 1:4 for standard surface preparation.',
-        sourcePage: 15,
-        purchaseLabel: 'Stage Stone Soap for standard wash',
-      }),
-      createPrepLayer({
-        sku: 'NU-LIFT',
-        name: 'SEMCO Nu-Lift Cleaner',
-        label: 'Use only for mineral deposits',
-        note: 'Use Nu-Lift when the surface has calcium, magnesium, mineral residue, alkali, or efflorescence.',
-        sourcePage: 23,
-        purchaseLabel: 'Add only if mineral contamination is visible',
-      }),
-    );
-    return base;
-  }
-
-  if (substrateType === 'cement_board' || substrateType === 'gypsum_board') {
-    base.push(createPrepLayer({
-      sku: 'PREP-WALL-BOARD',
-      name: substrateType === 'gypsum_board' ? 'Drywall substrate check' : 'Cement board substrate check',
-      label: 'Fastened, dry, stable board',
-      note: 'Wall board prep depends on the surface and exposure. Wet-area joints, corners, and seams require Liquid Membrane/fabric detail before X-Bond. Drywall is walls only.',
-      sourcePage: 35,
-      purchaseLabel: 'No cleaner quantity; verify board stability and wet-area detail',
-    }));
-    return base;
-  }
-
-  if (substrateType === 'heated_floor') {
-    base.push(createPrepLayer({
-      sku: 'PREP-HEATED-FLOOR',
-      name: 'Heated floor prep check',
-      label: 'Prep actual top surface',
-      note: 'Heated floors must be prepped by the actual top surface. Keep heat off during application and cure; do not thermal-cycle while the system is bonding.',
-      sourcePage: 28,
-      purchaseLabel: 'No cleaner quantity; choose prep by actual top surface',
-    }));
-    return base;
-  }
-
-  base.push(createPrepLayer({
-    sku: 'STONE-SOAP',
-    name: 'SEMCO Stone Soap',
-    label: 'Standard wash',
-    note: 'SIP Type A uses Stone Soap solution 1:4. Use Power Cleaner first if grease, oil, wax, glue, paint, or topical coatings are present.',
-    sourcePage: 15,
-    purchaseLabel: 'Stage Stone Soap; add Power Cleaner only if contamination is present',
-  }));
-
-  return base;
+  if (!prepSystem.assemblyNote) return [];
+  return [createAssemblyPrepLayer(prepSystem)];
 }
 
-function createPrepLayer({
-  sku,
-  name,
-  label,
-  note,
-  sourcePage,
-  purchaseLabel,
-}: {
-  sku: string;
-  name: string;
-  label: string;
-  note: string;
-  sourcePage: number;
-  purchaseLabel: string;
-}): MaterialLayer {
+function createCleanerLayer(step: PrepCleanerStep, areaSqft: number, wastePct: number): MaterialLayer {
+  const adjustedSqft = areaSqft * (1 + wastePct / 100);
+  const minimumCleanerGallons = adjustedSqft / step.maxSqftPerConcentrateGallon;
+  const maximumCleanerGallons = adjustedSqft / step.minSqftPerConcentrateGallon;
+  const roundedCleanerGallons = Math.max(1, Math.ceil(maximumCleanerGallons));
+
   return {
-    productId: sku.toLowerCase(),
-    productSku: sku,
-    productName: name,
+    productId: `${step.productSku.toLowerCase()}-step-${step.order}`,
+    productSku: step.productSku,
+    productName: step.productName,
+    category: 'prep',
+    coats: 0,
+    quantityKg: 0,
+    quantityPacks: roundedCleanerGallons,
+    packSizeKg: 0,
+    coverageRateSqmPerKg: 0,
+    quantityLabel: `${formatGallonRange(minimumCleanerGallons, maximumCleanerGallons)} gal concentrate`,
+    purchaseLabel: `Allow up to ${formatGallons(maximumCleanerGallons)} gal for this pass; repeated passes are combined into the package plan below`,
+    packLabel: 'Available in 1 gal and 5 gal pails',
+    coverageLabel: `Step ${step.order} - ${step.dilutionLabel} - ${step.minSqftPerConcentrateGallon}-${step.maxSqftPerConcentrateGallon} sq ft/gal concentrate`,
+    sourceDocument: SIP_PREP_SOURCE,
+    sourcePage: step.sourcePage,
+    sourceNote: `${step.purpose} Coverage source: ${CLEANER_COVERAGE_SOURCE}. ${CLEANER_COVERAGE_CAVEAT}`,
+    exactQuantity: maximumCleanerGallons,
+    roundedQuantity: roundedCleanerGallons,
+    quantityRangeMin: minimumCleanerGallons,
+    quantityRangeMax: maximumCleanerGallons,
+    prepStep: step.order,
+    dilutionLabel: step.dilutionLabel,
+  };
+}
+
+function createAssemblyPrepLayer(prepSystem: PrepSystem): MaterialLayer {
+  const isWood = prepSystem.id === 'type_e';
+  return {
+    productId: isWood ? 'prep-wood' : 'prep-surface-ready',
+    productSku: isWood ? 'PREP-WOOD' : 'PREP-SURFACE-READY',
+    productName: isWood ? 'Wood substrate prep' : 'Surface readiness check',
     category: 'prep',
     coats: 0,
     quantityKg: 0,
     quantityPacks: 0,
     packSizeKg: 0,
     coverageRateSqmPerKg: 0,
-    quantityLabel: 'As needed',
-    purchaseLabel,
-    coverageLabel: label,
-    sourceDocument: 'Open SIP manual - master copy v2019-3 2.pdf',
-    sourcePage,
-    sourceNote: note,
+    quantityLabel: 'No cleaner quantity',
+    purchaseLabel: isWood ? 'Liquid Membrane is included in the material rows' : 'Verify the actual top surface before coating',
+    coverageLabel: prepSystem.label,
+    sourceDocument: SIP_PREP_SOURCE,
+    sourcePage: prepSystem.sourcePage,
+    sourceNote: prepSystem.assemblyNote,
   };
+}
+
+function buildSourceSummary(
+  prepSystem: PrepSystem,
+  membraneMode: WaterproofingMode,
+  membraneRequired: boolean,
+  installationScope: InstallationScope,
+): string {
+  const prepLabel = prepSystem.sipType ? `SIP Type ${prepSystem.sipType}` : 'surface-readiness check';
+  const cleanerBasis = prepSystem.cleanerSteps.length > 0
+    ? ` Cleaner amounts use ${CLEANER_COVERAGE_SOURCE} per concentrate gallon for each required pass and are planning estimates; actual site use may vary.`
+    : '';
+  const membraneSummary = installationScope === 'submerged'
+    ? 'Liquid Membrane is required for submerged exposure and is included automatically using the 4-coat submerged system.'
+    : installationScope === 'wet_area'
+      ? 'Liquid Membrane is required for this wet area and is included automatically using the 2-coat above-grade system.'
+      : membraneRequired
+        ? 'Liquid Membrane is required by the selected substrate/system detail and is included automatically.'
+        : membraneMode === 'none'
+          ? installationScope === 'non_wet_wall'
+            ? 'Liquid Membrane is optional for this wall in a non-wet area and is not included.'
+            : 'Liquid Membrane is optional for this floor or other non-wet calculation and is not included.'
+          : 'Liquid Membrane was included by selection.';
+
+  return `Preparation follows ${prepLabel}: ${prepSystem.label}.${cleanerBasis} ${membraneSummary}`;
+}
+
+function formatGallons(value: number): string {
+  if (value < 1) return value.toFixed(2);
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function formatGallonRange(minimum: number, maximum: number): string {
+  const minLabel = formatGallons(minimum);
+  const maxLabel = formatGallons(maximum);
+  return minLabel === maxLabel ? minLabel : `${minLabel}-${maxLabel}`;
 }
 
 function toMaterialLayer(estimate: CoverageEstimate): MaterialLayer {
@@ -320,6 +251,9 @@ function toMaterialLayer(estimate: CoverageEstimate): MaterialLayer {
 
 export function formatLayerSummary(layer: MaterialLayer): string {
   if (layer.quantityLabel) {
+    if (layer.category === 'prep') {
+      return `${layer.productName}: ${layer.quantityLabel} (${layer.packLabel ?? layer.productSku})`;
+    }
     return `${layer.productName}: ${layer.quantityLabel} (${layer.packLabel ?? layer.productSku}) - ${layer.coats} coat${layer.coats > 1 ? 's' : ''}`;
   }
 

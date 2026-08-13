@@ -1,4 +1,5 @@
 import type { SubstrateId } from '@/constants/substrates';
+import type { InstallationScope } from '@/constants/prep-systems';
 import { SQFT_PER_SQM } from '@/constants/product-coverage';
 import { calculate } from '@/services/calculator';
 import { getFormulaForBatch, type BatchSize } from '@/services/color-scaler';
@@ -73,7 +74,7 @@ const GLOSSARY: { term: string; aliases: string[]; definition: string; example: 
   { term: 'Dwell time', aliases: ['dwell time', 'dwell'], definition: 'How long a cleaner needs to sit on the surface and work before you scrub and rinse it off.', example: 'Let the Stone Soap mix dwell for a few minutes before scrubbing so it can break down the grime.' },
   { term: 'Skim coat', aliases: ['skim coat', 'skim'], definition: 'A very thin leveling pass used to smooth small imperfections rather than build thickness.', example: 'A quick skim coat can knock down trowel lines before the finish coat.' },
   { term: 'Waste factor', aliases: ['waste factor', 'waste percentage', 'waste percent'], definition: 'Extra material added to an order (usually about 10%) to cover spillage, edges, texture, and mistakes.', example: 'For 600 sq ft, a 10% waste factor means ordering material for 660 sq ft.' },
-  { term: 'Submerged', aliases: ['submerged'], definition: 'Constantly under water or holding water — like a pool, pond, or fountain. Submerged work uses different coat counts and sealers than a shower.', example: 'A pond shell is submerged work, so Liquid Membrane needs 3 coats, not the standard 2.' },
+  { term: 'Submerged', aliases: ['submerged'], definition: 'Constantly under water or holding water — like a pool, pond, or fountain. Submerged work uses different coat counts and sealers than a shower.', example: 'The installed pool detail calls for four 15-mil Liquid Membrane coats, or 60 mil total.' },
   { term: 'Bond / adhesion', aliases: ['adhesion', 'bond', 'bonding'], definition: 'How strongly the coating grips the surface underneath. Bad prep means bad adhesion, and the coating can peel or delaminate.', example: 'X-Bond over dusty concrete will have poor adhesion — vacuum and clean first.' },
   { term: 'Delamination', aliases: ['delamination', 'delaminate', 'delaminating'], definition: 'When a layer lets go and separates from the surface under it, usually from poor prep, moisture, or movement.', example: 'Hollow-sounding tile is delaminating — do not coat over it until it is removed or repaired.' },
 ];
@@ -511,6 +512,34 @@ const SEALER_FROM_CONTEXT: Record<string, string> = {
   matte: 'MATTE-SEALER',
 };
 
+function installationScopeFor(
+  context: AssistantJobContext,
+  substrate: SubstrateId,
+): InstallationScope {
+  if (
+    substrate === 'pool'
+    || context.exposure === 'submerged'
+    || context.application === 'pool'
+    || context.application === 'pond'
+  ) {
+    return 'submerged';
+  }
+
+  if (
+    context.exposure === 'wet'
+    || context.exposure === 'steam'
+    || context.application === 'shower'
+  ) {
+    return 'wet_area';
+  }
+
+  if (context.application === 'wall' && context.exposure === 'dry') {
+    return 'non_wet_wall';
+  }
+
+  return 'floor_or_other';
+}
+
 function parseAreaSqft(normalized: string): number | null {
   const sqft = normalized.match(/(\d+(?:\.\d+)?)\s*(?:sq\s?ft|sqft|square\s?feet|square\s?foot|ft2|sf)\b/);
   if (sqft?.[1]) return Number(sqft[1]);
@@ -593,7 +622,18 @@ function quantityAnswer(
   }
 
   const wastePct = parseWastePct(normalized) ?? DEFAULT_WASTE_PCT;
-  const submerged = context.exposure === 'submerged' || substrate === 'pool';
+  const installationScope = installationScopeFor(context, substrate);
+  const submerged = installationScope === 'submerged';
+  const wetArea = installationScope === 'wet_area';
+  const membraneRequested = submerged
+    || wetArea
+    || context.system === 'liquid_membrane'
+    || [
+    'liquid membrane',
+    'waterproofing membrane',
+    'with membrane',
+    'include membrane',
+  ].some((term) => normalized.includes(term));
 
   let result;
   try {
@@ -602,7 +642,8 @@ function quantityAnswer(
       substrateType: substrate,
       wastePct,
       sealerSku: SEALER_FROM_CONTEXT[context.finish],
-      waterproofingMode: submerged ? 'submerged' : 'above_grade',
+      waterproofingMode: submerged ? 'submerged' : membraneRequested ? 'above_grade' : 'none',
+      installationScope,
       finishSku: context.system === 'microbond' ? 'MICROBOND-SMOOTH' : 'XBOND-STANDARD',
     });
   } catch (error) {
@@ -642,7 +683,13 @@ function quantityAnswer(
   if (prep.length > 0) {
     lines.push(
       '',
-      `Also stage as needed for prep: ${prep.map((layer) => layer.productName).join(', ')}.`,
+      '**SIP preparation plan**',
+      ...prep.map((layer) => [
+        `- Step ${layer.prepStep ?? 1}: ${layer.productName}`,
+        layer.quantityLabel,
+        layer.dilutionLabel,
+        layer.purchaseLabel,
+      ].filter(Boolean).join(' — ')),
     );
   }
 

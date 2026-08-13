@@ -1,6 +1,6 @@
 # Semco Pro App Store Connect Answers
 
-Prepared: 2026-08-07
+Prepared: 2026-08-12
 
 ## App Information
 
@@ -14,8 +14,12 @@ Prepared: 2026-08-07
 ## Pricing and Availability
 
 - Price: Free
-- Recommended initial territory: Canada
+- Available territories: Canada and South Africa
 - Release: Automatically release after App Review approval
+
+## Version 1.0.2 — What’s New
+
+The material calculator now distinguishes non-wet walls, wet areas, and submerged work so Liquid Membrane is optional only where the selected system permits it. SIP preparation guidance now recommends the appropriate cleaner sequence and estimates cleaner quantities, package sizes, and prices. Material requests route to Modern Arc for Ontario/eastern regions and Innovative Finishes for Manitoba/western regions using the same national price catalog.
 
 ## Privacy Policy
 

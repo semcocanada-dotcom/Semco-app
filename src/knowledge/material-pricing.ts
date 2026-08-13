@@ -19,6 +19,13 @@ export type PricedMaterialLine = {
   lineTotalCad?: number;
 };
 
+export type CleanerPackageLine = {
+  price: MaterialPrice;
+  priceSku: string;
+  quantity: number;
+  packageGallons: 1 | 5;
+};
+
 export const MATERIAL_PRICE_SOURCE = 'Modern Arc Ontario Dealer Pricing 2026';
 
 const SKU_ALIASES: Record<string, string> = {
@@ -52,15 +59,21 @@ export const MATERIAL_PRICES: MaterialPrice[] = [
   { sku: 'CG105', product: 'Colour Green', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'Not listed', retailPriceCad: 1227.30, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.3' },
   { sku: 'PS301', product: 'Pre Stain Colour', category: 'Sealers and Stains', size: '1 gallon pail', coverageRate: 'Not listed', retailPriceCad: 214.70, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.3' },
   { sku: 'PS305', product: 'Pre Stain Colour', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'Not listed', retailPriceCad: 999.91, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.3' },
-  { sku: 'SS101', product: 'Stone Soap', category: 'Cleaners', size: '1 gallon pail', coverageRate: 'Not listed', retailPriceCad: 116.92, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.3' },
-  { sku: 'SS105', product: 'Stone Soap', category: 'Cleaners', size: '5 gallon pail', coverageRate: 'Not listed', retailPriceCad: 584.51, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.3' },
-  { sku: 'PC 201', product: 'Power Cleaner', category: 'Cleaners', size: '1 gallon pail', coverageRate: 'Not listed', retailPriceCad: 117.60, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
-  { sku: 'PC 205', product: 'Power Cleaner', category: 'Cleaners', size: '5 gallon pail', coverageRate: 'Not listed', retailPriceCad: 590.00, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
-  { sku: 'NL 101', product: 'Nu Lift Cleaner', category: 'Cleaners', size: '1 gallon pail', coverageRate: 'Not listed', retailPriceCad: 101.84, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
-  { sku: 'NL 105', product: 'Nu Lift Cleaner', category: 'Cleaners', size: '5 gallon pail', coverageRate: 'Not listed', retailPriceCad: 508.98, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
+  { sku: 'SS101', product: 'Stone Soap', category: 'Cleaners', size: '1 gallon pail', coverageRate: 'Planning coverage 200-250 sq ft per gallon', retailPriceCad: 116.92, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
+  { sku: 'SS105', product: 'Stone Soap', category: 'Cleaners', size: '5 gallon pail', coverageRate: 'Planning coverage 1000-1250 sq ft per pail', retailPriceCad: 584.51, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
+  { sku: 'PC 201', product: 'Power Cleaner', category: 'Cleaners', size: '1 gallon pail', coverageRate: 'Planning coverage 300-450 sq ft per gallon', retailPriceCad: 117.60, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
+  { sku: 'PC 205', product: 'Power Cleaner', category: 'Cleaners', size: '5 gallon pail', coverageRate: 'Planning coverage 1500-2250 sq ft per pail', retailPriceCad: 590.00, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
+  { sku: 'NL 101', product: 'Nu Lift Cleaner', category: 'Cleaners', size: '1 gallon pail', coverageRate: 'Planning coverage 200-250 sq ft per gallon', retailPriceCad: 101.84, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
+  { sku: 'NL 105', product: 'Nu Lift Cleaner', category: 'Cleaners', size: '5 gallon pail', coverageRate: 'Planning coverage 1000-1250 sq ft per pail', retailPriceCad: 508.98, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.4' },
 ];
 
 const priceLookup = new Map(MATERIAL_PRICES.map((price) => [normalizeSku(price.sku), price]));
+
+const CLEANER_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: string }> = {
+  STONESOAP: { oneGallon: 'SS101', fiveGallon: 'SS105' },
+  POWERCLEANER: { oneGallon: 'PC 201', fiveGallon: 'PC 205' },
+  NULIFT: { oneGallon: 'NL 101', fiveGallon: 'NL 105' },
+};
 
 export function getPriceSku(productSku: string): string {
   return SKU_ALIASES[productSku] ?? productSku;
@@ -71,14 +84,114 @@ export function getMaterialPrice(productSku: string): MaterialPrice | undefined 
 }
 
 export function priceMaterialLayers(layers: MaterialLayer[]): PricedMaterialLine[] {
-  return layers.map((layer) => {
+  const cleanerGroups = getCleanerGroups(layers);
+
+  return layers.flatMap((layer, index) => {
+    const cleanerKey = getCleanerKey(layer.productSku);
+    const cleanerGroup = cleanerKey ? cleanerGroups.get(cleanerKey) : undefined;
+    if (cleanerGroup && cleanerGroup.firstIndex !== index) return [];
+
+    const requiredCleanerGallons = cleanerGroup
+      ? cleanerGroup.layers.reduce((total, cleanerLayer) => total + getRequiredCleanerGallons(cleanerLayer), 0)
+      : getRequiredCleanerGallons(layer);
+    const pricedLayer = cleanerGroup
+      ? {
+          ...layer,
+          exactQuantity: requiredCleanerGallons,
+          roundedQuantity: Math.ceil(requiredCleanerGallons),
+          purchaseLabel: `Combined cleaner requirement: ${formatGallons(requiredCleanerGallons)} gal concentrate`,
+        }
+      : layer;
+    const cleanerPackageLines = getCleanerPackagePlan(layer.productSku, requiredCleanerGallons);
+    if (cleanerPackageLines) {
+      if (cleanerPackageLines.length === 0) {
+        return [createUnpurchasedLine(pricedLayer)];
+      }
+
+      return cleanerPackageLines.map(({ price, priceSku, quantity }) => ({
+        layer: pricedLayer,
+        price,
+        priceSku,
+        quantity,
+        lineTotalCad: quantity * price.retailPriceCad,
+      }));
+    }
+
     const priceSku = getPriceSku(layer.productSku);
     const price = getMaterialPrice(layer.productSku);
     const quantity = getPricedQuantity(layer);
     const lineTotalCad = price && quantity > 0 ? quantity * price.retailPriceCad : undefined;
 
-    return { layer, price, priceSku, quantity, lineTotalCad };
+    return [{ layer, price, priceSku, quantity, lineTotalCad }];
   });
+}
+
+function getCleanerGroups(layers: MaterialLayer[]): Map<string, { firstIndex: number; layers: MaterialLayer[] }> {
+  const groups = new Map<string, { firstIndex: number; layers: MaterialLayer[] }>();
+  layers.forEach((layer, index) => {
+    const key = getCleanerKey(layer.productSku);
+    if (!key) return;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.layers.push(layer);
+    } else {
+      groups.set(key, { firstIndex: index, layers: [layer] });
+    }
+  });
+  return groups;
+}
+
+function getCleanerKey(productSku: string): string | null {
+  const normalized = normalizeSku(productSku);
+  return CLEANER_PACKAGE_SKUS[normalized] ? normalized : null;
+}
+
+/**
+ * Builds a purchase plan for the logical cleaner SKUs used by the calculator.
+ * Required concentrate is rounded up to a whole gallon, then packed with as many
+ * 5-gallon pails as possible and 1-gallon pails for the remainder. This covers
+ * the requirement without rounding the purchase volume beyond the next gallon.
+ *
+ * Returns `null` for non-cleaner SKUs so their existing pricing behavior is kept.
+ */
+export function getCleanerPackagePlan(
+  productSku: string,
+  requiredGallons: number,
+): CleanerPackageLine[] | null {
+  const packageSkus = CLEANER_PACKAGE_SKUS[normalizeSku(productSku)];
+  if (!packageSkus) return null;
+  if (!Number.isFinite(requiredGallons) || requiredGallons <= 0) return [];
+
+  const purchasedGallons = Math.ceil(requiredGallons);
+  const fiveGallonQuantity = Math.floor(purchasedGallons / 5);
+  const oneGallonQuantity = purchasedGallons % 5;
+  const lines: CleanerPackageLine[] = [];
+
+  if (fiveGallonQuantity > 0) {
+    const price = priceLookup.get(normalizeSku(packageSkus.fiveGallon));
+    if (price) {
+      lines.push({
+        price,
+        priceSku: packageSkus.fiveGallon,
+        quantity: fiveGallonQuantity,
+        packageGallons: 5,
+      });
+    }
+  }
+
+  if (oneGallonQuantity > 0) {
+    const price = priceLookup.get(normalizeSku(packageSkus.oneGallon));
+    if (price) {
+      lines.push({
+        price,
+        priceSku: packageSkus.oneGallon,
+        quantity: oneGallonQuantity,
+        packageGallons: 1,
+      });
+    }
+  }
+
+  return lines;
 }
 
 export function getMaterialPriceTotal(lines: PricedMaterialLine[]): number {
@@ -93,6 +206,27 @@ function getPricedQuantity(layer: MaterialLayer): number {
   }
 
   return Math.ceil(layer.roundedQuantity);
+}
+
+function getRequiredCleanerGallons(layer: MaterialLayer): number {
+  const candidates = [layer.exactQuantity, layer.roundedQuantity, layer.quantityPacks];
+  return candidates.find((quantity) => Number.isFinite(quantity) && (quantity ?? 0) > 0) ?? 0;
+}
+
+function createUnpurchasedLine(layer: MaterialLayer): PricedMaterialLine {
+  const priceSku = getPriceSku(layer.productSku);
+  return {
+    layer,
+    price: getMaterialPrice(layer.productSku),
+    priceSku,
+    quantity: 0,
+  };
+}
+
+function formatGallons(value: number): string {
+  if (value < 1) return value.toFixed(2);
+  if (value < 10) return value.toFixed(1);
+  return value.toFixed(0);
 }
 
 function normalizeSku(value: string): string {

@@ -1,5 +1,6 @@
 import type { SubstrateId } from '@/constants/substrates';
 import { SUBSTRATE_MAP } from '@/constants/substrates';
+import { getPrepSystem, type PrepConditionId } from '@/constants/prep-systems';
 import { STOCKED_SEALER_POLICY_TEXT } from '@/constants/stocked-sealers';
 import { STANDARD_SHOWER_POLICY_TEXT } from '@/constants/shower-policy';
 import type { ManualKnowledgeHit } from './manual-knowledge';
@@ -44,6 +45,18 @@ type PrepSurfaceGroup =
 interface PrepSurfaceMatch {
   group: PrepSurfaceGroup;
   label: string;
+}
+
+function sipPrepSequence(condition: PrepConditionId): string {
+  return getPrepSystem(condition).cleanerSteps
+    .map((step) => {
+      const cleaner = step.productName.replace(/^SEMCO\s+/i, '');
+      const dilution = step.waterParts === 0
+        ? 'undiluted'
+        : `${step.cleanerParts}:${step.waterParts}`;
+      return `${cleaner} ${dilution}`;
+    })
+    .join(', then ');
 }
 
 export interface ReasoningProfile {
@@ -496,7 +509,7 @@ function documentGapAnswer(): string {
 
 function liquidMembraneApplicationAnswer(facts: ExtractedJobFacts): string {
   const submergedIntro = facts.isSubmerged
-    ? 'For underwater/submerged work, use 3 coats of SEMCO Liquid Membrane. Do not answer this as a standard 2-coat waterproofing detail.'
+    ? 'For pool/underwater/submerged work, use 4 coats of SEMCO Liquid Membrane at 15 mil wet film per coat, for 60 mil total. Do not answer this as a standard 2-coat waterproofing detail.'
     : 'For Liquid Membrane as the waterproofing layer, build the membrane in clean coats and inspect it before anything covers it.';
 
   return [
@@ -506,35 +519,36 @@ function liquidMembraneApplicationAnswer(facts: ExtractedJobFacts): string {
     '**Step 1: Confirm the shell is worth coating.**',
     'Check that the concrete is sound, stable, and not actively leaking. Stop for hollow, loose, soft, spalling, delaminating, moving, or actively wet concrete. Take a prep photo before cleaning.',
     '',
-    '**Step 2: Clean for pond residue and minerals.**',
-    'Remove algae, dirt, calcium, mineral, alkali, efflorescence, and pond residue before coating. Use the Nu-Lift path where mineral residue is present, then finish with Stone Soap so the surface is clean and balanced.',
+    '**Step 2: Use the SIP Type C pool-prep sequence.**',
+    `For a pool, pond, or other submerged concrete shell, run the three cleaner passes in this exact order: ${sipPrepSequence('type_c')}.`,
+    'Dampen the surface before each pass. Apply lightly, let it sit 2-3 minutes, scrub/agitate, rinse thoroughly, and remove the residue before starting the next pass. Do not leave cleaner or slurry under the membrane.',
     '',
-    '**Step 3: Nu-Lift wash where minerals are present.**',
-    'Dampen the surface, apply Nu-Lift lightly, let it sit 2-3 minutes, scrub/agitate, then rinse thoroughly and remove the residue. Do not leave cleaner or slurry under the membrane.',
+    '**Step 3: Confirm the shell is clean and dry.**',
+    'Repeat the rinse/removal step if particles remain, then allow the concrete to dry before membrane. Stop if algae, dirt, calcium, mineral, alkali, efflorescence, or old pool residue is still present.',
     '',
-    '**Step 4: Stone Soap final wash.**',
-    'Use Stone Soap at 1 part Stone Soap to 4 parts water. Let it sit 2-3 minutes, scrub/agitate, rinse clean, remove residue, and allow the concrete to dry before membrane.',
-    '',
-    '**Step 5: First Liquid Membrane coat.**',
+    '**Step 4: First Liquid Membrane coat.**',
     'Apply a generous, even first coat with brush or roller. Work it into corners, edges, penetrations, and rough areas. Keep it continuous, but do not leave puddles or heavy sags.',
     '',
-    '**Step 6: Fabric/detail work where needed.**',
+    '**Step 5: Fabric/detail work where needed.**',
     'At cracks, joints, inside corners, transitions, drains, or movement-risk areas, embed fabric into wet Liquid Membrane. Press it in fully so there are no voids, wrinkles, bubbles, or dry fabric edges.',
     '',
-    '**Step 7: Second Liquid Membrane coat.**',
+    '**Step 6: Second Liquid Membrane coat.**',
     'After the previous coat is ready for recoat, apply the second coat over the full pond area. Cover the fabric completely and keep the coat even from wall to floor and through corners.',
     '',
-    '**Step 8: Third Liquid Membrane coat for underwater.**',
-    'For underwater/submerged use, apply a third full coat. This is the rule to remember: pond, pool, fountain, underwater, or submerged work gets 3 coats of Liquid Membrane.',
+    '**Step 7: Third Liquid Membrane coat for underwater.**',
+    'Apply the third full coat at 15 mil wet film and keep the waterproofing continuous across the submerged area.',
+    '',
+    '**Step 8: Fourth Liquid Membrane coat for underwater.**',
+    'Apply the fourth full coat at 15 mil wet film. The pool/submerged detail is 4 coats at 15 mil each, for 60 mil total.',
     '',
     '**Step 9: Inspect before water or cover-up.**',
     'Walk the whole pond and look for pinholes, voids, thin spots, missed edges, wrinkles, bubbles, damage, or contaminated areas. Touch up defects with additional Liquid Membrane before approval.',
     '',
     '**Step 10: Hold the warranty photos.**',
-    'Capture prep, first membrane/detail, second coat, third coat, final inspection, and final handover photos. If water-containment fails later, those photos prove the hidden work was done.',
+    'Capture prep, first membrane/detail, second coat, third coat, fourth coat, final inspection, and final handover photos. If water-containment fails later, those photos prove the hidden work was done.',
     '',
     'Field check:',
-    'If the installer asks “how many coats underwater,” the answer is 3 coats of Liquid Membrane. The 2-coat language applies to lighter standard details, not this submerged water-containment rule.',
+    'If the installer asks “how many coats underwater,” the pool/submerged detail answer is 4 coats of Liquid Membrane at 15 mil each. The 2-coat language applies to lighter standard details, not this submerged water-containment rule.',
   ].join('\n');
 }
 
@@ -571,15 +585,15 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
 
   const prepGroupRecommendations: Record<PrepSurfaceGroup, string[]> = {
     type_a_standard: [
-      'Use SIP Type A for clean, non-waxed hard surfaces: concrete, natural stone, vinyl/VCT, metal, Formica, glass, and plexiglass.',
+      `Use SIP Type A for clean, non-waxed hard surfaces: concrete, natural stone, vinyl/VCT, metal, Formica, glass, and plexiglass. Cleaner sequence: ${sipPrepSequence('type_a')}.`,
       'Sweep debris, dampen the surface with water, then apply Stone Soap solution lightly with a pump sprayer and let it sit 2-3 minutes.',
       'Stone Soap ratio: 1 part Stone Soap to 4 parts water.',
       'Scrub/agitate with a scrub machine and concrete nylon brush, or a hand scrub brush in tight areas.',
       'Rinse the surface. On interiors, wet-vac the residue. Repeat rinse/vacuum if particles remain, then let the surface dry.',
-      'If the surface is actually oily, waxed, sealed, painted, glued, or coated, do not use Type A alone. Move to the Power Cleaner path.',
+      `If the surface is actually oily, waxed, sealed, painted, glued, or coated, do not use Type A alone. Move to SIP Type B: ${sipPrepSequence('type_b')}.`,
     ],
     type_b_residue: [
-      'Use SIP Type B for commercial kitchen contamination, epoxy, terrazzo, carpet glue, waxed surfaces, paint, sealers, or non-permanent topical coatings.',
+      `Use SIP Type B for commercial kitchen contamination, epoxy, terrazzo, carpet glue, waxed surfaces, paint, sealers, or non-permanent topical coatings. Cleaner sequence: ${sipPrepSequence('type_b')}.`,
       'Sweep debris and dampen the surface with water.',
       'Apply Power Cleaner solution lightly with a pump sprayer and let it sit 2-3 minutes. Ratio: 1 part Power Cleaner to 4 parts water.',
       'Scrub/agitate with a scrub machine and concrete nylon brush, or a hand brush in tight areas.',
@@ -588,7 +602,7 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
       'Let the surface dry. Do not coat over loose coating, soft glue, failing epoxy, or unknown film until adhesion is confirmed.',
     ],
     type_c_unknown_exterior: [
-      'Use SIP Type C for unknown existing conditions, stamped concrete, exterior surfaces, or surfaces where mineral/alkali/efflorescence and residue risk are both possible.',
+      `Use SIP Type C for unknown existing conditions, stamped concrete, exterior surfaces, or surfaces where mineral/alkali/efflorescence and residue risk are both possible. Run this exact order: ${sipPrepSequence('type_c')}.`,
       'Sweep debris and dampen the surface with water.',
       'Step 1: Power Cleaner 1:4. Apply lightly, let sit 2-3 minutes, scrub/agitate, rinse, and wet-vac interiors.',
       'Step 2: Nu-Lift 1:1. Repeat the same apply, dwell, scrub, rinse, and vacuum process to remove mineral deposits, efflorescence, alkali, and magnesium deposits.',
@@ -596,7 +610,7 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
       'Repeat rinse/vacuum if particles remain, then let the surface dry before coating.',
     ],
     type_d_mineral_masonry_tile: [
-      'Use SIP Type D for tile, exterior block wall, stucco, below-grade plaster, and magnesium/efflorescence contaminated surfaces.',
+      `Use SIP Type D for tile, exterior block wall, stucco, below-grade plaster, and magnesium/efflorescence contaminated surfaces. Cleaner sequence: ${sipPrepSequence('type_d')}.`,
       'Sweep debris and dampen the surface with water.',
       'Apply Nu-Lift Cleaner lightly with a pump sprayer and let it sit 2-3 minutes. SIP Type D lists Nu-Lift as non-diluted.',
       'Scrub/agitate with a scrub machine and nylon brush, or a hand brush in tight areas.',
@@ -622,9 +636,10 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
     ],
     pool_submerged: [
       'Treat pools, ponds, fountains, jacuzzis, submerged surfaces, and continuous wet exposure as wet-area work, not a normal floor.',
-      'Remove calcium, mineral, alkali, efflorescence, or pool residue with the Nu-Lift path where present, then Stone Soap final wash at 1:4.',
+      `Use SIP Type C as the pool-prep plan and run the cleaner passes in this exact order: ${sipPrepSequence('type_c')}.`,
+      'For each pass, apply lightly, let sit 2-3 minutes, scrub/agitate, rinse, and remove the residue before the next pass.',
       'Rinse/vacuum and allow the surface to dry before coating.',
-      'Use the wet-area Liquid Membrane build-up where the detail requires it. For underwater/submerged Liquid Membrane work, use 3 coats, then inspect for voids, pinholes, thin spots, and defects before covering or filling.',
+      'Use the wet-area Liquid Membrane build-up where the detail requires it. The pool/submerged detail requires 4 coats at 15 mil wet film per coat, for 60 mil total; then inspect for voids, pinholes, thin spots, and defects before covering or filling.',
       'Use Natural Shield as the current stocked penetrating sealer for pool/submerged and exterior exposure.',
       'Capture prep, membrane, base, finish, sealer, and final photos because submerged work is high warranty risk.',
     ],
@@ -633,12 +648,12 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
       'Confirm the assembly is stable and movement joints are handled before coating.',
       'Turn the heat off during application and cure. Do not thermal-cycle the floor while the system is bonding.',
       'Use Liquid Membrane/fabric where movement risk, joints, or the project detail requires it.',
-      'If the top surface is unknown or coated, use the Type C or Type B path and get Semco review before approving the assembly.',
+      `If the top surface is unknown, use SIP Type C (${sipPrepSequence('type_c')}); if it is coated, use SIP Type B (${sipPrepSequence('type_b')}). Get Semco review before approving an unknown assembly.`,
     ],
     icf: [
       'ICF is not one single prep path; prep depends on the exposed face. Confirm whether the installer is coating concrete, cementitious parge, plaster, foam, or another facing.',
       'If it is a sound concrete/cementitious face, use the concrete/Type A path unless contamination pushes it to Type B, C, or D.',
-      'If mineral, alkali, or efflorescence is present, use the Nu-Lift path and Stone Soap final wash.',
+      `If mineral, alkali, or efflorescence is present, use SIP Type D: ${sipPrepSequence('type_d')}.`,
       'If the face is foam, unknown, loose, damp, or moving, stop and get Semco technical review before approving X-Bond.',
     ],
   };
@@ -648,10 +663,11 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
       'Prep depends on two things: what the surface is, and what is on it. I need those before I can choose the right Semco cleaning path.',
       '',
       'Quick decision tree:',
-      'Clean non-waxed hard surface: Stone Soap 1:4.',
-      'Grease, oil, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue: Power Cleaner 1:4, then Stone Soap 1:4.',
-      'Unknown, stamped, or exterior condition: Power Cleaner 1:4, Nu-Lift 1:1, then Power Cleaner 1:9.',
-      'Tile, block, stucco, below-grade plaster, pool residue, calcium, mineral, alkali, or efflorescence: Nu-Lift, then Stone Soap 1:4.',
+      `Clean non-waxed hard surface, including clean concrete (SIP Type A): ${sipPrepSequence('type_a')}.`,
+      `Grease, oil, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue (SIP Type B): ${sipPrepSequence('type_b')}.`,
+      `Unknown, stamped, or exterior condition (SIP Type C): ${sipPrepSequence('type_c')}.`,
+      `Pool or submerged concrete (SIP Type C): ${sipPrepSequence('type_c')}.`,
+      `Tile, block, stucco, below-grade plaster, calcium, mineral, alkali, or efflorescence (SIP Type D): ${sipPrepSequence('type_d')}.`,
       'Wood / plywood / OSB: confirm the surface is stable, then use Liquid Membrane and fabric before X-Bond.',
       '',
       'Tell me:',
@@ -664,14 +680,13 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
     concrete: [
       'Sweep all debris off the concrete so the next coat can bond directly to the substrate.',
       'Dampen the surface with water first so the cleaner does not dive too deep into the pores.',
-      'Preferred Semco Canada field prep: use Nu-Lift first as the pH/mineral reset step, then finish with Stone Soap final wash before coating.',
-      'Apply Nu-Lift solution lightly with a pump sprayer and let it sit 2-3 minutes. For concrete exterior/stamped/unknown-condition prep, the SIP stronger prep path lists Nu-Lift at 1 part Nu-Lift to 1 part water.',
+      `For clean, unsealed, non-waxed concrete, use SIP Type A: ${sipPrepSequence('type_a')}.`,
+      'Apply the Stone Soap solution lightly with a pump sprayer and let it sit 2-3 minutes.',
       'Scrub/agitate with a scrub machine and concrete nylon brush, or a hand scrub brush in tight areas, then rinse. For interiors, use a wet vacuum to remove residue.',
-      'Follow with Stone Soap solution as the final wash and let it sit 2-3 minutes. Ratio: 1 part Stone Soap to 4 parts water.',
-      'Scrub/agitate again, rinse, and wet-vac residue on interiors.',
       'Repeat rinse/vacuum if particles or residue remain, then allow the surface to dry before the next step so bubbles do not show up in the coating.',
-      'If the concrete has grease, wax, glue, paint, sealer, epoxy, terrazzo, or non-permanent topical coating residue, use Power Cleaner first at 1 part Power Cleaner to 4 parts water, rinse/vacuum, then continue with Nu-Lift and Stone Soap final wash.',
-      'If the concrete is exterior, stamped, unknown-condition, or has heavier mineral/alkali/efflorescence risk, the SIP stronger prep path is Power Cleaner 1:4, rinse/vacuum, Nu-Lift 1:1, rinse/vacuum, then Power Cleaner 1:9, rinse/vacuum, and dry.',
+      `If the concrete has grease, wax, glue, paint, sealer, epoxy, terrazzo, or non-permanent topical coating residue, use SIP Type B: ${sipPrepSequence('type_b')}. Rinse/remove residue between passes and dry after the final rinse.`,
+      `If the concrete is exterior, stamped, or unknown-condition, use SIP Type C: ${sipPrepSequence('type_c')}. Rinse/remove residue between passes and dry after the final rinse.`,
+      `If calcium, mineral, alkali, magnesium, or efflorescence contamination calls for the mineral-removal path, use SIP Type D: ${sipPrepSequence('type_d')}. Rinse/remove residue between passes and dry after the final rinse.`,
     ],
     plywood: [
       'Confirm the plywood / OSB is structural, fastened, stable, dry, and not flexing.',
@@ -685,7 +700,7 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
     icf: prepGroupRecommendations.icf,
     metal: [
       'For clean, non-waxed metal, use the SIP Type A path: sweep, dampen, Stone Soap 1:4 for 2-3 minutes, scrub/agitate, rinse, wet-vac interiors, and dry.',
-      'If oil, grease, shop residue, wax, paint, sealer, or coating residue is present, use Power Cleaner 1:4 first, then Stone Soap 1:4 final wash.',
+      `If oil, grease, shop residue, wax, paint, sealer, or coating residue is present, use SIP Type B: ${sipPrepSequence('type_b')}.`,
       'Confirm surface profile and adhesion before coating. Do not approve metal by assumption.',
       'Use Semco review if the metal is structural, exterior, wet, high movement, rusting, or coated with an unknown finish.',
     ],
@@ -736,16 +751,15 @@ function allSurfacePrepAnswer(): string {
     'Use surface prep as a decision tree. The right cleaner path depends on the substrate and the contamination, not just the square footage.',
     '',
     'Checked prep map:',
-    'Concrete: Semco Canada field prep is Nu-Lift first as the pH/mineral reset, then Stone Soap final wash before coating. If concrete is exterior, stamped, unknown, or has heavier mineral/alkali/efflorescence risk, use the stronger SIP Type C path.',
-    'Clean, non-waxed natural stone, vinyl/VCT, metal, Formica, glass, plexiglass: SIP Type A. Sweep, dampen, Stone Soap 1:4, dwell 2-3 minutes, scrub, rinse, wet-vac interiors, repeat rinse/vacuum if needed, dry.',
-    'Commercial kitchen contamination, epoxy, terrazzo, carpet glue, waxed, painted, sealed, or coated surfaces: SIP Type B. Power Cleaner 1:4, dwell 2-3 minutes, scrub, rinse/vacuum, then Stone Soap 1:4 final wash, rinse/vacuum, dry. Remove loose coating and confirm adhesion.',
-    'Unknown existing conditions, stamped concrete, and exterior surfaces: SIP Type C. Power Cleaner 1:4, rinse/vacuum; Nu-Lift 1:1, rinse/vacuum; Power Cleaner 1:9, rinse/vacuum; dry.',
-    'Tile, exterior block wall, stucco, below-grade plaster, calcium/mineral/alkali/magnesium/efflorescence: SIP Type D. Non-diluted Nu-Lift, dwell 2-3 minutes, scrub, rinse/vacuum; then Stone Soap 1:4 final wash, rinse/vacuum, dry.',
+    `Clean, unsealed, non-waxed concrete and other clean hard surfaces: SIP Type A. ${sipPrepSequence('type_a')}; dwell 2-3 minutes, scrub, rinse, wet-vac interiors, repeat rinse/vacuum if needed, and dry.`,
+    `Commercial kitchen contamination, epoxy, terrazzo, carpet glue, waxed, painted, sealed, or coated surfaces: SIP Type B. ${sipPrepSequence('type_b')}; rinse/remove residue between passes, then dry. Remove loose coating and confirm adhesion.`,
+    `Unknown existing conditions, stamped concrete, exterior surfaces, and pools/submerged concrete: SIP Type C. ${sipPrepSequence('type_c')}; rinse/remove residue between passes, then dry.`,
+    `Tile, exterior block wall, stucco, below-grade plaster, calcium/mineral/alkali/magnesium/efflorescence: SIP Type D. ${sipPrepSequence('type_d')}; rinse/remove residue between passes, then dry.`,
     'Wood, plywood, OSB, decks: SIP Type E. Confirm the wood is structural/stable, sweep, roll Liquid Membrane and dry, embed fabric into wet Liquid Membrane, immediately add two more membrane coats with pressure, overlap fabric 2 inches, dry before X-Bond.',
     'Drywall/gypsum board: walls only. It must be dry, stable, fastened, and not damaged. Do not use drywall as a floor substrate. Wet walls need the proper Liquid Membrane/fabric detail at joints/corners/seams.',
     'Cement board/backer board/concrete boards: confirm fastening and stability, then treat wet-area joints/corners/seams with Liquid Membrane and fabric before X-Bond.',
     'ICF: confirm the exposed face first. Concrete/parge/plaster faces can follow the matching prep type. Foam, unknown, loose, damp, or moving faces need Semco review before approval.',
-    'Pools/ponds/fountains/jacuzzis/submerged/wet exposure: use the mineral-residue path where needed, rinse clean, dry, use 3 coats of Liquid Membrane for underwater/submerged membrane work, and finish with Natural Shield as the current stocked penetrating sealer where a penetrating sealer is specified.',
+    `Pools/ponds/fountains/jacuzzis/submerged/wet exposure: use SIP Type C (${sipPrepSequence('type_c')}), rinse/remove residue between each pass, dry, use 4 coats of Liquid Membrane for the pool/submerged detail, and finish with Natural Shield as the current stocked penetrating sealer where a penetrating sealer is specified.`,
     'Heated floors: prep the actual top surface, keep heat off during application and cure, and do not thermal-cycle while the system is bonding.',
     '',
     'Stop and review:',
@@ -817,7 +831,7 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
   const substratePath: Record<SubstrateId, string[]> = {
     concrete: [
       'Confirm the concrete is sound, non-delaminating, stable, dry enough, and not actively wet.',
-      'Clean and reset the surface before coating. If minerals, calcium, alkali, or efflorescence are present, use the Nu-Lift path, then Stone Soap final wash at 1:4, rinse/vacuum, and dry.',
+      `For clean, unsealed, non-waxed concrete, use SIP Type A: ${sipPrepSequence('type_a')}. If minerals, calcium, alkali, magnesium, or efflorescence are present, use SIP Type D: ${sipPrepSequence('type_d')}. Rinse/remove residue between passes and dry before coating.`,
     ],
     cement_board: [
       'Confirm the cement board, concrete board, construction board/panel, GlasRoc, GlassRoc, or similar wet-area board is properly fastened, sound, dry, and stable.',
@@ -833,15 +847,15 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
     ],
     existing_tile: [
       'Check every tile area first. Only continue over tile or grout that is bonded solid, not hollow, cracked, loose, tenting, or moving.',
-      'Use the tile/mineral prep path: Nu-Lift, scrub/agitate, rinse/vacuum, then Stone Soap 1:4 final wash, rinse/vacuum, and dry. Fill grout lines flush.',
+      `Use SIP Type D for tile: ${sipPrepSequence('type_d')}. Scrub/agitate, rinse/remove residue between passes, dry, and fill grout lines flush.`,
     ],
     concrete_block: [
       'Confirm block/CMU/grouted substrate is sound, clean, dry enough, and not loose, dusty, spalling, or actively wet.',
-      'Use the tile/mineral masonry prep path where minerals or efflorescence are present: Nu-Lift, then Stone Soap 1:4 final wash, rinse/vacuum, and dry.',
+      `Use SIP Type D where minerals or efflorescence are present: ${sipPrepSequence('type_d')}. Rinse/remove residue between passes and dry.`,
     ],
     existing_paint: [
       'Do not approve a painted or coated shower substrate by assumption. Remove loose or failing coating and confirm adhesion before any X-Bond work.',
-      'Use the Power Cleaner path for paint/coating residue, then Stone Soap final wash. If the coating is unknown, stop for Semco review.',
+      `Use SIP Type B for paint/coating residue: ${sipPrepSequence('type_b')}. If the coating is unknown, stop for Semco review.`,
     ],
     icf: [
       'Confirm the exposed ICF face first. A sound cementitious face can follow the matching board/concrete path; foam, loose, damp, or unknown faces need Semco review.',
@@ -853,7 +867,7 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
     ],
     pool: [
       'A pool or submerged area is not a standard interior shower. Treat it as submerged water-containment work and use the pool/submerged procedure.',
-      'For underwater Liquid Membrane work, use 3 coats. Use Natural Shield where a penetrating sealer is specified for submerged/exterior work.',
+      `Use SIP Type C prep in this order: ${sipPrepSequence('type_c')}. For the pool/submerged Liquid Membrane detail, use 4 coats at 15 mil wet film per coat, for 60 mil total. Use Natural Shield where a penetrating sealer is specified for submerged/exterior work.`,
     ],
     heated_floor: [
       'For heated shower floors, identify the actual top substrate first, then keep heat off during application and cure.',
@@ -931,14 +945,14 @@ function concreteBuildUpAnswer(): string {
     '**Step 1: Make the go/no-go call.**',
     'Concrete must be sound, non-delaminating, stable, and dry enough for coating. Stop and get Semco review if it is loose, moving, actively wet, contaminated, or has cracks/movement that can keep moving.',
     '',
-    '**Step 2: Clean and reset the concrete.**',
+    '**Step 2: Use SIP Type A on clean concrete.**',
     'Take a prep photo first. Sweep loose debris and dampen the slab.',
-    'Use Nu-Lift first as the pH/mineral reset. Apply it lightly with a pump sprayer, let it sit 2-3 minutes, scrub/agitate with a scrub machine and concrete nylon brush or hand brush, rinse, and wet-vac indoors.',
-    'Then do Stone Soap as the final wash: 1 part Stone Soap to 4 parts water, 2-3 minute dwell, scrub/agitate, rinse, wet-vac indoors, repeat if particles remain, then let the slab dry.',
+    `For clean, unsealed, non-waxed concrete, the documented SIP Type A cleaner sequence is ${sipPrepSequence('type_a')}. Apply it lightly with a pump sprayer, let it sit 2-3 minutes, scrub/agitate with a scrub machine and concrete nylon brush or hand brush, rinse, wet-vac indoors, repeat if particles remain, then let the slab dry.`,
     '',
     '**Step 3: Adjust the prep if the slab is dirty, sealed, exterior, or unknown.**',
-    'If grease, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue is present, use Power Cleaner 1:4 first, rinse/vacuum, then continue with Nu-Lift and Stone Soap.',
-    'For exterior, stamped, unknown-condition, or heavier mineral/alkali/efflorescence risk, use Power Cleaner 1:4, rinse/vacuum, Nu-Lift 1:1, rinse/vacuum, then Power Cleaner 1:9, rinse/vacuum, and dry.',
+    `If grease, wax, glue, paint, sealer, epoxy, terrazzo, or topical residue is present, use SIP Type B: ${sipPrepSequence('type_b')}. Rinse/remove residue between passes and dry after the final rinse.`,
+    `For exterior, stamped, or unknown-condition concrete, use SIP Type C: ${sipPrepSequence('type_c')}. Rinse/remove residue between passes and dry after the final rinse.`,
+    `For the SIP Type D mineral-removal condition, including calcium, mineral, alkali, magnesium, or efflorescence contamination, use ${sipPrepSequence('type_d')}. Rinse/remove residue between passes and dry after the final rinse.`,
     '',
     '**Step 4: Prime and scratch coat.**',
     'Roll X-Bond Liquid as the primer and keep it tacky. Do not let it dry before the scratch coat.',
@@ -970,31 +984,29 @@ function poolBuildUpAnswer(): string {
     '**Step 1: Make the pool-shell go/no-go call.**',
     'Confirm the concrete shell is sound, stable, and not actively leaking. Stop if the surface is loose, hollow, soft, spalling, delaminating, moving, rust-stained from an active issue, or still actively wet. Take the first prep photo before you cover anything.',
     '',
-    '**Step 2: Remove pool and mineral contamination.**',
-    'Pools commonly carry calcium, mineral, alkali, efflorescence, or old pool residue. Where mineral residue is present, use the Nu-Lift path first, then finish with Stone Soap so the surface is clean and pH-balanced before coating.',
+    '**Step 2: Use the SIP Type C pool-prep sequence.**',
+    `Run these three cleaner passes in this exact order: ${sipPrepSequence('type_c')}.`,
+    'For each pass, dampen the surface, apply the solution lightly, let it sit 2-3 minutes, scrub/agitate with a nylon brush or scrub machine, then rinse thoroughly and remove the residue before starting the next pass.',
     '',
-    '**Step 3: Wash with Nu-Lift where residue is present.**',
-    'Dampen the surface, apply Nu-Lift lightly, let it sit 2-3 minutes, then scrub/agitate with a nylon brush or scrub machine. Rinse thoroughly and remove residue. Do not leave cleaner residue trapped under the system.',
+    '**Step 3: Inspect after cleaning.**',
+    'Repeat the rinse/removal step if particles remain. Do not leave algae, dirt, calcium, mineral, alkali, efflorescence, old pool residue, cleaner, or slurry trapped under the system. Let the concrete dry before coating.',
     '',
-    '**Step 4: Final wash with Stone Soap.**',
-    'Use Stone Soap at 1 part Stone Soap to 4 parts water. Let it sit 2-3 minutes, scrub/agitate, rinse clean, and remove the residue. Repeat the rinse/vacuum step if particles remain. Let the concrete dry before coating.',
-    '',
-    '**Step 5: Prime and scratch coat the concrete.**',
+    '**Step 4: Prime and scratch coat the concrete.**',
     'Roll X-Bond Liquid as the primer and keep it tacky. Do not let it dry before the scratch coat. Mix 1 part X-Bond Liquid to 2 parts X-Bond Stone, liquid first, with a square paddle at 180-200 RPM. Spread the scratch coat tight in one direction, let it dry, scrape loose particles, and sweep clean.',
     '',
-    '**Step 6: Waterproof/detail the submerged areas.**',
-    'Use SEMCO Liquid Membrane with fabric reinforcement where the pool/wet-area detail requires it, especially at joints, cracks, corners, penetrations, drains, transitions, or movement-risk areas. Press fabric into wet membrane, overlap fabric seams by at least 2 inches where fabric is used, and avoid voids or wrinkles. For underwater/submerged Liquid Membrane work, use 3 coats.',
+    '**Step 5: Waterproof/detail the submerged areas.**',
+    'Use SEMCO Liquid Membrane with fabric reinforcement where the pool/wet-area detail requires it, especially at joints, cracks, corners, penetrations, drains, transitions, or movement-risk areas. Press fabric into wet membrane, overlap fabric seams by at least 2 inches where fabric is used, and avoid voids or wrinkles. The pool/submerged detail requires 4 coats at 15 mil wet film per coat, for 60 mil total.',
     '',
-    '**Step 7: Inspect the membrane before hiding it.**',
-    'Before X-Bond goes over the membrane, inspect for pinholes, voids, thin spots, missed edges, and defects. SEMCO Liquid Membrane should be dry to the touch before the next step. Take the membrane-stage warranty photo and confirm the submerged membrane work has 3 coats.',
+    '**Step 6: Inspect the membrane before hiding it.**',
+    'Before X-Bond goes over the membrane, inspect for pinholes, voids, thin spots, missed edges, and defects. SEMCO Liquid Membrane should be dry to the touch before the next step. Take the membrane-stage warranty photo and confirm the pool/submerged membrane work has 4 coats at 15 mil each.',
     '',
-    '**Step 8: Apply the X-Bond build-up.**',
+    '**Step 7: Apply the X-Bond build-up.**',
     'Continue with the required X-Bond scratch/base and finish layers only after the prep and membrane/detail work are ready. For the selected X-Bond finish procedure, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone at 180-200 RPM and spread tight in one direction with a trowel or X-Bond smoother.',
     '',
-    '**Step 9: Let the finish dry, then seal for submerged exposure.**',
+    '**Step 8: Let the finish dry, then seal for submerged exposure.**',
     'Use Natural Shield as the current stocked penetrating sealer for pool/submerged and exterior exposure. Apply it wet-on-wet in 3 coats and do not allow each coat to dry before the next coat. Avoid puddling.',
     '',
-    '**Step 10: Document the warranty stages.**',
+    '**Step 9: Document the warranty stages.**',
     'Capture clear photos at prep, membrane/primer, scratch/base, finish, sealer, and final handover. For a pool, missing stage photos are a bigger problem because the important waterproofing work is hidden once the finish is on.',
     '',
     'Field check:',
@@ -1060,21 +1072,21 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
     icf: [
       'First identify the exposed face: concrete, cementitious parge, plaster, foam, or another facing. ICF is not one automatic approval.',
       'If the face is sound concrete/cementitious material, use the matching concrete/block/plaster prep path before X-Bond.',
-      'If the face has mineral, alkali, calcium, magnesium, or efflorescence, use Nu-Lift followed by Stone Soap final wash.',
+      `If the face has mineral, alkali, calcium, magnesium, or efflorescence, use SIP Type D: ${sipPrepSequence('type_d')}.`,
       'If the face is foam, unknown, loose, damp, moving, or not cementitious, stop and get Semco review before approving the build-up.',
       'For vertical X-Bond work, roll X-Bond Liquid primer and do not let it dry. Mix wall X-Bond at 1 part X-Bond Liquid to 3 parts X-Bond Stone at 180-200 RPM.',
       'Trowel bottom-up or use the approved exterior/unoccupied spray method at 15 PSI with a large tip. Add Liquid Membrane/fabric where water, joints, or movement risk require it.',
     ],
     metal: [
       'Do not approve metal by assumption. Confirm the metal is stable, clean, properly profiled, and suitable for coating.',
-      'For clean, non-waxed metal, use SIP Type A: Stone Soap 1:4, dwell 2-3 minutes, scrub/agitate, rinse, wet-vac interiors, and dry.',
-      'If oil, grease, mill residue, wax, paint, sealer, or unknown coating is present, use Power Cleaner 1:4 first, then Stone Soap 1:4 final wash.',
+      `For clean, non-waxed metal, use SIP Type A: ${sipPrepSequence('type_a')}; dwell 2-3 minutes, scrub/agitate, rinse, wet-vac interiors, and dry.`,
+      `If oil, grease, mill residue, wax, paint, sealer, or unknown coating is present, use SIP Type B: ${sipPrepSequence('type_b')}.`,
       'Confirm adhesion before coating. Stop for rusting, loose coating, structural movement, exterior/wet/high-movement metal, or unknown finish until Semco reviews it.',
       'If approved, use the X-Bond scratch coat procedure: X-Bond Liquid primer not allowed to dry, then mix 1 part X-Bond Liquid to 2 parts X-Bond Stone at 180-200 RPM.',
     ],
     existing_tile: [
       'Pre-check every tile area. Only go over tile that is bonded solid and not hollow, cracked, loose, tenting, or moving.',
-      'Prep Type D: sweep, dampen, apply non-diluted Nu-Lift for 2-3 minutes, scrub/agitate, rinse/wet-vac, then repeat with Stone Soap 1:4 final wash and dry.',
+      `Prep with SIP Type D: ${sipPrepSequence('type_d')}. Sweep, dampen, dwell 2-3 minutes, scrub/agitate, rinse/remove residue between passes, and dry.`,
       'Fill grout lines flush before the build-up so they do not telegraph.',
       'Apply X-Bond Scratch Coat, then SEMCO Liquid Membrane with fabric reinforcement, then second X-Bond Scratch Coat.',
       'Use X-Bond Brown Coat up to 3/4 inch where tile/grout texture or leveling requires it.',
@@ -1089,7 +1101,7 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
     ],
     concrete_block: [
       'Confirm block/CMU/stucco/plaster is sound, clean, dry enough, and not spalling, dusty, actively wet, or loose.',
-      'Use SIP Type D when mineral/efflorescence risk is present: non-diluted Nu-Lift, scrub, rinse/wet-vac, then Stone Soap 1:4 final wash.',
+      `Use SIP Type D when mineral/efflorescence risk is present: ${sipPrepSequence('type_d')}. Scrub, rinse/remove residue between passes, and dry.`,
       'For below-grade or wet-risk walls, use the specified waterproofing/Liquid Membrane detail before the X-Bond finish.',
       'For vertical X-Bond, use the wall mix: 1 part X-Bond Liquid to 3 parts X-Bond Stone at 180-200 RPM over tacky X-Bond Liquid primer.',
     ],
@@ -1102,8 +1114,8 @@ function installBuildUpAnswer(facts: ExtractedJobFacts, missingInputs: string[])
     existing_paint: [
       'Do not coat over paint/coating unless adhesion is confirmed.',
       'Remove loose, soft, peeling, chalking, or failing coating first.',
-      'Use SIP Type B for paint/sealer/coating residue: Power Cleaner 1:4, scrub, rinse/wet-vac, then Stone Soap 1:4 final wash and dry.',
-      'If the coating type is unknown or the surface is exterior/stamped/unsure, use the stronger Type C path or get Semco review before approval.',
+      `Use SIP Type B for paint/sealer/coating residue: ${sipPrepSequence('type_b')}. Scrub, rinse/remove residue between passes, and dry.`,
+      `If the coating type is unknown or the surface is exterior/stamped/unsure, use SIP Type C (${sipPrepSequence('type_c')}) or get Semco review before approval.`,
       'Once approved, continue with the X-Bond scratch coat and selected finish system.',
     ],
     heated_floor: [
@@ -1161,19 +1173,19 @@ function xBondFinishCoatAnswer(facts: ExtractedJobFacts): string {
 function genericBuildUpForPrepSurface(group: PrepSurfaceGroup, label: string): string {
   const prepLines: Record<PrepSurfaceGroup, string[]> = {
     type_a_standard: [
-      'Prep as SIP Type A: sweep, dampen, Stone Soap 1:4 for 2-3 minutes, scrub/agitate, rinse, wet-vac interiors, repeat if particles remain, and dry.',
+      `Prep as SIP Type A: sweep, dampen, ${sipPrepSequence('type_a')}, dwell 2-3 minutes, scrub/agitate, rinse, wet-vac interiors, repeat if particles remain, and dry.`,
       'This applies only when the surface is clean, non-waxed, non-sealed, and not contaminated.',
     ],
     type_b_residue: [
-      'Prep as SIP Type B: Power Cleaner 1:4 for 2-3 minutes, scrub/agitate, rinse/wet-vac, then Stone Soap 1:4 final wash, rinse/wet-vac, and dry.',
+      `Prep as SIP Type B: ${sipPrepSequence('type_b')}. Dwell 2-3 minutes, scrub/agitate, rinse/wet-vac between passes, and dry after the final rinse.`,
       'Remove loose/failing coating and confirm adhesion before approving X-Bond.',
     ],
     type_c_unknown_exterior: [
-      'Prep as SIP Type C: Power Cleaner 1:4, rinse/wet-vac; Nu-Lift 1:1, rinse/wet-vac; Power Cleaner 1:9, rinse/wet-vac; dry.',
+      `Prep as SIP Type C in this exact order: ${sipPrepSequence('type_c')}. Rinse/wet-vac between passes and dry after the final rinse.`,
       'Use this when the existing condition is unknown, stamped, or exterior.',
     ],
     type_d_mineral_masonry_tile: [
-      'Prep as SIP Type D: non-diluted Nu-Lift for 2-3 minutes, scrub/agitate, rinse/wet-vac, then Stone Soap 1:4 final wash, rinse/wet-vac, and dry.',
+      `Prep as SIP Type D: ${sipPrepSequence('type_d')}. Dwell 2-3 minutes, scrub/agitate, rinse/wet-vac between passes, and dry after the final rinse.`,
       'For tile, confirm it is bonded solid and fill grout lines flush. For block/stucco/plaster, stop if it is loose, dusty, spalling, or actively wet.',
     ],
     type_e_wood: [
@@ -1186,7 +1198,7 @@ function genericBuildUpForPrepSurface(group: PrepSurfaceGroup, label: string): s
       'Drywall is walls only, not a floor substrate.',
     ],
     pool_submerged: [
-      'Treat as wet-area/submerged work. Remove mineral/pool residue, use 3 coats of Liquid Membrane for underwater/submerged membrane work, and use Natural Shield as the current stocked penetrating sealer where a penetrating sealer is specified.',
+      `Treat as wet-area/submerged work. Prep with SIP Type C in this exact order: ${sipPrepSequence('type_c')}. Use 4 coats of Liquid Membrane at 15 mil wet film per coat, for 60 mil total, and use Natural Shield as the current stocked penetrating sealer where a penetrating sealer is specified.`,
       'Capture all warranty photos because submerged work is high risk.',
     ],
     heated_floor: [
