@@ -1,6 +1,6 @@
 # SEMCO Warranty Monitor
 
-The warranty monitor is a separately hosted, owner-only web dashboard:
+The warranty monitor is a separately hosted staff web dashboard:
 
 https://semco-warranty-monitor.co-me.chatgpt.site
 
@@ -11,8 +11,8 @@ site.
 
 ## Access and data security
 
-- The hosting layer is private to the site owner unless access is explicitly
-  shared later.
+- The login page is publicly reachable so authorized staff do not need a
+  separate hosting invitation. This exposes no Semco records by itself.
 - Inside the site, staff must also sign in to the same Supabase Auth project as
   Semco Pro.
 - The interface requires an exact `admin_profiles` row with role `semco_admin`.
