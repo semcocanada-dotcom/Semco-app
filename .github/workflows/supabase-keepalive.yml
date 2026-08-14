@@ -1,0 +1,35 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Daily authenticated read prevents free-tier inactivity pausing.
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Ping Autism Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify project API is reachable
+        env:
+          SUPABASE_URL: https://wowlxyxaltgxbbsbcxao.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_X9eDFGcf0Vn27-yct5E0dQ_4u-HgtN9
+        run: |
+          STATUS=$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/" \
+            --header "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+            --header "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY")
+
+          echo "Supabase response: $STATUS"
+
+          if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 500 ]; then
+            echo "Unexpected status $STATUS; project may be paused or unreachable."
+            exit 1
+          fi
+
+          echo "Autism Supabase project is active."
