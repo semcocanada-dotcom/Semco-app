@@ -20,3 +20,9 @@ entrypoint = "./functions/delete-account/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/delete-account-request/index.ts"
+
+[functions.warranty-dashboard]
+enabled = true
+# Public convenience endpoint; redirects to the separately hosted private site.
+verify_jwt = false
+entrypoint = "./functions/warranty-dashboard/index.ts"
