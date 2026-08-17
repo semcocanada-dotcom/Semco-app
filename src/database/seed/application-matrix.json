@@ -1,0 +1,76 @@
+{
+  "concrete": {
+    "label": "Concrete",
+    "layers": [
+      { "sku": "PRIMER-2K", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+    ]
+  },
+  "concrete_block": {
+    "label": "Concrete Block / CMU",
+    "layers": [
+      { "sku": "FILLER-BASE", "coats": 1, "required": false, "note": "If surface is rough or porous" },
+      { "sku": "PRIMER-2K", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+    ]
+  },
+  "plywood": {
+    "label": "Plywood / OSB",
+    "layers": [
+      { "sku": "PRIMER-2K", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 3, "required": true, "note": "Extra sealer coat for floor applications on wood" }
+    ]
+  },
+  "cement_board": {
+    "label": "Cement Board / Backer Board",
+    "layers": [
+      { "sku": "PRIMER-2K", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+    ]
+  },
+  "existing_tile": {
+    "label": "Existing Tile",
+    "layers": [
+      { "sku": "FILLER-BASE", "coats": 1, "required": true, "note": "Fill grout lines flush before priming" },
+      { "sku": "PRIMER-2K", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+    ]
+  },
+  "existing_paint": {
+    "label": "Existing Paint / Coating",
+    "layers": [
+      { "sku": "PRIMER-ADHESION", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+    ]
+  },
+  "gypsum_board": {
+    "label": "Drywall / Gypsum Board",
+    "layers": [
+      { "sku": "PRIMER-ADHESION", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 2, "required": true }
+    ]
+  },
+  "heated_floor": {
+    "label": "Heated Floor (UFH)",
+    "layers": [
+      { "sku": "PRIMER-2K", "coats": 1, "required": true },
+      { "sku": "BASE-W", "coats": 2, "required": true },
+      { "sku": "FINISH-R", "coats": 2, "required": true },
+      { "sku": "SEAL-2K-S", "coats": 3, "required": true, "note": "Extra coat for heated floor protection" }
+    ]
+  }
+}
