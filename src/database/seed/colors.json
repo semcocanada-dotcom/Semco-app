@@ -1,0 +1,44 @@
+[
+  {
+    "id": "col-alabaster",
+    "name": "Alabaster",
+    "code": "SC-001",
+    "isStandard": true,
+    "installerId": null,
+    "pigments": [],
+    "photoUrl": null,
+    "notes": "Pure white — no pigment addition required. Natural cement tone.",
+    "createdAt": "2026-04-18T00:00:00.000Z",
+    "updatedAt": "2026-04-18T00:00:00.000Z"
+  },
+  {
+    "id": "col-graphite",
+    "name": "Graphite",
+    "code": "SC-002",
+    "isStandard": true,
+    "installerId": null,
+    "pigments": [
+      { "pigmentCode": "LAMP-BLK", "pigmentName": "Lamp Black", "mlPerQuart": 6.0, "mlPerGallon": 24.0, "mlPerFiveGallon": 120.0 },
+      { "pigmentCode": "RAW-UMB", "pigmentName": "Raw Umber", "mlPerQuart": 2.5, "mlPerGallon": 10.0, "mlPerFiveGallon": 50.0 }
+    ],
+    "photoUrl": null,
+    "notes": "Deep charcoal. Run ingest-colors-csv.ts to replace with real Semco XBond formula.",
+    "createdAt": "2026-04-18T00:00:00.000Z",
+    "updatedAt": "2026-04-18T00:00:00.000Z"
+  },
+  {
+    "id": "col-sand",
+    "name": "Sand",
+    "code": "SC-004",
+    "isStandard": true,
+    "installerId": null,
+    "pigments": [
+      { "pigmentCode": "YLW-OCH", "pigmentName": "Yellow Ochre", "mlPerQuart": 4.0, "mlPerGallon": 16.0, "mlPerFiveGallon": 80.0 },
+      { "pigmentCode": "BRN-UMB", "pigmentName": "Burnt Umber", "mlPerQuart": 1.5, "mlPerGallon": 6.0, "mlPerFiveGallon": 30.0 }
+    ],
+    "photoUrl": null,
+    "notes": "Warm sandy beige. Run ingest-colors-csv.ts to replace with real Semco XBond formula.",
+    "createdAt": "2026-04-18T00:00:00.000Z",
+    "updatedAt": "2026-04-18T00:00:00.000Z"
+  }
+]
