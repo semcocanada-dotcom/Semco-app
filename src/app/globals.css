@@ -1,0 +1,264 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ── Vendor theme — edit these (plus tailwind.config.ts tokens) to re-skin ── */
+  --color-navy:        #1C3A6E;
+  --color-navy-dark:   #142B52;
+  --color-navy-light:  #E8EDF6;
+  --color-brand:       #1B84AD;
+  --color-brand-dark:  #14688A;
+  --color-brand-light: #E5F3F8;
+  --color-deal:        #E11D48;
+  --color-bg:          #F5F5F7;
+  --color-surface:     #FFFFFF;
+  --color-text1:       #1D1D1F;
+  --color-text2:       #6E6E73;
+  --color-separator:   #E5E5EA;
+  --color-success:     #22C55E;
+
+  /* CTA + hero gradients — one place to change for a new vendor */
+  --cta-from: #1C3A6E;
+  --cta-to:   #142B52;
+  --brand-from: #1B84AD;
+  --brand-to:   #14688A;
+}
+
+/* Primary CTA surface (buttons, hero header) */
+.bg-cta {
+  background: linear-gradient(135deg, var(--cta-from), var(--cta-to));
+}
+.bg-brand-grad {
+  background: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text1);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Spring press ────────────────────────────────────────────────────────── */
+.spring-tap {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  cursor: pointer;
+}
+.spring-tap:active {
+  transform: scale(0.96);
+  transition-duration: 0.06s;
+  transition-timing-function: ease-out;
+}
+
+.spring-tap-strong {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  cursor: pointer;
+}
+.spring-tap-strong:active {
+  transform: scale(0.84);
+  transition-duration: 0.06s;
+  transition-timing-function: ease-out;
+}
+
+/* ─── Keyframe animations ─────────────────────────────────────────────────── */
+
+/* Button pop / success state */
+@keyframes pop-in {
+  0%   { transform: scale(0.82); opacity: 0; }
+  55%  { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+/* Checkmark icon pop */
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-12deg); opacity: 0; }
+  55%  { transform: scale(1.15) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg);    opacity: 1; }
+}
+
+/* Badge count update */
+@keyframes badge-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.38); }
+  65%  { transform: scale(0.93); }
+  100% { transform: scale(1); }
+}
+
+/* Generic slide up */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Simple fade */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Page entrance — pure fade.
+   Deliberately no transform: a transformed ancestor becomes the containing
+   block for position:fixed children (proof sheet, floating buttons). */
+@keyframes page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* List row stagger entrance */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Price / number crossfade when value changes */
+@keyframes value-update {
+  from { opacity: 0.3; transform: scale(0.97); }
+  to   { opacity: 1;   transform: scale(1); }
+}
+
+/* Nav icon — physical bump when item added */
+@keyframes nav-bump {
+  0%   { transform: translateY(0)    scale(1); }
+  28%  { transform: translateY(-3px) scale(1.10); }
+  60%  { transform: translateY(1px)  scale(0.96); }
+  100% { transform: translateY(0)    scale(1); }
+}
+
+/* Toast notification — full lifecycle in one keyframe */
+@keyframes toast-lifecycle {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.96); }
+  13%  { opacity: 1; transform: translateY(0)    scale(1); }
+  78%  { opacity: 1; transform: translateY(0)    scale(1); }
+  100% { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+
+/* Social proof confidence flash */
+@keyframes proof-flash {
+  0%   { opacity: 0; transform: translateY(4px) scale(0.88); }
+  18%  { opacity: 1; transform: translateY(0)   scale(1); }
+  72%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-3px); }
+}
+
+/* SVG checkmark draw-in */
+@keyframes check-draw {
+  from { stroke-dashoffset: 36; opacity: 0.5; }
+  to   { stroke-dashoffset: 0;  opacity: 1; }
+}
+
+/* Button shimmer loading */
+@keyframes btn-shimmer {
+  from { background-position:  200% center; }
+  to   { background-position: -200% center; }
+}
+
+/* Status step slide-in (confirmation page) */
+@keyframes status-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Skeleton loading */
+@keyframes skeleton-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* Row highlight after reorder */
+@keyframes row-highlight {
+  0%,100% { background-color: transparent; }
+  20%,80% { background-color: rgba(28, 58, 110, 0.055); }
+}
+
+/* Card scale-in */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Utility animation classes ───────────────────────────────────────────── */
+.animate-pop-in       { animation: pop-in           0.26s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-check-pop    { animation: check-pop         0.26s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-badge        { animation: badge-pop         0.30s cubic-bezier(0.34, 1.4,  0.64, 1) both; }
+.animate-slide-up     { animation: slide-up          0.22s ease-out both; }
+.animate-fade-in      { animation: fade-in           0.18s ease-out both; }
+.animate-page-in      { animation: page-in           0.24s ease-out both; }
+.animate-fade-up      { animation: fade-up           0.20s ease-out both; }
+.animate-value-update { animation: value-update      0.16s ease-out both; }
+.animate-nav-bump     { animation: nav-bump          0.30s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+.animate-toast        { animation: toast-lifecycle   1.60s ease-in-out  both; }
+.animate-proof-flash  { animation: proof-flash       1.00s ease-out     both; }
+.animate-status-in    { animation: status-in         0.22s ease-out     both; }
+.animate-scale-in     { animation: scale-in          0.22s ease-out     both; }
+.animate-row-highlight{ animation: row-highlight     1.20s ease-out     both; }
+.animate-check-draw {
+  stroke-dasharray: 36;
+  animation: check-draw 0.38s cubic-bezier(0.4, 0, 0.2, 1) 0.28s both;
+}
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e5e5e5 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* ─── Glass nav bar ───────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* ─── Safe area ───────────────────────────────────────────────────────────── */
+.safe-area-pb {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+html { scroll-behavior: smooth; }
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+input:focus { outline: none; }
+
+/* ─── Segmented control ───────────────────────────────────────────────────── */
+.segment-btn {
+  @apply flex-1 py-2 text-[14px] font-medium rounded-lg transition-all duration-150;
+}
+.segment-btn.active   { @apply bg-surface text-text1 shadow-card; }
+.segment-btn.inactive { @apply text-text2; }
+
+/* ─── Scrollbar hide ──────────────────────────────────────────────────────── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in, .animate-fade-up, .animate-nav-bump, .animate-toast,
+  .animate-proof-flash, .animate-row-highlight, .animate-status-in,
+  .animate-slide-up, .animate-pop-in, .animate-check-pop, .animate-badge,
+  .animate-value-update, .animate-scale-in, .animate-fade-in, .animate-check-draw {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .spring-tap, .spring-tap-strong { transition: none !important; }
+}
