@@ -190,6 +190,50 @@ describe('calculator preparation and membrane behavior', () => {
     expect(result.sourceSummary).toContain('optional for this wall in a non-wet area');
   });
 
+  it('uses the no-scratch 100 sq ft field rate only for dry non-wet drywall walls', () => {
+    const dryWall = calculate({
+      areaSqft: 100,
+      substrateType: 'gypsum_board',
+      wastePct: 10,
+      installationScope: 'non_wet_wall',
+      waterproofingMode: 'none',
+    });
+    const normalizedDrywall = calculate({
+      areaSqft: 100,
+      substrateType: 'gypsum_board',
+      wastePct: 0,
+      installationScope: 'floor_or_other',
+      waterproofingMode: 'none',
+    });
+    const paintedWall = calculate({
+      areaSqft: 100,
+      substrateType: 'existing_paint',
+      wastePct: 0,
+      installationScope: 'non_wet_wall',
+      waterproofingMode: 'none',
+    });
+    const dryWallStone = dryWall.layers.find((layer) => layer.productSku === 'XBOND-STONE');
+    const normalizedStone = normalizedDrywall.layers.find((layer) => layer.productSku === 'XBOND-STONE');
+    const paintedStone = paintedWall.layers.find((layer) => layer.productSku === 'XBOND-STONE');
+    const dryWallLiquid = dryWall.layers.find((layer) => layer.productSku === 'XBOND-LIQUID');
+
+    expect(dryWallStone).toMatchObject({
+      exactQuantity: 1,
+      roundedQuantity: 1,
+      coats: 2,
+      coverageLabel: 'Dry, non-wet drywall finish coats: 100 sq ft/bag',
+    });
+    expect(dryWallStone?.sourceNote).toContain('omit the scratch coat');
+    expect(dryWallStone?.sourceNote).toContain('global waste percentage is not added');
+    expect(dryWallLiquid?.exactQuantity).toBeCloseTo(110 / 37.5, 8);
+    expect(dryWall.wastePct).toBe(10);
+    expect(normalizedDrywall.installationScope).toBe('non_wet_wall');
+    expect(normalizedStone).toMatchObject({ exactQuantity: 1, roundedQuantity: 1 });
+    expect(paintedStone).toMatchObject({ exactQuantity: 100 / 75, roundedQuantity: 2 });
+    expect(normalizedStone?.sourceNote).toContain('omit the scratch coat');
+    expect(paintedStone?.sourceNote).not.toContain('omit the scratch coat');
+  });
+
   it('forces the 2-coat above-grade membrane system for a wet-area cement-board wall', () => {
     const result = calculate({
       areaSqft: 100,

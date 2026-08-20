@@ -14,14 +14,32 @@ describe('useCalculator preparation and membrane controls', () => {
     const { result } = renderHook(() => useCalculator());
 
     act(() => result.current.setSubstrate('gypsum_board'));
-    act(() => result.current.setInstallationScope('non_wet_wall'));
+    expect(result.current.form.installationScope).toBe('non_wet_wall');
     expect(result.current.form.waterproofingMode).toBe('none');
+
+    act(() => result.current.setInstallationScope('floor_or_other'));
+    expect(result.current.form.installationScope).toBe('non_wet_wall');
 
     act(() => result.current.setWaterproofingMode('above_grade'));
     expect(result.current.form.waterproofingMode).toBe('above_grade');
 
     act(() => result.current.setWaterproofingMode('none'));
     expect(result.current.form.waterproofingMode).toBe('none');
+  });
+
+  it('automatically applies the dry-wall scope and one-bag field rate for drywall', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('100'));
+    act(() => result.current.setSubstrate('gypsum_board'));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.result?.installationScope).toBe('non_wet_wall');
+    expect(result.current.result?.layers.find((layer) => layer.productSku === 'XBOND-STONE')).toMatchObject({
+      exactQuantity: 1,
+      roundedQuantity: 1,
+    });
   });
 
   it('forces membrane for a wet-area wall and unlocks it when changed to a non-wet wall', () => {

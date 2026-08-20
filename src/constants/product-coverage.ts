@@ -1,4 +1,5 @@
 import type { SubstrateId } from '@/constants/substrates';
+import type { InstallationScope } from '@/constants/prep-systems';
 import {
   CURRENT_POOL_SEALER_SKU,
   STOCKED_SEALER_POLICY_PAGE,
@@ -86,6 +87,16 @@ const XBOND: CoverageProduct = {
       sourceDocument: 'X-BondMicrocementDataSheet2024.pdf',
       sourcePage: 2,
       basis: 'Field rate: at least 75 sq ft finished per 50 lb bag. Data sheet coverage is per 2 gal X-Bond Liquid + 1 x 50 lb X-Bond Stone at 1/8 inch.',
+    },
+    dryNonWetDrywall: {
+      label: 'Dry, non-wet drywall finish coats',
+      minSqftPerUnit: 100,
+      maxSqftPerUnit: 100,
+      unit: 'bag',
+      coats: 2,
+      sourceDocument: 'SEMCO Canada non-wet drywall field rule',
+      sourcePage: 0,
+      basis: 'Dry, non-water-area drywall only: omit the scratch coat, prime with X-Bond Liquid, and plan 1 x 50 lb X-Bond Stone bag per 100 sq ft of measured wall area for the two trowelled finish coats. This field ordering rate includes the wall allowance, so the global waste percentage is not added to X-Bond Stone for this scope.',
     },
     tile: {
       label: 'X-Bond Stone at 1/8 inch',
@@ -411,7 +422,10 @@ export const COVERAGE_PRODUCTS = {
   MATTE_SEALER,
 };
 
-export function getXBondRange(substrate: SubstrateId): CoverageRange {
+export function getXBondRange(substrate: SubstrateId, installationScope?: InstallationScope): CoverageRange {
+  if (substrate === 'gypsum_board' && installationScope === 'non_wet_wall') {
+    return XBOND.ranges.dryNonWetDrywall;
+  }
   if (substrate === 'existing_tile') return XBOND.ranges.tile;
   if (substrate === 'existing_paint' || substrate === 'gypsum_board') return XBOND.ranges.painted;
   return XBOND.ranges.concrete;

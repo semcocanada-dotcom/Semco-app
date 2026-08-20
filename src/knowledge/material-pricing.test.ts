@@ -4,6 +4,7 @@ import {
   getMaterialPriceTotal,
   priceMaterialLayers,
 } from '@/knowledge/material-pricing';
+import { calculate } from '@/services/calculator';
 
 function cleanerLayer(productSku: string, exactGallons?: number, roundedGallons?: number): MaterialLayer {
   return {
@@ -109,5 +110,48 @@ describe('cleaner package pricing', () => {
     expect(getCleanerPackagePlan('STONE-SOAP', Number.NaN)).toEqual([]);
     expect(getCleanerPackagePlan('XBOND-STONE', 2)).toBeNull();
     expect(priceMaterialLayers([cleanerLayer('STONE-SOAP')])[0].quantity).toBe(0);
+  });
+});
+
+describe('Matte sealer package pricing', () => {
+  it('prices the recommended 1-gallon pail for a 100 sq ft Matte calculation', () => {
+    const result = calculate({
+      areaSqft: 100,
+      substrateType: 'gypsum_board',
+      installationScope: 'non_wet_wall',
+      wastePct: 10,
+      sealerSku: 'MATTE-SEALER',
+    });
+    const matte = result.layers.find((layer) => layer.productSku === 'MATTE-SEALER');
+
+    expect(matte).toMatchObject({
+      roundedQuantity: 1,
+      purchaseLabel: 'Buy 1 x 1 gal pail',
+    });
+
+    const [line] = priceMaterialLayers([matte!]);
+
+    expect(line).toMatchObject({ priceSku: 'MS601', quantity: 1, lineTotalCad: 266 });
+    expect(line.price).toMatchObject({ size: '1 gallon pail', retailPriceCad: 266 });
+  });
+
+  it('keeps the 5-gallon Matte SKU when the calculation genuinely needs that package', () => {
+    const result = calculate({
+      areaSqft: 1000,
+      substrateType: 'concrete',
+      wastePct: 10,
+      sealerSku: 'MATTE-SEALER',
+    });
+    const matte = result.layers.find((layer) => layer.productSku === 'MATTE-SEALER');
+
+    expect(matte).toMatchObject({
+      roundedQuantity: 5,
+      purchaseLabel: 'Buy 1 x 5 gal pail',
+    });
+
+    const [line] = priceMaterialLayers([matte!]);
+
+    expect(line).toMatchObject({ priceSku: 'MS605', quantity: 1, lineTotalCad: 1057.97 });
+    expect(line.price?.size).toBe('5 gallon pail');
   });
 });

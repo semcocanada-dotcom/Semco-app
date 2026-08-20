@@ -35,7 +35,7 @@ const SKU_ALIASES: Record<string, string> = {
   'MICROBOND-STONE': 'XBM50',
   'SATIN-STONE': 'XTS100',
   'TITAN-SHIELD': 'TSG705',
-  'MATTE-SEALER': 'MS605',
+  'MATTE-SEALER': 'MS601',
   'STONE-SOAP': 'SS101',
   'POWER-CLEANER': 'PC 201',
   'NU-LIFT': 'NL 101',
@@ -48,6 +48,7 @@ export const MATERIAL_PRICES: MaterialPrice[] = [
   { sku: 'XBAD805', product: 'X-Bond Additive Brown Coat Filler', category: 'X-Bond Microcement System', size: '20 lb bag', coverageRate: 'Can be applied from 1/4 in to 4 in thickness', retailPriceCad: 472.08, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
   { sku: 'XB805', product: 'X-Bond Liquid', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Based on 2 x 50 lb X-Bond Stone and 5 gal liquid at 1/8 in thickness', retailPriceCad: 623.57, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
   { sku: 'XBM50', product: 'Microbond', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft', retailPriceCad: 455.18, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
+  { sku: 'MS601', product: 'Semco Sealer Matte', category: 'Sealers and Stains', size: '1 gallon pail', coverageRate: 'Coverage 200 sq ft, based on 2 coats', retailPriceCad: 266.00, minimumQty: 1, source: 'Modern Arc Sales Order 1018 dated 2026-08-19' },
   { sku: 'MS605', product: 'Semco Sealer Matte', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft, based on 2 coats', retailPriceCad: 1057.97, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
   { sku: 'TSG705', product: 'Titan Shield Gloss', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft, based on 3 coats', retailPriceCad: 957.68, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
   { sku: 'XTS100', product: 'Satin Stone Sealer', category: 'Sealers and Stains', size: '1.5 gallon kit', coverageRate: 'X-Bond 300-375 sq ft; Semco ADA Finish 150-250 sq ft', retailPriceCad: 733.79, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
@@ -73,6 +74,10 @@ const CLEANER_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: stri
   STONESOAP: { oneGallon: 'SS101', fiveGallon: 'SS105' },
   POWERCLEANER: { oneGallon: 'PC 201', fiveGallon: 'PC 205' },
   NULIFT: { oneGallon: 'NL 101', fiveGallon: 'NL 105' },
+};
+
+const MATERIAL_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: string }> = {
+  MATTESEALER: { oneGallon: 'MS601', fiveGallon: 'MS605' },
 };
 
 export function getPriceSku(productSku: string): string {
@@ -110,6 +115,21 @@ export function priceMaterialLayers(layers: MaterialLayer[]): PricedMaterialLine
 
       return cleanerPackageLines.map(({ price, priceSku, quantity }) => ({
         layer: pricedLayer,
+        price,
+        priceSku,
+        quantity,
+        lineTotalCad: quantity * price.retailPriceCad,
+      }));
+    }
+
+    const materialPackageLines = getMaterialPackagePlan(layer.productSku, layer.roundedQuantity);
+    if (materialPackageLines) {
+      if (materialPackageLines.length === 0) {
+        return [createUnpurchasedLine(layer)];
+      }
+
+      return materialPackageLines.map(({ price, priceSku, quantity }) => ({
+        layer,
         price,
         priceSku,
         quantity,
@@ -162,7 +182,24 @@ export function getCleanerPackagePlan(
   if (!packageSkus) return null;
   if (!Number.isFinite(requiredGallons) || requiredGallons <= 0) return [];
 
-  const purchasedGallons = Math.ceil(requiredGallons);
+  return buildGallonPackagePlan(packageSkus, Math.ceil(requiredGallons));
+}
+
+function getMaterialPackagePlan(
+  productSku: string,
+  purchasedGallons?: number,
+): CleanerPackageLine[] | null {
+  const packageSkus = MATERIAL_PACKAGE_SKUS[normalizeSku(productSku)];
+  if (!packageSkus) return null;
+  if (!Number.isFinite(purchasedGallons) || (purchasedGallons ?? 0) <= 0) return [];
+
+  return buildGallonPackagePlan(packageSkus, Math.ceil(purchasedGallons ?? 0));
+}
+
+function buildGallonPackagePlan(
+  packageSkus: { oneGallon: string; fiveGallon: string },
+  purchasedGallons: number,
+): CleanerPackageLine[] {
   const fiveGallonQuantity = Math.floor(purchasedGallons / 5);
   const oneGallonQuantity = purchasedGallons % 5;
   const lines: CleanerPackageLine[] = [];
@@ -201,7 +238,7 @@ export function getMaterialPriceTotal(lines: PricedMaterialLine[]): number {
 function getPricedQuantity(layer: MaterialLayer): number {
   if (!layer.roundedQuantity || layer.roundedQuantity <= 0) return 0;
 
-  if (layer.productSku === 'XBOND-LIQUID' || layer.productSku === 'SEMCO-LIQUID-MEMBRANE' || layer.productSku === 'MATTE-SEALER' || layer.productSku === 'TITAN-SHIELD') {
+  if (layer.productSku === 'XBOND-LIQUID' || layer.productSku === 'SEMCO-LIQUID-MEMBRANE' || layer.productSku === 'TITAN-SHIELD') {
     return Math.ceil(layer.roundedQuantity / 5);
   }
 

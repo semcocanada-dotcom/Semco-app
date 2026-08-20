@@ -43,9 +43,11 @@ export function useCalculator() {
     const prepCondition = getRequiredPrepCondition(v) ?? getDefaultPrepCondition(v);
     const installationScope: InstallationScope = v === 'pool'
       ? 'submerged'
-      : f.substrateType === 'pool'
-        ? 'floor_or_other'
-        : f.installationScope;
+      : v === 'gypsum_board'
+        ? 'non_wet_wall'
+        : f.substrateType === 'pool' || f.substrateType === 'gypsum_board'
+          ? 'floor_or_other'
+          : f.installationScope;
     const membraneRequired = isLiquidMembraneRequired(v, prepCondition, installationScope);
 
     return {
@@ -72,7 +74,11 @@ export function useCalculator() {
     return { ...f, waterproofingMode: v };
   }), []);
   const setInstallationScope = useCallback((v: InstallationScope) => setForm((f) => {
-    const installationScope = f.substrateType === 'pool' ? 'submerged' : v;
+    const installationScope = f.substrateType === 'pool'
+      ? 'submerged'
+      : f.substrateType === 'gypsum_board'
+        ? 'non_wet_wall'
+        : v;
     const membraneRequired = f.substrateType
       ? isLiquidMembraneRequired(f.substrateType, f.prepCondition ?? undefined, installationScope)
       : installationScope === 'wet_area' || installationScope === 'submerged';

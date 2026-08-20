@@ -62,15 +62,22 @@ export function calculate(input: CalculatorInput): CalculationResult {
 
   const prepCondition = resolvePrepCondition(substrateType, input.prepCondition);
   const prepSystem = getPrepSystem(prepCondition);
-  const installationScope: InstallationScope = substrateType === 'pool'
-    ? 'submerged'
-    : input.installationScope ?? 'floor_or_other';
+  const requestedInstallationScope = input.installationScope ?? 'floor_or_other';
 
-  if (substrateType === 'gypsum_board' && installationScope === 'wet_area') {
+  if (
+    substrateType === 'gypsum_board'
+    && (requestedInstallationScope === 'wet_area' || requestedInstallationScope === 'submerged')
+  ) {
     throw new Error(
-      'Regular drywall/gypsum board is not supported in wet areas. Select a wet-area board or cement board substrate.',
+      'Regular drywall/gypsum board is not supported in wet areas or submerged work. It is supported only on walls in non-wet areas. Select a wet-area board or cement board substrate.',
     );
   }
+
+  const installationScope: InstallationScope = substrateType === 'pool'
+    ? 'submerged'
+    : substrateType === 'gypsum_board'
+      ? 'non_wet_wall'
+      : requestedInstallationScope;
 
   const membraneRequired = isLiquidMembraneRequired(
     substrateType,
@@ -79,8 +86,15 @@ export function calculate(input: CalculatorInput): CalculationResult {
   );
 
   const sealerProduct = getSealerProduct(getSealerSkuForSubstrate(substrateType, sealerSku));
+  const usesDryNonWetDrywallFieldRate = substrateType === 'gypsum_board'
+    && installationScope === 'non_wet_wall';
   const estimates: CoverageEstimate[] = [
-    estimateCoverage(COVERAGE_PRODUCTS.XBOND, getXBondRange(substrateType), areaSqft, wastePct),
+    estimateCoverage(
+      COVERAGE_PRODUCTS.XBOND,
+      getXBondRange(substrateType, installationScope),
+      areaSqft,
+      usesDryNonWetDrywallFieldRate ? 0 : wastePct,
+    ),
     estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getXBondLiquidRange(), areaSqft, wastePct),
   ];
 

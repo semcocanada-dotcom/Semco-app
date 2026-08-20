@@ -202,7 +202,10 @@ export default function CalculatorScreen() {
                       size="sm"
                       style={styles.scopeBtn}
                       textStyle={styles.optionText}
-                      disabled={isPool && opt.id !== 'submerged'}
+                      disabled={
+                        (isPool && opt.id !== 'submerged')
+                        || (form.substrateType === 'gypsum_board' && opt.id !== 'non_wet_wall')
+                      }
                     />
                   ))}
                 </View>
