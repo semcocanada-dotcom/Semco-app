@@ -97,7 +97,7 @@ export default function ReceiptSubmissionScreen() {
         </Card>
 
         <SectionHeader title="Purchase Details" subtitle="Use this when material was bought outside the app order flow." />
-        <Input label="Dealer / Store" value={dealerName} onChangeText={setDealerName} placeholder="Modern Arc, Diamond Arc, or dealer name" />
+        <Input label="Dealer / Store" value={dealerName} onChangeText={setDealerName} placeholder="Modern Arc, Innovative Finishes, or dealer name" />
         <Input label="Receipt Number" value={receiptNumber} onChangeText={setReceiptNumber} placeholder="Optional" />
         <Input label="Notes" value={notes} onChangeText={setNotes} placeholder="Products, order details, or review notes" multiline />
 
