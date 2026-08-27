@@ -64,15 +64,16 @@ export const SUBSTRATES: SubstrateDefinition[] = [
     label: 'Drywall',
     description: 'Interior wallboard',
     requiresPrimer2K: false,
-    notes: 'Walls only. Do not use drywall as a floor substrate.',
+    notes: 'Regular drywall is for non-wet interior walls only. For moisture-resistant board approved by its manufacturer for a shower or wet wall, choose Wet-Area Board.',
     visible: true,
   },
   {
+    // Persisted compatibility ID: this is the umbrella option for approved wet-area boards.
     id: 'cement_board',
-    label: 'Wet-area / Cement Board',
-    description: 'Properly installed cement or approved wet-area board',
+    label: 'Wet-Area Board',
+    description: 'Manufacturer-approved moisture-resistant drywall, gypsum, backer, or cement board rated for the wet-area application',
     requiresPrimer2K: true,
-    notes: 'Use this instead of regular drywall for showers and wet walls. Select the Wet Wall / Shower project area to include the required membrane system.',
+    notes: 'Use a manufacturer-approved moisture-resistant wet-area board for showers and wet walls; regular drywall remains for non-wet walls only. Select Wet Wall / Shower to include the required membrane system.',
     visible: true,
   },
   {
@@ -111,3 +112,15 @@ export const VISIBLE_SUBSTRATES = SUBSTRATES.filter((substrate) => substrate.vis
 export const SUBSTRATE_MAP = Object.fromEntries(
   SUBSTRATES.map((s) => [s.id, s]),
 ) as Record<SubstrateId, SubstrateDefinition>;
+
+export function formatSubstrateLabel(value?: string | null): string {
+  if (!value) return 'Not set';
+
+  const knownSubstrate = SUBSTRATE_MAP[value as SubstrateId];
+  if (knownSubstrate) return knownSubstrate.label;
+
+  return value
+    .replace(/_/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}

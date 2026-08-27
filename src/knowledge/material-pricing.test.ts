@@ -93,16 +93,29 @@ describe('cleaner package pricing', () => {
     expect(line).toMatchObject({ priceSku: 'PC 205', quantity: 1, lineTotalCad: 590 });
   });
 
-  it('keeps non-cleaner package pricing behavior unchanged', () => {
+  it('uses the priced 5-gallon and pending 1-gallon Liquid Membrane SKUs together', () => {
     const membrane = {
       ...cleanerLayer('SEMCO-LIQUID-MEMBRANE', 5.1, 6),
       productName: 'Liquid Membrane',
       category: 'membrane',
     };
 
-    const [line] = priceMaterialLayers([membrane]);
+    const lines = priceMaterialLayers([membrane]);
 
-    expect(line).toMatchObject({ priceSku: 'XME805', quantity: 2, lineTotalCad: 1442 });
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toMatchObject({
+      priceSku: 'XME805',
+      packageLabel: '5 gallon pail',
+      quantity: 1,
+      lineTotalCad: 721,
+    });
+    expect(lines[1]).toMatchObject({
+      priceSku: 'XME801',
+      packageLabel: '1 gallon pail',
+      quantity: 1,
+    });
+    expect(lines[1].price).toBeUndefined();
+    expect(lines[1].lineTotalCad).toBeUndefined();
   });
 
   it('does not create a purchase for zero or invalid cleaner quantities', () => {
@@ -110,6 +123,45 @@ describe('cleaner package pricing', () => {
     expect(getCleanerPackagePlan('STONE-SOAP', Number.NaN)).toEqual([]);
     expect(getCleanerPackagePlan('XBOND-STONE', 2)).toBeNull();
     expect(priceMaterialLayers([cleanerLayer('STONE-SOAP')])[0].quantity).toBe(0);
+  });
+});
+
+describe('Liquid Membrane package pricing', () => {
+  it('keeps a two-gallon requirement as two XME801 pails', () => {
+    const membrane = {
+      ...cleanerLayer('SEMCO-LIQUID-MEMBRANE', 1.9, 2),
+      productName: 'Liquid Membrane',
+      category: 'membrane',
+    };
+
+    const lines = priceMaterialLayers([membrane]);
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({
+      priceSku: 'XME801',
+      packageLabel: '1 gallon pail',
+      quantity: 2,
+    });
+    expect(lines[0].price).toBeUndefined();
+    expect(lines[0].lineTotalCad).toBeUndefined();
+  });
+
+  it('retains the authoritative XME805 price for an exact five-gallon purchase', () => {
+    const membrane = {
+      ...cleanerLayer('SEMCO-LIQUID-MEMBRANE', 5, 5),
+      productName: 'Liquid Membrane',
+      category: 'membrane',
+    };
+
+    const [line] = priceMaterialLayers([membrane]);
+
+    expect(line).toMatchObject({
+      priceSku: 'XME805',
+      packageLabel: '5 gallon pail',
+      quantity: 1,
+      lineTotalCad: 721,
+    });
+    expect(line.price?.retailPriceCad).toBe(721);
   });
 });
 

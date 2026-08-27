@@ -31,6 +31,7 @@ import { getWarrantyPhotoStatus, getWarrantySummaryText } from '@/services/warra
 import { useAuthStore } from '@/store/auth';
 import { Badge, BatchCard, Button, Card, EmptyState, Input, StatCard, TabControl } from '@/components/ui';
 import { resolveDealerContext } from '@/constants/dealers';
+import { formatSubstrateLabel } from '@/constants/substrates';
 import { STOCKED_SEALERS } from '@/constants/stocked-sealers';
 import { getInstallerProfile, profileToDealerInput } from '@/services/installer-profile';
 import { formatSqftFromSqm, sqftToSqm } from '@/utils/area';
@@ -454,7 +455,7 @@ export default function ProjectDetailScreen() {
               <StatCard
                 label="Area"
                 value={formatSqftFromSqm(project.totalAreaSqm)}
-                detail={formatId(project.substrateType)}
+                detail={formatSubstrateLabel(project.substrateType)}
                 icon="resize-outline"
                 tone="primary"
                 style={styles.dashboardStat}
@@ -516,7 +517,7 @@ export default function ProjectDetailScreen() {
               <InfoRow icon="call-outline" label="Phone" value={project.clientPhone ?? 'Not set'} />
               <InfoRow icon="location-outline" label="Address" value={project.siteAddress ?? 'No address yet'} />
               <InfoRow icon="briefcase-outline" label="Job Number" value={project.id} />
-              <InfoRow icon="layers-outline" label="Substrate" value={formatId(project.substrateType)} />
+              <InfoRow icon="layers-outline" label="Substrate" value={formatSubstrateLabel(project.substrateType)} />
               <InfoRow icon="resize-outline" label="Area" value={formatSqftFromSqm(project.totalAreaSqm)} />
               <InfoRow icon="business-outline" label="Dealer" value={dealerContext.dealerId ? dealerContext.dealerName : 'Set company profile'} />
               <InfoRow icon="pulse-outline" label="Status" value={status.label} />
@@ -531,7 +532,7 @@ export default function ProjectDetailScreen() {
         {tab === 'spec' ? (
           <View style={styles.section}>
             <Card style={styles.infoCard}>
-              <InfoRow icon="layers-outline" label="Substrate" value={formatId(project.substrateType)} />
+              <InfoRow icon="layers-outline" label="Substrate" value={formatSubstrateLabel(project.substrateType)} />
               <InfoRow icon="color-filter-outline" label="Finish" value={formatId(project.finishType)} />
               <InfoRow icon="shield-checkmark-outline" label="Sealer" value={selectedSealer?.productName ?? project.sealerProductId ?? 'Not set'} />
               <InfoRow icon="document-text-outline" label="Notes" value={project.notes ?? 'No notes yet'} />

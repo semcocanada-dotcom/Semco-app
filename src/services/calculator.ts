@@ -69,7 +69,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     && (requestedInstallationScope === 'wet_area' || requestedInstallationScope === 'submerged')
   ) {
     throw new Error(
-      'Regular drywall/gypsum board is not supported in wet areas or submerged work. It is supported only on walls in non-wet areas. Select a wet-area board or cement board substrate.',
+      'Regular drywall/gypsum board is not supported in wet areas or submerged work. It is supported only on walls in non-wet areas. Select a manufacturer-approved moisture-resistant wet-area board substrate.',
     );
   }
 

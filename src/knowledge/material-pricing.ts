@@ -15,6 +15,7 @@ export type PricedMaterialLine = {
   layer: MaterialLayer;
   price?: MaterialPrice;
   priceSku?: string;
+  packageLabel?: string;
   quantity: number;
   lineTotalCad?: number;
 };
@@ -24,6 +25,11 @@ export type CleanerPackageLine = {
   priceSku: string;
   quantity: number;
   packageGallons: 1 | 5;
+  packageLabel: string;
+};
+
+type MaterialPackageLine = Omit<CleanerPackageLine, 'price'> & {
+  price?: MaterialPrice;
 };
 
 export const MATERIAL_PRICE_SOURCE = 'Modern Arc Ontario Dealer Pricing 2026';
@@ -77,6 +83,9 @@ const CLEANER_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: stri
 };
 
 const MATERIAL_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: string }> = {
+  // XME801 is an official 1-gallon SKU, but its Canadian retail price is not in
+  // the supplied 2026 catalog. Keep its order line visible and price pending.
+  SEMCOLIQUIDMEMBRANE: { oneGallon: 'XME801', fiveGallon: 'XME805' },
   MATTESEALER: { oneGallon: 'MS601', fiveGallon: 'MS605' },
 };
 
@@ -113,10 +122,11 @@ export function priceMaterialLayers(layers: MaterialLayer[]): PricedMaterialLine
         return [createUnpurchasedLine(pricedLayer)];
       }
 
-      return cleanerPackageLines.map(({ price, priceSku, quantity }) => ({
+      return cleanerPackageLines.map(({ price, priceSku, quantity, packageLabel }) => ({
         layer: pricedLayer,
         price,
         priceSku,
+        packageLabel,
         quantity,
         lineTotalCad: quantity * price.retailPriceCad,
       }));
@@ -128,12 +138,13 @@ export function priceMaterialLayers(layers: MaterialLayer[]): PricedMaterialLine
         return [createUnpurchasedLine(layer)];
       }
 
-      return materialPackageLines.map(({ price, priceSku, quantity }) => ({
+      return materialPackageLines.map(({ price, priceSku, quantity, packageLabel }) => ({
         layer,
         price,
         priceSku,
+        packageLabel,
         quantity,
-        lineTotalCad: quantity * price.retailPriceCad,
+        lineTotalCad: price ? quantity * price.retailPriceCad : undefined,
       }));
     }
 
@@ -182,13 +193,15 @@ export function getCleanerPackagePlan(
   if (!packageSkus) return null;
   if (!Number.isFinite(requiredGallons) || requiredGallons <= 0) return [];
 
-  return buildGallonPackagePlan(packageSkus, Math.ceil(requiredGallons));
+  return buildGallonPackagePlan(packageSkus, Math.ceil(requiredGallons)).filter(
+    (line): line is CleanerPackageLine => Boolean(line.price),
+  );
 }
 
 function getMaterialPackagePlan(
   productSku: string,
   purchasedGallons?: number,
-): CleanerPackageLine[] | null {
+): MaterialPackageLine[] | null {
   const packageSkus = MATERIAL_PACKAGE_SKUS[normalizeSku(productSku)];
   if (!packageSkus) return null;
   if (!Number.isFinite(purchasedGallons) || (purchasedGallons ?? 0) <= 0) return [];
@@ -199,33 +212,31 @@ function getMaterialPackagePlan(
 function buildGallonPackagePlan(
   packageSkus: { oneGallon: string; fiveGallon: string },
   purchasedGallons: number,
-): CleanerPackageLine[] {
+): MaterialPackageLine[] {
   const fiveGallonQuantity = Math.floor(purchasedGallons / 5);
   const oneGallonQuantity = purchasedGallons % 5;
-  const lines: CleanerPackageLine[] = [];
+  const lines: MaterialPackageLine[] = [];
 
   if (fiveGallonQuantity > 0) {
     const price = priceLookup.get(normalizeSku(packageSkus.fiveGallon));
-    if (price) {
-      lines.push({
-        price,
-        priceSku: packageSkus.fiveGallon,
-        quantity: fiveGallonQuantity,
-        packageGallons: 5,
-      });
-    }
+    lines.push({
+      price,
+      priceSku: packageSkus.fiveGallon,
+      quantity: fiveGallonQuantity,
+      packageGallons: 5,
+      packageLabel: '5 gallon pail',
+    });
   }
 
   if (oneGallonQuantity > 0) {
     const price = priceLookup.get(normalizeSku(packageSkus.oneGallon));
-    if (price) {
-      lines.push({
-        price,
-        priceSku: packageSkus.oneGallon,
-        quantity: oneGallonQuantity,
-        packageGallons: 1,
-      });
-    }
+    lines.push({
+      price,
+      priceSku: packageSkus.oneGallon,
+      quantity: oneGallonQuantity,
+      packageGallons: 1,
+      packageLabel: '1 gallon pail',
+    });
   }
 
   return lines;

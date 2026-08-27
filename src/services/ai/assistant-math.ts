@@ -710,7 +710,7 @@ function substrateLabelFor(substrate: SubstrateId): string {
     concrete: 'concrete',
     existing_tile: 'existing tile',
     plywood: 'plywood/OSB',
-    cement_board: 'GlasRoc or similar board',
+    cement_board: 'approved moisture-resistant wet-area board',
     gypsum_board: 'drywall',
     metal: 'metal',
     icf: 'ICF',

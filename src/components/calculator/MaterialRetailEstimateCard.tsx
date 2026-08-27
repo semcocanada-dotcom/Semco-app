@@ -28,7 +28,9 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           <Text style={styles.title}>{showPrices ? `${dealerContext.dealerName} estimate` : 'Dealer estimate'}</Text>
           <Text style={styles.source}>{dealerContext.pricingSourceLabel}</Text>
         </View>
-        <Text style={styles.total}>{showPrices ? formatCad(totalCad) : 'Pending'}</Text>
+        <Text style={styles.total}>
+          {showPrices && missingPriceLines.length === 0 ? formatCad(totalCad) : 'Pending'}
+        </Text>
       </View>
 
       {pricedLines.map((line) => (
@@ -36,7 +38,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           <View style={styles.lineCopy}>
             <Text style={styles.lineName}>{line.price?.product ?? line.layer.productName}</Text>
             <Text style={styles.lineMeta}>
-              {line.quantity} x {line.price?.size ?? line.priceSku}
+              {line.quantity} x {line.price?.size ?? line.packageLabel ?? line.priceSku}
               {showPrices && line.price ? ` @ ${formatCad(line.price.retailPriceCad)}` : ''}
             </Text>
             {line.layer.category === 'prep' && line.price?.coverageRate ? (

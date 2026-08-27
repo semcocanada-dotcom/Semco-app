@@ -69,7 +69,7 @@ export interface ReasoningProfile {
 }
 
 const SUBSTRATE_ALIASES: { id: SubstrateId; terms: string[] }[] = [
-  { id: 'cement_board', terms: ['cement board', 'backer board', 'concrete board', 'concrete boards', 'concrete panel', 'concrete panels', 'glasroc', 'glassroc', 'glaseroc'] },
+  { id: 'cement_board', terms: ['cement board', 'backer board', 'concrete board', 'concrete boards', 'concrete panel', 'concrete panels', 'glasroc', 'glassroc', 'glaseroc', 'wet-area board', 'wet area board', 'moisture-resistant drywall', 'moisture resistant drywall', 'moisture-resistant board', 'moisture resistant board', 'mr board'] },
   { id: 'concrete_block', terms: ['block', 'cmu', 'stucco', 'masonry', 'brick', 'below grade plaster', 'plaster'] },
   { id: 'existing_paint', terms: ['paint', 'painted', 'coating', 'coated', 'epoxy', 'terrazzo', 'carpet glue', 'wax', 'waxed', 'sealer residue'] },
   { id: 'existing_tile', terms: ['tile', 'ceramic', 'porcelain', 'grout'] },
@@ -105,8 +105,8 @@ const PREP_SURFACE_GROUPS: { group: PrepSurfaceGroup; label: string; terms: stri
   },
   {
     group: 'wall_board',
-    label: 'drywall, gypsum board, cement board, backer board, concrete board, or wall panel',
-    terms: ['drywall', 'gypsum', 'wallboard', 'gyp board', 'cement board', 'backer board', 'concrete board', 'concrete panel', 'glasroc', 'glassroc', 'glaseroc'],
+    label: 'drywall, gypsum board, approved wet-area board, backer board, concrete board, or wall panel',
+    terms: ['drywall', 'gypsum', 'wallboard', 'gyp board', 'cement board', 'backer board', 'concrete board', 'concrete panel', 'glasroc', 'glassroc', 'glaseroc', 'wet-area board', 'wet area board', 'moisture-resistant drywall', 'moisture resistant drywall', 'moisture-resistant board', 'moisture resistant board', 'mr board'],
   },
   {
     group: 'pool_submerged',
@@ -725,7 +725,7 @@ function prepAnswer(facts: ExtractedJobFacts, missingInputs: string[]): string {
       'Let the surface dry. Stop for loose, dusty, spalling, damp, or actively leaking block/stucco/plaster.',
     ],
     cement_board: [
-      'Confirm the cement board/backer board is properly fastened, stable, clean, and dry.',
+      'Confirm the manufacturer-approved wet-area board is properly fastened, stable, clean, dry, and rated for the intended wet exposure.',
       'For dry wall work, clean only as needed and allow the surface to dry before coating.',
       'For showers, wet rooms, corners, seams, and board joints, use Liquid Membrane and fabric reinforcement before the X-Bond finish.',
       'Use the wall X-Bond procedure for vertical work: X-Bond Liquid primer, do not let it dry, then X-Bond wall mix at 1 part X-Bond Liquid to 3 parts X-Bond Stone at 180-200 RPM.',
@@ -757,7 +757,7 @@ function allSurfacePrepAnswer(): string {
     `Tile, exterior block wall, stucco, below-grade plaster, calcium/mineral/alkali/magnesium/efflorescence: SIP Type D. ${sipPrepSequence('type_d')}; rinse/remove residue between passes, then dry.`,
     'Wood, plywood, OSB, decks: SIP Type E. Confirm the wood is structural/stable, sweep, roll Liquid Membrane and dry, embed fabric into wet Liquid Membrane, immediately add two more membrane coats with pressure, overlap fabric 2 inches, dry before X-Bond.',
     'Drywall/gypsum board: walls only. It must be dry, stable, fastened, and not damaged. Do not use drywall as a floor substrate. Wet walls need the proper Liquid Membrane/fabric detail at joints/corners/seams.',
-    'Cement board/backer board/concrete boards: confirm fastening and stability, then treat wet-area joints/corners/seams with Liquid Membrane and fabric before X-Bond.',
+    'Approved wet-area boards, including rated moisture-resistant construction board, cement/backer board, and GlasRoc equivalents: confirm fastening and stability, then treat joints/corners/seams with Liquid Membrane and fabric before X-Bond.',
     'ICF: confirm the exposed face first. Concrete/parge/plaster faces can follow the matching prep type. Foam, unknown, loose, damp, or moving faces need Semco review before approval.',
     `Pools/ponds/fountains/jacuzzis/submerged/wet exposure: use SIP Type C (${sipPrepSequence('type_c')}), rinse/remove residue between each pass, dry, use 4 coats of Liquid Membrane for the pool/submerged detail, and finish with Natural Shield as the current stocked penetrating sealer where a penetrating sealer is specified.`,
     'Heated floors: prep the actual top surface, keep heat off during application and cure, and do not thermal-cycle while the system is bonding.',
@@ -834,7 +834,7 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
       `For clean, unsealed, non-waxed concrete, use SIP Type A: ${sipPrepSequence('type_a')}. If minerals, calcium, alkali, magnesium, or efflorescence are present, use SIP Type D: ${sipPrepSequence('type_d')}. Rinse/remove residue between passes and dry before coating.`,
     ],
     cement_board: [
-      'Confirm the cement board, concrete board, construction board/panel, GlasRoc, GlassRoc, or similar wet-area board is properly fastened, sound, dry, and stable.',
+      'Confirm the moisture-resistant construction board, cement/backer board, GlasRoc/GlassRoc, or equivalent is manufacturer-approved for the intended wet exposure and is properly fastened, sound, dry, and stable.',
       'Clean dust and debris off the board. Do not continue over loose board, damaged board, soft spots, swelling, or contamination.',
     ],
     gypsum_board: [
@@ -876,7 +876,7 @@ function showerBuildUpAnswer(substrateType: SubstrateId): string {
   };
 
   const substrateLabel = substrateType === 'cement_board'
-    ? 'GlasRoc / GlassRoc or similar wet-area board'
+    ? 'approved moisture-resistant wet-area board'
     : SUBSTRATE_MAP[substrateType]?.label ?? substrateType;
   const prep = substratePath[substrateType] ?? substratePath.cement_board;
 

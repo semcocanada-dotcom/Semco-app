@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '@/components/ui/Badge';
 import type { Project } from '@/database/schema/projects';
 import { formatSqftFromSqm } from '@/utils/area';
+import { formatSubstrateLabel } from '@/constants/substrates';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 
 const STATUS_MAP: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> = {
@@ -54,7 +55,7 @@ export function ProjectCard({ project, onPress }: ProjectCardProps) {
           {project.substrateType ? (
             <View style={styles.metaItem}>
               <Ionicons name="layers-outline" size={14} color={Colors.textSecondary} />
-              <Text style={styles.metaText}>{project.substrateType.replace(/_/g, ' ')}</Text>
+              <Text style={styles.metaText}>{formatSubstrateLabel(project.substrateType)}</Text>
             </View>
           ) : null}
         </View>

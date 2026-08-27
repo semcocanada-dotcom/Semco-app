@@ -216,7 +216,7 @@ export default function CalculatorScreen() {
                   <View style={styles.warningNote}>
                     <Ionicons name="warning-outline" size={18} color={Colors.danger} />
                     <Text style={styles.warningText}>
-                      Regular drywall is not a wet-area substrate. Select Wet-area board / Cement board or another approved wet-area substrate.
+                      Regular drywall is not a wet-area substrate. Select Wet-Area Board or another manufacturer-approved wet-area substrate.
                     </Text>
                   </View>
                 ) : null}

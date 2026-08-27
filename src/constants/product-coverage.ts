@@ -34,6 +34,7 @@ export interface CoverageProduct {
   purchaseUnitLabel?: string;
   purchaseUnitSize?: number;
   purchaseSizes?: number[];
+  purchasePacking?: 'minimum-volume';
 }
 
 export interface CoverageEstimate {
@@ -179,6 +180,7 @@ const LIQUID_MEMBRANE: CoverageProduct = {
   category: 'waterproofing',
   packLabel: '1 gal and 5 gal pails',
   purchaseSizes: [1, 5],
+  purchasePacking: 'minimum-volume',
   defaultRange: 'aboveGrade',
   ranges: {
     aboveGrade: {
@@ -518,6 +520,43 @@ function getPurchaseRecommendation(product: CoverageProduct, unit: CoverageUnit,
   const sizes = [...product.purchaseSizes].sort((a, b) => a - b);
   const smallSize = sizes[0] ?? 1;
   const pailSize = sizes.find((size) => size >= 5) ?? sizes[sizes.length - 1] ?? 1;
+
+  if (product.purchasePacking === 'minimum-volume') {
+    const requiredGallons = Math.max(1, Math.ceil(exactUnits));
+    const packageCounts: { size: number; count: number }[] = [];
+    let remainingGallons = requiredGallons;
+
+    [...sizes].sort((a, b) => b - a).forEach((size) => {
+      const count = Math.floor(remainingGallons / size);
+      if (count <= 0) return;
+      packageCounts.push({ size, count });
+      remainingGallons -= count * size;
+    });
+
+    if (remainingGallons > 0) {
+      const count = Math.ceil(remainingGallons / smallSize);
+      const existingSmallPackage = packageCounts.find((entry) => entry.size === smallSize);
+      if (existingSmallPackage) {
+        existingSmallPackage.count += count;
+      } else {
+        packageCounts.push({ size: smallSize, count });
+      }
+    }
+
+    const roundedUnits = packageCounts.reduce(
+      (total, entry) => total + entry.size * entry.count,
+      0,
+    );
+    const packageLabel = `Buy ${packageCounts
+      .map(({ size, count }) => `${count} x ${formatQuantity(size)} gal pail${count === 1 ? '' : 's'}`)
+      .join(' + ')}`;
+    const showTotal = packageCounts.length > 1 || packageCounts.some(({ count }) => count > 1);
+
+    return {
+      roundedUnits,
+      purchaseLabel: `${packageLabel}${showTotal ? ` (${formatQuantity(roundedUnits)} gal total)` : ''}`,
+    };
+  }
 
   if (exactUnits <= smallSize) {
     return { roundedUnits: smallSize, purchaseLabel: `Buy 1 x ${formatQuantity(smallSize)} gal pail` };

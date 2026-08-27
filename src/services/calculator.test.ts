@@ -250,6 +250,49 @@ describe('calculator preparation and membrane behavior', () => {
     expect(result.sourceSummary).toContain('2-coat above-grade system');
   });
 
+  it('orders two 1-gallon Liquid Membrane pails for the 384 sq ft Atlantic quote', () => {
+    const result = calculate({
+      areaSqft: 384,
+      substrateType: 'cement_board',
+      wastePct: 10,
+      installationScope: 'wet_area',
+      waterproofingMode: 'none',
+    });
+    const membrane = result.layers.find((layer) => layer.productSku === 'SEMCO-LIQUID-MEMBRANE');
+
+    expect(membrane).toMatchObject({
+      quantityLabel: '1.9 gal',
+      roundedQuantity: 2,
+      quantityPacks: 2,
+      purchaseLabel: 'Buy 2 x 1 gal pails (2 gal total)',
+    });
+    expect(membrane?.exactQuantity).toBeCloseTo((384 * 1.1) / 225, 8);
+  });
+
+  it('uses a 5-gallon Liquid Membrane pail only when the requirement reaches five gallons', () => {
+    const fiveGallons = calculate({
+      areaSqft: 1125,
+      substrateType: 'cement_board',
+      wastePct: 0,
+      installationScope: 'wet_area',
+    }).layers.find((layer) => layer.productSku === 'SEMCO-LIQUID-MEMBRANE');
+    const sixGallons = calculate({
+      areaSqft: 1350,
+      substrateType: 'cement_board',
+      wastePct: 0,
+      installationScope: 'wet_area',
+    }).layers.find((layer) => layer.productSku === 'SEMCO-LIQUID-MEMBRANE');
+
+    expect(fiveGallons).toMatchObject({
+      roundedQuantity: 5,
+      purchaseLabel: 'Buy 1 x 5 gal pail',
+    });
+    expect(sixGallons).toMatchObject({
+      roundedQuantity: 6,
+      purchaseLabel: 'Buy 1 x 5 gal pail + 1 x 1 gal pail (6 gal total)',
+    });
+  });
+
   it('rejects regular gypsum board in a wet area', () => {
     expect(() => calculate({
       areaSqft: 100,
@@ -257,7 +300,7 @@ describe('calculator preparation and membrane behavior', () => {
       wastePct: 0,
       installationScope: 'wet_area',
       waterproofingMode: 'none',
-    })).toThrow('Select a wet-area board or cement board substrate');
+    })).toThrow('Select a manufacturer-approved moisture-resistant wet-area board substrate');
   });
 
   it('forces the 4-coat system for submerged exposure and normalizes pools to submerged', () => {

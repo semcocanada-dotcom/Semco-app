@@ -55,7 +55,7 @@ const MAX_CONTEXT_USER_MESSAGES = 6;
 
 // Longer phrases first so "concrete board" resolves to board, not concrete.
 const SUBSTRATE_TERMS: { value: Exclude<JobSubstrate, 'unknown'>; terms: string[] }[] = [
-  { value: 'glasroc_board', terms: ['glasroc', 'glassroc', 'glaseroc', 'glass roc', 'cement board', 'backer board', 'concrete board', 'concrete panel', 'wet-area board', 'wet area board', 'densshield'] },
+  { value: 'glasroc_board', terms: ['glasroc', 'glassroc', 'glaseroc', 'glass roc', 'cement board', 'backer board', 'concrete board', 'concrete panel', 'wet-area board', 'wet area board', 'moisture-resistant drywall', 'moisture resistant drywall', 'moisture-resistant board', 'moisture resistant board', 'mr board', 'densshield'] },
   { value: 'plywood_osb', terms: ['plywood', 'osb', 'wood deck', 'wood subfloor', 'wooden'] },
   { value: 'tile', terms: ['existing tile', 'tile', 'ceramic', 'porcelain', 'grouted'] },
   { value: 'drywall', terms: ['painted drywall', 'drywall', 'gypsum', 'wallboard', 'gyp board'] },
@@ -102,7 +102,7 @@ const SUBSTRATE_LABELS: Record<Exclude<JobSubstrate, 'unknown'>, string> = {
   concrete: 'concrete',
   tile: 'existing tile',
   plywood_osb: 'plywood/OSB',
-  glasroc_board: 'GlasRoc or similar wet-area board',
+  glasroc_board: 'approved moisture-resistant wet-area board',
   drywall: 'drywall',
   metal: 'metal',
   icf: 'ICF',
