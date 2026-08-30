@@ -45,9 +45,27 @@ export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
     if (allocation.reviewReason) lines.push(`  Review: ${allocation.reviewReason}`);
   }
 
+  if (plan.samplePlan?.samples.length) {
+    lines.push('', `Colour samples — ${plan.samplePlan.sampleLabel} each:`);
+    for (const sample of plan.samplePlan.samples) {
+      lines.push(
+        `- ${sample.colourName} (${sample.colourCode}): ${sample.sampleLabel}; ${sample.totalChargeCad != null ? `${formatCad(sample.totalChargeCad)} tint charge` : 'DEALER SAMPLE FORMULA REVIEW REQUIRED'}.`,
+      );
+      if (sample.batch?.pigments?.length) {
+        lines.push('  Quart sample tint-machine formula:');
+        sample.batch.pigments.forEach((pigment) => {
+          lines.push(`  • ${pigment.pigmentCode} ${pigment.pigmentName}: ${pigment.dispenserAmount} (${formatNumber(pigment.tintOunces)} machine oz)`);
+        });
+      } else if (sample.pricingStatus === 'priced') {
+        lines.push('  No pigment addition required for this sample.');
+      }
+      if (sample.reviewReason) lines.push(`  Review: ${sample.reviewReason}`);
+    }
+  }
+
   lines.push(
     `Total tint charge: ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'Dealer review required'}.`,
-    `X-Bond Liquid: ${formatNumber(plan.exactLiquidGallons)} gal exact; ${formatNumber(plan.preparedLiquidGallons)} gal prepared; ${formatNumber(plan.baseLiquidPurchaseGallons)} gal staged for purchase.`,
+    `X-Bond Liquid: ${formatNumber(plan.exactLiquidGallons)} gal exact for the project; ${formatNumber(plan.preparedLiquidGallons)} gal prepared for project batches${plan.samplePlan ? `; ${formatNumber(plan.samplePlan.totalLiquidGallons)} gal for colour samples` : ''}; ${formatNumber(plan.baseLiquidPurchaseGallons)} gal staged for purchase.`,
     'Tint charge only; X-Bond Liquid, labour, freight, tax, and other material charges are separate.',
   );
   return lines;

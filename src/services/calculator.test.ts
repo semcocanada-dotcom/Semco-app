@@ -371,6 +371,32 @@ describe('calculator preparation and membrane behavior', () => {
     });
   });
 
+  it('stages extra X-Bond Liquid when a one-quart colour sample is selected', () => {
+    const result = calculate({
+      areaSqft: 187.5,
+      substrateType: 'concrete',
+      wastePct: 0,
+      colourAllocations: [{ colourId: 'col-xbond-2053t', areaSqft: 187.5 }],
+      includeColourSamples: true,
+    });
+    const liquid = result.layers.find((layer) => layer.productSku === 'XBOND-LIQUID');
+
+    expect(result.colourTintPlan).toMatchObject({
+      preparedLiquidGallons: 5,
+      baseLiquidPurchaseGallons: 6,
+      totalChargeCad: 56.88,
+      samplePlan: {
+        totalLiquidGallons: 0.25,
+        totalChargeCad: 2.71,
+        samples: [{ colourCode: '2053T', sampleSize: 'quart' }],
+      },
+    });
+    expect(liquid).toMatchObject({
+      roundedQuantity: 6,
+      purchaseLabel: 'Buy 1 x 5 gal pail + 1 x 1 gal pail (6 gal)',
+    });
+  });
+
   it('rounds each project colour to whole-gallon tint batches', () => {
     const result = calculate({
       areaSqft: 183.75,

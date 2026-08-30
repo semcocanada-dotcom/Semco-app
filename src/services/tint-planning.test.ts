@@ -4,6 +4,7 @@ import {
   buildTintBatchCounts,
   ensureXBondLiquidPurchaseCoversTintPlan,
   getTintableXBondLiquidGallons,
+  hasLegacyQuartTintBatch,
 } from '@/services/tint-planning';
 
 describe('tint batch sizing', () => {
@@ -128,6 +129,81 @@ describe('colour tint allocation', () => {
       batches: [{ batchSize: 'gallon', quantity: 1, formulaBasis: 'direct_source' }],
     });
     expect(planned.plan.allocations[0].batches.some((batch) => batch.batchSize === 'quart')).toBe(false);
+  });
+
+  it('adds a verified one-quart sample separately from project batches and pricing', () => {
+    const result = fixtureResult(75, [liquidLayer(2, 5)]);
+    const planned = buildColourTintPlan(
+      result,
+      [{ colourId: 'col-xbond-2053t', areaSqft: 75 }],
+      { includeSamples: true },
+    );
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.allocations[0].batches).toEqual([
+      expect.objectContaining({ batchSize: 'gallon', quantity: 2 }),
+    ]);
+    expect(planned.plan.samplePlan).toMatchObject({
+      sampleSize: 'quart',
+      sampleLabel: '1-quart sample (946 mL)',
+      totalLiquidGallons: 0.25,
+      totalChargeCad: 2.71,
+      isFullyPriced: true,
+      samples: [{
+        colourCode: '2053T',
+        sampleSize: 'quart',
+        liquidGallons: 0.25,
+        totalChargeCad: 2.71,
+        batch: { batchSize: 'quart', batchLabel: '1 quart sample', quantity: 1 },
+      }],
+    });
+    expect(planned.plan.totalChargeCad).toBe(24.37);
+    expect(hasLegacyQuartTintBatch(planned.plan)).toBe(false);
+  });
+
+  it('requires dealer review when a published quart sample formula is unavailable', () => {
+    const result = fixtureResult(37.5, [liquidLayer(1, 1)]);
+    const planned = buildColourTintPlan(
+      result,
+      [{ colourId: 'col-xbond-2162p', areaSqft: 37.5 }],
+      { includeSamples: true },
+    );
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.allocations[0]).toMatchObject({ pricingStatus: 'priced' });
+    expect(planned.plan.samplePlan?.samples[0]).toMatchObject({
+      sampleSize: 'quart',
+      pricingStatus: 'dealer_review',
+    });
+    expect(planned.plan.samplePlan?.samples[0].batch).toBeUndefined();
+    expect(planned.plan.samplePlan?.samples[0].reviewReason).toContain('published 1-quart sample formula');
+    expect(planned.plan.isFullyPriced).toBe(false);
+    expect(planned.plan.totalChargeCad).toBeUndefined();
+  });
+
+  it('creates one separate quart sample for every selected project colour', () => {
+    const result = fixtureResult(187.5, [liquidLayer(5, 6)]);
+    const planned = buildColourTintPlan(
+      result,
+      [
+        { colourId: 'col-xbond-2053t', areaSqft: 75 },
+        { colourId: 'col-xbond-2383d', areaSqft: 112.5 },
+      ],
+      { includeSamples: true },
+    );
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.samplePlan).toMatchObject({
+      totalLiquidGallons: 0.5,
+      totalChargeCad: 4.13,
+      samples: [{ colourCode: '2053T' }, { colourCode: '2383D' }],
+    });
+    expect(planned.plan.preparedLiquidGallons).toBe(5);
+    expect(planned.plan.baseLiquidPurchaseGallons).toBe(6);
+    expect(planned.plan.totalChargeCad).toBe(44.3);
   });
 
   it('uses the direct five-gallon formula when a project amount rounds to five gallons', () => {

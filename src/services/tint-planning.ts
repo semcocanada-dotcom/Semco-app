@@ -2,6 +2,8 @@ import type {
   CalculationResult,
   ColourTintAllocation,
   ColourTintPlan,
+  ColourTintSampleLine,
+  ColourTintSamplePlan,
   MaterialLayer,
   TintBatchPlanLine,
   TintBatchSize,
@@ -19,6 +21,10 @@ import { formatDispenser } from '@/services/color-scaler';
 export interface ColourAllocationInput {
   colourId: string;
   areaSqft: number;
+}
+
+export interface ColourTintPlanOptions {
+  includeSamples?: boolean;
 }
 
 export type ColourTintPlanResult =
@@ -83,6 +89,7 @@ export function buildTintBatchCounts(exactGallons: number): {
 export function buildColourTintPlan(
   result: Pick<CalculationResult, 'layers' | 'areaSqft' | 'areaSqm'>,
   requestedAllocations: ColourAllocationInput[],
+  options: ColourTintPlanOptions = {},
 ): ColourTintPlanResult {
   const projectAreaSqft = result.areaSqft ?? result.areaSqm * 10.7639104167;
   const errors: string[] = [];
@@ -121,30 +128,111 @@ export function buildColourTintPlan(
     projectAreaSqft,
     exactLiquidGallons,
   ));
-  const isFullyPriced = allocations.every((allocation) => allocation.pricingStatus === 'priced');
+  const samplePlan = options.includeSamples ? buildSamplePlan(merged) : undefined;
+  const isFullyPriced = allocations.every((allocation) => allocation.pricingStatus === 'priced')
+    && (samplePlan?.isFullyPriced ?? true);
   const preparedLiquidGallons = allocations.reduce(
     (total, allocation) => total + allocation.preparedLiquidGallons,
     0,
   );
   const purchasedLiquidGallons = getPurchasedXBondLiquidGallons(result.layers);
+  const totalLiquidToStage = preparedLiquidGallons + (samplePlan?.totalLiquidGallons ?? 0);
+  const projectTintOunces = allocations.reduce(
+    (total, allocation) => total + (allocation.totalTintOunces ?? 0),
+    0,
+  );
+  const projectTintChargeCad = allocations.reduce(
+    (total, allocation) => total + (allocation.totalChargeCad ?? 0),
+    0,
+  );
 
   return {
     ok: true,
     plan: {
       allocations,
+      samplePlan,
       exactLiquidGallons,
       preparedLiquidGallons,
-      baseLiquidPurchaseGallons: Math.max(purchasedLiquidGallons, nextWholeGallonPurchase(preparedLiquidGallons)),
+      baseLiquidPurchaseGallons: Math.max(purchasedLiquidGallons, nextWholeGallonPurchase(totalLiquidToStage)),
       totalTintOunces: isFullyPriced
-        ? round8(allocations.reduce((total, allocation) => total + (allocation.totalTintOunces ?? 0), 0))
+        ? round8(projectTintOunces + (samplePlan?.totalTintOunces ?? 0))
         : undefined,
       totalChargeCad: isFullyPriced
-        ? round2(allocations.reduce((total, allocation) => total + (allocation.totalChargeCad ?? 0), 0))
+        ? round2(projectTintChargeCad + (samplePlan?.totalChargeCad ?? 0))
         : undefined,
       ratePerTintOunceCad: TINT_RATE_PER_MACHINE_OUNCE_CAD,
       pricingUnit: TINT_PRICING_UNIT,
       isFullyPriced,
     },
+  };
+}
+
+function buildSamplePlan(allocations: ColourAllocationInput[]): ColourTintSamplePlan {
+  const samples = allocations.map((allocation) => buildSampleLine(allocation.colourId));
+  const isFullyPriced = samples.every((sample) => sample.pricingStatus === 'priced');
+
+  return {
+    samples,
+    sampleSize: 'quart',
+    sampleLabel: '1-quart sample (946 mL)',
+    totalLiquidGallons: samples.length * 0.25,
+    totalTintOunces: isFullyPriced
+      ? round8(samples.reduce((total, sample) => total + (sample.totalTintOunces ?? 0), 0))
+      : undefined,
+    totalChargeCad: isFullyPriced
+      ? round2(samples.reduce((total, sample) => total + (sample.totalChargeCad ?? 0), 0))
+      : undefined,
+    isFullyPriced,
+  };
+}
+
+function buildSampleLine(colourId: string): ColourTintSampleLine {
+  const colour = getColourChargeRecord(colourId);
+  const base = {
+    colourId: colour?.id ?? colourId,
+    colourCode: colour?.code ?? 'Custom',
+    colourName: colour?.name ?? 'Custom colour',
+    formulaCode: colour?.sourceFormulaCode ?? 'Dealer review',
+    swatchHex: colour?.swatchHex ?? undefined,
+    sampleSize: 'quart' as const,
+    sampleLabel: '1-quart sample (946 mL)',
+    liquidGallons: 0.25 as const,
+  };
+
+  if (!colour || !colour.orderable || colour.batches.quart.formulaBasis !== 'direct_source') {
+    return {
+      ...base,
+      pigments: [],
+      pricingStatus: 'dealer_review',
+      reviewReason: colour?.batches.quart.formulaBasis === 'derived_from_gallon_div_4'
+        ? 'A published 1-quart sample formula is not available for this colour. Dealer review is required.'
+        : colour?.reviewReason ?? 'This colour does not have a verified 1-quart sample formula.',
+    };
+  }
+
+  const definition = colour.batches.quart;
+  const pigments = aggregatePigments(colour.pigments, [{ batchSize: 'quart', quantity: 1 }]);
+  const batch: TintBatchPlanLine = {
+    batchSize: 'quart',
+    batchLabel: '1 quart sample',
+    batchGallons: 0.25,
+    quantity: 1,
+    preparedGallons: 0.25,
+    tintOuncesPerBatch: definition.tintOunces,
+    totalTintOunces: definition.tintOunces,
+    chargeCadPerBatch: definition.chargeCad,
+    lineTotalCad: definition.chargeCad,
+    formulaBasis: definition.formulaBasis,
+    pigments,
+  };
+
+  return {
+    ...base,
+    batch,
+    pigments,
+    totalTintOunces: definition.tintOunces,
+    totalChargeCad: definition.chargeCad,
+    pricingStatus: 'priced',
   };
 }
 

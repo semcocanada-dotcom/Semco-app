@@ -54,7 +54,70 @@ describe('dealer material request tint summary', () => {
     expect(buildTintRequestSummaryLines(legacyPlan).join('\n')).toContain('RECALCULATION REQUIRED');
     expect(buildTintRequestSummaryLines(legacyPlan).join('\n')).not.toContain('formula below is per batch');
   });
+
+  it('includes selected one-quart samples separately from project batches', () => {
+    const lines = buildTintRequestSummaryLines(planWithSampleFixture());
+    const body = lines.join('\n');
+
+    expect(body).toContain('Colour samples — 1-quart sample (946 mL) each:');
+    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $2.71 tint charge");
+    expect(body).toContain('Quart sample tint-machine formula:');
+    expect(body).toContain('0.25 gal for colour samples');
+    expect(body).toContain('Total tint charge: $24.37');
+  });
 });
+
+function planWithSampleFixture(): ColourTintPlan {
+  const plan = planFixture();
+  const projectBatch = plan.allocations[0].batches[0];
+  const samplePigments = [{
+    ...(projectBatch.pigments ?? [])[0],
+    pigmentCode: 'R S SS',
+    pigmentName: 'Exterior Red',
+    dispenserY48: 1,
+    dispenserAmount: '1/48 Y',
+    tintOunces: 1 / 48,
+  }];
+  return {
+    ...plan,
+    totalTintOunces: 12.18750001,
+    totalChargeCad: 24.37,
+    samplePlan: {
+      samples: [{
+        colourId: 'col-xbond-2053t',
+        colourCode: '2053T',
+        colourName: "Aaron's Rod",
+        formulaCode: '2053T',
+        sampleSize: 'quart',
+        sampleLabel: '1-quart sample (946 mL)',
+        liquidGallons: 0.25,
+        batch: {
+          ...projectBatch,
+          batchSize: 'quart',
+          batchLabel: '1 quart sample',
+          batchGallons: 0.25,
+          quantity: 1,
+          preparedGallons: 0.25,
+          tintOuncesPerBatch: 1.35416667,
+          totalTintOunces: 1.35416667,
+          chargeCadPerBatch: 2.71,
+          lineTotalCad: 2.71,
+          pigments: samplePigments,
+        },
+        pigments: samplePigments,
+        totalTintOunces: 1.35416667,
+        totalChargeCad: 2.71,
+        pricingStatus: 'priced',
+      }],
+      sampleSize: 'quart',
+      sampleLabel: '1-quart sample (946 mL)',
+      totalLiquidGallons: 0.25,
+      totalTintOunces: 1.35416667,
+      totalChargeCad: 2.71,
+      isFullyPriced: true,
+    },
+  };
+}
 
 function legacyQuartPlanFixture(): ColourTintPlan {
   const plan = planFixture();

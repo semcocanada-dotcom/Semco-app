@@ -33,6 +33,8 @@ interface ColourAllocationPickerProps {
   onAreaChange: (slotId: string, areaSqft: string) => void;
   onAddColour: () => void;
   onRemoveColour: (slotId: string) => void;
+  includeSamples: boolean;
+  onIncludeSamplesChange: (include: boolean) => void;
 }
 
 export function ColourAllocationPicker({
@@ -44,6 +46,8 @@ export function ColourAllocationPicker({
   onAreaChange,
   onAddColour,
   onRemoveColour,
+  includeSamples,
+  onIncludeSamplesChange,
 }: ColourAllocationPickerProps) {
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -57,6 +61,11 @@ export function ColourAllocationPicker({
     : Number.isFinite(totalArea) && selections[0]?.colourId ? totalArea : 0;
   const remainingArea = Number.isFinite(totalArea) ? totalArea - allocatedArea : null;
   const activeColourId = selections.find((selection) => selection.slotId === activeSlotId)?.colourId;
+  const sampleReviewCount = selections.reduce((count, selection) => {
+    if (!selection.colourId) return count;
+    const colour = getColourChargeRecord(selection.colourId);
+    return count + (colour?.orderable && colour.batches.quart.formulaBasis === 'direct_source' ? 0 : 1);
+  }, 0);
 
   function openPicker(slotId: string) {
     setActiveSlotId(slotId);
@@ -184,6 +193,42 @@ export function ColourAllocationPicker({
           </View>
         </>
       ) : null}
+
+      <TouchableOpacity
+        onPress={() => onIncludeSamplesChange(!includeSamples)}
+        activeOpacity={0.76}
+        style={[styles.sampleOption, includeSamples && styles.sampleOptionSelected]}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: includeSamples }}
+        accessibilityLabel="Add one 1-quart sample for each selected colour"
+      >
+        <View style={[styles.sampleIcon, includeSamples && styles.sampleIconSelected]}>
+          <Ionicons
+            name={includeSamples ? 'checkmark-outline' : 'flask-outline'}
+            size={19}
+            color={includeSamples ? Colors.white : Colors.darkTeal}
+          />
+        </View>
+        <View style={styles.sampleCopy}>
+          <View style={styles.sampleTitleRow}>
+            <Text style={styles.sampleTitle}>Add colour sample</Text>
+            <Text style={styles.optionalLabel}>OPTIONAL</Text>
+          </View>
+          <Text style={styles.sampleDescription}>
+            One 1-quart sample (946 mL) for each selected colour, added separately to the estimate and request.
+          </Text>
+          {includeSamples && sampleReviewCount > 0 ? (
+            <Text style={styles.sampleWarning}>
+              {sampleReviewCount} selected sample formula{sampleReviewCount === 1 ? '' : 's'} require dealer review.
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons
+          name={includeSamples ? 'checkbox-outline' : 'square-outline'}
+          size={22}
+          color={includeSamples ? Colors.primary : Colors.textDisabled}
+        />
+      </TouchableOpacity>
 
       <Modal
         visible={activeSlotId !== null}
@@ -351,6 +396,26 @@ const styles = StyleSheet.create({
   allocationValue: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
   allocationComplete: { color: Colors.success },
   allocationOver: { color: Colors.danger },
+  sampleOption: {
+    minHeight: 76,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
+    padding: Spacing.sm,
+  },
+  sampleOptionSelected: { borderColor: Colors.lightTeal, backgroundColor: Colors.primaryMuted },
+  sampleIcon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primaryMuted },
+  sampleIconSelected: { backgroundColor: Colors.primary },
+  sampleCopy: { flex: 1, gap: 3 },
+  sampleTitleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  sampleTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
+  optionalLabel: { color: Colors.semcoOrange, fontFamily: Fonts.bold, fontSize: 9, letterSpacing: 0.4 },
+  sampleDescription: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.35 },
+  sampleWarning: { color: Colors.semcoOrange, fontFamily: Fonts.semibold, fontSize: Typography.size.xs },
   modalSafe: { flex: 1, backgroundColor: Colors.appBackground },
   modalContent: { flex: 1, width: '100%', maxWidth: Layout.screenMaxWidth, alignSelf: 'center', padding: Spacing.base, gap: Spacing.sm },
   modalHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },

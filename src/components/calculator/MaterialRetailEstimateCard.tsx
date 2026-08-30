@@ -73,6 +73,19 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
         </View>
       ))}
 
+      {tintPlan?.samplePlan?.samples.map((sample) => (
+        <View key={`tint-sample-${sample.colourId}`} style={styles.line}>
+          <View style={styles.lineCopy}>
+            <Text style={styles.lineName}>{sample.colourName} colour sample</Text>
+            <Text style={styles.lineMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
+            <Text style={styles.lineCoverage}>Separate from the project tint batches</Text>
+          </View>
+          <Text style={styles.lineValue}>
+            {sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer formula review'}
+          </Text>
+        </View>
+      ))}
+
       <Text style={showPrices ? styles.routeNote : styles.warning}>
         {dealerContext.orderRoutingLabel}
       </Text>

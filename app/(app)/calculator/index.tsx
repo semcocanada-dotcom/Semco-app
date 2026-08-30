@@ -101,6 +101,7 @@ export default function CalculatorScreen() {
     setColourArea,
     addColourSelection,
     removeColourSelection,
+    setIncludeColourSamples,
     runCalculation,
     reset,
   } = useCalculator();
@@ -264,6 +265,8 @@ export default function CalculatorScreen() {
                 onAreaChange={setColourArea}
                 onAddColour={addColourSelection}
                 onRemoveColour={removeColourSelection}
+                includeSamples={form.includeColourSamples}
+                onIncludeSamplesChange={setIncludeColourSamples}
               />
 
               <View style={styles.section}>

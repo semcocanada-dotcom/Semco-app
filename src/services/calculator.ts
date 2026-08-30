@@ -46,6 +46,7 @@ export interface CalculatorInput {
   prepCondition?: PrepConditionId;
   installationScope?: InstallationScope;
   colourAllocations?: ColourAllocationInput[];
+  includeColourSamples?: boolean;
 }
 
 export function calculate(input: CalculatorInput): CalculationResult {
@@ -144,13 +145,16 @@ export function calculate(input: CalculatorInput): CalculationResult {
   };
 
   if (input.colourAllocations?.length) {
-    const tintPlanResult = buildColourTintPlan(result, input.colourAllocations);
+    const tintPlanResult = buildColourTintPlan(result, input.colourAllocations, {
+      includeSamples: input.includeColourSamples,
+    });
     if (!tintPlanResult.ok) {
       throw new Error(tintPlanResult.errors[0] ?? 'The colour allocation could not be calculated.');
     }
     result.layers = ensureXBondLiquidPurchaseCoversTintPlan(
       result.layers,
-      tintPlanResult.plan.preparedLiquidGallons,
+      tintPlanResult.plan.preparedLiquidGallons
+        + (tintPlanResult.plan.samplePlan?.totalLiquidGallons ?? 0),
     );
     result.colourTintPlan = {
       ...tintPlanResult.plan,

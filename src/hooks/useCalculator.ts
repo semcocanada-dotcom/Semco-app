@@ -32,6 +32,7 @@ interface CalculatorState {
   installationScope: InstallationScope;
   colourMode: CalculatorColourMode;
   colourSelections: CalculatorColourSelection[];
+  includeColourSamples: boolean;
 }
 
 let colourSlotCounter = 2;
@@ -58,6 +59,7 @@ export function useCalculator() {
     installationScope: 'floor_or_other',
     colourMode: 'single',
     colourSelections: getDefaultColourSelections(),
+    includeColourSamples: false,
   });
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -220,6 +222,11 @@ export function useCalculator() {
     }));
   }, [invalidateResult]);
 
+  const setIncludeColourSamples = useCallback((includeColourSamples: boolean) => {
+    invalidateResult();
+    setForm((f) => ({ ...f, includeColourSamples }));
+  }, [invalidateResult]);
+
   const runCalculation = useCallback(() => {
     setResult(null);
     setError(null);
@@ -280,6 +287,7 @@ export function useCalculator() {
         prepCondition: form.prepCondition,
         installationScope: form.installationScope,
         colourAllocations,
+        includeColourSamples: form.includeColourSamples,
       });
       setResult(res);
     } catch (err) {
@@ -301,6 +309,7 @@ export function useCalculator() {
       installationScope: 'floor_or_other',
       colourMode: 'single',
       colourSelections: getDefaultColourSelections(),
+      includeColourSamples: false,
     });
   }, []);
 
@@ -321,6 +330,7 @@ export function useCalculator() {
     setColourArea,
     addColourSelection,
     removeColourSelection,
+    setIncludeColourSamples,
     runCalculation,
     reset,
   };

@@ -64,6 +64,36 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
         </View>
       ))}
 
+      {plan.samplePlan ? (
+        <View style={styles.sampleSection}>
+          <View style={styles.sampleHeader}>
+            <View style={styles.sampleHeaderCopy}>
+              <Text style={styles.sampleTitle}>Sample mixing</Text>
+              <Text style={styles.sampleSubtitle}>
+                {plan.samplePlan.samples.length} × {plan.samplePlan.sampleLabel}
+              </Text>
+            </View>
+            <Text style={styles.sampleTotal}>
+              {plan.samplePlan.totalChargeCad != null ? formatCad(plan.samplePlan.totalChargeCad) : 'Review'}
+            </Text>
+          </View>
+          {plan.samplePlan.samples.map((sample) => (
+            <View key={`sample-${sample.colourId}`} style={styles.sampleLine}>
+              <View style={styles.colourIdentity}>
+                <ColourSwatch hex={sample.swatchHex ?? getColourChargeRecord(sample.colourId)?.swatchHex ?? undefined} />
+                <View style={styles.allocationCopy}>
+                  <Text style={styles.sampleColourName}>{sample.colourName}</Text>
+                  <Text style={styles.colourMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
+                </View>
+              </View>
+              <Text style={sample.pricingStatus === 'priced' ? styles.sampleLinePrice : styles.review}>
+                {sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer review'}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {!needsRecalculation ? (
         <TouchableOpacity
           onPress={() => setShowDetails((visible) => !visible)}
@@ -119,13 +149,38 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
               ) : null}
             </View>
           ))}
+          {plan.samplePlan ? (
+            <View style={styles.sampleDetailSection}>
+              <Text style={styles.detailColourTitle}>One-quart sample formulas</Text>
+              {plan.samplePlan.samples.map((sample) => (
+                <View key={`sample-detail-${sample.colourId}`} style={styles.detailAllocation}>
+                  <Text style={styles.batchFormulaTitle}>{sample.colourName} · {sample.colourCode}</Text>
+                  {sample.batch?.pigments?.length ? (
+                    <View style={styles.formulaBox}>
+                      {sample.batch.pigments.map((pigment) => (
+                        <Text key={`${sample.colourId}-${pigment.pigmentCode}`} style={styles.formulaLine}>
+                          {pigment.pigmentCode} · {pigment.pigmentName}: {pigment.dispenserAmount}
+                        </Text>
+                      ))}
+                    </View>
+                  ) : sample.pricingStatus === 'priced' ? (
+                    <Text style={styles.liquidText}>No pigment addition required for this sample.</Text>
+                  ) : (
+                    <Text style={styles.review}>{sample.reviewReason ?? 'Dealer review is required for this sample formula.'}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
       ) : null}
 
       <View style={styles.totalRow}>
         <View>
           <Text style={styles.totalLabel}>Tint charge</Text>
-          <Text style={styles.totalNote}>SEMCO machine ounces at {formatCad(plan.ratePerTintOunceCad)}/oz</Text>
+          <Text style={styles.totalNote}>
+            {plan.samplePlan ? 'Project and sample tint' : 'SEMCO machine ounces'} at {formatCad(plan.ratePerTintOunceCad)}/oz
+          </Text>
         </View>
         <Text style={styles.totalValue}>
           {needsRecalculation ? 'Recalculate' : plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'Dealer review'}
@@ -205,6 +260,16 @@ const styles = StyleSheet.create({
   batchFormulaTitle: { color: Colors.darkTeal, fontFamily: Fonts.bold, fontSize: Typography.size.xs },
   formulaLine: { color: Colors.navy, fontFamily: Fonts.medium, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.35 },
   review: { color: Colors.danger, fontFamily: Fonts.semibold, fontSize: Typography.size.xs },
+  sampleSection: { gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
+  sampleHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: Spacing.sm },
+  sampleHeaderCopy: { flex: 1, gap: 2 },
+  sampleTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.base },
+  sampleSubtitle: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs },
+  sampleTotal: { color: Colors.semcoOrange, fontFamily: Fonts.bold, fontSize: Typography.size.base },
+  sampleLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  sampleColourName: { color: Colors.navy, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
+  sampleLinePrice: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
+  sampleDetailSection: { gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
   totalRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
   totalLabel: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.base },
   totalNote: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs },

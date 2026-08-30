@@ -70,8 +70,36 @@ export interface ColourTintAllocation {
   preparationNote?: string;
 }
 
+export interface ColourTintSampleLine {
+  colourId: string;
+  colourCode: string;
+  colourName: string;
+  formulaCode: string;
+  swatchHex?: string;
+  sampleSize: 'quart';
+  sampleLabel: string;
+  liquidGallons: 0.25;
+  batch?: TintBatchPlanLine;
+  pigments: TintPigmentPlanLine[];
+  totalTintOunces?: number;
+  totalChargeCad?: number;
+  pricingStatus: 'priced' | 'dealer_review';
+  reviewReason?: string;
+}
+
+export interface ColourTintSamplePlan {
+  samples: ColourTintSampleLine[];
+  sampleSize: 'quart';
+  sampleLabel: string;
+  totalLiquidGallons: number;
+  totalTintOunces?: number;
+  totalChargeCad?: number;
+  isFullyPriced: boolean;
+}
+
 export interface ColourTintPlan {
   allocations: ColourTintAllocation[];
+  samplePlan?: ColourTintSamplePlan;
   exactLiquidGallons: number;
   preparedLiquidGallons: number;
   baseLiquidPurchaseGallons: number;

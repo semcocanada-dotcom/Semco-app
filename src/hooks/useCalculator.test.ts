@@ -159,6 +159,22 @@ describe('useCalculator preparation and membrane controls', () => {
     });
   });
 
+  it('adds an optional one-quart sample for the selected colour', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('75'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setColourSelection('colour-1', 'col-xbond-2053t'));
+    act(() => result.current.setIncludeColourSamples(true));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.result?.colourTintPlan?.samplePlan).toMatchObject({
+      sampleLabel: '1-quart sample (946 mL)',
+      samples: [{ colourCode: '2053T', sampleSize: 'quart' }],
+    });
+  });
+
   it('requires multi-colour areas to total the project area', () => {
     const { result } = renderHook(() => useCalculator());
 
