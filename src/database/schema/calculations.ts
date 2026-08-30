@@ -57,6 +57,7 @@ export interface ColourTintAllocation {
   colourCode: string;
   colourName: string;
   formulaCode: string;
+  swatchHex?: string;
   areaSqft: number;
   exactLiquidGallons: number;
   preparedLiquidGallons: number;

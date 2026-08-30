@@ -30,6 +30,7 @@ describe('colour tint allocation', () => {
     if (!planned.ok) return;
     expect(planned.plan.allocations[0]).toMatchObject({
       colourCode: '2053T',
+      swatchHex: '#FFD077',
       exactLiquidGallons: 5,
       preparedLiquidGallons: 5,
       totalChargeCad: 54.17,

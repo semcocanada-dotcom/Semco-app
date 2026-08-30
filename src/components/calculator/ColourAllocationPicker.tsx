@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { SearchBar } from '@/components/ui/SearchBar';
 import {
   COLOUR_TINT_STATS,
+  COLOUR_SWATCH_STATS,
   getColourChargeRecord,
   searchTintColours,
 } from '@/knowledge/colour-charges';
@@ -55,6 +56,7 @@ export function ColourAllocationPicker({
       }, 0)
     : Number.isFinite(totalArea) && selections[0]?.colourId ? totalArea : 0;
   const remainingArea = Number.isFinite(totalArea) ? totalArea - allocatedArea : null;
+  const activeColourId = selections.find((selection) => selection.slotId === activeSlotId)?.colourId;
 
   function openPicker(slotId: string) {
     setActiveSlotId(slotId);
@@ -75,9 +77,9 @@ export function ColourAllocationPicker({
           <Ionicons name="color-palette-outline" size={20} color={Colors.darkTeal} />
         </View>
         <View style={styles.titleCopy}>
-          <Text style={styles.title}>Colour & tint preparation</Text>
+          <Text style={styles.title}>Project colour</Text>
           <Text style={styles.helper}>
-            Choose the X-Bond colour and split the project area when more than one colour is required.
+            Choose one colour, or split the area between multiple colours.
           </Text>
         </View>
       </View>
@@ -99,30 +101,30 @@ export function ColourAllocationPicker({
         />
       </View>
 
-      <Text style={styles.helper}>
-        {mode === 'single'
-          ? 'The selected colour will be prepared for the entire project area.'
-          : 'Enter the square footage for each colour. The areas must add up to the full project area.'}
-      </Text>
+      {mode === 'multiple' ? (
+        <Text style={styles.helper}>Enter each colour area. Together they must equal the full project area.</Text>
+      ) : null}
 
       <View style={styles.selectionList}>
         {selections.map((selection, index) => {
           const colour = selection.colourId ? getColourChargeRecord(selection.colourId) : undefined;
           return (
             <View key={selection.slotId} style={styles.selectionCard}>
-              <View style={styles.selectionHeader}>
-                <Text style={styles.selectionLabel}>Colour {index + 1}</Text>
-                {mode === 'multiple' && selections.length > 2 ? (
-                  <TouchableOpacity
-                    onPress={() => onRemoveColour(selection.slotId)}
-                    style={styles.removeButton}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove colour ${index + 1}`}
-                  >
-                    <Ionicons name="trash-outline" size={18} color={Colors.danger} />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
+              {mode === 'multiple' ? (
+                <View style={styles.selectionHeader}>
+                  <Text style={styles.selectionLabel}>Colour {index + 1}</Text>
+                  {selections.length > 2 ? (
+                    <TouchableOpacity
+                      onPress={() => onRemoveColour(selection.slotId)}
+                      style={styles.removeButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove colour ${index + 1}`}
+                    >
+                      <Ionicons name="trash-outline" size={18} color={Colors.danger} />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : null}
 
               <TouchableOpacity
                 onPress={() => openPicker(selection.slotId)}
@@ -130,22 +132,17 @@ export function ColourAllocationPicker({
                 style={[styles.colourButton, colour && styles.colourButtonSelected]}
                 accessibilityRole="button"
                 accessibilityLabel={colour ? `Change ${colour.name}` : `Choose colour ${index + 1}`}
+                accessibilityState={{ selected: Boolean(colour) }}
               >
-                <View style={styles.colourButtonIcon}>
-                  <Ionicons
-                    name={colour ? 'checkmark-circle-outline' : 'search-outline'}
-                    size={20}
-                    color={colour ? Colors.primary : Colors.textSecondary}
-                  />
-                </View>
+                <MiniSwatch hex={colour?.swatchHex} size={34} />
                 <View style={styles.colourButtonCopy}>
                   <Text style={colour ? styles.colourName : styles.colourPlaceholder}>
                     {colour?.name ?? 'Choose a colour'}
                   </Text>
                   <Text style={styles.colourCode}>
                     {colour
-                      ? `${colour.code}${colour.sourceFormulaCode !== colour.code ? ` · formula ${colour.sourceFormulaCode}` : ''}`
-                      : `Search ${COLOUR_TINT_STATS.mappedColours.toLocaleString('en-CA')} X-Bond formulas`}
+                      ? colour.code
+                      : `${COLOUR_TINT_STATS.mappedColours.toLocaleString('en-CA')} colours, A–Z`}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={Colors.textDisabled} />
@@ -180,8 +177,8 @@ export function ColourAllocationPicker({
                 styles.allocationValue,
                 remainingArea != null && Math.abs(remainingArea) <= 0.05 && styles.allocationComplete,
                 remainingArea != null && remainingArea < -0.05 && styles.allocationOver,
-              ]}>
-                {remainingArea == null ? 'Enter total area' : `${formatArea(remainingArea)} sq ft`}
+              ]} accessibilityLiveRegion="polite">
+                {formatRemainingArea(remainingArea)}
               </Text>
             </View>
           </View>
@@ -199,7 +196,7 @@ export function ColourAllocationPicker({
             <View style={styles.modalHeader}>
               <View style={styles.modalTitleCopy}>
                 <Text style={styles.modalTitle}>Choose X-Bond colour</Text>
-                <Text style={styles.modalSubtitle}>Names and codes are shown without digital colour swatches.</Text>
+                <Text style={styles.modalSubtitle}>Alphabetical by colour name.</Text>
               </View>
               <TouchableOpacity
                 onPress={() => setActiveSlotId(null)}
@@ -217,7 +214,11 @@ export function ColourAllocationPicker({
               autoFocus
               autoCorrect={false}
             />
-            <Text style={styles.resultCount}>{options.length} colour{options.length === 1 ? '' : 's'}</Text>
+            <View style={styles.resultMeta}>
+              <Text style={styles.resultCount} accessibilityLiveRegion="polite">{options.length} colour{options.length === 1 ? '' : 's'}</Text>
+              <Text style={styles.swatchCount}>{COLOUR_SWATCH_STATS.available} digital swatches</Text>
+            </View>
+            <Text style={styles.swatchDisclaimer}>Digital swatches are a guide only. Confirm the final colour with the physical SEMCO fan deck.</Text>
             <FlatList
               data={options}
               keyExtractor={(item) => item.id}
@@ -228,10 +229,11 @@ export function ColourAllocationPicker({
                   onPress={() => chooseColour(item.id)}
                   activeOpacity={0.74}
                   style={styles.optionRow}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name}, ${item.code}`}
+                  accessibilityState={{ selected: activeColourId === item.id }}
                 >
-                  <View style={styles.optionIcon}>
-                    <Ionicons name="color-fill-outline" size={18} color={Colors.primary} />
-                  </View>
+                  <MiniSwatch hex={item.swatchHex} size={36} />
                   <View style={styles.optionCopy}>
                     <Text style={styles.optionName}>{item.name}</Text>
                     <Text style={styles.optionCode}>
@@ -262,6 +264,28 @@ function formatArea(value: number): string {
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
+function formatRemainingArea(value: number | null): string {
+  if (value == null) return 'Enter total area';
+  if (Math.abs(value) <= 0.05) return 'Allocation complete';
+  if (value < 0) return `${formatArea(Math.abs(value))} sq ft over`;
+  return `${formatArea(value)} sq ft`;
+}
+
+function MiniSwatch({ hex, size }: { hex?: string | null; size: number }) {
+  return (
+    <View
+      style={[
+        styles.swatch,
+        { width: size, height: size, borderRadius: size / 2 },
+        hex ? { backgroundColor: hex } : styles.swatchUnavailable,
+      ]}
+      accessible={false}
+    >
+      {!hex ? <Ionicons name="remove-outline" size={17} color={Colors.textDisabled} /> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   section: { gap: Spacing.sm },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
@@ -289,7 +313,7 @@ const styles = StyleSheet.create({
   },
   selectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   selectionLabel: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontSize: Typography.size.xs, textTransform: 'uppercase' },
-  removeButton: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF2F0' },
+  removeButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF2F0' },
   colourButton: {
     minHeight: 60,
     flexDirection: 'row',
@@ -302,7 +326,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
   },
   colourButtonSelected: { borderColor: Colors.lightTeal, backgroundColor: Colors.primaryMuted },
-  colourButtonIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.white },
+  swatch: {
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(8, 46, 55, 0.18)',
+  },
+  swatchUnavailable: { backgroundColor: Colors.white, borderStyle: 'dashed' },
   colourButtonCopy: { flex: 1, gap: 2 },
   colourName: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
   colourPlaceholder: { color: Colors.textSecondary, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
@@ -328,6 +359,9 @@ const styles = StyleSheet.create({
   modalSubtitle: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs },
   closeButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.white },
   resultCount: { color: Colors.textSecondary, fontFamily: Fonts.medium, fontSize: Typography.size.xs },
+  resultMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  swatchCount: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.xs },
+  swatchDisclaimer: { color: Colors.textDisabled, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.3 },
   optionList: { paddingBottom: Spacing.xxl },
   optionRow: {
     minHeight: 64,
@@ -338,7 +372,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
     paddingVertical: Spacing.sm,
   },
-  optionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primaryMuted },
   optionCopy: { flex: 1, gap: 2 },
   optionName: { color: Colors.navy, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
   optionCode: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs },

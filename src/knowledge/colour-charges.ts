@@ -1,4 +1,5 @@
 import tintDataJson from '@/database/seed/colour-tint-data.json';
+import colourSeedJson from '@/database/seed/colors.json';
 import type { TintBatchSize, TintFormulaBasis } from '@/database/schema/calculations';
 
 export interface TintBatchDefinition {
@@ -26,6 +27,7 @@ export interface ColourChargeRecord {
   reviewReason: string | null;
   formulaCorrections: string[];
   qaFlags: string[];
+  swatchHex: string | null;
   batches: Record<TintBatchSize, TintBatchDefinition>;
   pigments: TintPigmentDefinition[];
 }
@@ -43,14 +45,22 @@ interface ColourTintSeed {
     reviewRequiredColours: number;
     pigmentFormulaRows: number;
   };
-  colours: ColourChargeRecord[];
+  colours: Omit<ColourChargeRecord, 'swatchHex'>[];
 }
 
 const tintData = tintDataJson as unknown as ColourTintSeed;
-const byId = new Map(tintData.colours.map((colour) => [colour.id, colour]));
-const byCode = new Map(tintData.colours.map((colour) => [normalise(colour.code), colour]));
+const swatchesById = new Map(
+  (colourSeedJson as { id: string; swatchHex?: string | null }[])
+    .map((colour) => [colour.id, validSwatch(colour.swatchHex) ? colour.swatchHex! : null]),
+);
+const colourRecords: ColourChargeRecord[] = tintData.colours.map((colour) => ({
+  ...colour,
+  swatchHex: swatchesById.get(colour.id) ?? null,
+}));
+const byId = new Map(colourRecords.map((colour) => [colour.id, colour]));
+const byCode = new Map(colourRecords.map((colour) => [normalise(colour.code), colour]));
 const byFormulaCode = new Map(
-  tintData.colours.map((colour) => [normalise(colour.sourceFormulaCode), colour]),
+  colourRecords.map((colour) => [normalise(colour.sourceFormulaCode), colour]),
 );
 
 export const TINT_RATE_PER_MACHINE_OUNCE_CAD = tintData.ratePerTintOunceCad;
@@ -58,15 +68,22 @@ export const TINT_PRICING_UNIT = tintData.pricingUnit;
 export const TINT_UNIT_DEFINITION = tintData.unitDefinition;
 export const COLOUR_TINT_SOURCE = tintData.source;
 export const COLOUR_TINT_STATS = tintData.stats;
+export const COLOUR_SWATCH_STATS = {
+  available: colourRecords.filter((colour) => colour.swatchHex).length,
+  unavailable: colourRecords.filter((colour) => !colour.swatchHex).length,
+};
 
-export const TINT_COLOUR_OPTIONS = tintData.colours.map((colour) => ({
-  id: colour.id,
-  code: colour.code,
-  name: colour.name,
-  formulaCode: colour.sourceFormulaCode,
-  orderable: colour.orderable,
-  reviewReason: colour.reviewReason,
-}));
+export const TINT_COLOUR_OPTIONS = colourRecords
+  .map((colour) => ({
+    id: colour.id,
+    code: colour.code,
+    name: colour.name,
+    formulaCode: colour.sourceFormulaCode,
+    swatchHex: colour.swatchHex,
+    orderable: colour.orderable,
+    reviewReason: colour.reviewReason,
+  }))
+  .sort((a, b) => compareAlphabetically(a.name, b.name) || compareAlphabetically(a.code, b.code));
 
 export function getColourChargeRecord(colourIdOrCode: string): ColourChargeRecord | undefined {
   const normalised = normalise(colourIdOrCode);
@@ -95,4 +112,12 @@ export function getPigmentY48ForBatch(
 
 function normalise(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+}
+
+function compareAlphabetically(a: string, b: string): number {
+  return a.localeCompare(b, 'en-CA', { sensitivity: 'base', numeric: true });
+}
+
+function validSwatch(value?: string | null): value is string {
+  return Boolean(value && /^#[0-9A-F]{6}$/i.test(value));
 }

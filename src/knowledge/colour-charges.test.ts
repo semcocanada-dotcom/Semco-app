@@ -1,4 +1,5 @@
 import {
+  COLOUR_SWATCH_STATS,
   COLOUR_TINT_STATS,
   getColourChargeRecord,
   TINT_COLOUR_OPTIONS,
@@ -16,6 +17,60 @@ describe('X-Bond colour tint charge catalogue', () => {
       pigmentFormulaRows: 3466,
     });
     expect(TINT_RATE_PER_MACHINE_OUNCE_CAD).toBe(2);
+  });
+
+  it('sorts colour choices alphabetically by name and then code', () => {
+    const compare = (a: { name: string; code: string }, b: { name: string; code: string }) =>
+      a.name.localeCompare(b.name, 'en-CA', { sensitivity: 'base', numeric: true })
+      || a.code.localeCompare(b.code, 'en-CA', { sensitivity: 'base', numeric: true });
+
+    expect(TINT_COLOUR_OPTIONS.slice(0, 4)).toMatchObject([
+      { name: "Aaron's Rod", code: '2053T' },
+      { name: 'Absicon', code: '2383D' },
+      { name: 'Abstract', code: '2397D' },
+      { name: 'Abyss', code: '2951D' },
+    ]);
+    expect(TINT_COLOUR_OPTIONS.at(-1)).toMatchObject({ name: 'Zesty Lilac', code: '2304P' });
+
+    for (let index = 1; index < TINT_COLOUR_OPTIONS.length; index += 1) {
+      expect(compare(TINT_COLOUR_OPTIONS[index - 1], TINT_COLOUR_OPTIONS[index])).toBeLessThanOrEqual(0);
+    }
+
+    const blueResults = searchTintColours('blue');
+    for (let index = 1; index < blueResults.length; index += 1) {
+      expect(compare(blueResults[index - 1], blueResults[index])).toBeLessThanOrEqual(0);
+    }
+  });
+
+  it('adds only verified fan-deck hex swatches and identifies colours without one', () => {
+    expect(COLOUR_SWATCH_STATS).toEqual({ available: 1008, unavailable: 14 });
+    expect(getColourChargeRecord('2053T')?.swatchHex).toBe('#FFD077');
+
+    const coloursWithoutSwatches = TINT_COLOUR_OPTIONS
+      .filter((colour) => colour.swatchHex == null)
+      .map((colour) => colour.code)
+      .sort((a, b) => a.localeCompare(b, 'en-CA', { numeric: true }));
+
+    expect(coloursWithoutSwatches).toEqual([
+      '4000',
+      '4001',
+      '4003',
+      '4004',
+      '4005',
+      '4006',
+      '4007',
+      '4008',
+      '4009',
+      '4010',
+      '4011',
+      '4012',
+      '4013',
+      '4014',
+    ]);
+
+    for (const colour of TINT_COLOUR_OPTIONS) {
+      if (colour.swatchHex) expect(colour.swatchHex).toMatch(/^#[0-9A-F]{6}$/i);
+    }
   });
 
   it('keeps all three aggregate charges for direct-source formulas', () => {
