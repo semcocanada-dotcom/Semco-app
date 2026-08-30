@@ -9,6 +9,7 @@ import {
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { UNASSIGNED_DEALER_CONTEXT, type DealerContext } from '@/constants/dealers';
 import { formatBatchPlan } from '@/components/calculator/ColourTintPlanCard';
+import { hasLegacyQuartTintBatch } from '@/services/tint-planning';
 
 type MaterialRetailEstimateCardProps = {
   result: CalculationResult;
@@ -20,9 +21,10 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
   const pricedLines = lines.filter((line) => line.quantity > 0);
   const missingPriceLines = pricedLines.filter((line) => !line.price);
   const tintPlan = result.colourTintPlan;
-  const totalCad = getMaterialPriceTotal(lines) + (tintPlan?.totalChargeCad ?? 0);
+  const needsTintRecalculation = hasLegacyQuartTintBatch(tintPlan);
+  const totalCad = getMaterialPriceTotal(lines) + (needsTintRecalculation ? 0 : tintPlan?.totalChargeCad ?? 0);
   const showPrices = dealerContext.pricingAvailable;
-  const hasPendingTint = Boolean(tintPlan && !tintPlan.isFullyPriced);
+  const hasPendingTint = Boolean(tintPlan && (!tintPlan.isFullyPriced || needsTintRecalculation));
 
   return (
     <Card style={styles.card}>
@@ -64,7 +66,9 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
             <Text style={styles.lineCoverage}>{formatBatchPlan(allocation.batches)}</Text>
           </View>
           <Text style={styles.lineValue}>
-            {allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Dealer formula review'}
+            {needsTintRecalculation
+              ? 'Recalculate'
+              : allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Dealer formula review'}
           </Text>
         </View>
       ))}
@@ -79,7 +83,11 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
         </Text>
       ) : null}
       {hasPendingTint ? (
-        <Text style={styles.warning}>One or more colour formulas need dealer review before the tint charge can be finalized.</Text>
+        <Text style={styles.warning}>
+          {needsTintRecalculation
+            ? 'Recalculate this saved tint plan before ordering so it uses only 1- and 5-gallon project batches.'
+            : 'One or more colour formulas need dealer review before the tint charge can be finalized.'}
+        </Text>
       ) : null}
     </Card>
   );

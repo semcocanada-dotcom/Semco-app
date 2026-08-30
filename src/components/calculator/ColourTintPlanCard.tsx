@@ -4,10 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import type { ColourTintPlan, TintBatchPlanLine } from '@/database/schema/calculations';
 import { getColourChargeRecord } from '@/knowledge/colour-charges';
+import { hasLegacyQuartTintBatch } from '@/services/tint-planning';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
 export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
   const [showDetails, setShowDetails] = useState(false);
+  const needsRecalculation = hasLegacyQuartTintBatch(plan);
 
   return (
     <Card style={styles.card}>
@@ -18,10 +20,21 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
         <View style={styles.headerCopy}>
           <Text style={styles.title}>Colour & tint summary</Text>
           <Text style={styles.subtitle}>
-            {formatGallons(plan.exactLiquidGallons)} gal required · {formatGallons(plan.preparedLiquidGallons)} gal prepared
+            {needsRecalculation
+              ? 'Saved tint plan needs recalculation'
+              : `${formatGallons(plan.exactLiquidGallons)} gal required · ${formatGallons(plan.preparedLiquidGallons)} gal prepared`}
           </Text>
         </View>
       </View>
+
+      {needsRecalculation ? (
+        <View style={styles.recalculationWarning}>
+          <Ionicons name="warning-outline" size={17} color={Colors.semcoOrange} />
+          <Text style={styles.recalculationWarningText}>
+            This saved plan used a quart job batch. Recalculate before ordering so it uses 1- and 5-gallon project batches.
+          </Text>
+        </View>
+      ) : null}
 
       {plan.allocations.map((allocation) => (
         <View key={allocation.colourId} style={styles.allocation}>
@@ -34,7 +47,9 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
               </View>
             </View>
             <Text style={styles.charge}>
-              {allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Review'}
+              {needsRecalculation
+                ? 'Recalculate'
+                : allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Review'}
             </Text>
           </View>
 
@@ -49,23 +64,28 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
         </View>
       ))}
 
-      <TouchableOpacity
-        onPress={() => setShowDetails((visible) => !visible)}
-        activeOpacity={0.72}
-        style={styles.detailsToggle}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: showDetails }}
-        accessibilityLabel={`${showDetails ? 'Hide' : 'Show'} tint-machine details`}
-      >
-        <View style={styles.detailsToggleCopy}>
-          <Ionicons name="options-outline" size={18} color={Colors.darkTeal} />
-          <Text style={styles.detailsToggleText}>{showDetails ? 'Hide tinting details' : 'Show tinting details'}</Text>
-        </View>
-        <Ionicons name={showDetails ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textSecondary} />
-      </TouchableOpacity>
+      {!needsRecalculation ? (
+        <TouchableOpacity
+          onPress={() => setShowDetails((visible) => !visible)}
+          activeOpacity={0.72}
+          style={styles.detailsToggle}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showDetails }}
+          accessibilityLabel={`${showDetails ? 'Hide' : 'Show'} tint-machine details`}
+        >
+          <View style={styles.detailsToggleCopy}>
+            <Ionicons name="options-outline" size={18} color={Colors.darkTeal} />
+            <Text style={styles.detailsToggleText}>{showDetails ? 'Hide tinting details' : 'Show tinting details'}</Text>
+          </View>
+          <Ionicons name={showDetails ? 'chevron-up' : 'chevron-down'} size={18} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      ) : null}
 
-      {showDetails ? (
+      {showDetails && !needsRecalculation ? (
         <View style={styles.detailsPanel}>
+          <Text style={styles.batchPolicy}>
+            Project orders use 1-gallon and 5-gallon tint batches. Quart formulas are reserved for samples.
+          </Text>
           {plan.allocations.map((allocation) => (
             <View key={`details-${allocation.colourId}`} style={styles.detailAllocation}>
               <Text style={styles.detailColourTitle}>
@@ -107,7 +127,9 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
           <Text style={styles.totalLabel}>Tint charge</Text>
           <Text style={styles.totalNote}>SEMCO machine ounces at {formatCad(plan.ratePerTintOunceCad)}/oz</Text>
         </View>
-        <Text style={styles.totalValue}>{plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'Dealer review'}</Text>
+        <Text style={styles.totalValue}>
+          {needsRecalculation ? 'Recalculate' : plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'Dealer review'}
+        </Text>
       </View>
       <Text style={styles.disclaimer}>
         Tint charge only. X-Bond Liquid, labour, freight, tax, and other material charges are separate.
@@ -125,6 +147,9 @@ function ColourSwatch({ hex }: { hex?: string }) {
 }
 
 export function formatBatchPlan(batches: TintBatchPlanLine[]): string {
+  if (batches.some((batch) => batch.batchSize === 'quart')) {
+    return 'Recalculate for 1- and 5-gallon project batches';
+  }
   return batches
     .map((batch) => `${batch.quantity} × ${batch.batchLabel} tint batch${batch.quantity === 1 ? '' : 'es'}`)
     .join(' + ');
@@ -151,6 +176,8 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, gap: 2 },
   title: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.lg },
   subtitle: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.4 },
+  recalculationWarning: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, borderRadius: Radius.md, backgroundColor: Colors.accentMuted, padding: Spacing.sm },
+  recalculationWarningText: { flex: 1, color: Colors.semcoOrange, fontFamily: Fonts.semibold, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.4 },
   allocation: { gap: 5, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
   allocationHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: Spacing.sm },
   colourIdentity: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
@@ -168,6 +195,7 @@ const styles = StyleSheet.create({
   detailsToggleCopy: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
   detailsToggleText: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
   detailsPanel: { gap: Spacing.sm, borderRadius: Radius.md, backgroundColor: Colors.surfaceElevated, padding: Spacing.sm },
+  batchPolicy: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.4 },
   detailAllocation: { gap: Spacing.sm },
   detailColourTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
   note: { flexDirection: 'row', alignItems: 'flex-start', gap: 5, borderRadius: Radius.sm, backgroundColor: Colors.primaryMuted, padding: Spacing.sm },

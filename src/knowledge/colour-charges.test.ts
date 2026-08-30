@@ -152,4 +152,12 @@ describe('X-Bond colour tint charge catalogue', () => {
       }
     }
   });
+
+  it('has direct 1-gallon and 5-gallon formulas for every project colour', () => {
+    for (const option of TINT_COLOUR_OPTIONS) {
+      const colour = getColourChargeRecord(option.id)!;
+      expect(colour.batches.gallon.formulaBasis).toBe('direct_source');
+      expect(colour.batches.five_gallon.formulaBasis).toBe('direct_source');
+    }
+  });
 });

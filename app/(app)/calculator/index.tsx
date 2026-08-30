@@ -30,7 +30,7 @@ const ESTIMATOR_POINTS = [
   'SIP Type A-E prep and cleaner sequence',
   'Cleaner quantities plus 1 / 5 gal pricing',
   'Liquid Membrane optional where allowed',
-  'Single- or multi-colour tint preparation at $2 per machine oz',
+  'Single- or multi-colour job tinting in 1 / 5 gal batches at $2 per machine oz',
 ];
 
 const INSTALLATION_SCOPE_OPTIONS: readonly {

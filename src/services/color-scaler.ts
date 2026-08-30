@@ -3,7 +3,7 @@ import type { PigmentRatio } from '@/database/schema/colors';
 export type BatchSize = 'quart' | 'gallon' | 'five_gallon';
 
 export const BATCH_SIZES: { key: BatchSize; label: string; volumeLabel: string }[] = [
-  { key: 'quart', label: 'Quart', volumeLabel: '946 ml' },
+  { key: 'quart', label: 'Sample Quart', volumeLabel: '946 ml' },
   { key: 'gallon', label: 'Gallon', volumeLabel: '3.8 L' },
   { key: 'five_gallon', label: '5 Gallon', volumeLabel: '18.9 L' },
 ];
@@ -66,7 +66,9 @@ export function getFormulaForBatch(pigments: PigmentRatio[], batchSize: BatchSiz
       lines.length > 0
         ? 'Add all tints to XBond liquid and mix thoroughly before applying to substrate. All tints must be from the same manufacturing lot.'
         : hasAnyAmounts
-          ? `A ${BATCH_SIZES.find((b) => b.key === batchSize)?.label.toLowerCase() ?? batchSize} batch is not published for this colour. Mix the gallon batch instead.`
+          ? batchSize === 'quart'
+            ? 'A quart sample formula is not published for this colour. Use the gallon formula for project tinting.'
+            : `A ${BATCH_SIZES.find((b) => b.key === batchSize)?.label.toLowerCase() ?? batchSize} batch is not published for this colour. Mix the gallon batch instead.`
           : 'No pigment addition required. Natural cement tone.',
   };
 }
@@ -98,7 +100,7 @@ function formatMl(ml: number): string {
   return `${Number.isInteger(ml) ? ml.toFixed(0) : ml.toFixed(1)} ml`;
 }
 
-/** For custom colours, installer enters ml per quart and the app auto-scales. */
+/** For custom colours, the approved quart sample formula is the scaling reference. */
 export function buildPigmentRatio(
   pigmentCode: string,
   pigmentName: string,

@@ -8,16 +8,30 @@ import {
 
 describe('tint batch sizing', () => {
   it.each([
-    [0.25, ['1xquart']],
-    [0.2500001, ['2xquart']],
-    [1.25 + 1e-12, ['1xgallon', '1xquart']],
-    [1.2501, ['1xgallon', '2xquart']],
-    [4.75, ['4xgallon', '3xquart']],
+    [0.25, ['1xgallon']],
+    [0.2500001, ['1xgallon']],
+    [1, ['1xgallon']],
+    [1 + 1e-12, ['1xgallon']],
+    [1.0001, ['2xgallon']],
+    [1.25, ['2xgallon']],
+    [1.2501, ['2xgallon']],
+    [4.75, ['1xfive_gallon']],
     [5, ['1xfive_gallon']],
-    [5.25, ['1xfive_gallon', '1xquart']],
-    [6.25, ['1xfive_gallon', '1xgallon', '1xquart']],
-  ])('packs %s gallons into exact formula sizes', (gallons, expected) => {
-    expect(buildTintBatchCounts(gallons as number).map((line) => `${line.quantity}x${line.batchSize}`)).toEqual(expected);
+    [5.25, ['1xfive_gallon', '1xgallon']],
+    [6.25, ['1xfive_gallon', '2xgallon']],
+    [9, ['1xfive_gallon', '4xgallon']],
+    [9.2, ['2xfive_gallon']],
+    [10.01, ['2xfive_gallon', '1xgallon']],
+  ])('packs %s gallons into project-size formulas without quarts', (gallons, expected) => {
+    const batches = buildTintBatchCounts(gallons as number);
+    expect(batches.map((line) => `${line.quantity}x${line.batchSize}`)).toEqual(expected);
+    expect(batches.every((line) => line.batchSize !== 'quart')).toBe(true);
+  });
+
+  it('returns no project tint batches for invalid or empty amounts', () => {
+    expect(buildTintBatchCounts(0)).toEqual([]);
+    expect(buildTintBatchCounts(-1)).toEqual([]);
+    expect(buildTintBatchCounts(Number.NaN)).toEqual([]);
   });
 });
 
@@ -67,7 +81,7 @@ describe('colour tint allocation', () => {
 
     expect(planned.ok).toBe(true);
     if (!planned.ok) return;
-    const [fiveGallon, quart] = planned.plan.allocations[0].batches;
+    const [fiveGallon, gallon] = planned.plan.allocations[0].batches;
     expect(fiveGallon).toMatchObject({
       batchSize: 'five_gallon',
       quantity: 1,
@@ -75,19 +89,19 @@ describe('colour tint allocation', () => {
         expect.objectContaining({ pigmentCode: 'R S SS', dispenserY48: 20 }),
       ]),
     });
-    expect(quart).toMatchObject({
-      batchSize: 'quart',
+    expect(gallon).toMatchObject({
+      batchSize: 'gallon',
       quantity: 1,
       pigments: expect.arrayContaining([
-        expect.objectContaining({ pigmentCode: 'R S SS', dispenserY48: 1 }),
+        expect.objectContaining({ pigmentCode: 'R S SS', dispenserY48: 4 }),
       ]),
     });
     expect(planned.plan.allocations[0].pigments).toEqual(
-      expect.arrayContaining([expect.objectContaining({ pigmentCode: 'R S SS', dispenserY48: 21 })]),
+      expect.arrayContaining([expect.objectContaining({ pigmentCode: 'R S SS', dispenserY48: 24 })]),
     );
   });
 
-  it('uses a direct gallon batch when the source quart formula is unpublished', () => {
+  it('uses a direct gallon batch for a partial-gallon project volume', () => {
     const result = fixtureResult(9.375, [liquidLayer(0.25, 5)]);
     const planned = buildColourTintPlan(result, [{ colourId: 'col-xbond-2162p', areaSqft: 9.375 }]);
 
@@ -98,10 +112,25 @@ describe('colour tint allocation', () => {
       totalChargeCad: 15.19,
       batches: [{ batchSize: 'gallon', quantity: 1, formulaBasis: 'direct_source' }],
     });
-    expect(planned.plan.allocations[0].preparationNote).toContain('does not publish a quart dispenser formula');
+    expect(planned.plan.allocations[0].preparationNote).toBeUndefined();
   });
 
-  it('uses the direct five-gallon formula when an unpublished quart remainder rounds the batch to five gallons', () => {
+  it('reserves a published quart formula for samples and uses a gallon for the job', () => {
+    const result = fixtureResult(9.375, [liquidLayer(0.25, 1)]);
+    const planned = buildColourTintPlan(result, [{ colourId: 'col-xbond-2053t', areaSqft: 9.375 }]);
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.allocations[0]).toMatchObject({
+      exactLiquidGallons: 0.25,
+      preparedLiquidGallons: 1,
+      totalChargeCad: 10.83,
+      batches: [{ batchSize: 'gallon', quantity: 1, formulaBasis: 'direct_source' }],
+    });
+    expect(planned.plan.allocations[0].batches.some((batch) => batch.batchSize === 'quart')).toBe(false);
+  });
+
+  it('uses the direct five-gallon formula when a project amount rounds to five gallons', () => {
     const result = fixtureResult(178.125, [liquidLayer(4.75, 5)]);
     const planned = buildColourTintPlan(result, [{ colourId: 'col-xbond-2162p', areaSqft: 178.125 }]);
 
@@ -154,7 +183,7 @@ describe('colour tint allocation', () => {
     expect(planned.plan.allocations[0].totalChargeCad).toBeUndefined();
   });
 
-  it('uses a 1-gallon pail for the remainder when per-colour rounding exceeds five gallons', () => {
+  it('rounds each project colour independently to whole gallons', () => {
     const result = fixtureResult(100, [liquidLayer(4.9, 5)]);
     const planned = buildColourTintPlan(result, [
       { colourId: 'col-xbond-2053t', areaSqft: 33.33 },
@@ -164,7 +193,7 @@ describe('colour tint allocation', () => {
 
     expect(planned.ok).toBe(true);
     if (!planned.ok) return;
-    expect(planned.plan.preparedLiquidGallons).toBe(5.25);
+    expect(planned.plan.preparedLiquidGallons).toBe(6);
     expect(planned.plan.baseLiquidPurchaseGallons).toBe(6);
     const adjusted = ensureXBondLiquidPurchaseCoversTintPlan(result.layers, planned.plan.preparedLiquidGallons);
     expect(adjusted[0]).toMatchObject({

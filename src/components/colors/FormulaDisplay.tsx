@@ -11,7 +11,7 @@ interface FormulaDisplayProps {
 }
 
 export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
-  const [batchSize, setBatchSize] = useState<BatchSize>('quart');
+  const [batchSize, setBatchSize] = useState<BatchSize>('gallon');
   const formula = getFormulaForBatch(parsePigments(pigments), batchSize);
 
   return (
@@ -20,6 +20,7 @@ export function FormulaDisplay({ pigments, colorName }: FormulaDisplayProps) {
       <Text style={styles.subheading}>XBond tint formula</Text>
 
       <Text style={styles.selectorLabel}>Batch size</Text>
+      <Text style={styles.sampleNote}>Quart formulas are for samples and mockups only. Project orders use 1- and 5-gallon batches.</Text>
       <View style={styles.batchSelector}>
         {BATCH_SIZES.map((b) => (
           <TouchableOpacity
@@ -140,6 +141,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: Spacing.md,
   },
+  sampleNote: { color: Colors.textSecondary, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.4, marginTop: 3 },
   batchSelector: {
     flexDirection: 'row',
     gap: Spacing.sm,

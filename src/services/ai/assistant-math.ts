@@ -370,7 +370,7 @@ function findColors(normalized: string): BundledColor[] {
 }
 
 function batchLabel(batch: BatchSize): string {
-  if (batch === 'quart') return '1 quart (946 ml) of X-Bond Liquid';
+  if (batch === 'quart') return '1 sample quart (946 ml) of X-Bond Liquid';
   if (batch === 'gallon') return '1 gallon (3.8 L) of X-Bond Liquid';
   return '5 gallons (18.9 L) of X-Bond Liquid';
 }
@@ -413,7 +413,7 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
     };
   }
 
-  // Requested batch: explicit 5-gallon, quart, or N-gallon multiples.
+  // Quart remains available only when explicitly requested for a sample.
   const gallonsAsk = normalized.match(/(\d+(?:\.\d+)?)\s*gal/);
   const wantsQuart = /quart/.test(normalized);
 
@@ -435,7 +435,7 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
       multiplier = gallons;
     } else if (gallons > 0) {
       batch = 'gallon';
-      scalingNote = `The verified batches are quart, 1 gallon, and 5 gallon. For ${formatNumber(gallons)} gallons, mix whole 1-gallon batches — partial-batch scaling is not part of the verified formula data.`;
+      scalingNote = `Project tinting uses whole 1-gallon and 5-gallon batches. For ${formatNumber(gallons)} gallons, round up to whole project batches rather than scaling a partial batch.`;
     }
   }
 
@@ -457,6 +457,10 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
   }
 
   if (scalingNote) lines.push('', scalingNote);
+
+  if (batch === 'quart') {
+    lines.push('', 'This quart formula is for a sample or mockup only. Project orders use whole 1-gallon and 5-gallon tint batches.');
+  }
 
   lines.push(
     '',

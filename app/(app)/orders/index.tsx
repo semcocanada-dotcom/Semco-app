@@ -26,6 +26,7 @@ import {
   buildTintRequestSummaryLines,
   canSaveMaterialRequest,
   hasColourTintPlan,
+  requiresWholeGallonTintRecalculation,
 } from '@/services/material-request-summary';
 import {
   fetchInstallerProjectsFromCloud,
@@ -222,6 +223,7 @@ export default function OrdersScreen() {
   const dealerUsesProfile = Boolean(profile?.postalCode);
   const trimmedCustomItemNotes = customItemNotes.trim();
   const hasTintPlan = hasColourTintPlan(result);
+  const needsTintRecalculation = requiresWholeGallonTintRecalculation(result);
   const canSaveRequest = canSaveMaterialRequest(result, trimmedCustomItemNotes);
 
   async function savePendingCalculation(now: string): Promise<string | null> {
@@ -255,6 +257,13 @@ export default function OrdersScreen() {
   }
 
   async function ensureRequest(status: OrderRequestStatus) {
+    if (result && needsTintRecalculation) {
+      Alert.alert(
+        'Recalculate colour tint',
+        'This saved plan used a quart job batch. Return to the calculator and calculate again for 1- and 5-gallon project batches.',
+      );
+      return;
+    }
     if (result && !hasTintPlan) {
       Alert.alert(
         'Choose a project colour',
@@ -426,7 +435,18 @@ export default function OrdersScreen() {
               dealerEmail={dealerContext.orderEmail}
             />
             {result ? <MaterialBreakdownCard result={result} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
-            {result && !hasTintPlan ? (
+            {result && needsTintRecalculation ? (
+              <Card style={styles.tintRequiredCard}>
+                <Ionicons name="refresh-outline" size={21} color={Colors.semcoOrange} />
+                <View style={styles.tintRequiredCopy}>
+                  <Text style={styles.tintRequiredTitle}>Recalculate tint before this request can be saved</Text>
+                  <Text style={styles.bodySmall}>
+                    This saved result used a sample-size quart batch. Recalculate it so the dealer receives 1- and 5-gallon project formulas and charges.
+                  </Text>
+                  <Button label="Recalculate in Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} fullWidth />
+                </View>
+              </Card>
+            ) : result && !hasTintPlan ? (
               <Card style={styles.tintRequiredCard}>
                 <Ionicons name="color-palette-outline" size={21} color={Colors.semcoOrange} />
                 <View style={styles.tintRequiredCopy}>

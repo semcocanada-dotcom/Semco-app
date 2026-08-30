@@ -371,7 +371,7 @@ describe('calculator preparation and membrane behavior', () => {
     });
   });
 
-  it('stages a one-gallon X-Bond Liquid remainder for multi-colour quarter rounding', () => {
+  it('rounds each project colour to whole-gallon tint batches', () => {
     const result = calculate({
       areaSqft: 183.75,
       substrateType: 'concrete',
@@ -384,7 +384,7 @@ describe('calculator preparation and membrane behavior', () => {
     });
     const liquid = result.layers.find((layer) => layer.productSku === 'XBOND-LIQUID');
 
-    expect(result.colourTintPlan?.preparedLiquidGallons).toBe(5.25);
+    expect(result.colourTintPlan?.preparedLiquidGallons).toBe(6);
     expect(result.colourTintPlan?.baseLiquidPurchaseGallons).toBe(6);
     expect(liquid?.roundedQuantity).toBe(6);
     expect(liquid?.purchaseLabel).toBe('Buy 1 x 5 gal pail + 1 x 1 gal pail (6 gal)');

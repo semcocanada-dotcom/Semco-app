@@ -2,6 +2,7 @@ import type { ColourTintPlan } from '@/database/schema/calculations';
 import {
   buildTintRequestSummaryLines,
   canSaveMaterialRequest,
+  requiresWholeGallonTintRecalculation,
 } from '@/services/material-request-summary';
 
 describe('dealer material request tint summary', () => {
@@ -10,7 +11,9 @@ describe('dealer material request tint summary', () => {
     const body = lines.join('\n');
 
     expect(body).toContain("Aaron's Rod (2053T)");
+    expect(body).toContain('Project orders use 1-gallon and 5-gallon tint batches; quart formulas are reserved for samples.');
     expect(body).toContain('2 x 1 gallon tint batches');
+    expect(body).not.toContain('1 quart tint batch');
     expect(body).toContain('formula below is per batch');
     expect(body).toContain('R S SS Exterior Red: 4/48 Y');
     expect(body).toContain('$21.66 tint charge');
@@ -35,7 +38,44 @@ describe('dealer material request tint summary', () => {
     expect(canSaveMaterialRequest(colouredResult, '')).toBe(true);
     expect(canSaveMaterialRequest(undefined, 'extra trowel')).toBe(true);
   });
+
+  it('blocks old quart job plans until they are recalculated', () => {
+    const legacyPlan = legacyQuartPlanFixture();
+    const result = {
+      layers: [],
+      totalKg: 0,
+      wastePct: 0,
+      areaSqm: 10,
+      colourTintPlan: legacyPlan,
+    };
+
+    expect(requiresWholeGallonTintRecalculation(result)).toBe(true);
+    expect(canSaveMaterialRequest(result, '')).toBe(false);
+    expect(buildTintRequestSummaryLines(legacyPlan).join('\n')).toContain('RECALCULATION REQUIRED');
+    expect(buildTintRequestSummaryLines(legacyPlan).join('\n')).not.toContain('formula below is per batch');
+  });
 });
+
+function legacyQuartPlanFixture(): ColourTintPlan {
+  const plan = planFixture();
+  const allocation = plan.allocations[0];
+  return {
+    ...plan,
+    preparedLiquidGallons: 0.25,
+    allocations: [{
+      ...allocation,
+      preparedLiquidGallons: 0.25,
+      batches: [{
+        ...allocation.batches[0],
+        batchSize: 'quart',
+        batchLabel: '1 quart',
+        batchGallons: 0.25,
+        quantity: 1,
+        preparedGallons: 0.25,
+      }],
+    }],
+  };
+}
 
 function planFixture(): ColourTintPlan {
   return {

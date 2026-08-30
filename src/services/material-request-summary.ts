@@ -1,18 +1,32 @@
 import type { CalculationResult, ColourTintPlan } from '@/database/schema/calculations';
+import { hasLegacyQuartTintBatch } from '@/services/tint-planning';
 
 export function hasColourTintPlan(result?: CalculationResult): boolean {
   return Boolean(result?.colourTintPlan?.allocations.length);
 }
 
 export function canSaveMaterialRequest(result: CalculationResult | undefined, customItemNotes: string): boolean {
-  if (result) return hasColourTintPlan(result);
+  if (result) return hasColourTintPlan(result) && !requiresWholeGallonTintRecalculation(result);
   return Boolean(customItemNotes.trim());
+}
+
+export function requiresWholeGallonTintRecalculation(result?: CalculationResult): boolean {
+  return hasLegacyQuartTintBatch(result?.colourTintPlan);
 }
 
 export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
   if (!plan?.allocations.length) return [];
+  if (hasLegacyQuartTintBatch(plan)) {
+    return [
+      'Colour tint preparation:',
+      'RECALCULATION REQUIRED: this saved plan used a quart job batch. Recalculate it for 1- and 5-gallon project batches before ordering.',
+    ];
+  }
 
-  const lines = ['Colour tint preparation:'];
+  const lines = [
+    'Colour tint preparation:',
+    'Project orders use 1-gallon and 5-gallon tint batches; quart formulas are reserved for samples.',
+  ];
   for (const allocation of plan.allocations) {
     lines.push(
       `- ${allocation.colourName} (${allocation.colourCode})${allocation.formulaCode !== allocation.colourCode ? `; source formula ${allocation.formulaCode}` : ''}: ${formatNumber(allocation.areaSqft)} sq ft; ${formatNumber(allocation.exactLiquidGallons)} gal exact; ${formatNumber(allocation.preparedLiquidGallons)} gal prepared; ${formatBatches(allocation.batches)}; ${allocation.totalChargeCad != null ? `${formatCad(allocation.totalChargeCad)} tint charge` : 'DEALER FORMULA REVIEW REQUIRED'}.`,

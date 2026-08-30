@@ -28,15 +28,13 @@ export type ColourTintPlanResult =
 const AREA_TOLERANCE_SQFT = 0.05;
 const FLOATING_POINT_EPSILON = 1e-9;
 
-const BATCHES: readonly {
-  batchSize: TintBatchSize;
+const PROJECT_BATCHES: readonly {
+  batchSize: Exclude<TintBatchSize, 'quart'>;
   batchLabel: string;
-  gallons: 0.25 | 1 | 5;
-  quarterUnits: number;
+  gallons: 1 | 5;
 }[] = [
-  { batchSize: 'five_gallon', batchLabel: '5 gallon', gallons: 5, quarterUnits: 20 },
-  { batchSize: 'gallon', batchLabel: '1 gallon', gallons: 1, quarterUnits: 4 },
-  { batchSize: 'quart', batchLabel: '1 quart', gallons: 0.25, quarterUnits: 1 },
+  { batchSize: 'five_gallon', batchLabel: '5 gallon', gallons: 5 },
+  { batchSize: 'gallon', batchLabel: '1 gallon', gallons: 1 },
 ];
 
 export function getTintableXBondLiquidGallons(result: Pick<CalculationResult, 'layers'>): number {
@@ -51,6 +49,11 @@ export function getPurchasedXBondLiquidGallons(layers: MaterialLayer[]): number 
     .reduce((total, layer) => total + Math.max(0, layer.roundedQuantity ?? 0), 0);
 }
 
+export function hasLegacyQuartTintBatch(plan?: Pick<ColourTintPlan, 'allocations'>): boolean {
+  return Boolean(plan?.allocations.some((allocation) =>
+    allocation.batches.some((batch) => batch.batchSize === 'quart')));
+}
+
 export function buildTintBatchCounts(exactGallons: number): {
   batchSize: TintBatchSize;
   batchLabel: string;
@@ -60,10 +63,12 @@ export function buildTintBatchCounts(exactGallons: number): {
 }[] {
   if (!Number.isFinite(exactGallons) || exactGallons <= 0) return [];
 
-  let remainingQuarterUnits = Math.ceil(exactGallons * 4 - FLOATING_POINT_EPSILON);
-  return BATCHES.flatMap((batch) => {
-    const quantity = Math.floor(remainingQuarterUnits / batch.quarterUnits);
-    remainingQuarterUnits -= quantity * batch.quarterUnits;
+  // Project orders use only whole-gallon containers. Quart formulas remain in
+  // the colour catalogue for sample mixing, but are never staged for a job.
+  let remainingGallons = Math.ceil(exactGallons - FLOATING_POINT_EPSILON);
+  return PROJECT_BATCHES.flatMap((batch) => {
+    const quantity = Math.floor(remainingGallons / batch.gallons);
+    remainingGallons -= quantity * batch.gallons;
     if (quantity <= 0) return [];
     return [{
       batchSize: batch.batchSize,
@@ -165,7 +170,7 @@ export function ensureXBondLiquidPurchaseCoversTintPlan(
       purchaseLabel: formatGallonPackagePurchase(roundedQuantity),
       sourceNote: [
         layer.sourceNote,
-        'Base liquid was increased to cover colour-by-colour tint batches and their supported formula sizes.',
+        'Base liquid was increased to cover colour-by-colour whole-gallon job tint batches.',
       ].filter(Boolean).join(' '),
     };
   });
@@ -178,18 +183,9 @@ function buildAllocation(
 ): ColourTintAllocation {
   const colour = getColourChargeRecord(allocation.colourId);
   const exactLiquidGallons = totalExactLiquidGallons * (allocation.areaSqft / projectAreaSqft);
-  const batchCounts = colour
-    ? getOperationalBatchCounts(exactLiquidGallons, colour.batches.quart.formulaBasis)
-    : buildTintBatchCounts(exactLiquidGallons);
+  const batchCounts = buildTintBatchCounts(exactLiquidGallons);
   const preparedLiquidGallons = batchCounts.reduce((total, batch) => total + batch.preparedGallons, 0);
-  const usesGallonForUnpublishedQuart = Boolean(
-    colour?.batches.quart.formulaBasis === 'derived_from_gallon_div_4'
-    && buildTintBatchCounts(exactLiquidGallons).some((batch) => batch.batchSize === 'quart'),
-  );
   const preparationNote = [
-    usesGallonForUnpublishedQuart
-      ? 'The source does not publish a quart dispenser formula, so the tint quantity is rounded up to whole-gallon direct formula batches.'
-      : null,
     colour?.associationNote,
     colour?.formulaCorrections.length
       ? `Verified source correction applied to the ${colour.formulaCorrections.join(', ')} formula; confirm the cured sample before production.`
@@ -280,23 +276,6 @@ function aggregatePigments(
     dispenserAmount: formatDispenser(pigment.dispenserY48),
     tintOunces: round8(pigment.dispenserY48 / 48),
   }));
-}
-
-function getOperationalBatchCounts(
-  exactGallons: number,
-  quartFormulaBasis: 'direct_source' | 'derived_from_gallon_div_4',
-): ReturnType<typeof buildTintBatchCounts> {
-  const batches = buildTintBatchCounts(exactGallons);
-  if (quartFormulaBasis === 'direct_source') return batches;
-
-  const quart = batches.find((batch) => batch.batchSize === 'quart');
-  if (!quart) return batches;
-
-  // Derived quart values are useful for price review, but they are not a
-  // published machine formula. Round the preparation volume to whole gallons,
-  // then repack it so an exact 5-gallon direct formula is used instead of five
-  // separate gallon formulas when the rounded volume reaches five gallons.
-  return buildTintBatchCounts(Math.ceil(exactGallons - FLOATING_POINT_EPSILON));
 }
 
 function mergeDuplicateAllocations(allocations: ColourAllocationInput[]): ColourAllocationInput[] {

@@ -128,8 +128,8 @@ export default function CreateColorScreen() {
         <Input label="Color Name" value={name} onChangeText={setName} placeholder="e.g. Coastal Mist" error={error ?? undefined} />
         <Input label="Code (optional)" value={code} onChangeText={setCode} placeholder="e.g. MY-001" autoCapitalize="characters" />
 
-        <Text style={styles.sectionLabel}>Tints (ml per quart of XBond)</Text>
-        <Text style={styles.sectionHint}>Enter amounts for a quart batch. Gallon and 5-gallon scale automatically.</Text>
+        <Text style={styles.sectionLabel}>Sample formula (ml per quart of XBond)</Text>
+        <Text style={styles.sectionHint}>Enter the approved quart sample formula. Project gallon and 5-gallon formulas scale automatically.</Text>
         {AVAILABLE_PIGMENTS.map((pig) => {
           const existing = pigments.find((p) => p.pigmentCode === pig.code);
           return (
