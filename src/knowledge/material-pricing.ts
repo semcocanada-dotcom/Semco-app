@@ -49,9 +49,11 @@ const SKU_ALIASES: Record<string, string> = {
 
 export const MATERIAL_PRICES: MaterialPrice[] = [
   { sku: 'XBT50', product: 'X-Bond Stone', category: 'X-Bond Microcement System', size: '50 lb bag', coverageRate: 'Concrete 120-150; Painted Surface 120-150; Ceramic Tile 110-175; Vinyl Tile 120-150; Natural Stone 100-200; Metal 120-150', retailPriceCad: 137.36, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
+  { sku: 'XME801', product: 'Liquid Membrane', category: 'X-Bond Microcement System', size: '1 gallon pail', coverageRate: 'Open pore 100-200; Closed pore 140-250; X-Bond Scratch Coat 200-300', retailPriceCad: 189.61, minimumQty: 1, source: 'Modern Arc price confirmation dated 2026-08-30' },
   { sku: 'XME805', product: 'Liquid Membrane', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Open pore 500-1000; Closed pore 700-1250; X-Bond Scratch Coat 1000-1500', retailPriceCad: 721.00, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
   { sku: 'XBAD801', product: 'X-Bond Additive Brown Coat Filler', category: 'X-Bond Microcement System', size: '4 lb bag', coverageRate: 'Can be applied from 1/4 in to 4 in thickness', retailPriceCad: 78.66, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
   { sku: 'XBAD805', product: 'X-Bond Additive Brown Coat Filler', category: 'X-Bond Microcement System', size: '20 lb bag', coverageRate: 'Can be applied from 1/4 in to 4 in thickness', retailPriceCad: 472.08, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
+  { sku: 'XB801', product: 'X-Bond Liquid', category: 'X-Bond Microcement System', size: '1 gallon pail', coverageRate: 'Based on X-Bond system mix requirements', retailPriceCad: 154.82, minimumQty: 1, source: 'Modern Arc price confirmation dated 2026-08-30' },
   { sku: 'XB805', product: 'X-Bond Liquid', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Based on 2 x 50 lb X-Bond Stone and 5 gal liquid at 1/8 in thickness', retailPriceCad: 623.57, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
   { sku: 'XBM50', product: 'Microbond', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft', retailPriceCad: 455.18, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
   { sku: 'MS601', product: 'Semco Sealer Matte', category: 'Sealers and Stains', size: '1 gallon pail', coverageRate: 'Coverage 200 sq ft, based on 2 coats', retailPriceCad: 266.00, minimumQty: 1, source: 'Modern Arc Sales Order 1018 dated 2026-08-19' },
@@ -84,11 +86,7 @@ const CLEANER_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: stri
 
 const MATERIAL_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: string }> = {
   // The product data sheet confirms 1- and 5-gallon X-Bond Liquid pails.
-  // XB801 is kept visible as price pending because the supplied 2026 Canadian
-  // dealer catalog only includes the XB805 5-gallon price.
   XBONDLIQUID: { oneGallon: 'XB801', fiveGallon: 'XB805' },
-  // XME801 is an official 1-gallon SKU, but its Canadian retail price is not in
-  // the supplied 2026 catalog. Keep its order line visible and price pending.
   SEMCOLIQUIDMEMBRANE: { oneGallon: 'XME801', fiveGallon: 'XME805' },
   MATTESEALER: { oneGallon: 'MS601', fiveGallon: 'MS605' },
 };

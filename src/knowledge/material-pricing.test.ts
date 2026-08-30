@@ -93,7 +93,7 @@ describe('cleaner package pricing', () => {
     expect(line).toMatchObject({ priceSku: 'PC 205', quantity: 1, lineTotalCad: 590 });
   });
 
-  it('uses the priced 5-gallon and pending 1-gallon Liquid Membrane SKUs together', () => {
+  it('uses the priced 5-gallon and 1-gallon Liquid Membrane SKUs together', () => {
     const membrane = {
       ...cleanerLayer('SEMCO-LIQUID-MEMBRANE', 5.1, 6),
       productName: 'Liquid Membrane',
@@ -113,9 +113,9 @@ describe('cleaner package pricing', () => {
       priceSku: 'XME801',
       packageLabel: '1 gallon pail',
       quantity: 1,
+      lineTotalCad: 189.61,
     });
-    expect(lines[1].price).toBeUndefined();
-    expect(lines[1].lineTotalCad).toBeUndefined();
+    expect(lines[1].price?.retailPriceCad).toBe(189.61);
   });
 
   it('does not create a purchase for zero or invalid cleaner quantities', () => {
@@ -141,9 +141,9 @@ describe('Liquid Membrane package pricing', () => {
       priceSku: 'XME801',
       packageLabel: '1 gallon pail',
       quantity: 2,
+      lineTotalCad: 379.22,
     });
-    expect(lines[0].price).toBeUndefined();
-    expect(lines[0].lineTotalCad).toBeUndefined();
+    expect(lines[0].price?.retailPriceCad).toBe(189.61);
   });
 
   it('retains the authoritative XME805 price for an exact five-gallon purchase', () => {
@@ -166,7 +166,7 @@ describe('Liquid Membrane package pricing', () => {
 });
 
 describe('X-Bond Liquid package pricing', () => {
-  it('uses one priced 5-gallon pail and one pending 1-gallon pail for six gallons', () => {
+  it('uses one priced 5-gallon pail and one priced 1-gallon pail for six gallons', () => {
     const liquid = {
       ...cleanerLayer('XBOND-LIQUID', 5.25, 6),
       productName: 'X-Bond Liquid',
@@ -186,8 +186,10 @@ describe('X-Bond Liquid package pricing', () => {
       priceSku: 'XB801',
       packageLabel: '1 gallon pail',
       quantity: 1,
+      lineTotalCad: 154.82,
     });
-    expect(lines[1].price).toBeUndefined();
+    expect(lines[1].price?.retailPriceCad).toBe(154.82);
+    expect(getMaterialPriceTotal(lines)).toBeCloseTo(778.39, 2);
   });
 });
 
