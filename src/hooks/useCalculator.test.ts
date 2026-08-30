@@ -143,4 +143,106 @@ describe('useCalculator preparation and membrane controls', () => {
 
     expect(result.current.form.prepCondition).toBe('type_a');
   });
+
+  it('assigns the full project area to one selected colour', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('187.5'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setColourSelection('colour-1', 'col-xbond-2053t'));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.result?.colourTintPlan?.allocations[0]).toMatchObject({
+      colourCode: '2053T',
+      areaSqft: 187.5,
+    });
+  });
+
+  it('requires multi-colour areas to total the project area', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('100'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setColourMode('multiple'));
+    const [first, second] = result.current.form.colourSelections;
+    act(() => result.current.setColourSelection(first.slotId, 'col-xbond-2053t'));
+    act(() => result.current.setColourSelection(second.slotId, 'col-xbond-2383d'));
+    act(() => result.current.setColourArea(first.slotId, '40'));
+    act(() => result.current.setColourArea(second.slotId, '50'));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.error).toContain('must total 100 sq ft');
+
+    act(() => result.current.setColourArea(second.slotId, '60'));
+    act(() => result.current.runCalculation());
+    expect(result.current.error).toBeNull();
+    expect(result.current.result?.colourTintPlan?.allocations).toHaveLength(2);
+  });
+
+  it('requires distinct colours in multi-colour mode', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('100'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setColourMode('multiple'));
+    const [first, second] = result.current.form.colourSelections;
+    act(() => result.current.setColourSelection(first.slotId, 'col-xbond-2053t'));
+    act(() => result.current.setColourSelection(second.slotId, 'col-xbond-2053t'));
+    act(() => result.current.setColourArea(first.slotId, '50'));
+    act(() => result.current.setColourArea(second.slotId, '50'));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.error).toContain('different colour');
+    expect(result.current.result).toBeNull();
+  });
+
+  it('clears a calculated tint snapshot when the colour changes', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('100'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setColourSelection('colour-1', 'col-xbond-2053t'));
+    act(() => result.current.runCalculation());
+    expect(result.current.result?.colourTintPlan).toBeDefined();
+
+    act(() => result.current.setColourSelection('colour-1', 'col-xbond-2383d'));
+    expect(result.current.result).toBeNull();
+  });
+
+  it('clears a calculated tint snapshot when any estimate input changes', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('100'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setColourSelection('colour-1', 'col-xbond-2053t'));
+    act(() => result.current.runCalculation());
+    expect(result.current.result?.colourTintPlan).toBeDefined();
+
+    act(() => result.current.setAreaSqft('500'));
+    expect(result.current.result).toBeNull();
+  });
+
+  it('does not discard colour rows when the active colour mode is tapped again', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setColourMode('multiple'));
+    act(() => result.current.addColourSelection());
+    const slots = result.current.form.colourSelections.map((selection) => selection.slotId);
+
+    act(() => result.current.setColourMode('multiple'));
+    expect(result.current.form.colourSelections.map((selection) => selection.slotId)).toEqual(slots);
+  });
+
+  it('resets colour mode and selections', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setColourMode('multiple'));
+    act(() => result.current.reset());
+
+    expect(result.current.form.colourMode).toBe('single');
+    expect(result.current.form.colourSelections).toEqual([
+      { slotId: 'colour-1', colourId: null, areaSqft: '' },
+    ]);
+  });
 });

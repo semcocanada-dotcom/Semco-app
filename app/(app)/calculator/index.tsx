@@ -6,6 +6,8 @@ import { useCalculator } from '@/hooks/useCalculator';
 import { AppHeader, Button, Card, Input } from '@/components/ui';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
 import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialRetailEstimateCard';
+import { ColourAllocationPicker } from '@/components/calculator/ColourAllocationPicker';
+import { ColourTintPlanCard } from '@/components/calculator/ColourTintPlanCard';
 import { PrepSystemPicker } from '@/components/calculator/PrepSystemPicker';
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
@@ -28,6 +30,7 @@ const ESTIMATOR_POINTS = [
   'SIP Type A-E prep and cleaner sequence',
   'Cleaner quantities plus 1 / 5 gal pricing',
   'Liquid Membrane optional where allowed',
+  'Single- or multi-colour tint preparation at $2 per machine oz',
 ];
 
 const INSTALLATION_SCOPE_OPTIONS: readonly {
@@ -93,6 +96,11 @@ export default function CalculatorScreen() {
     setInstallationScope,
     setFinishSku,
     setPrepCondition,
+    setColourMode,
+    setColourSelection,
+    setColourArea,
+    addColourSelection,
+    removeColourSelection,
     runCalculation,
     reset,
   } = useCalculator();
@@ -129,7 +137,7 @@ export default function CalculatorScreen() {
   );
 
   async function createMaterialRequest() {
-    if (!result) return;
+    if (!result?.colourTintPlan) return;
     setCreatingRequest(true);
     try {
       await savePendingMaterialRequest(result);
@@ -247,6 +255,17 @@ export default function CalculatorScreen() {
                 </View>
               </View>
 
+              <ColourAllocationPicker
+                mode={form.colourMode}
+                selections={form.colourSelections}
+                totalAreaSqft={form.areaSqft}
+                onModeChange={setColourMode}
+                onSelectColour={setColourSelection}
+                onAreaChange={setColourArea}
+                onAddColour={addColourSelection}
+                onRemoveColour={removeColourSelection}
+              />
+
               <View style={styles.section}>
                 <Text style={styles.label}>Liquid Membrane</Text>
                 {membraneRequired ? (
@@ -345,11 +364,22 @@ export default function CalculatorScreen() {
             {result ? (
               <View style={styles.resultSection}>
                 <MaterialBreakdownCard result={result} />
+                {result.colourTintPlan ? <ColourTintPlanCard plan={result.colourTintPlan} /> : (
+                  <Card style={styles.colourRequiredCard}>
+                    <Ionicons name="color-palette-outline" size={21} color={Colors.semcoOrange} />
+                    <View style={styles.colourRequiredCopy}>
+                      <Text style={styles.colourRequiredTitle}>Choose a colour before requesting materials</Text>
+                      <Text style={styles.helperText}>
+                        Material quantities are calculated, but a colour is needed to prepare and price the tint.
+                      </Text>
+                    </View>
+                  </Card>
+                )}
                 <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} />
                 <Button
-                  label="Create Material Request"
+                  label={result.colourTintPlan ? 'Create Material Request' : 'Choose Colour Before Request'}
                   onPress={createMaterialRequest}
-                  disabled={creatingRequest}
+                  disabled={creatingRequest || !result.colourTintPlan}
                   fullWidth
                 />
                 <Button label="Reset" onPress={reset} variant="ghost" fullWidth />
@@ -526,4 +556,17 @@ const styles = StyleSheet.create({
   },
   error: { color: Colors.danger, fontSize: Typography.size.sm },
   resultSection: { gap: Spacing.md },
+  colourRequiredCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    borderColor: Colors.accentMuted,
+    backgroundColor: '#FFF9F1',
+  },
+  colourRequiredCopy: { flex: 1, gap: 2 },
+  colourRequiredTitle: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
+  },
 });

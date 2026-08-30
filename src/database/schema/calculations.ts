@@ -26,6 +26,61 @@ export interface MaterialLayer {
   dilutionLabel?: string;
 }
 
+export type TintBatchSize = 'quart' | 'gallon' | 'five_gallon';
+export type TintFormulaBasis = 'direct_source' | 'derived_from_gallon_div_4';
+
+export interface TintBatchPlanLine {
+  batchSize: TintBatchSize;
+  batchLabel: string;
+  batchGallons: 0.25 | 1 | 5;
+  quantity: number;
+  preparedGallons: number;
+  tintOuncesPerBatch?: number;
+  totalTintOunces?: number;
+  chargeCadPerBatch?: number;
+  lineTotalCad?: number;
+  formulaBasis?: TintFormulaBasis;
+  /** Dispenser formula for one batch/container; repeat it `quantity` times. */
+  pigments?: TintPigmentPlanLine[];
+}
+
+export interface TintPigmentPlanLine {
+  pigmentCode: string;
+  pigmentName: string;
+  dispenserY48: number;
+  dispenserAmount: string;
+  tintOunces: number;
+}
+
+export interface ColourTintAllocation {
+  colourId: string;
+  colourCode: string;
+  colourName: string;
+  formulaCode: string;
+  areaSqft: number;
+  exactLiquidGallons: number;
+  preparedLiquidGallons: number;
+  batches: TintBatchPlanLine[];
+  pigments: TintPigmentPlanLine[];
+  totalTintOunces?: number;
+  totalChargeCad?: number;
+  pricingStatus: 'priced' | 'dealer_review';
+  reviewReason?: string;
+  preparationNote?: string;
+}
+
+export interface ColourTintPlan {
+  allocations: ColourTintAllocation[];
+  exactLiquidGallons: number;
+  preparedLiquidGallons: number;
+  baseLiquidPurchaseGallons: number;
+  totalTintOunces?: number;
+  totalChargeCad?: number;
+  ratePerTintOunceCad: number;
+  pricingUnit: string;
+  isFullyPriced: boolean;
+}
+
 export interface CalculationResult {
   layers: MaterialLayer[];
   totalKg: number;
@@ -37,6 +92,7 @@ export interface CalculationResult {
   prepSystemLabel?: string;
   liquidMembraneRequired?: boolean;
   installationScope?: InstallationScope;
+  colourTintPlan?: ColourTintPlan;
 }
 
 export const calculations = sqliteTable(

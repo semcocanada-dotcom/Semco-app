@@ -83,6 +83,10 @@ const CLEANER_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: stri
 };
 
 const MATERIAL_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: string }> = {
+  // The product data sheet confirms 1- and 5-gallon X-Bond Liquid pails.
+  // XB801 is kept visible as price pending because the supplied 2026 Canadian
+  // dealer catalog only includes the XB805 5-gallon price.
+  XBONDLIQUID: { oneGallon: 'XB801', fiveGallon: 'XB805' },
   // XME801 is an official 1-gallon SKU, but its Canadian retail price is not in
   // the supplied 2026 catalog. Keep its order line visible and price pending.
   SEMCOLIQUIDMEMBRANE: { oneGallon: 'XME801', fiveGallon: 'XME805' },

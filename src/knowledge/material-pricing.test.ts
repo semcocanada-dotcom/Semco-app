@@ -165,6 +165,32 @@ describe('Liquid Membrane package pricing', () => {
   });
 });
 
+describe('X-Bond Liquid package pricing', () => {
+  it('uses one priced 5-gallon pail and one pending 1-gallon pail for six gallons', () => {
+    const liquid = {
+      ...cleanerLayer('XBOND-LIQUID', 5.25, 6),
+      productName: 'X-Bond Liquid',
+      category: 'x_bond_liquid',
+    };
+
+    const lines = priceMaterialLayers([liquid]);
+
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toMatchObject({
+      priceSku: 'XB805',
+      packageLabel: '5 gallon pail',
+      quantity: 1,
+      lineTotalCad: 623.57,
+    });
+    expect(lines[1]).toMatchObject({
+      priceSku: 'XB801',
+      packageLabel: '1 gallon pail',
+      quantity: 1,
+    });
+    expect(lines[1].price).toBeUndefined();
+  });
+});
+
 describe('Matte sealer package pricing', () => {
   it('prices the recommended 1-gallon pail for a 100 sq ft Matte calculation', () => {
     const result = calculate({

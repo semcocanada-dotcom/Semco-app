@@ -29,6 +29,11 @@ import {
 } from '@/constants/product-coverage';
 import type { CoverageEstimate, WaterproofingMode, XBondFinishSku } from '@/constants/product-coverage';
 import type { CalculationResult, MaterialLayer } from '@/database/schema/calculations';
+import {
+  buildColourTintPlan,
+  ensureXBondLiquidPurchaseCoversTintPlan,
+  type ColourAllocationInput,
+} from '@/services/tint-planning';
 
 export interface CalculatorInput {
   areaSqft?: number;
@@ -40,6 +45,7 @@ export interface CalculatorInput {
   finishSku?: XBondFinishSku;
   prepCondition?: PrepConditionId;
   installationScope?: InstallationScope;
+  colourAllocations?: ColourAllocationInput[];
 }
 
 export function calculate(input: CalculatorInput): CalculationResult {
@@ -119,7 +125,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
 
   estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct, substrateType), areaSqft, wastePct));
 
-  return {
+  const result: CalculationResult = {
     layers: [...getPrepLayers(prepSystem, areaSqft, wastePct), ...estimates.map(toMaterialLayer)],
     totalKg: 0,
     wastePct,
@@ -136,6 +142,25 @@ export function calculate(input: CalculatorInput): CalculationResult {
       installationScope,
     ),
   };
+
+  if (input.colourAllocations?.length) {
+    const tintPlanResult = buildColourTintPlan(result, input.colourAllocations);
+    if (!tintPlanResult.ok) {
+      throw new Error(tintPlanResult.errors[0] ?? 'The colour allocation could not be calculated.');
+    }
+    result.layers = ensureXBondLiquidPurchaseCoversTintPlan(
+      result.layers,
+      tintPlanResult.plan.preparedLiquidGallons,
+    );
+    result.colourTintPlan = {
+      ...tintPlanResult.plan,
+      baseLiquidPurchaseGallons: result.layers
+        .filter((layer) => layer.productSku === 'XBOND-LIQUID')
+        .reduce((total, layer) => total + (layer.roundedQuantity ?? 0), 0),
+    };
+  }
+
+  return result;
 }
 
 function getPrepLayers(prepSystem: PrepSystem, areaSqft: number, wastePct: number): MaterialLayer[] {

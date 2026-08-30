@@ -353,6 +353,42 @@ describe('calculator preparation and membrane behavior', () => {
     expect(result.liquidMembraneRequired).toBe(false);
     expect(result.layers.some((layer) => layer.productSku === 'SEMCO-LIQUID-MEMBRANE')).toBe(false);
   });
+
+  it('snapshots a selected colour and tint charge with the calculation', () => {
+    const result = calculate({
+      areaSqft: 187.5,
+      substrateType: 'concrete',
+      wastePct: 0,
+      colourAllocations: [{ colourId: 'col-xbond-2053t', areaSqft: 187.5 }],
+    });
+
+    expect(result.colourTintPlan).toMatchObject({
+      exactLiquidGallons: 5,
+      preparedLiquidGallons: 5,
+      baseLiquidPurchaseGallons: 5,
+      totalChargeCad: 54.17,
+      allocations: [{ colourCode: '2053T', formulaCode: '2053T' }],
+    });
+  });
+
+  it('stages a one-gallon X-Bond Liquid remainder for multi-colour quarter rounding', () => {
+    const result = calculate({
+      areaSqft: 183.75,
+      substrateType: 'concrete',
+      wastePct: 0,
+      colourAllocations: [
+        { colourId: 'col-xbond-2053t', areaSqft: 61.25 },
+        { colourId: 'col-xbond-2383d', areaSqft: 61.25 },
+        { colourId: 'col-xbond-2397d', areaSqft: 61.25 },
+      ],
+    });
+    const liquid = result.layers.find((layer) => layer.productSku === 'XBOND-LIQUID');
+
+    expect(result.colourTintPlan?.preparedLiquidGallons).toBe(5.25);
+    expect(result.colourTintPlan?.baseLiquidPurchaseGallons).toBe(6);
+    expect(liquid?.roundedQuantity).toBe(6);
+    expect(liquid?.purchaseLabel).toBe('Buy 1 x 5 gal pail + 1 x 1 gal pail (6 gal)');
+  });
 });
 
 function stepSummary(step: {

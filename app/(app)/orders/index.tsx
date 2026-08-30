@@ -12,6 +12,7 @@ import type { Calculation, CalculationResult } from '@/database/schema/calculati
 import type { OrderRequest } from '@/database/schema/workflow';
 import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdownCard';
 import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialRetailEstimateCard';
+import { ColourTintPlanCard } from '@/components/calculator/ColourTintPlanCard';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { Button, Card, Badge, SectionHeader } from '@/components/ui';
 import { clearPendingMaterialRequest, getPendingMaterialRequest } from '@/services/pending-material-request';
@@ -21,6 +22,11 @@ import type { InstallerProfile } from '@/database/schema/installers';
 import { useAuthStore } from '@/store/auth';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
 import { createLocalId } from '@/utils/id';
+import {
+  buildTintRequestSummaryLines,
+  canSaveMaterialRequest,
+  hasColourTintPlan,
+} from '@/services/material-request-summary';
 import {
   fetchInstallerProjectsFromCloud,
   fetchProjectWorkspaceFromCloud,
@@ -215,7 +221,8 @@ export default function OrdersScreen() {
   );
   const dealerUsesProfile = Boolean(profile?.postalCode);
   const trimmedCustomItemNotes = customItemNotes.trim();
-  const canSaveRequest = Boolean(result || trimmedCustomItemNotes);
+  const hasTintPlan = hasColourTintPlan(result);
+  const canSaveRequest = canSaveMaterialRequest(result, trimmedCustomItemNotes);
 
   async function savePendingCalculation(now: string): Promise<string | null> {
     if (!project) return null;
@@ -248,6 +255,13 @@ export default function OrdersScreen() {
   }
 
   async function ensureRequest(status: OrderRequestStatus) {
+    if (result && !hasTintPlan) {
+      Alert.alert(
+        'Choose a project colour',
+        'Open the calculator, choose one or more colours, and calculate again before saving this material request.',
+      );
+      return;
+    }
     if (!project || !canSaveRequest) return;
     if (status === 'in_review' && !dealerContext.orderEmail) {
       Alert.alert('Dealer email missing', 'Add the company postal code before submitting this request.');
@@ -412,6 +426,19 @@ export default function OrdersScreen() {
               dealerEmail={dealerContext.orderEmail}
             />
             {result ? <MaterialBreakdownCard result={result} /> : <NoEstimateCard onOpenCalculator={() => router.push('/calculator' as any)} />}
+            {result && !hasTintPlan ? (
+              <Card style={styles.tintRequiredCard}>
+                <Ionicons name="color-palette-outline" size={21} color={Colors.semcoOrange} />
+                <View style={styles.tintRequiredCopy}>
+                  <Text style={styles.tintRequiredTitle}>Colour required before this request can be saved</Text>
+                  <Text style={styles.bodySmall}>
+                    Return to the calculator, choose one or more colours, and calculate again so the dealer receives the correct tint formulas and charges.
+                  </Text>
+                  <Button label="Choose Colour in Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} fullWidth />
+                </View>
+              </Card>
+            ) : null}
+            {result?.colourTintPlan ? <ColourTintPlanCard plan={result.colourTintPlan} /> : null}
             {result ? <MaterialRetailEstimateCard result={result} dealerContext={dealerContext} /> : null}
 
             <View style={styles.section}>
@@ -584,6 +611,7 @@ function buildDealerEmailBody({
   const materialLines = result?.layers
     .filter((layer) => (layer.roundedQuantity ?? layer.quantityPacks ?? 0) > 0)
     .map((layer) => `- ${layer.productName}: ${layer.purchaseLabel ?? layer.quantityLabel ?? `${layer.roundedQuantity ?? layer.quantityPacks} ${layer.packLabel ?? ''}`.trim()}`);
+  const tintLines = buildTintRequestSummaryLines(result?.colourTintPlan);
 
   return [
     'Semco material request',
@@ -600,6 +628,7 @@ function buildDealerEmailBody({
     materialLines?.length ? 'Calculator quantities:' : null,
     ...(materialLines ?? []),
     '',
+    ...(tintLines.length ? [...tintLines, ''] : []),
     requestNotes ? 'Request notes:' : null,
     requestNotes,
     '',
@@ -742,6 +771,19 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: Typography.size.xs,
     lineHeight: Typography.size.xs * 1.3,
+  },
+  tintRequiredCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    borderColor: Colors.accentMuted,
+    backgroundColor: '#FFF8F2',
+  },
+  tintRequiredCopy: { flex: 1, gap: Spacing.sm },
+  tintRequiredTitle: {
+    color: Colors.navy,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
   },
   noEstimateCard: {
     alignItems: 'stretch',

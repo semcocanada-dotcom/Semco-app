@@ -8,6 +8,7 @@ import {
 } from '@/knowledge/material-pricing';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { UNASSIGNED_DEALER_CONTEXT, type DealerContext } from '@/constants/dealers';
+import { formatBatchPlan } from '@/components/calculator/ColourTintPlanCard';
 
 type MaterialRetailEstimateCardProps = {
   result: CalculationResult;
@@ -18,8 +19,10 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
   const lines = useMemo(() => priceMaterialLayers(result.layers), [result.layers]);
   const pricedLines = lines.filter((line) => line.quantity > 0);
   const missingPriceLines = pricedLines.filter((line) => !line.price);
-  const totalCad = getMaterialPriceTotal(lines);
+  const tintPlan = result.colourTintPlan;
+  const totalCad = getMaterialPriceTotal(lines) + (tintPlan?.totalChargeCad ?? 0);
   const showPrices = dealerContext.pricingAvailable;
+  const hasPendingTint = Boolean(tintPlan && !tintPlan.isFullyPriced);
 
   return (
     <Card style={styles.card}>
@@ -29,7 +32,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           <Text style={styles.source}>{dealerContext.pricingSourceLabel}</Text>
         </View>
         <Text style={styles.total}>
-          {showPrices && missingPriceLines.length === 0 ? formatCad(totalCad) : 'Pending'}
+          {showPrices && missingPriceLines.length === 0 && !hasPendingTint ? formatCad(totalCad) : 'Pending'}
         </Text>
       </View>
 
@@ -51,6 +54,21 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
         </View>
       ))}
 
+      {tintPlan?.allocations.map((allocation) => (
+        <View key={`tint-${allocation.colourId}`} style={styles.line}>
+          <View style={styles.lineCopy}>
+            <Text style={styles.lineName}>{allocation.colourName} tint preparation</Text>
+            <Text style={styles.lineMeta}>
+              {allocation.colourCode}{allocation.formulaCode !== allocation.colourCode ? ` · formula ${allocation.formulaCode}` : ''}
+            </Text>
+            <Text style={styles.lineCoverage}>{formatBatchPlan(allocation.batches)}</Text>
+          </View>
+          <Text style={styles.lineValue}>
+            {allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Dealer formula review'}
+          </Text>
+        </View>
+      ))}
+
       <Text style={showPrices ? styles.routeNote : styles.warning}>
         {dealerContext.orderRoutingLabel}
       </Text>
@@ -59,6 +77,9 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
         <Text style={styles.warning}>
           {missingPriceLines.length} item{missingPriceLines.length === 1 ? '' : 's'} need retail pricing before final review.
         </Text>
+      ) : null}
+      {hasPendingTint ? (
+        <Text style={styles.warning}>One or more colour formulas need dealer review before the tint charge can be finalized.</Text>
       ) : null}
     </Card>
   );
