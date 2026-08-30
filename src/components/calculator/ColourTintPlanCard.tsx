@@ -2,14 +2,22 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
-import type { ColourTintPlan, TintBatchPlanLine } from '@/database/schema/calculations';
+import type {
+  ColourTintPlan,
+  ColourTintSampleLine,
+  ColourTintSamplePlan,
+  TintBatchPlanLine,
+} from '@/database/schema/calculations';
 import { getColourChargeRecord } from '@/knowledge/colour-charges';
-import { hasLegacyQuartTintBatch } from '@/services/tint-planning';
+import { hasLegacyQuartTintBatch, hasLegacySamplePricing } from '@/services/tint-planning';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 
 export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
   const [showDetails, setShowDetails] = useState(false);
-  const needsRecalculation = hasLegacyQuartTintBatch(plan);
+  const needsBatchRecalculation = hasLegacyQuartTintBatch(plan);
+  const needsSamplePricingRecalculation = hasLegacySamplePricing(plan);
+  const needsRecalculation = needsBatchRecalculation || needsSamplePricingRecalculation;
+  const usesCurrentSamplePricing = Boolean(plan.samplePlan) && !needsSamplePricingRecalculation;
 
   return (
     <Card style={styles.card}>
@@ -31,7 +39,9 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
         <View style={styles.recalculationWarning}>
           <Ionicons name="warning-outline" size={17} color={Colors.semcoOrange} />
           <Text style={styles.recalculationWarningText}>
-            This saved plan used a quart job batch. Recalculate before ordering so it uses 1- and 5-gallon project batches.
+            {needsBatchRecalculation
+              ? 'This saved plan used a quart job batch. Recalculate before ordering so it uses 1- and 5-gallon project batches.'
+              : 'This saved sample used old pigment-only pricing. Recalculate to apply the $30 sample preparation and free-at-300-sq-ft policy.'}
           </Text>
         </View>
       ) : null}
@@ -47,7 +57,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
               </View>
             </View>
             <Text style={styles.charge}>
-              {needsRecalculation
+              {needsBatchRecalculation
                 ? 'Recalculate'
                 : allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Review'}
             </Text>
@@ -73,24 +83,43 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
                 {plan.samplePlan.samples.length} × {plan.samplePlan.sampleLabel}
               </Text>
             </View>
-            <Text style={styles.sampleTotal}>
-              {plan.samplePlan.totalChargeCad != null ? formatCad(plan.samplePlan.totalChargeCad) : 'Review'}
+            <Text style={plan.samplePlan.isComplimentary && !needsSamplePricingRecalculation ? styles.sampleFree : styles.sampleTotal}>
+              {needsSamplePricingRecalculation
+                ? 'Recalculate'
+                : plan.samplePlan.isComplimentary
+                ? 'FREE'
+                : plan.samplePlan.totalChargeCad != null ? formatCad(plan.samplePlan.totalChargeCad) : 'Review'}
             </Text>
           </View>
-          {plan.samplePlan.samples.map((sample) => (
-            <View key={`sample-${sample.colourId}`} style={styles.sampleLine}>
-              <View style={styles.colourIdentity}>
-                <ColourSwatch hex={sample.swatchHex ?? getColourChargeRecord(sample.colourId)?.swatchHex ?? undefined} />
-                <View style={styles.allocationCopy}>
-                  <Text style={styles.sampleColourName}>{sample.colourName}</Text>
-                  <Text style={styles.colourMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
+          {plan.samplePlan.samples.map((sample) => {
+            const usesCurrentPricing = !needsSamplePricingRecalculation && hasCurrentSampleLinePricing(sample);
+            return (
+              <View key={`sample-${sample.colourId}`} style={styles.sampleLine}>
+                <View style={styles.colourIdentity}>
+                  <ColourSwatch hex={sample.swatchHex ?? getColourChargeRecord(sample.colourId)?.swatchHex ?? undefined} />
+                  <View style={styles.allocationCopy}>
+                    <Text style={styles.sampleColourName}>{sample.colourName}</Text>
+                    <Text style={styles.colourMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
+                    {usesCurrentPricing ? (
+                      <Text style={sample.isComplimentary ? styles.sampleWaivedMeta : styles.samplePricingMeta}>
+                        {formatSamplePriceBreakdown(sample)}
+                      </Text>
+                    ) : null}
+                    {!needsSamplePricingRecalculation && sample.pricingStatus === 'dealer_review' ? (
+                      <Text style={styles.review}>Tint formula requires dealer review before mixing.</Text>
+                    ) : null}
+                  </View>
                 </View>
+                <Text style={sample.isComplimentary && !needsSamplePricingRecalculation ? styles.sampleFree : sample.pricingStatus === 'priced' ? styles.sampleLinePrice : styles.review}>
+                  {needsSamplePricingRecalculation
+                    ? 'Recalculate'
+                    : sample.isComplimentary
+                    ? 'FREE'
+                    : sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer review'}
+                </Text>
               </View>
-              <Text style={sample.pricingStatus === 'priced' ? styles.sampleLinePrice : styles.review}>
-                {sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer review'}
-              </Text>
-            </View>
-          ))}
+            );
+          })}
         </View>
       ) : null}
 
@@ -177,9 +206,15 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
 
       <View style={styles.totalRow}>
         <View>
-          <Text style={styles.totalLabel}>Tint charge</Text>
+          <Text style={styles.totalLabel}>{usesCurrentSamplePricing ? 'Colour & sample charges' : 'Tint charge'}</Text>
           <Text style={styles.totalNote}>
-            {plan.samplePlan ? 'Project and sample tint' : 'SEMCO machine ounces'} at {formatCad(plan.ratePerTintOunceCad)}/oz
+            {needsSamplePricingRecalculation
+              ? 'Saved sample pricing needs an update'
+              : usesCurrentSamplePricing
+              ? plan.samplePlan?.isComplimentary
+                ? `Pigment tint · samples free at ${formatComplimentaryThreshold(plan.samplePlan)}`
+                : 'Pigment tint + sample preparation'
+              : `${plan.samplePlan ? 'Project and sample tint' : 'SEMCO machine ounces'} at ${formatCad(plan.ratePerTintOunceCad)}/oz`}
           </Text>
         </View>
         <Text style={styles.totalValue}>
@@ -187,10 +222,34 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
         </Text>
       </View>
       <Text style={styles.disclaimer}>
-        Tint charge only. X-Bond Liquid, labour, freight, tax, and other material charges are separate.
+        {usesCurrentSamplePricing
+          ? 'X-Bond Liquid, labour, freight, tax, and other material charges are separate.'
+          : 'Tint charge only. X-Bond Liquid, labour, freight, tax, and other material charges are separate.'}
       </Text>
     </Card>
   );
+}
+
+function hasCurrentSampleLinePricing(sample: ColourTintSampleLine): boolean {
+  return sample.pigmentChargeCad != null
+    || sample.preparationFeeCad != null
+    || sample.subtotalChargeCad != null
+    || sample.discountCad != null
+    || sample.isComplimentary != null;
+}
+
+function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
+  const pigment = sample.pigmentChargeCad != null ? formatCad(sample.pigmentChargeCad) : 'review required';
+  const preparation = sample.preparationFeeCad != null
+    ? `${formatCadCompact(sample.preparationFeeCad)} sample preparation`
+    : 'Sample preparation review required';
+  return `Pigment tint ${pigment} · ${preparation}${sample.isComplimentary ? ' · waived' : ''}`;
+}
+
+function formatComplimentaryThreshold(plan: ColourTintSamplePlan): string {
+  return plan.complimentaryThresholdSqft != null
+    ? `${formatArea(plan.complimentaryThresholdSqft)}+ sq ft`
+    : 'qualifying project size';
 }
 
 function ColourSwatch({ hex }: { hex?: string }) {
@@ -222,6 +281,10 @@ function formatArea(value: number): string {
 
 function formatCad(value: number): string {
   return `$${value.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatCadCompact(value: number): string {
+  return Number.isInteger(value) ? `$${value.toLocaleString('en-CA')}` : formatCad(value);
 }
 
 const styles = StyleSheet.create({
@@ -269,6 +332,9 @@ const styles = StyleSheet.create({
   sampleLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
   sampleColourName: { color: Colors.navy, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
   sampleLinePrice: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
+  sampleFree: { color: Colors.success, fontFamily: Fonts.bold, fontSize: Typography.size.base },
+  samplePricingMeta: { color: Colors.darkTeal, fontFamily: Fonts.medium, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.3 },
+  sampleWaivedMeta: { color: Colors.success, fontFamily: Fonts.semibold, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.3 },
   sampleDetailSection: { gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
   totalRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
   totalLabel: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.base },

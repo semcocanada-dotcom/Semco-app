@@ -16,6 +16,12 @@ import {
   TINT_RATE_PER_MACHINE_OUNCE_CAD,
   type TintPigmentDefinition,
 } from '@/knowledge/colour-charges';
+import {
+  COLOUR_SAMPLE_PREPARATION_FEE_CAD,
+  COLOUR_SAMPLE_PRICING_POLICY_VERSION,
+  COMPLIMENTARY_COLOUR_SAMPLE_THRESHOLD_SQFT,
+  isComplimentaryColourSampleProject,
+} from '@/knowledge/sample-pricing';
 import { formatDispenser } from '@/services/color-scaler';
 
 export interface ColourAllocationInput {
@@ -58,6 +64,13 @@ export function getPurchasedXBondLiquidGallons(layers: MaterialLayer[]): number 
 export function hasLegacyQuartTintBatch(plan?: Pick<ColourTintPlan, 'allocations'>): boolean {
   return Boolean(plan?.allocations.some((allocation) =>
     allocation.batches.some((batch) => batch.batchSize === 'quart')));
+}
+
+export function hasLegacySamplePricing(plan?: Pick<ColourTintPlan, 'samplePlan'>): boolean {
+  return Boolean(
+    plan?.samplePlan
+    && plan.samplePlan.pricingPolicyVersion !== COLOUR_SAMPLE_PRICING_POLICY_VERSION,
+  );
 }
 
 export function buildTintBatchCounts(exactGallons: number): {
@@ -128,7 +141,9 @@ export function buildColourTintPlan(
     projectAreaSqft,
     exactLiquidGallons,
   ));
-  const samplePlan = options.includeSamples ? buildSamplePlan(merged) : undefined;
+  const samplePlan = options.includeSamples
+    ? buildSamplePlan(merged, projectAreaSqft)
+    : undefined;
   const isFullyPriced = allocations.every((allocation) => allocation.pricingStatus === 'priced')
     && (samplePlan?.isFullyPriced ?? true);
   const preparedLiquidGallons = allocations.reduce(
@@ -145,6 +160,10 @@ export function buildColourTintPlan(
     (total, allocation) => total + (allocation.totalChargeCad ?? 0),
     0,
   );
+  const hasKnownTotalTintOunces = allocations.every((allocation) => allocation.totalTintOunces != null)
+    && (!samplePlan || samplePlan.totalTintOunces != null);
+  const hasKnownFinalCharge = allocations.every((allocation) => allocation.totalChargeCad != null)
+    && (!samplePlan || samplePlan.totalChargeCad != null);
 
   return {
     ok: true,
@@ -154,10 +173,10 @@ export function buildColourTintPlan(
       exactLiquidGallons,
       preparedLiquidGallons,
       baseLiquidPurchaseGallons: Math.max(purchasedLiquidGallons, nextWholeGallonPurchase(totalLiquidToStage)),
-      totalTintOunces: isFullyPriced
+      totalTintOunces: hasKnownTotalTintOunces
         ? round8(projectTintOunces + (samplePlan?.totalTintOunces ?? 0))
         : undefined,
-      totalChargeCad: isFullyPriced
+      totalChargeCad: hasKnownFinalCharge
         ? round2(projectTintChargeCad + (samplePlan?.totalChargeCad ?? 0))
         : undefined,
       ratePerTintOunceCad: TINT_RATE_PER_MACHINE_OUNCE_CAD,
@@ -167,26 +186,53 @@ export function buildColourTintPlan(
   };
 }
 
-function buildSamplePlan(allocations: ColourAllocationInput[]): ColourTintSamplePlan {
-  const samples = allocations.map((allocation) => buildSampleLine(allocation.colourId));
+function buildSamplePlan(
+  allocations: ColourAllocationInput[],
+  projectAreaSqft: number,
+): ColourTintSamplePlan {
+  const isComplimentary = isComplimentaryColourSampleProject(projectAreaSqft);
+  const samples = allocations.map((allocation) => buildSampleLine(
+    allocation.colourId,
+    isComplimentary,
+  ));
   const isFullyPriced = samples.every((sample) => sample.pricingStatus === 'priced');
+  const hasKnownPigmentCharges = samples.every((sample) => sample.pigmentChargeCad != null);
+  const totalPigmentChargeCad = hasKnownPigmentCharges
+    ? round2(samples.reduce((total, sample) => total + (sample.pigmentChargeCad ?? 0), 0))
+    : undefined;
+  const totalPreparationFeeCad = round2(samples.reduce(
+    (total, sample) => total + (sample.preparationFeeCad ?? 0),
+    0,
+  ));
+  const subtotalChargeCad = totalPigmentChargeCad == null
+    ? undefined
+    : round2(totalPigmentChargeCad + totalPreparationFeeCad);
+  const totalDiscountCad = isComplimentary ? subtotalChargeCad : 0;
 
   return {
     samples,
     sampleSize: 'quart',
     sampleLabel: '1-quart sample (946 mL)',
+    pricingPolicyVersion: COLOUR_SAMPLE_PRICING_POLICY_VERSION,
     totalLiquidGallons: samples.length * 0.25,
     totalTintOunces: isFullyPriced
       ? round8(samples.reduce((total, sample) => total + (sample.totalTintOunces ?? 0), 0))
       : undefined,
-    totalChargeCad: isFullyPriced
-      ? round2(samples.reduce((total, sample) => total + (sample.totalChargeCad ?? 0), 0))
-      : undefined,
+    totalPigmentChargeCad,
+    totalPreparationFeeCad,
+    subtotalChargeCad,
+    totalDiscountCad,
+    totalChargeCad: isComplimentary ? 0 : subtotalChargeCad,
+    isComplimentary,
+    complimentaryThresholdSqft: COMPLIMENTARY_COLOUR_SAMPLE_THRESHOLD_SQFT,
     isFullyPriced,
   };
 }
 
-function buildSampleLine(colourId: string): ColourTintSampleLine {
+function buildSampleLine(
+  colourId: string,
+  isComplimentary: boolean,
+): ColourTintSampleLine {
   const colour = getColourChargeRecord(colourId);
   const base = {
     colourId: colour?.id ?? colourId,
@@ -197,12 +243,16 @@ function buildSampleLine(colourId: string): ColourTintSampleLine {
     sampleSize: 'quart' as const,
     sampleLabel: '1-quart sample (946 mL)',
     liquidGallons: 0.25 as const,
+    preparationFeeCad: COLOUR_SAMPLE_PREPARATION_FEE_CAD,
+    isComplimentary,
   };
 
   if (!colour || !colour.orderable || colour.batches.quart.formulaBasis !== 'direct_source') {
     return {
       ...base,
       pigments: [],
+      discountCad: isComplimentary ? undefined : 0,
+      totalChargeCad: isComplimentary ? 0 : undefined,
       pricingStatus: 'dealer_review',
       reviewReason: colour?.batches.quart.formulaBasis === 'derived_from_gallon_div_4'
         ? 'A published 1-quart sample formula is not available for this colour. Dealer review is required.'
@@ -212,6 +262,9 @@ function buildSampleLine(colourId: string): ColourTintSampleLine {
 
   const definition = colour.batches.quart;
   const pigments = aggregatePigments(colour.pigments, [{ batchSize: 'quart', quantity: 1 }]);
+  const pigmentChargeCad = definition.chargeCad;
+  const subtotalChargeCad = round2(pigmentChargeCad + COLOUR_SAMPLE_PREPARATION_FEE_CAD);
+  const discountCad = isComplimentary ? subtotalChargeCad : 0;
   const batch: TintBatchPlanLine = {
     batchSize: 'quart',
     batchLabel: '1 quart sample',
@@ -231,7 +284,12 @@ function buildSampleLine(colourId: string): ColourTintSampleLine {
     batch,
     pigments,
     totalTintOunces: definition.tintOunces,
-    totalChargeCad: definition.chargeCad,
+    pigmentChargeCad,
+    preparationFeeCad: COLOUR_SAMPLE_PREPARATION_FEE_CAD,
+    subtotalChargeCad,
+    discountCad,
+    totalChargeCad: round2(subtotalChargeCad - discountCad),
+    isComplimentary,
     pricingStatus: 'priced',
   };
 }
@@ -258,7 +316,7 @@ export function ensureXBondLiquidPurchaseCoversTintPlan(
       purchaseLabel: formatGallonPackagePurchase(roundedQuantity),
       sourceNote: [
         layer.sourceNote,
-        'Base liquid was increased to cover colour-by-colour whole-gallon job tint batches.',
+        'Base liquid was increased to cover project tint batches and selected colour samples.',
       ].filter(Boolean).join(' '),
     };
   });

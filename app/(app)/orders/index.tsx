@@ -260,7 +260,7 @@ export default function OrdersScreen() {
     if (result && needsTintRecalculation) {
       Alert.alert(
         'Recalculate colour tint',
-        'This saved plan used a quart job batch. Return to the calculator and calculate again for 1- and 5-gallon project batches.',
+        'This saved tint plan uses older batch or sample-pricing rules. Return to the calculator and calculate again before ordering.',
       );
       return;
     }
@@ -441,7 +441,7 @@ export default function OrdersScreen() {
                 <View style={styles.tintRequiredCopy}>
                   <Text style={styles.tintRequiredTitle}>Recalculate tint before this request can be saved</Text>
                   <Text style={styles.bodySmall}>
-                    This saved result used a sample-size quart batch. Recalculate it so the dealer receives 1- and 5-gallon project formulas and charges.
+                    This saved tint plan uses older batch or sample-pricing rules. Recalculate it so the dealer receives the current formulas and charges.
                   </Text>
                   <Button label="Recalculate in Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} fullWidth />
                 </View>

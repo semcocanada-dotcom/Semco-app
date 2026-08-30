@@ -384,11 +384,21 @@ describe('calculator preparation and membrane behavior', () => {
     expect(result.colourTintPlan).toMatchObject({
       preparedLiquidGallons: 5,
       baseLiquidPurchaseGallons: 6,
-      totalChargeCad: 56.88,
+      totalChargeCad: 86.88,
       samplePlan: {
         totalLiquidGallons: 0.25,
-        totalChargeCad: 2.71,
-        samples: [{ colourCode: '2053T', sampleSize: 'quart' }],
+        totalPigmentChargeCad: 2.71,
+        totalPreparationFeeCad: 30,
+        subtotalChargeCad: 32.71,
+        totalDiscountCad: 0,
+        totalChargeCad: 32.71,
+        samples: [{
+          colourCode: '2053T',
+          sampleSize: 'quart',
+          pigmentChargeCad: 2.71,
+          preparationFeeCad: 30,
+          totalChargeCad: 32.71,
+        }],
       },
     });
     expect(liquid).toMatchObject({

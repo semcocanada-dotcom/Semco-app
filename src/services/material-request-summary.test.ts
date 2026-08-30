@@ -1,4 +1,5 @@
 import type { ColourTintPlan } from '@/database/schema/calculations';
+import { COLOUR_SAMPLE_PRICING_POLICY_VERSION } from '@/knowledge/sample-pricing';
 import {
   buildTintRequestSummaryLines,
   canSaveMaterialRequest,
@@ -56,18 +57,53 @@ describe('dealer material request tint summary', () => {
   });
 
   it('includes selected one-quart samples separately from project batches', () => {
-    const lines = buildTintRequestSummaryLines(planWithSampleFixture());
+    const lines = buildTintRequestSummaryLines(currentSamplePlanFixture(false));
     const body = lines.join('\n');
 
     expect(body).toContain('Colour samples — 1-quart sample (946 mL) each:');
-    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $2.71 tint charge");
+    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); Pigment tint $2.71; $30 sample preparation; sample total $32.71");
     expect(body).toContain('Quart sample tint-machine formula:');
     expect(body).toContain('0.25 gal for colour samples');
-    expect(body).toContain('Total tint charge: $24.37');
+    expect(body).toContain('Sample pricing: Pigment tint $2.71; sample preparation $30.00; sample total $32.71.');
+    expect(body).toContain('Total colour charges: $54.37');
+  });
+
+  it('shows the pigment and preparation discount when samples are free at 300 square feet', () => {
+    const body = buildTintRequestSummaryLines(currentSamplePlanFixture(true)).join('\n');
+
+    expect(body).toContain('Pigment tint $2.71; $30 sample preparation; FREE — $32.71 waived');
+    expect(body).toContain('$32.71 waived; FREE at 300 sq ft or more — both charges waived.');
+    expect(body).toContain('Total colour charges: $21.66');
+  });
+
+  it('keeps formula review visible even when a complimentary sample has a final zero charge', () => {
+    const body = buildTintRequestSummaryLines(complimentaryReviewSampleFixture()).join('\n');
+
+    expect(body).toContain('Pigment tint DEALER FORMULA REVIEW REQUIRED; $30 sample preparation; FREE — both charges waived');
+    expect(body).toContain('Review: Published quart formula requires dealer review.');
+    expect(body).toContain('Total colour charges: $21.66');
+  });
+
+  it('blocks legacy pigment-only sample pricing without inventing the new fee', () => {
+    const plan = legacySamplePlanFixture();
+    const result = {
+      layers: [],
+      totalKg: 0,
+      wastePct: 0,
+      areaSqm: 10,
+      colourTintPlan: plan,
+    };
+    const body = buildTintRequestSummaryLines(plan).join('\n');
+
+    expect(requiresWholeGallonTintRecalculation(result)).toBe(true);
+    expect(canSaveMaterialRequest(result, '')).toBe(false);
+    expect(body).toContain('RECALCULATION REQUIRED');
+    expect(body).not.toContain('$2.71');
+    expect(body).not.toContain('$30 sample preparation; sample total');
   });
 });
 
-function planWithSampleFixture(): ColourTintPlan {
+function legacySamplePlanFixture(): ColourTintPlan {
   const plan = planFixture();
   const projectBatch = plan.allocations[0].batches[0];
   const samplePigments = [{
@@ -115,6 +151,70 @@ function planWithSampleFixture(): ColourTintPlan {
       totalTintOunces: 1.35416667,
       totalChargeCad: 2.71,
       isFullyPriced: true,
+    },
+  };
+}
+
+function currentSamplePlanFixture(isComplimentary: boolean): ColourTintPlan {
+  const legacy = legacySamplePlanFixture();
+  const legacySamplePlan = legacy.samplePlan!;
+  const legacySample = legacySamplePlan.samples[0];
+  const sampleTotalCad = isComplimentary ? 0 : 32.71;
+  return {
+    ...legacy,
+    totalChargeCad: 21.66 + sampleTotalCad,
+    samplePlan: {
+      ...legacySamplePlan,
+      pricingPolicyVersion: COLOUR_SAMPLE_PRICING_POLICY_VERSION,
+      totalPigmentChargeCad: 2.71,
+      totalPreparationFeeCad: 30,
+      subtotalChargeCad: 32.71,
+      totalDiscountCad: isComplimentary ? 32.71 : 0,
+      totalChargeCad: sampleTotalCad,
+      isComplimentary,
+      complimentaryThresholdSqft: 300,
+      samples: [{
+        ...legacySample,
+        pigmentChargeCad: 2.71,
+        preparationFeeCad: 30,
+        subtotalChargeCad: 32.71,
+        discountCad: isComplimentary ? 32.71 : 0,
+        totalChargeCad: sampleTotalCad,
+        isComplimentary,
+      }],
+    },
+  };
+}
+
+function complimentaryReviewSampleFixture(): ColourTintPlan {
+  const plan = currentSamplePlanFixture(true);
+  const samplePlan = plan.samplePlan!;
+  const sample = samplePlan.samples[0];
+  return {
+    ...plan,
+    totalTintOunces: plan.allocations[0].totalTintOunces,
+    totalChargeCad: 21.66,
+    isFullyPriced: false,
+    samplePlan: {
+      ...samplePlan,
+      totalTintOunces: undefined,
+      totalPigmentChargeCad: undefined,
+      subtotalChargeCad: undefined,
+      totalDiscountCad: undefined,
+      totalChargeCad: 0,
+      isFullyPriced: false,
+      samples: [{
+        ...sample,
+        batch: undefined,
+        pigments: [],
+        totalTintOunces: undefined,
+        pigmentChargeCad: undefined,
+        subtotalChargeCad: undefined,
+        discountCad: undefined,
+        totalChargeCad: 0,
+        pricingStatus: 'dealer_review',
+        reviewReason: 'Published quart formula requires dealer review.',
+      }],
     },
   };
 }

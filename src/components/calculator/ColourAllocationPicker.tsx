@@ -22,6 +22,7 @@ import type {
   CalculatorColourMode,
   CalculatorColourSelection,
 } from '@/hooks/useCalculator';
+import { isComplimentaryColourSampleProject } from '@/knowledge/sample-pricing';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 interface ColourAllocationPickerProps {
@@ -53,6 +54,7 @@ export function ColourAllocationPicker({
   const [query, setQuery] = useState('');
   const options = useMemo(() => searchTintColours(query), [query]);
   const totalArea = Number.parseFloat(totalAreaSqft);
+  const samplesAreComplimentary = isComplimentaryColourSampleProject(totalArea);
   const allocatedArea = mode === 'multiple'
     ? selections.reduce((total, selection) => {
         const value = Number.parseFloat(selection.areaSqft);
@@ -200,7 +202,9 @@ export function ColourAllocationPicker({
         style={[styles.sampleOption, includeSamples && styles.sampleOptionSelected]}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: includeSamples }}
-        accessibilityLabel="Add one 1-quart sample for each selected colour"
+        accessibilityLabel={samplesAreComplimentary
+          ? 'Add one free 1-quart sample for each selected colour. The 30 dollar sample preparation and pigment tint are waived for this project.'
+          : 'Add one 1-quart sample for each selected colour. Each sample is 30 dollars preparation plus pigment tint, and is free at 300 square feet or more.'}
       >
         <View style={[styles.sampleIcon, includeSamples && styles.sampleIconSelected]}>
           <Ionicons
@@ -214,8 +218,11 @@ export function ColourAllocationPicker({
             <Text style={styles.sampleTitle}>Add colour sample</Text>
             <Text style={styles.optionalLabel}>OPTIONAL</Text>
           </View>
-          <Text style={styles.sampleDescription}>
-            One 1-quart sample (946 mL) for each selected colour, added separately to the estimate and request.
+          <Text style={styles.sampleDescription}>One 1-quart sample (946 mL) per selected colour.</Text>
+          <Text style={samplesAreComplimentary ? styles.sampleFreeQualified : styles.sampleFreePolicy}>
+            {samplesAreComplimentary
+              ? 'FREE — $30 sample preparation + Pigment tint waived'
+              : '$30 sample preparation + Pigment tint · Free at 300+ sq ft'}
           </Text>
           {includeSamples && sampleReviewCount > 0 ? (
             <Text style={styles.sampleWarning}>
@@ -415,6 +422,8 @@ const styles = StyleSheet.create({
   sampleTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.sm },
   optionalLabel: { color: Colors.semcoOrange, fontFamily: Fonts.bold, fontSize: 9, letterSpacing: 0.4 },
   sampleDescription: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.35 },
+  sampleFreePolicy: { color: Colors.darkTeal, fontFamily: Fonts.medium, fontSize: Typography.size.xs },
+  sampleFreeQualified: { color: Colors.success, fontFamily: Fonts.bold, fontSize: Typography.size.xs },
   sampleWarning: { color: Colors.semcoOrange, fontFamily: Fonts.semibold, fontSize: Typography.size.xs },
   modalSafe: { flex: 1, backgroundColor: Colors.appBackground },
   modalContent: { flex: 1, width: '100%', maxWidth: Layout.screenMaxWidth, alignSelf: 'center', padding: Spacing.base, gap: Spacing.sm },

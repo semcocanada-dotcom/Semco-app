@@ -5,6 +5,7 @@ import {
   ensureXBondLiquidPurchaseCoversTintPlan,
   getTintableXBondLiquidGallons,
   hasLegacyQuartTintBatch,
+  hasLegacySamplePricing,
 } from '@/services/tint-planning';
 
 describe('tint batch sizing', () => {
@@ -37,6 +38,32 @@ describe('tint batch sizing', () => {
 });
 
 describe('colour tint allocation', () => {
+  it('detects stored pigment-only sample pricing but not current or sample-free plans', () => {
+    const currentPlan = buildColourTintPlan(
+      fixtureResult(75, [liquidLayer(2, 2)]),
+      [{ colourId: 'col-xbond-2053t', areaSqft: 75 }],
+      { includeSamples: true },
+    );
+
+    expect(currentPlan.ok).toBe(true);
+    if (!currentPlan.ok) return;
+    expect(currentPlan.plan.samplePlan?.pricingPolicyVersion).toBe('2026-08-30-v1');
+    expect(hasLegacySamplePricing(currentPlan.plan)).toBe(false);
+    expect(hasLegacySamplePricing({ samplePlan: undefined })).toBe(false);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
+        pricingPolicyVersion: undefined,
+      },
+    })).toBe(true);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
+        pricingPolicyVersion: 'older-policy',
+      },
+    })).toBe(true);
+  });
+
   it('prepares one five-gallon Aaron’s Rod batch for a one-colour job', () => {
     const result = fixtureResult(187.5, [liquidLayer(5, 5)]);
     const planned = buildColourTintPlan(result, [{ colourId: 'col-xbond-2053t', areaSqft: 187.5 }]);
@@ -148,18 +175,85 @@ describe('colour tint allocation', () => {
       sampleSize: 'quart',
       sampleLabel: '1-quart sample (946 mL)',
       totalLiquidGallons: 0.25,
-      totalChargeCad: 2.71,
+      totalPigmentChargeCad: 2.71,
+      totalPreparationFeeCad: 30,
+      subtotalChargeCad: 32.71,
+      totalDiscountCad: 0,
+      totalChargeCad: 32.71,
+      isComplimentary: false,
+      complimentaryThresholdSqft: 300,
       isFullyPriced: true,
       samples: [{
         colourCode: '2053T',
         sampleSize: 'quart',
         liquidGallons: 0.25,
-        totalChargeCad: 2.71,
+        pigmentChargeCad: 2.71,
+        preparationFeeCad: 30,
+        subtotalChargeCad: 32.71,
+        discountCad: 0,
+        totalChargeCad: 32.71,
+        isComplimentary: false,
         batch: { batchSize: 'quart', batchLabel: '1 quart sample', quantity: 1 },
       }],
     });
-    expect(planned.plan.totalChargeCad).toBe(24.37);
+    expect(planned.plan.totalChargeCad).toBe(54.37);
     expect(hasLegacyQuartTintBatch(planned.plan)).toBe(false);
+  });
+
+  it('charges samples at 299.99 sq ft and waives both fees at exactly 300 sq ft', () => {
+    const belowThreshold = buildColourTintPlan(
+      fixtureResult(299.99, [liquidLayer(1, 1)]),
+      [{ colourId: 'col-xbond-2053t', areaSqft: 299.99 }],
+      { includeSamples: true },
+    );
+    const atThreshold = buildColourTintPlan(
+      fixtureResult(300, [liquidLayer(1, 1)]),
+      [{ colourId: 'col-xbond-2053t', areaSqft: 300 }],
+      { includeSamples: true },
+    );
+
+    expect(belowThreshold.ok).toBe(true);
+    expect(atThreshold.ok).toBe(true);
+    if (!belowThreshold.ok || !atThreshold.ok) return;
+
+    expect(belowThreshold.plan.samplePlan).toMatchObject({
+      totalPigmentChargeCad: 2.71,
+      totalPreparationFeeCad: 30,
+      subtotalChargeCad: 32.71,
+      totalDiscountCad: 0,
+      totalChargeCad: 32.71,
+      isComplimentary: false,
+      samples: [{
+        pigmentChargeCad: 2.71,
+        preparationFeeCad: 30,
+        subtotalChargeCad: 32.71,
+        discountCad: 0,
+        totalChargeCad: 32.71,
+        isComplimentary: false,
+      }],
+    });
+    expect(atThreshold.plan.samplePlan).toMatchObject({
+      totalPigmentChargeCad: 2.71,
+      totalPreparationFeeCad: 30,
+      subtotalChargeCad: 32.71,
+      totalDiscountCad: 32.71,
+      totalChargeCad: 0,
+      isComplimentary: true,
+      samples: [{
+        pigmentChargeCad: 2.71,
+        preparationFeeCad: 30,
+        subtotalChargeCad: 32.71,
+        discountCad: 32.71,
+        totalChargeCad: 0,
+        isComplimentary: true,
+      }],
+    });
+    expect(belowThreshold.plan.allocations[0].totalChargeCad).toBe(10.83);
+    expect(atThreshold.plan.allocations[0].totalChargeCad).toBe(10.83);
+    expect(belowThreshold.plan.totalChargeCad).toBe(43.54);
+    expect(atThreshold.plan.totalChargeCad).toBe(10.83);
+    expect(atThreshold.plan.samplePlan?.totalLiquidGallons).toBe(0.25);
+    expect(atThreshold.plan.baseLiquidPurchaseGallons).toBe(2);
   });
 
   it('requires dealer review when a published quart sample formula is unavailable', () => {
@@ -176,11 +270,53 @@ describe('colour tint allocation', () => {
     expect(planned.plan.samplePlan?.samples[0]).toMatchObject({
       sampleSize: 'quart',
       pricingStatus: 'dealer_review',
+      preparationFeeCad: 30,
+      discountCad: 0,
+      totalChargeCad: undefined,
+      isComplimentary: false,
     });
     expect(planned.plan.samplePlan?.samples[0].batch).toBeUndefined();
     expect(planned.plan.samplePlan?.samples[0].reviewReason).toContain('published 1-quart sample formula');
+    expect(planned.plan.samplePlan).toMatchObject({
+      totalPigmentChargeCad: undefined,
+      totalPreparationFeeCad: 30,
+      subtotalChargeCad: undefined,
+      totalDiscountCad: 0,
+      totalChargeCad: undefined,
+      isComplimentary: false,
+    });
     expect(planned.plan.isFullyPriced).toBe(false);
     expect(planned.plan.totalChargeCad).toBeUndefined();
+  });
+
+  it('keeps a complimentary dealer-review sample flagged while making its final charge zero', () => {
+    const planned = buildColourTintPlan(
+      fixtureResult(300, [liquidLayer(1, 2)]),
+      [{ colourId: 'col-xbond-2162p', areaSqft: 300 }],
+      { includeSamples: true },
+    );
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.samplePlan?.samples[0]).toMatchObject({
+      pricingStatus: 'dealer_review',
+      preparationFeeCad: 30,
+      discountCad: undefined,
+      totalChargeCad: 0,
+      isComplimentary: true,
+    });
+    expect(planned.plan.samplePlan).toMatchObject({
+      totalPigmentChargeCad: undefined,
+      totalPreparationFeeCad: 30,
+      subtotalChargeCad: undefined,
+      totalDiscountCad: undefined,
+      totalChargeCad: 0,
+      isComplimentary: true,
+      isFullyPriced: false,
+    });
+    expect(planned.plan.isFullyPriced).toBe(false);
+    expect(planned.plan.allocations[0].totalChargeCad).toBe(15.19);
+    expect(planned.plan.totalChargeCad).toBe(15.19);
   });
 
   it('creates one separate quart sample for every selected project colour', () => {
@@ -198,12 +334,33 @@ describe('colour tint allocation', () => {
     if (!planned.ok) return;
     expect(planned.plan.samplePlan).toMatchObject({
       totalLiquidGallons: 0.5,
-      totalChargeCad: 4.13,
-      samples: [{ colourCode: '2053T' }, { colourCode: '2383D' }],
+      totalPigmentChargeCad: 4.13,
+      totalPreparationFeeCad: 60,
+      subtotalChargeCad: 64.13,
+      totalDiscountCad: 0,
+      totalChargeCad: 64.13,
+      samples: [
+        { colourCode: '2053T', preparationFeeCad: 30, totalChargeCad: 32.71 },
+        { colourCode: '2383D', preparationFeeCad: 30, totalChargeCad: 31.42 },
+      ],
     });
     expect(planned.plan.preparedLiquidGallons).toBe(5);
     expect(planned.plan.baseLiquidPurchaseGallons).toBe(6);
-    expect(planned.plan.totalChargeCad).toBe(44.3);
+    expect(planned.plan.totalChargeCad).toBe(104.3);
+  });
+
+  it('does not add sample liquid or charges when samples are not requested', () => {
+    const planned = buildColourTintPlan(
+      fixtureResult(75, [liquidLayer(2, 2)]),
+      [{ colourId: 'col-xbond-2053t', areaSqft: 75 }],
+    );
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.samplePlan).toBeUndefined();
+    expect(planned.plan.baseLiquidPurchaseGallons).toBe(2);
+    expect(planned.plan.allocations[0].totalChargeCad).toBe(21.66);
+    expect(planned.plan.totalChargeCad).toBe(21.66);
   });
 
   it('uses the direct five-gallon formula when a project amount rounds to five gallons', () => {

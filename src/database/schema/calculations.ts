@@ -82,7 +82,17 @@ export interface ColourTintSampleLine {
   batch?: TintBatchPlanLine;
   pigments: TintPigmentPlanLine[];
   totalTintOunces?: number;
+  /** Pigment-only charge at the configured per-ounce tint rate. */
+  pigmentChargeCad?: number;
+  /** Dealer preparation fee before any complimentary-project discount. */
+  preparationFeeCad?: number;
+  /** Pigment plus preparation before any discount. */
+  subtotalChargeCad?: number;
+  /** Amount waived under the complimentary sample policy. */
+  discountCad?: number;
+  /** Final sample charge. Retains the legacy total field for stored snapshots. */
   totalChargeCad?: number;
+  isComplimentary?: boolean;
   pricingStatus: 'priced' | 'dealer_review';
   reviewReason?: string;
 }
@@ -91,9 +101,18 @@ export interface ColourTintSamplePlan {
   samples: ColourTintSampleLine[];
   sampleSize: 'quart';
   sampleLabel: string;
+  /** Snapshot of the pricing rules used so older pigment-only plans can be recalculated. */
+  pricingPolicyVersion?: string;
   totalLiquidGallons: number;
   totalTintOunces?: number;
+  totalPigmentChargeCad?: number;
+  totalPreparationFeeCad?: number;
+  subtotalChargeCad?: number;
+  totalDiscountCad?: number;
+  /** Final aggregate sample charge. Retains the legacy total field for stored snapshots. */
   totalChargeCad?: number;
+  isComplimentary?: boolean;
+  complimentaryThresholdSqft?: number;
   isFullyPriced: boolean;
 }
 

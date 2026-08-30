@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/ui/Card';
-import type { CalculationResult } from '@/database/schema/calculations';
+import type { CalculationResult, ColourTintSampleLine } from '@/database/schema/calculations';
 import {
   getMaterialPriceTotal,
   priceMaterialLayers,
@@ -9,7 +9,7 @@ import {
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { UNASSIGNED_DEALER_CONTEXT, type DealerContext } from '@/constants/dealers';
 import { formatBatchPlan } from '@/components/calculator/ColourTintPlanCard';
-import { hasLegacyQuartTintBatch } from '@/services/tint-planning';
+import { hasLegacyQuartTintBatch, hasLegacySamplePricing } from '@/services/tint-planning';
 
 type MaterialRetailEstimateCardProps = {
   result: CalculationResult;
@@ -21,10 +21,15 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
   const pricedLines = lines.filter((line) => line.quantity > 0);
   const missingPriceLines = pricedLines.filter((line) => !line.price);
   const tintPlan = result.colourTintPlan;
-  const needsTintRecalculation = hasLegacyQuartTintBatch(tintPlan);
+  const needsBatchRecalculation = hasLegacyQuartTintBatch(tintPlan);
+  const needsSamplePricingRecalculation = hasLegacySamplePricing(tintPlan);
+  const needsTintRecalculation = needsBatchRecalculation || needsSamplePricingRecalculation;
   const totalCad = getMaterialPriceTotal(lines) + (needsTintRecalculation ? 0 : tintPlan?.totalChargeCad ?? 0);
   const showPrices = dealerContext.pricingAvailable;
-  const hasPendingTint = Boolean(tintPlan && (!tintPlan.isFullyPriced || needsTintRecalculation));
+  const hasPendingTintPrice = Boolean(tintPlan && (tintPlan.totalChargeCad == null || needsTintRecalculation));
+  const hasTintReview = Boolean(tintPlan && (!tintPlan.isFullyPriced || needsTintRecalculation));
+  const hasProjectFormulaReview = Boolean(tintPlan?.allocations.some((allocation) => allocation.pricingStatus === 'dealer_review'));
+  const hasSampleFormulaReview = Boolean(tintPlan?.samplePlan?.samples.some((sample) => sample.pricingStatus === 'dealer_review'));
 
   return (
     <Card style={styles.card}>
@@ -34,7 +39,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           <Text style={styles.source}>{dealerContext.pricingSourceLabel}</Text>
         </View>
         <Text style={styles.total}>
-          {showPrices && missingPriceLines.length === 0 && !hasPendingTint ? formatCad(totalCad) : 'Pending'}
+          {showPrices && missingPriceLines.length === 0 && !hasPendingTintPrice ? formatCad(totalCad) : 'Pending'}
         </Text>
       </View>
 
@@ -59,14 +64,14 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
       {tintPlan?.allocations.map((allocation) => (
         <View key={`tint-${allocation.colourId}`} style={styles.line}>
           <View style={styles.lineCopy}>
-            <Text style={styles.lineName}>{allocation.colourName} tint preparation</Text>
+            <Text style={styles.lineName}>{allocation.colourName} pigment tint</Text>
             <Text style={styles.lineMeta}>
               {allocation.colourCode}{allocation.formulaCode !== allocation.colourCode ? ` · formula ${allocation.formulaCode}` : ''}
             </Text>
             <Text style={styles.lineCoverage}>{formatBatchPlan(allocation.batches)}</Text>
           </View>
           <Text style={styles.lineValue}>
-            {needsTintRecalculation
+            {needsBatchRecalculation
               ? 'Recalculate'
               : allocation.totalChargeCad != null ? formatCad(allocation.totalChargeCad) : 'Dealer formula review'}
           </Text>
@@ -78,10 +83,21 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           <View style={styles.lineCopy}>
             <Text style={styles.lineName}>{sample.colourName} colour sample</Text>
             <Text style={styles.lineMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
-            <Text style={styles.lineCoverage}>Separate from the project tint batches</Text>
+            <Text style={sample.isComplimentary ? styles.freeLineMeta : styles.lineCoverage}>
+              {needsSamplePricingRecalculation
+                ? 'Saved pigment-only price — recalculate before ordering'
+                : formatSamplePriceBreakdown(sample)}
+            </Text>
+            {!needsSamplePricingRecalculation && sample.pricingStatus === 'dealer_review' ? (
+              <Text style={styles.reviewLineMeta}>Tint formula requires dealer review before mixing.</Text>
+            ) : null}
           </View>
-          <Text style={styles.lineValue}>
-            {sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer formula review'}
+          <Text style={sample.isComplimentary && !needsSamplePricingRecalculation ? styles.freeLineValue : styles.lineValue}>
+            {needsSamplePricingRecalculation
+              ? 'Recalculate'
+              : sample.isComplimentary
+              ? 'FREE'
+              : sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer formula review'}
           </Text>
         </View>
       ))}
@@ -95,11 +111,17 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           {missingPriceLines.length} item{missingPriceLines.length === 1 ? '' : 's'} need retail pricing before final review.
         </Text>
       ) : null}
-      {hasPendingTint ? (
+      {hasTintReview ? (
         <Text style={styles.warning}>
-          {needsTintRecalculation
+          {needsBatchRecalculation
             ? 'Recalculate this saved tint plan before ordering so it uses only 1- and 5-gallon project batches.'
-            : 'One or more colour formulas need dealer review before the tint charge can be finalized.'}
+            : needsSamplePricingRecalculation
+            ? 'Recalculate this saved sample plan to apply the $30 sample preparation and free-at-300-sq-ft policy.'
+            : hasProjectFormulaReview && hasSampleFormulaReview
+            ? 'Project and sample colour formulas need dealer review before pricing and mixing can be finalized.'
+            : hasSampleFormulaReview
+            ? 'One or more sample formulas need dealer review before the sample can be mixed.'
+            : 'One or more project colour formulas need dealer review before the tint charge can be finalized.'}
         </Text>
       ) : null}
     </Card>
@@ -108,6 +130,18 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
 
 function formatCad(value: number): string {
   return `$${value.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatCadCompact(value: number): string {
+  return Number.isInteger(value) ? `$${value.toLocaleString('en-CA')}` : formatCad(value);
+}
+
+function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
+  const pigment = sample.pigmentChargeCad != null ? formatCad(sample.pigmentChargeCad) : 'review required';
+  const preparation = sample.preparationFeeCad != null
+    ? `${formatCadCompact(sample.preparationFeeCad)} sample preparation`
+    : 'Sample preparation review required';
+  return `Pigment tint ${pigment} · ${preparation}${sample.isComplimentary ? ' · waived' : ''}`;
 }
 
 const styles = StyleSheet.create({
@@ -163,12 +197,31 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xs,
     lineHeight: Typography.size.xs * 1.3,
   },
+  freeLineMeta: {
+    color: Colors.success,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.3,
+  },
+  reviewLineMeta: {
+    color: Colors.semcoOrange,
+    fontFamily: Fonts.semibold,
+    fontSize: Typography.size.xs,
+    lineHeight: Typography.size.xs * 1.3,
+  },
   lineValue: {
     minWidth: 92,
     color: Colors.navy,
     fontFamily: Fonts.bold,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.bold,
+    textAlign: 'right',
+  },
+  freeLineValue: {
+    minWidth: 92,
+    color: Colors.success,
+    fontFamily: Fonts.bold,
+    fontSize: Typography.size.sm,
     textAlign: 'right',
   },
   warning: {
