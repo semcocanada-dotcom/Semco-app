@@ -41,7 +41,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
           <Text style={styles.recalculationWarningText}>
             {needsBatchRecalculation
               ? 'This saved plan used a quart job batch. Recalculate before ordering so it uses 1- and 5-gallon project batches.'
-              : 'This saved sample used an older policy. Recalculate to apply the $30 prepared-quart fee without adding extra X-Bond Liquid.'}
+              : 'This saved sample used an older policy. Recalculate for the $40 flat rate with X-Bond and pigment included.'}
           </Text>
         </View>
       ) : null}
@@ -83,10 +83,10 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
                 {plan.samplePlan.samples.length} × {plan.samplePlan.sampleLabel}
               </Text>
             </View>
-            <Text style={plan.samplePlan.isComplimentary && !needsSamplePricingRecalculation ? styles.sampleFree : styles.sampleTotal}>
+            <Text style={plan.samplePlan.isSampleComplimentary && !needsSamplePricingRecalculation ? styles.sampleFree : styles.sampleTotal}>
               {needsSamplePricingRecalculation
                 ? 'Recalculate'
-                : plan.samplePlan.isComplimentary
+                : plan.samplePlan.isSampleComplimentary
                 ? 'FREE'
                 : plan.samplePlan.totalChargeCad != null ? formatCad(plan.samplePlan.totalChargeCad) : 'Review'}
             </Text>
@@ -101,7 +101,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
                     <Text style={styles.sampleColourName}>{sample.colourName}</Text>
                     <Text style={styles.colourMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
                     {usesCurrentPricing ? (
-                      <Text style={sample.isComplimentary ? styles.sampleWaivedMeta : styles.samplePricingMeta}>
+                      <Text style={sample.isSampleComplimentary ? styles.sampleWaivedMeta : styles.samplePricingMeta}>
                         {formatSamplePriceBreakdown(sample)}
                       </Text>
                     ) : null}
@@ -110,10 +110,10 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
                     ) : null}
                   </View>
                 </View>
-                <Text style={sample.isComplimentary && !needsSamplePricingRecalculation ? styles.sampleFree : sample.pricingStatus === 'priced' ? styles.sampleLinePrice : styles.review}>
+                <Text style={sample.isSampleComplimentary && !needsSamplePricingRecalculation ? styles.sampleFree : sample.totalChargeCad != null ? styles.sampleLinePrice : styles.review}>
                   {needsSamplePricingRecalculation
                     ? 'Recalculate'
-                    : sample.isComplimentary
+                    : sample.isSampleComplimentary
                     ? 'FREE'
                     : sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer review'}
                 </Text>
@@ -143,7 +143,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
       {showDetails && !needsRecalculation ? (
         <View style={styles.detailsPanel}>
           <Text style={styles.batchPolicy}>
-            Project orders use 1-gallon and 5-gallon tint batches. Sample quarts are drawn from the X-Bond Liquid ordered for the job and do not add extra liquid.
+            Project orders use 1-gallon and 5-gallon tint batches. The $40 sample flat rate includes a prepared X-Bond quart and pigment from dealer sample stock, so no extra project pail is added.
           </Text>
           {plan.allocations.map((allocation) => (
             <View key={`details-${allocation.colourId}`} style={styles.detailAllocation}>
@@ -211,9 +211,9 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
             {needsSamplePricingRecalculation
               ? 'Saved sample pricing needs an update'
               : usesCurrentSamplePricing
-              ? plan.samplePlan?.isComplimentary
-                ? `Prepared samples + pigment free at ${formatComplimentaryThreshold(plan.samplePlan)}`
-                : 'Prepared samples + pigment tint'
+              ? plan.samplePlan?.isSampleComplimentary
+                ? `Samples free at ${formatSampleThreshold(plan.samplePlan)}`
+                : 'Samples · $40 flat rate each'
               : `${plan.samplePlan ? 'Project and sample tint' : 'SEMCO machine ounces'} at ${formatCad(plan.ratePerTintOunceCad)}/oz`}
           </Text>
         </View>
@@ -223,7 +223,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
       </View>
       <Text style={styles.disclaimer}>
         {usesCurrentSamplePricing
-          ? 'Sample quarts come from the job\'s ordered X-Bond Liquid; no extra liquid is added for samples. Labour, freight, tax, and other material charges are separate.'
+          ? 'The $40 flat rate includes a prepared X-Bond quart and pigment from dealer sample stock. No extra project pail is added. Production pigment charging is unchanged.'
           : 'Tint charge only. X-Bond Liquid, labour, freight, tax, and other material charges are separate.'}
       </Text>
     </Card>
@@ -231,24 +231,22 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
 }
 
 function hasCurrentSampleLinePricing(sample: ColourTintSampleLine): boolean {
-  return sample.pigmentChargeCad != null
-    || sample.preparationFeeCad != null
+  return sample.flatRateCad != null
     || sample.subtotalChargeCad != null
     || sample.discountCad != null
-    || sample.isComplimentary != null;
+    || sample.isSampleComplimentary != null;
 }
 
 function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
-  const pigment = sample.pigmentChargeCad != null ? formatCad(sample.pigmentChargeCad) : 'review required';
-  const preparation = sample.preparationFeeCad != null
-    ? `${formatCadCompact(sample.preparationFeeCad)} prepared quart`
-    : 'Prepared-quart fee review required';
-  return `${preparation} from job liquid · Pigment ${pigment}${sample.isComplimentary ? ' · waived' : ''}`;
+  const flatRate = sample.flatRateCad != null
+    ? formatCadCompact(sample.flatRateCad)
+    : 'Flat-rate review required';
+  return `${flatRate} flat rate · X-Bond + pigment included${sample.isSampleComplimentary ? ' · waived' : ''}`;
 }
 
-function formatComplimentaryThreshold(plan: ColourTintSamplePlan): string {
-  return plan.complimentaryThresholdSqft != null
-    ? `${formatArea(plan.complimentaryThresholdSqft)}+ sq ft`
+function formatSampleThreshold(plan: ColourTintSamplePlan): string {
+  return plan.sampleComplimentaryThresholdSqft != null
+    ? `${formatArea(plan.sampleComplimentaryThresholdSqft)}+ sq ft`
     : 'qualifying project size';
 }
 

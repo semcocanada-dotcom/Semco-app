@@ -48,8 +48,8 @@ describe('colour tint allocation', () => {
     expect(currentPlan.ok).toBe(true);
     if (!currentPlan.ok) return;
     expect(currentPlan.plan.samplePlan).toMatchObject({
-      pricingPolicyVersion: '2026-08-30-v2',
-      liquidSource: 'ordered_project_material',
+      pricingPolicyVersion: '2026-08-30-v3',
+      liquidSource: 'dealer_sample_stock',
     });
     expect(hasLegacySamplePricing(currentPlan.plan)).toBe(false);
     expect(hasLegacySamplePricing({ samplePlan: undefined })).toBe(false);
@@ -68,13 +68,35 @@ describe('colour tint allocation', () => {
     expect(hasLegacySamplePricing({
       samplePlan: {
         ...currentPlan.plan.samplePlan!,
+        pricingPolicyVersion: '2026-08-30-v2',
+        liquidSource: 'ordered_project_material',
+      },
+    })).toBe(true);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
         liquidSource: undefined,
       },
     })).toBe(true);
     expect(hasLegacySamplePricing({
       samplePlan: {
         ...currentPlan.plan.samplePlan!,
-        liquidSource: 'extra_sample_material' as never,
+        liquidSource: 'ordered_project_material',
+      },
+    })).toBe(true);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
+        totalFlatRateCad: undefined,
+      },
+    })).toBe(true);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
+        samples: currentPlan.plan.samplePlan!.samples.map((sample) => ({
+          ...sample,
+          flatRateCad: undefined,
+        })),
       },
     })).toBe(true);
   });
@@ -189,42 +211,46 @@ describe('colour tint allocation', () => {
     expect(planned.plan.samplePlan).toMatchObject({
       sampleSize: 'quart',
       sampleLabel: '1-quart sample (946 mL)',
-      liquidSource: 'ordered_project_material',
+      pricingPolicyVersion: '2026-08-30-v3',
+      liquidSource: 'dealer_sample_stock',
       totalLiquidGallons: 0.25,
-      totalPigmentChargeCad: 2.71,
-      totalPreparationFeeCad: 30,
-      subtotalChargeCad: 32.71,
+      totalFlatRateCad: 40,
+      subtotalChargeCad: 40,
       totalDiscountCad: 0,
-      totalChargeCad: 32.71,
-      isComplimentary: false,
-      complimentaryThresholdSqft: 300,
+      totalChargeCad: 40,
+      isSampleComplimentary: false,
+      sampleComplimentaryThresholdSqft: 500,
       isFullyPriced: true,
       samples: [{
         colourCode: '2053T',
         sampleSize: 'quart',
         liquidGallons: 0.25,
-        pigmentChargeCad: 2.71,
-        preparationFeeCad: 30,
-        subtotalChargeCad: 32.71,
+        flatRateCad: 40,
+        subtotalChargeCad: 40,
         discountCad: 0,
-        totalChargeCad: 32.71,
-        isComplimentary: false,
+        totalChargeCad: 40,
+        isSampleComplimentary: false,
         batch: { batchSize: 'quart', batchLabel: '1 quart sample', quantity: 1 },
       }],
     });
-    expect(planned.plan.totalChargeCad).toBe(54.37);
+    expect(planned.plan.samplePlan?.totalPigmentChargeCad).toBeUndefined();
+    expect(planned.plan.samplePlan?.totalPreparationFeeCad).toBeUndefined();
+    expect(planned.plan.samplePlan?.samples[0].pigmentChargeCad).toBeUndefined();
+    expect(planned.plan.samplePlan?.samples[0].preparationFeeCad).toBeUndefined();
+    expect(planned.plan.samplePlan?.samples[0].batch?.lineTotalCad).toBeUndefined();
+    expect(planned.plan.totalChargeCad).toBe(61.66);
     expect(hasLegacyQuartTintBatch(planned.plan)).toBe(false);
   });
 
-  it('charges samples at 299.99 sq ft and waives both fees at exactly 300 sq ft', () => {
+  it('charges the $40 flat rate below 500 sq ft and waives it at exactly 500 sq ft', () => {
     const belowThreshold = buildColourTintPlan(
-      fixtureResult(299.99, [liquidLayer(1, 1)]),
-      [{ colourId: 'col-xbond-2053t', areaSqft: 299.99 }],
+      fixtureResult(499.99, [liquidLayer(1, 1)]),
+      [{ colourId: 'col-xbond-2053t', areaSqft: 499.99 }],
       { includeSamples: true },
     );
     const atThreshold = buildColourTintPlan(
-      fixtureResult(300, [liquidLayer(1, 1)]),
-      [{ colourId: 'col-xbond-2053t', areaSqft: 300 }],
+      fixtureResult(500, [liquidLayer(1, 1)]),
+      [{ colourId: 'col-xbond-2053t', areaSqft: 500 }],
       { includeSamples: true },
     );
 
@@ -233,43 +259,39 @@ describe('colour tint allocation', () => {
     if (!belowThreshold.ok || !atThreshold.ok) return;
 
     expect(belowThreshold.plan.samplePlan).toMatchObject({
-      totalPigmentChargeCad: 2.71,
-      totalPreparationFeeCad: 30,
-      subtotalChargeCad: 32.71,
+      totalFlatRateCad: 40,
+      subtotalChargeCad: 40,
       totalDiscountCad: 0,
-      totalChargeCad: 32.71,
-      isComplimentary: false,
+      totalChargeCad: 40,
+      isSampleComplimentary: false,
       samples: [{
-        pigmentChargeCad: 2.71,
-        preparationFeeCad: 30,
-        subtotalChargeCad: 32.71,
+        flatRateCad: 40,
+        subtotalChargeCad: 40,
         discountCad: 0,
-        totalChargeCad: 32.71,
-        isComplimentary: false,
+        totalChargeCad: 40,
+        isSampleComplimentary: false,
       }],
     });
     expect(atThreshold.plan.samplePlan).toMatchObject({
-      totalPigmentChargeCad: 2.71,
-      totalPreparationFeeCad: 30,
-      subtotalChargeCad: 32.71,
-      totalDiscountCad: 32.71,
+      totalFlatRateCad: 40,
+      subtotalChargeCad: 40,
+      totalDiscountCad: 40,
       totalChargeCad: 0,
-      isComplimentary: true,
+      isSampleComplimentary: true,
       samples: [{
-        pigmentChargeCad: 2.71,
-        preparationFeeCad: 30,
-        subtotalChargeCad: 32.71,
-        discountCad: 32.71,
+        flatRateCad: 40,
+        subtotalChargeCad: 40,
+        discountCad: 40,
         totalChargeCad: 0,
-        isComplimentary: true,
+        isSampleComplimentary: true,
       }],
     });
     expect(belowThreshold.plan.allocations[0].totalChargeCad).toBe(10.83);
     expect(atThreshold.plan.allocations[0].totalChargeCad).toBe(10.83);
-    expect(belowThreshold.plan.totalChargeCad).toBe(43.54);
+    expect(belowThreshold.plan.totalChargeCad).toBe(50.83);
     expect(atThreshold.plan.totalChargeCad).toBe(10.83);
     expect(atThreshold.plan.samplePlan?.totalLiquidGallons).toBe(0.25);
-    expect(atThreshold.plan.samplePlan?.liquidSource).toBe('ordered_project_material');
+    expect(atThreshold.plan.samplePlan?.liquidSource).toBe('dealer_sample_stock');
     expect(atThreshold.plan.baseLiquidPurchaseGallons).toBe(1);
   });
 
@@ -287,29 +309,30 @@ describe('colour tint allocation', () => {
     expect(planned.plan.samplePlan?.samples[0]).toMatchObject({
       sampleSize: 'quart',
       pricingStatus: 'dealer_review',
-      preparationFeeCad: 30,
+      flatRateCad: 40,
+      subtotalChargeCad: 40,
       discountCad: 0,
-      totalChargeCad: undefined,
-      isComplimentary: false,
+      totalChargeCad: 40,
+      isSampleComplimentary: false,
     });
     expect(planned.plan.samplePlan?.samples[0].batch).toBeUndefined();
     expect(planned.plan.samplePlan?.samples[0].reviewReason).toContain('published 1-quart sample formula');
     expect(planned.plan.samplePlan).toMatchObject({
-      totalPigmentChargeCad: undefined,
-      totalPreparationFeeCad: 30,
-      subtotalChargeCad: undefined,
+      totalFlatRateCad: 40,
+      subtotalChargeCad: 40,
       totalDiscountCad: 0,
-      totalChargeCad: undefined,
-      isComplimentary: false,
+      totalChargeCad: 40,
+      isSampleComplimentary: false,
     });
     expect(planned.plan.isFullyPriced).toBe(false);
-    expect(planned.plan.totalChargeCad).toBeUndefined();
+    expect(planned.plan.allocations[0].totalChargeCad).toBe(15.19);
+    expect(planned.plan.totalChargeCad).toBe(55.19);
   });
 
-  it('keeps a complimentary dealer-review sample flagged while making its final charge zero', () => {
+  it('waives an unknown-formula sample at 500 sq ft while retaining dealer review', () => {
     const planned = buildColourTintPlan(
-      fixtureResult(300, [liquidLayer(1, 2)]),
-      [{ colourId: 'col-xbond-2162p', areaSqft: 300 }],
+      fixtureResult(500, [liquidLayer(1, 2)]),
+      [{ colourId: 'col-xbond-2162p', areaSqft: 500 }],
       { includeSamples: true },
     );
 
@@ -317,18 +340,18 @@ describe('colour tint allocation', () => {
     if (!planned.ok) return;
     expect(planned.plan.samplePlan?.samples[0]).toMatchObject({
       pricingStatus: 'dealer_review',
-      preparationFeeCad: 30,
-      discountCad: undefined,
+      flatRateCad: 40,
+      subtotalChargeCad: 40,
+      discountCad: 40,
       totalChargeCad: 0,
-      isComplimentary: true,
+      isSampleComplimentary: true,
     });
     expect(planned.plan.samplePlan).toMatchObject({
-      totalPigmentChargeCad: undefined,
-      totalPreparationFeeCad: 30,
-      subtotalChargeCad: undefined,
-      totalDiscountCad: undefined,
+      totalFlatRateCad: 40,
+      subtotalChargeCad: 40,
+      totalDiscountCad: 40,
       totalChargeCad: 0,
-      isComplimentary: true,
+      isSampleComplimentary: true,
       isFullyPriced: false,
     });
     expect(planned.plan.isFullyPriced).toBe(false);
@@ -350,21 +373,57 @@ describe('colour tint allocation', () => {
     expect(planned.ok).toBe(true);
     if (!planned.ok) return;
     expect(planned.plan.samplePlan).toMatchObject({
-      liquidSource: 'ordered_project_material',
+      liquidSource: 'dealer_sample_stock',
       totalLiquidGallons: 0.5,
-      totalPigmentChargeCad: 4.13,
-      totalPreparationFeeCad: 60,
-      subtotalChargeCad: 64.13,
+      totalFlatRateCad: 80,
+      subtotalChargeCad: 80,
       totalDiscountCad: 0,
-      totalChargeCad: 64.13,
+      totalChargeCad: 80,
       samples: [
-        { colourCode: '2053T', preparationFeeCad: 30, totalChargeCad: 32.71 },
-        { colourCode: '2383D', preparationFeeCad: 30, totalChargeCad: 31.42 },
+        { colourCode: '2053T', flatRateCad: 40, totalChargeCad: 40 },
+        { colourCode: '2383D', flatRateCad: 40, totalChargeCad: 40 },
       ],
     });
     expect(planned.plan.preparedLiquidGallons).toBe(5);
     expect(planned.plan.baseLiquidPurchaseGallons).toBe(5);
-    expect(planned.plan.totalChargeCad).toBe(104.3);
+    expect(planned.plan.totalChargeCad).toBe(120.17);
+  });
+
+  it('waives every selected $40 sample at 500 sq ft', () => {
+    const planned = buildColourTintPlan(
+      fixtureResult(500, [liquidLayer(5, 5)]),
+      [
+        { colourId: 'col-xbond-2053t', areaSqft: 200 },
+        { colourId: 'col-xbond-2383d', areaSqft: 300 },
+      ],
+      { includeSamples: true },
+    );
+
+    expect(planned.ok).toBe(true);
+    if (!planned.ok) return;
+    expect(planned.plan.samplePlan).toMatchObject({
+      isSampleComplimentary: true,
+      totalFlatRateCad: 80,
+      subtotalChargeCad: 80,
+      totalDiscountCad: 80,
+      totalChargeCad: 0,
+      samples: [
+        {
+          colourCode: '2053T',
+          flatRateCad: 40,
+          discountCad: 40,
+          totalChargeCad: 0,
+        },
+        {
+          colourCode: '2383D',
+          flatRateCad: 40,
+          discountCad: 40,
+          totalChargeCad: 0,
+        },
+      ],
+    });
+    expect(planned.plan.baseLiquidPurchaseGallons).toBe(5);
+    expect(planned.plan.totalChargeCad).toBe(40.17);
   });
 
   it('does not add sample liquid or charges when samples are not requested', () => {

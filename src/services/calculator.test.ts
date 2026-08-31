@@ -371,7 +371,7 @@ describe('calculator preparation and membrane behavior', () => {
     });
   });
 
-  it('takes a selected one-quart sample from the ordered project X-Bond Liquid', () => {
+  it('uses dealer sample stock without increasing the project X-Bond Liquid order', () => {
     const result = calculate({
       areaSqft: 187.5,
       substrateType: 'concrete',
@@ -384,21 +384,21 @@ describe('calculator preparation and membrane behavior', () => {
     expect(result.colourTintPlan).toMatchObject({
       preparedLiquidGallons: 5,
       baseLiquidPurchaseGallons: 5,
-      totalChargeCad: 86.88,
+      totalChargeCad: 94.17,
       samplePlan: {
-        liquidSource: 'ordered_project_material',
+        liquidSource: 'dealer_sample_stock',
         totalLiquidGallons: 0.25,
-        totalPigmentChargeCad: 2.71,
-        totalPreparationFeeCad: 30,
-        subtotalChargeCad: 32.71,
+        totalFlatRateCad: 40,
+        subtotalChargeCad: 40,
         totalDiscountCad: 0,
-        totalChargeCad: 32.71,
+        totalChargeCad: 40,
+        isSampleComplimentary: false,
         samples: [{
           colourCode: '2053T',
           sampleSize: 'quart',
-          pigmentChargeCad: 2.71,
-          preparationFeeCad: 30,
-          totalChargeCad: 32.71,
+          flatRateCad: 40,
+          totalChargeCad: 40,
+          isSampleComplimentary: false,
         }],
       },
     });

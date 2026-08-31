@@ -82,19 +82,20 @@ export interface ColourTintSampleLine {
   batch?: TintBatchPlanLine;
   pigments: TintPigmentPlanLine[];
   totalTintOunces?: number;
-  /** Pigment-only charge at the configured per-ounce tint rate. */
+  /** Flat customer price including sample liquid and pigment. */
+  flatRateCad?: number;
+  /** Legacy v1/v2 pigment-only charge. */
   pigmentChargeCad?: number;
-  /**
-   * Prepared-quart fee before any complimentary-project discount. Includes
-   * liquid drawn from the project order; pigment is recorded separately.
-   */
+  /** Legacy v1/v2 prepared-quart fee. */
   preparationFeeCad?: number;
-  /** Pigment plus preparation before any discount. */
+  /** Flat rate before any project-size discount. */
   subtotalChargeCad?: number;
-  /** Amount waived under the complimentary sample policy. */
+  /** Flat-rate amount waived under the project-size policy. */
   discountCad?: number;
   /** Final sample charge. Retains the legacy total field for stored snapshots. */
   totalChargeCad?: number;
+  isSampleComplimentary?: boolean;
+  /** Legacy v1/v2 snapshot field. */
   isComplimentary?: boolean;
   pricingStatus: 'priced' | 'dealer_review';
   reviewReason?: string;
@@ -106,18 +107,24 @@ export interface ColourTintSamplePlan {
   sampleLabel: string;
   /** Snapshot used to recalculate plans with older fee or liquid-source rules. */
   pricingPolicyVersion?: string;
-  /** Samples are prepared from X-Bond Liquid already included in the project material order. */
-  liquidSource?: 'ordered_project_material';
-  /** Amount the dealer sets aside from the ordered project liquid for sample preparation. */
+  /** Source of the X-Bond Liquid used to prepare samples. */
+  liquidSource?: 'dealer_sample_stock' | 'ordered_project_material';
+  /** Amount the dealer supplies from sample stock for sample preparation. */
   totalLiquidGallons: number;
   totalTintOunces?: number;
+  /** Aggregate flat price for every selected sample before any waiver. */
+  totalFlatRateCad?: number;
+  /** Legacy v1/v2 aggregate pigment charge. */
   totalPigmentChargeCad?: number;
-  /** Total prepared-quart fees, including liquid drawn from the project order. */
+  /** Legacy v1/v2 aggregate prepared-quart fee. */
   totalPreparationFeeCad?: number;
   subtotalChargeCad?: number;
   totalDiscountCad?: number;
   /** Final aggregate sample charge. Retains the legacy total field for stored snapshots. */
   totalChargeCad?: number;
+  isSampleComplimentary?: boolean;
+  sampleComplimentaryThresholdSqft?: number;
+  /** Legacy v1/v2 snapshot fields. */
   isComplimentary?: boolean;
   complimentaryThresholdSqft?: number;
   isFullyPriced: boolean;

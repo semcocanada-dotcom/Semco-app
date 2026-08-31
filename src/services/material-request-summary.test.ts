@@ -12,7 +12,8 @@ describe('dealer material request tint summary', () => {
     const body = lines.join('\n');
 
     expect(body).toContain("Aaron's Rod (2053T)");
-    expect(body).toContain("Project orders use 1-gallon and 5-gallon tint batches. Sample quarts are drawn from the job's ordered X-Bond Liquid and do not add extra liquid purchase quantity.");
+    expect(body).toContain('Project orders use 1-gallon and 5-gallon tint batches.');
+    expect(body).not.toContain('dealer sample stock');
     expect(body).toContain('2 x 1 gallon tint batches');
     expect(body).not.toContain('1 quart tint batch');
     expect(body).toContain('formula below is per batch');
@@ -61,29 +62,45 @@ describe('dealer material request tint summary', () => {
     const body = lines.join('\n');
 
     expect(body).toContain('Colour samples — 1-quart sample (946 mL) each:');
-    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $30 prepared-quart fee (from ordered X-Bond Liquid); pigment tint $2.71; sample total $32.71");
+    expect(body).toContain('Each sample is a $40 flat rate including a prepared X-Bond quart and pigment from dealer sample stock, so no extra project pail is added.');
+    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $40 flat rate (prepared X-Bond + pigment included); sample total $40.00");
     expect(body).toContain('Quart sample tint-machine formula:');
-    expect(body).toContain('5 gal staged for purchase. Sample quarts are drawn from that staged job quantity; no additional X-Bond Liquid is purchased for samples.');
+    expect(body).toContain('5 gal staged for purchase. Sample quarts come from dealer sample stock; no additional X-Bond Liquid or pail is added to the project order.');
     expect(body).not.toContain('gal for colour samples');
-    expect(body).toContain('Sample pricing: Prepared-quart fees $30.00; pigment tint $2.71; sample total $32.71.');
-    expect(body).toContain("The prepared-sample fee includes making the quart from the customer's ordered X-Bond Liquid; pigment is charged separately.");
-    expect(body).toContain('Total colour charges: $54.37');
+    expect(body).toContain('Sample pricing: Flat rates $40.00; prepared X-Bond + pigment included; sample total $40.00.');
+    expect(body).toContain('The $40 per-sample flat rate includes one prepared quart of X-Bond Liquid and its pigment.');
+    expect(body).toContain('Production pigment charging is unchanged.');
+    expect(body).toContain('Total colour charges: $61.66');
+    expect(body).not.toContain('$42.71');
   });
 
-  it('shows the pigment and preparation discount when samples are free at 300 square feet', () => {
+  it('waives the full $40 sample fee at 500 square feet', () => {
     const body = buildTintRequestSummaryLines(currentSamplePlanFixture(true)).join('\n');
 
-    expect(body).toContain('$30 prepared-quart fee (from ordered X-Bond Liquid); pigment tint $2.71; FREE — $32.71 waived');
-    expect(body).toContain('$32.71 waived; FREE at 300 sq ft or more — both charges waived.');
+    expect(body).toContain('$40 flat rate (prepared X-Bond + pigment included); FREE — $40.00 sample fee waived; sample total $0.00');
+    expect(body).toContain('$40.00 sample fees waived; FREE at 500 sq ft or more; sample total $0.00.');
     expect(body).toContain('Total colour charges: $21.66');
   });
 
-  it('keeps formula review visible even when a complimentary sample has a final zero charge', () => {
+  it('keeps formula review visible when the full sample fee is waived', () => {
     const body = buildTintRequestSummaryLines(complimentaryReviewSampleFixture()).join('\n');
 
-    expect(body).toContain('$30 prepared-quart fee (from ordered X-Bond Liquid); pigment tint DEALER FORMULA REVIEW REQUIRED; FREE — both charges waived');
+    expect(body).toContain('$40 flat rate (prepared X-Bond + pigment included); FREE — $40.00 sample fee waived; sample total $0.00');
     expect(body).toContain('Review: Published quart formula requires dealer review.');
     expect(body).toContain('Total colour charges: $21.66');
+  });
+
+  it('charges $40 for every selected sample and waives every fee at the threshold', () => {
+    const paidBody = buildTintRequestSummaryLines(multipleSamplePlanFixture(false)).join('\n');
+    const freeBody = buildTintRequestSummaryLines(multipleSamplePlanFixture(true)).join('\n');
+
+    expect(paidBody).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $40 flat rate");
+    expect(paidBody).toContain('Alexys (2383D): 1-quart sample (946 mL); $40 flat rate');
+    expect(paidBody).toContain('Sample pricing: Flat rates $80.00');
+    expect(paidBody).toContain('Total colour charges: $101.66');
+    expect(freeBody.match(/FREE — \$40\.00 sample fee waived/g)).toHaveLength(2);
+    expect(freeBody).toContain('$80.00 sample fees waived; FREE at 500 sq ft or more; sample total $0.00.');
+    expect(freeBody).toContain('Total colour charges: $21.66');
   });
 
   it('blocks legacy pigment-only sample pricing without inventing the new fee', () => {
@@ -101,14 +118,15 @@ describe('dealer material request tint summary', () => {
     expect(canSaveMaterialRequest(result, '')).toBe(false);
     expect(body).toContain('RECALCULATION REQUIRED');
     expect(body).not.toContain('$2.71');
-    expect(body).not.toContain('$30 prepared-quart fee (from ordered X-Bond Liquid)');
+    expect(body).not.toContain('$40 flat rate (prepared X-Bond + pigment included)');
   });
 
-  it('blocks saved v1 sample plans so they cannot retain an added liquid purchase quantity', () => {
+  it('blocks saved v2 sample plans so they cannot retain the superseded fee and liquid source', () => {
     const plan = currentSamplePlanFixture(false);
     plan.samplePlan = {
       ...plan.samplePlan!,
-      pricingPolicyVersion: '2026-08-30-v1',
+      pricingPolicyVersion: '2026-08-30-v2',
+      liquidSource: 'ordered_project_material',
     };
     const result = {
       layers: [],
@@ -176,33 +194,31 @@ function legacySamplePlanFixture(): ColourTintPlan {
   };
 }
 
-function currentSamplePlanFixture(isComplimentary: boolean): ColourTintPlan {
+function currentSamplePlanFixture(isSampleComplimentary: boolean): ColourTintPlan {
   const legacy = legacySamplePlanFixture();
   const legacySamplePlan = legacy.samplePlan!;
   const legacySample = legacySamplePlan.samples[0];
-  const sampleTotalCad = isComplimentary ? 0 : 32.71;
+  const sampleTotalCad = isSampleComplimentary ? 0 : 40;
   return {
     ...legacy,
     totalChargeCad: 21.66 + sampleTotalCad,
     samplePlan: {
       ...legacySamplePlan,
       pricingPolicyVersion: COLOUR_SAMPLE_PRICING_POLICY_VERSION,
-      liquidSource: 'ordered_project_material',
-      totalPigmentChargeCad: 2.71,
-      totalPreparationFeeCad: 30,
-      subtotalChargeCad: 32.71,
-      totalDiscountCad: isComplimentary ? 32.71 : 0,
+      liquidSource: 'dealer_sample_stock',
+      totalFlatRateCad: 40,
+      subtotalChargeCad: 40,
+      totalDiscountCad: isSampleComplimentary ? 40 : 0,
       totalChargeCad: sampleTotalCad,
-      isComplimentary,
-      complimentaryThresholdSqft: 300,
+      isSampleComplimentary,
+      sampleComplimentaryThresholdSqft: 500,
       samples: [{
         ...legacySample,
-        pigmentChargeCad: 2.71,
-        preparationFeeCad: 30,
-        subtotalChargeCad: 32.71,
-        discountCad: isComplimentary ? 32.71 : 0,
+        flatRateCad: 40,
+        subtotalChargeCad: 40,
+        discountCad: isSampleComplimentary ? 40 : 0,
         totalChargeCad: sampleTotalCad,
-        isComplimentary,
+        isSampleComplimentary,
       }],
     },
   };
@@ -220,9 +236,8 @@ function complimentaryReviewSampleFixture(): ColourTintPlan {
     samplePlan: {
       ...samplePlan,
       totalTintOunces: undefined,
-      totalPigmentChargeCad: undefined,
-      subtotalChargeCad: undefined,
-      totalDiscountCad: undefined,
+      subtotalChargeCad: 40,
+      totalDiscountCad: 40,
       totalChargeCad: 0,
       isFullyPriced: false,
       samples: [{
@@ -230,13 +245,40 @@ function complimentaryReviewSampleFixture(): ColourTintPlan {
         batch: undefined,
         pigments: [],
         totalTintOunces: undefined,
-        pigmentChargeCad: undefined,
-        subtotalChargeCad: undefined,
-        discountCad: undefined,
+        subtotalChargeCad: 40,
+        discountCad: 40,
         totalChargeCad: 0,
         pricingStatus: 'dealer_review',
         reviewReason: 'Published quart formula requires dealer review.',
       }],
+    },
+  };
+}
+
+function multipleSamplePlanFixture(isSampleComplimentary: boolean): ColourTintPlan {
+  const plan = currentSamplePlanFixture(isSampleComplimentary);
+  const samplePlan = plan.samplePlan!;
+  const firstSample = samplePlan.samples[0];
+  const secondSample = {
+    ...firstSample,
+    colourId: 'col-xbond-2383d',
+    colourCode: '2383D',
+    colourName: 'Alexys',
+    formulaCode: '2383D',
+  };
+
+  return {
+    ...plan,
+    totalChargeCad: 21.66 + (isSampleComplimentary ? 0 : 80),
+    samplePlan: {
+      ...samplePlan,
+      samples: [firstSample, secondSample],
+      totalLiquidGallons: 0.5,
+      totalTintOunces: (samplePlan.totalTintOunces ?? 0) * 2,
+      totalFlatRateCad: 80,
+      subtotalChargeCad: 80,
+      totalDiscountCad: isSampleComplimentary ? 80 : 0,
+      totalChargeCad: isSampleComplimentary ? 0 : 80,
     },
   };
 }

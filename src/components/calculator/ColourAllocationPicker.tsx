@@ -22,7 +22,7 @@ import type {
   CalculatorColourMode,
   CalculatorColourSelection,
 } from '@/hooks/useCalculator';
-import { isComplimentaryColourSampleProject } from '@/knowledge/sample-pricing';
+import { isColourSampleComplimentaryProject } from '@/knowledge/sample-pricing';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 interface ColourAllocationPickerProps {
@@ -54,7 +54,7 @@ export function ColourAllocationPicker({
   const [query, setQuery] = useState('');
   const options = useMemo(() => searchTintColours(query), [query]);
   const totalArea = Number.parseFloat(totalAreaSqft);
-  const samplesAreComplimentary = isComplimentaryColourSampleProject(totalArea);
+  const samplesAreComplimentary = isColourSampleComplimentaryProject(totalArea);
   const allocatedArea = mode === 'multiple'
     ? selections.reduce((total, selection) => {
         const value = Number.parseFloat(selection.areaSqft);
@@ -203,8 +203,8 @@ export function ColourAllocationPicker({
         accessibilityRole="checkbox"
         accessibilityState={{ checked: includeSamples }}
         accessibilityLabel={samplesAreComplimentary
-          ? 'Add one free prepared 1-quart sample for each selected colour. The sample is drawn from the X-Bond Liquid ordered for the job, so no extra liquid is purchased. The 30 dollar sample fee and pigment tint are waived.'
-          : 'Add one prepared 1-quart sample for each selected colour. Each is drawn from the X-Bond Liquid ordered for the job, so no extra liquid is purchased. The fee is 30 dollars plus pigment tint, and both are free at 300 square feet or more.'}
+          ? 'Add one free prepared 1-quart sample for each selected colour. The 40 dollar flat rate includes X-Bond Liquid and pigment from dealer sample stock, and is waived for projects of 500 square feet or more. No project pail is added.'
+          : 'Add one prepared 1-quart sample for each selected colour. The 40 dollar flat rate includes X-Bond Liquid and pigment from dealer sample stock. Samples are free for projects of 500 square feet or more. No project pail is added.'}
       >
         <View style={[styles.sampleIcon, includeSamples && styles.sampleIconSelected]}>
           <Ionicons
@@ -218,11 +218,9 @@ export function ColourAllocationPicker({
             <Text style={styles.sampleTitle}>Add colour sample</Text>
             <Text style={styles.optionalLabel}>OPTIONAL</Text>
           </View>
-          <Text style={styles.sampleDescription}>One prepared quart per colour, drawn from the job&apos;s X-Bond Liquid.</Text>
+          <Text style={styles.sampleDescription}>$40 flat rate · X-Bond + pigment included</Text>
           <Text style={samplesAreComplimentary ? styles.sampleFreeQualified : styles.sampleFreePolicy}>
-            {samplesAreComplimentary
-              ? 'FREE — $30 sample fee + pigment waived'
-              : '$30 prepared sample + pigment · Free at 300+ sq ft'}
+            FREE at 500+ sq ft
           </Text>
           {includeSamples && sampleReviewCount > 0 ? (
             <Text style={styles.sampleWarning}>

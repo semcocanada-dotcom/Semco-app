@@ -82,8 +82,8 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
         <View key={`tint-sample-${sample.colourId}`} style={styles.line}>
           <View style={styles.lineCopy}>
             <Text style={styles.lineName}>{sample.colourName} prepared colour sample</Text>
-            <Text style={styles.lineMeta}>{sample.colourCode} · 1 quart / 946 mL from ordered X-Bond Liquid</Text>
-            <Text style={sample.isComplimentary && !needsSamplePricingRecalculation ? styles.freeLineMeta : styles.lineCoverage}>
+            <Text style={styles.lineMeta}>{sample.colourCode} · Prepared 1 quart / 946 mL included</Text>
+            <Text style={sample.isSampleComplimentary && !needsSamplePricingRecalculation ? styles.freeLineMeta : styles.lineCoverage}>
               {needsSamplePricingRecalculation
                 ? 'Saved sample policy — recalculate before ordering'
                 : formatSamplePriceBreakdown(sample)}
@@ -92,10 +92,10 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
               <Text style={styles.reviewLineMeta}>Tint formula requires dealer review before mixing.</Text>
             ) : null}
           </View>
-          <Text style={sample.isComplimentary && !needsSamplePricingRecalculation ? styles.freeLineValue : styles.lineValue}>
+          <Text style={sample.isSampleComplimentary && !needsSamplePricingRecalculation ? styles.freeLineValue : styles.lineValue}>
             {needsSamplePricingRecalculation
               ? 'Recalculate'
-              : sample.isComplimentary
+              : sample.isSampleComplimentary
               ? 'FREE'
               : sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'Dealer formula review'}
           </Text>
@@ -116,7 +116,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           {needsBatchRecalculation
             ? 'Recalculate this saved tint plan before ordering so it uses only 1- and 5-gallon project batches.'
             : needsSamplePricingRecalculation
-            ? 'Recalculate this saved sample plan to apply the $30 prepared-quart fee without adding extra X-Bond Liquid.'
+            ? 'Recalculate this saved sample plan for the $40 flat rate with X-Bond and pigment included.'
             : hasProjectFormulaReview && hasSampleFormulaReview
             ? 'Project and sample colour formulas need dealer review before pricing and mixing can be finalized.'
             : hasSampleFormulaReview
@@ -126,7 +126,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
       ) : null}
       {tintPlan?.samplePlan && !needsSamplePricingRecalculation ? (
         <Text style={styles.sampleLiquidNote}>
-          Sample quarts come from the X-Bond Liquid listed above. No extra pail is added for samples.
+          The $40 flat rate includes a prepared X-Bond quart and pigment from dealer sample stock. No extra project pail is added.
         </Text>
       ) : null}
     </Card>
@@ -142,11 +142,10 @@ function formatCadCompact(value: number): string {
 }
 
 function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
-  const pigment = sample.pigmentChargeCad != null ? formatCad(sample.pigmentChargeCad) : 'review required';
-  const preparation = sample.preparationFeeCad != null
-    ? `${formatCadCompact(sample.preparationFeeCad)} prepared quart`
-    : 'Prepared-quart fee review required';
-  return `${preparation} + Pigment ${pigment}${sample.isComplimentary ? ' · waived' : ''}`;
+  const flatRate = sample.flatRateCad != null
+    ? formatCadCompact(sample.flatRateCad)
+    : 'Flat-rate review required';
+  return `${flatRate} flat rate · X-Bond + pigment included${sample.isSampleComplimentary ? ' · waived' : ''}`;
 }
 
 const styles = StyleSheet.create({
