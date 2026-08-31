@@ -254,7 +254,7 @@ describe('calculator preparation and membrane behavior', () => {
     });
   });
 
-  it('estimates one shared seam once for 4 x 8 plywood sheets and adds priced wet-area fabric', () => {
+  it('defaults wet-area work to one selectable 75 ft fabric roll', () => {
     const result = calculate({
       areaSqft: 150,
       substrateType: 'plywood',
@@ -266,29 +266,79 @@ describe('calculator preparation and membrane behavior', () => {
 
     expect(fabric).toMatchObject({
       productName: 'SEMCO Fabric Reinforcement',
-      quantityLabel: '61.9 lin ft estimated',
+      quantityLabel: '75 lin ft selected',
       purchaseLabel: 'Buy 1 x 6 in x 75 ft roll',
       packLabel: '6 in x 75 ft roll',
       roundedQuantity: 1,
     });
-    expect(fabric?.exactQuantity).toBeCloseTo((150 * 1.1 * 0.375) / 75, 8);
-    expect(fabric?.sourceNote).toContain('each shared seam counted once');
-    expect(result.sourceSummary).toContain('shared-seam average for 4 x 8 sheets');
+    expect(fabric?.exactQuantity).toBe(1);
+    expect(fabric?.sourceNote).toContain('selected by the installer');
+    expect(result.sourceSummary).toContain('1 x 75-ft Fabric Reinforcement roll selected');
   });
 
-  it('rounds the 4 x 8 plywood shared-seam estimate up to additional fabric rolls', () => {
+  it('uses the installer-selected number of fabric rolls instead of estimating seams from area', () => {
     const fabric = calculate({
       areaSqft: 400,
       substrateType: 'plywood',
       wastePct: 10,
       installationScope: 'wet_area',
+      fabricRolls: 3,
     }).layers.find((layer) => layer.productSku === 'FR675');
 
     expect(fabric).toMatchObject({
-      quantityLabel: '165 lin ft estimated',
+      quantityLabel: '225 lin ft selected',
       roundedQuantity: 3,
       purchaseLabel: 'Buy 3 x 6 in x 75 ft rolls',
     });
+  });
+
+  it('allows optional rolls for dry cracks and omits fabric when zero rolls are selected', () => {
+    const selected = calculate({
+      areaSqft: 100,
+      substrateType: 'concrete',
+      wastePct: 0,
+      installationScope: 'floor_or_other',
+      fabricRolls: 2,
+    });
+    const omitted = calculate({
+      areaSqft: 100,
+      substrateType: 'concrete',
+      wastePct: 0,
+      installationScope: 'floor_or_other',
+      fabricRolls: 0,
+    });
+
+    expect(selected.layers.find((layer) => layer.productSku === 'FR675')).toMatchObject({
+      quantityLabel: '150 lin ft selected',
+      roundedQuantity: 2,
+      purchaseLabel: 'Buy 2 x 6 in x 75 ft rolls',
+    });
+    expect(omitted.layers.some((layer) => layer.productSku === 'FR675')).toBe(false);
+    expect(omitted.sourceSummary).toContain('No Fabric Reinforcement rolls were selected');
+  });
+
+  it('keeps one fabric roll as the wet-area minimum even when zero is requested', () => {
+    const fabric = calculate({
+      areaSqft: 50,
+      substrateType: 'cement_board',
+      wastePct: 0,
+      installationScope: 'wet_area',
+      fabricRolls: 0,
+    }).layers.find((layer) => layer.productSku === 'FR675');
+
+    expect(fabric).toMatchObject({ roundedQuantity: 1, quantityLabel: '75 lin ft selected' });
+  });
+
+  it('lets a submerged project stay at zero rolls when no cracks or joints need fabric', () => {
+    const result = calculate({
+      areaSqft: 500,
+      substrateType: 'pool',
+      wastePct: 10,
+      installationScope: 'submerged',
+      fabricRolls: 0,
+    });
+
+    expect(result.layers.some((layer) => layer.productSku === 'FR675')).toBe(false);
   });
 
   it('orders two 1-gallon Liquid Membrane pails for the 384 sq ft Atlantic quote', () => {

@@ -668,9 +668,12 @@ function quantityAnswer(
   for (const layer of quantified) {
     const exact = layer.exactQuantity ?? layer.quantityPacks;
     const perUnit = exact > 0 ? adjustedSqft / exact : 0;
-    const mathLine = exact > 0 && perUnit > 0
-      ? `${formatNumber(adjustedSqft)} sq ft ÷ ~${formatNumber(Math.round(perUnit))} sq ft per ${layer.packLabel ?? 'unit'} = ${formatNumber(Math.round(exact * 10) / 10)}`
-      : '';
+    const selectedRolls = layer.roundedQuantity ?? layer.quantityPacks ?? 0;
+    const mathLine = layer.category === 'reinforcement'
+      ? `Installer-selected: ${formatNumber(selectedRolls)} roll${selectedRolls === 1 ? '' : 's'} × 75 linear ft = ${formatNumber(selectedRolls * 75)} linear ft total.`
+      : exact > 0 && perUnit > 0
+        ? `${formatNumber(adjustedSqft)} sq ft ÷ ~${formatNumber(Math.round(perUnit))} sq ft per ${layer.packLabel ?? 'unit'} = ${formatNumber(Math.round(exact * 10) / 10)}`
+        : '';
 
     const coatsNote = layer.productSku === 'XBOND'
       ? 'Covers the complete system build-up, not per coat.'

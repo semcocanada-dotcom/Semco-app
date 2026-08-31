@@ -8,6 +8,7 @@ describe('useCalculator preparation and membrane controls', () => {
     expect(result.current.form.waterproofingMode).toBe('none');
     expect(result.current.form.prepCondition).toBeNull();
     expect(result.current.form.installationScope).toBe('floor_or_other');
+    expect(result.current.form.fabricRolls).toBe(0);
   });
 
   it('keeps membrane optional for a wall in a non-wet area', () => {
@@ -76,6 +77,7 @@ describe('useCalculator preparation and membrane controls', () => {
     expect(result.current.form.prepCondition).toBe('type_c');
     expect(result.current.form.waterproofingMode).toBe('submerged');
     expect(result.current.form.installationScope).toBe('submerged');
+    expect(result.current.form.fabricRolls).toBe(0);
 
     act(() => result.current.setPrepCondition('type_a'));
     act(() => result.current.setWaterproofingMode('none'));
@@ -123,6 +125,37 @@ describe('useCalculator preparation and membrane controls', () => {
     expect(result.current.result?.installationScope).toBe('wet_area');
     expect(result.current.result?.liquidMembraneRequired).toBe(true);
     expect(result.current.result?.layers.find((layer) => layer.productSku === 'SEMCO-LIQUID-MEMBRANE')?.coats).toBe(2);
+    expect(result.current.form.fabricRolls).toBe(1);
+    expect(result.current.result?.layers.find((layer) => layer.productSku === 'FR675')).toMatchObject({
+      roundedQuantity: 1,
+    });
+  });
+
+  it('lets the installer select dry-area fabric rolls and enforces the wet-area minimum', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('100'));
+    act(() => result.current.setSubstrate('concrete'));
+    act(() => result.current.setFabricRolls(2));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.form.fabricRolls).toBe(2);
+    expect(result.current.result?.layers.find((layer) => layer.productSku === 'FR675')).toMatchObject({
+      roundedQuantity: 2,
+      quantityLabel: '150 lin ft selected',
+    });
+
+    act(() => result.current.setFabricRolls(3));
+    expect(result.current.result).toBeNull();
+
+    act(() => result.current.setInstallationScope('wet_area'));
+    act(() => result.current.setFabricRolls(0));
+    expect(result.current.form.fabricRolls).toBe(1);
+
+    act(() => result.current.setInstallationScope('floor_or_other'));
+    expect(result.current.form.fabricRolls).toBe(1);
+    act(() => result.current.setFabricRolls(0));
+    expect(result.current.form.fabricRolls).toBe(0);
   });
 
   it('resets the project area to floor or other', () => {
@@ -187,7 +220,7 @@ describe('useCalculator preparation and membrane controls', () => {
 
     expect(result.current.error).toBeNull();
     expect(result.current.result?.layers.find((layer) => layer.productSku === 'FR675')).toMatchObject({
-      quantityLabel: '61.9 lin ft estimated',
+      quantityLabel: '75 lin ft selected',
       roundedQuantity: 1,
     });
     expect(result.current.result?.colourTintPlan?.samplePlan).toMatchObject({

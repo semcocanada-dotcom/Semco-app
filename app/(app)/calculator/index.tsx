@@ -8,6 +8,7 @@ import { MaterialBreakdownCard } from '@/components/calculator/MaterialBreakdown
 import { MaterialRetailEstimateCard } from '@/components/calculator/MaterialRetailEstimateCard';
 import { ColourAllocationPicker } from '@/components/calculator/ColourAllocationPicker';
 import { ColourTintPlanCard } from '@/components/calculator/ColourTintPlanCard';
+import { FabricRollSelector } from '@/components/calculator/FabricRollSelector';
 import { PrepSystemPicker } from '@/components/calculator/PrepSystemPicker';
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
@@ -30,6 +31,7 @@ const ESTIMATOR_POINTS = [
   'SIP Type A-E prep and cleaner sequence',
   'Cleaner quantities plus 1 / 5 gal pricing',
   'Liquid Membrane optional where allowed',
+  'Selectable 75 ft Fabric Reinforcement rolls for cracks, joints, and corners',
   'Single- or multi-colour job tinting in 1 / 5 gal batches at $2 per machine oz',
 ];
 
@@ -102,6 +104,7 @@ export default function CalculatorScreen() {
     addColourSelection,
     removeColourSelection,
     setIncludeColourSamples,
+    setFabricRolls,
     runCalculation,
     reset,
   } = useCalculator();
@@ -117,6 +120,7 @@ export default function CalculatorScreen() {
       ),
   );
   const selectedPrepSystem = form.prepCondition ? getPrepSystem(form.prepCondition) : null;
+  const fabricRequired = form.installationScope === 'wet_area';
   const wetDrywallSelected = form.substrateType === 'gypsum_board'
     && (form.installationScope === 'wet_area' || form.installationScope === 'submerged');
 
@@ -181,7 +185,7 @@ export default function CalculatorScreen() {
             <Card style={styles.formCard}>
               <Text style={styles.heading}>Coverage Calculator</Text>
               <Text style={styles.subheading}>
-                Input area and scope to estimate prep items, X-Bond Stone, X-Bond Liquid, Liquid Membrane, MicroBond, and sealer.
+                Input area and scope to estimate prep items, X-Bond Stone, X-Bond Liquid, Liquid Membrane, Fabric Reinforcement, MicroBond, and sealer.
               </Text>
 
               <Input
@@ -327,6 +331,12 @@ export default function CalculatorScreen() {
                   </Text>
                 </View>
               </View>
+
+              <FabricRollSelector
+                rolls={form.fabricRolls}
+                required={fabricRequired}
+                onChange={setFabricRolls}
+              />
 
               <View style={styles.section}>
                 <Text style={styles.label}>Sealer Finish</Text>

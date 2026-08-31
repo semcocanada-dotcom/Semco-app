@@ -183,6 +183,20 @@ describe('Fabric Reinforcement pricing', () => {
       retailPriceCad: 92.14,
     });
   });
+
+  it('prices every manually selected fabric roll at $92.14', () => {
+    const result = calculate({
+      areaSqft: 150,
+      substrateType: 'plywood',
+      wastePct: 10,
+      installationScope: 'wet_area',
+      fabricRolls: 3,
+    });
+    const fabric = result.layers.find((layer) => layer.productSku === 'FR675');
+    const [line] = priceMaterialLayers([fabric!]);
+
+    expect(line).toMatchObject({ priceSku: 'FR675', quantity: 3, lineTotalCad: 276.42 });
+  });
 });
 
 describe('X-Bond Liquid package pricing', () => {

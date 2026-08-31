@@ -33,6 +33,7 @@ interface CalculatorState {
   colourMode: CalculatorColourMode;
   colourSelections: CalculatorColourSelection[];
   includeColourSamples: boolean;
+  fabricRolls: number;
 }
 
 let colourSlotCounter = 2;
@@ -45,6 +46,10 @@ function createColourSlot(): CalculatorColourSelection {
 
 function getDefaultColourSelections(): CalculatorColourSelection[] {
   return [{ slotId: 'colour-1', colourId: null, areaSqft: '' }];
+}
+
+function getFabricRollMinimum(installationScope: InstallationScope): number {
+  return installationScope === 'wet_area' ? 1 : 0;
 }
 
 export function useCalculator() {
@@ -60,6 +65,7 @@ export function useCalculator() {
     colourMode: 'single',
     colourSelections: getDefaultColourSelections(),
     includeColourSamples: false,
+    fabricRolls: 0,
   });
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +101,7 @@ export function useCalculator() {
         waterproofingMode: membraneRequired
           ? (installationScope === 'submerged' ? 'submerged' : 'above_grade')
           : 'none',
+        fabricRolls: Math.max(getFabricRollMinimum(installationScope), f.fabricRolls),
       };
     });
   }, [invalidateResult]);
@@ -137,6 +144,7 @@ export function useCalculator() {
         waterproofingMode: membraneRequired
           ? (installationScope === 'submerged' ? 'submerged' : 'above_grade')
           : 'none',
+        fabricRolls: Math.max(getFabricRollMinimum(installationScope), f.fabricRolls),
       };
     });
   }, [invalidateResult]);
@@ -227,6 +235,17 @@ export function useCalculator() {
     setForm((f) => ({ ...f, includeColourSamples }));
   }, [invalidateResult]);
 
+  const setFabricRolls = useCallback((fabricRolls: number) => {
+    invalidateResult();
+    setForm((f) => ({
+      ...f,
+      fabricRolls: Math.max(
+        getFabricRollMinimum(f.installationScope),
+        Number.isFinite(fabricRolls) ? Math.floor(fabricRolls) : getFabricRollMinimum(f.installationScope),
+      ),
+    }));
+  }, [invalidateResult]);
+
   const runCalculation = useCallback(() => {
     setResult(null);
     setError(null);
@@ -288,6 +307,7 @@ export function useCalculator() {
         installationScope: form.installationScope,
         colourAllocations,
         includeColourSamples: form.includeColourSamples,
+        fabricRolls: form.fabricRolls,
       });
       setResult(res);
     } catch (err) {
@@ -310,6 +330,7 @@ export function useCalculator() {
       colourMode: 'single',
       colourSelections: getDefaultColourSelections(),
       includeColourSamples: false,
+      fabricRolls: 0,
     });
   }, []);
 
@@ -331,6 +352,7 @@ export function useCalculator() {
     addColourSelection,
     removeColourSelection,
     setIncludeColourSamples,
+    setFabricRolls,
     runCalculation,
     reset,
   };

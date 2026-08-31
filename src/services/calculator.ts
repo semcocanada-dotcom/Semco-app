@@ -51,9 +51,9 @@ export interface CalculatorInput {
   installationScope?: InstallationScope;
   colourAllocations?: ColourAllocationInput[];
   includeColourSamples?: boolean;
+  fabricRolls?: number;
 }
 
-const FOUR_BY_EIGHT_SHARED_SEAM_LF_PER_SQFT = (1 / 4) + (1 / 8);
 const FABRIC_REINFORCEMENT_ROLL_LF = 75;
 
 export function calculate(input: CalculatorInput): CalculationResult {
@@ -111,6 +111,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     ),
     estimateCoverage(COVERAGE_PRODUCTS.XBOND_LIQUID, getXBondLiquidRange(), areaSqft, wastePct),
   ];
+  const fabricRolls = normalizeFabricRolls(input.fabricRolls, installationScope);
 
   const membraneMode: WaterproofingMode = installationScope === 'submerged'
     ? 'submerged'
@@ -136,7 +137,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
   const result: CalculationResult = {
     layers: [
       ...getPrepLayers(prepSystem, areaSqft, wastePct),
-      ...getWetAreaFabricLayers(substrateType, installationScope, areaSqft, wastePct),
+      ...getFabricReinforcementLayers(fabricRolls, installationScope),
       ...estimates.map(toMaterialLayer),
     ],
     totalKg: 0,
@@ -152,6 +153,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
       membraneMode,
       membraneRequired,
       installationScope,
+      fabricRolls,
     ),
   };
 
@@ -177,24 +179,25 @@ export function calculate(input: CalculatorInput): CalculationResult {
   return result;
 }
 
-function getWetAreaFabricLayers(
-  substrateType: SubstrateId,
+function normalizeFabricRolls(
+  requestedRolls: number | undefined,
   installationScope: InstallationScope,
-  areaSqft: number,
-  wastePct: number,
-): MaterialLayer[] {
-  if (installationScope !== 'wet_area') return [];
+): number {
+  const minimumRolls = installationScope === 'wet_area' ? 1 : 0;
+  const wholeRolls = Number.isFinite(requestedRolls)
+    ? Math.max(0, Math.floor(requestedRolls ?? 0))
+    : minimumRolls;
+  return Math.max(minimumRolls, wholeRolls);
+}
 
-  const usesFourByEightSheetEstimate = substrateType === 'plywood';
-  const adjustedSqft = areaSqft * (1 + wastePct / 100);
-  const estimatedLinearFeet = usesFourByEightSheetEstimate
-    ? adjustedSqft * FOUR_BY_EIGHT_SHARED_SEAM_LF_PER_SQFT
-    : FABRIC_REINFORCEMENT_ROLL_LF;
-  const exactRolls = estimatedLinearFeet / FABRIC_REINFORCEMENT_ROLL_LF;
-  const roundedRolls = Math.max(1, Math.ceil(exactRolls));
-  const quantityLabel = usesFourByEightSheetEstimate
-    ? `${formatLinearFeet(estimatedLinearFeet)} lin ft estimated`
-    : '1 roll minimum allowance';
+function getFabricReinforcementLayers(
+  fabricRolls: number,
+  installationScope: InstallationScope,
+): MaterialLayer[] {
+  if (fabricRolls <= 0) return [];
+
+  const selectedLinearFeet = fabricRolls * FABRIC_REINFORCEMENT_ROLL_LF;
+  const requiredForExposure = installationScope === 'wet_area';
 
   return [{
     productId: 'semco-fabric-reinforcement-fr675',
@@ -203,22 +206,20 @@ function getWetAreaFabricLayers(
     category: 'reinforcement',
     coats: 1,
     quantityKg: 0,
-    quantityPacks: roundedRolls,
+    quantityPacks: fabricRolls,
     packSizeKg: 0,
     coverageRateSqmPerKg: 0,
-    quantityLabel,
-    purchaseLabel: `Buy ${roundedRolls} x 6 in x 75 ft roll${roundedRolls === 1 ? '' : 's'}`,
+    quantityLabel: `${selectedLinearFeet} lin ft selected`,
+    purchaseLabel: `Buy ${fabricRolls} x 6 in x 75 ft roll${fabricRolls === 1 ? '' : 's'}`,
     packLabel: '6 in x 75 ft roll',
-    coverageLabel: usesFourByEightSheetEstimate
-      ? 'Plywood wet-area seams - shared 4 x 8 sheet-joint average'
-      : 'Wet-area joints and inside corners - minimum allowance',
+    coverageLabel: 'For cracks, board joints, inside corners, and transitions',
     sourceDocument: STANDARD_SHOWER_POLICY_SOURCE,
     sourcePage: STANDARD_SHOWER_POLICY_PAGE,
-    sourceNote: usesFourByEightSheetEstimate
-      ? 'Uses 0.375 linear ft per sq ft for a repeating 4 x 8 sheet layout: one joint every 4 ft plus one joint every 8 ft, with each shared seam counted once. The selected waste percentage is included. Add the actual inside-corner and transition length, and add rolls if the field total exceeds 75 linear ft per roll.'
-      : 'Fabric Reinforcement is required at wet-area joints and inside corners. One roll is included as a minimum allowance; verify the actual joint, corner, and transition length and add one roll per 75 linear ft as needed.',
-    exactQuantity: exactRolls,
-    roundedQuantity: roundedRolls,
+    sourceNote: requiredForExposure
+      ? 'Fabric Reinforcement is required at wet-area joints, cracks, inside corners, and transitions. Roll quantity is selected by the installer from the field detail; each roll provides 75 linear ft.'
+      : 'Optional Fabric Reinforcement selected for cracks, board joints, inside corners, or transitions. Verify the measured detail length; each roll provides 75 linear ft.',
+    exactQuantity: fabricRolls,
+    roundedQuantity: fabricRolls,
   }];
 }
 
@@ -289,6 +290,7 @@ function buildSourceSummary(
   membraneMode: WaterproofingMode,
   membraneRequired: boolean,
   installationScope: InstallationScope,
+  fabricRolls: number,
 ): string {
   const prepLabel = prepSystem.sipType ? `SIP Type ${prepSystem.sipType}` : 'surface-readiness check';
   const cleanerBasis = prepSystem.cleanerSteps.length > 0
@@ -305,9 +307,9 @@ function buildSourceSummary(
             ? 'Liquid Membrane is optional for this wall in a non-wet area and is not included.'
             : 'Liquid Membrane is optional for this floor or other non-wet calculation and is not included.'
           : 'Liquid Membrane was included by selection.';
-  const fabricSummary = installationScope === 'wet_area'
-    ? ' Fabric Reinforcement is included for joints and inside corners; plywood quantity uses a shared-seam average for 4 x 8 sheets and must be checked against the field layout.'
-    : '';
+  const fabricSummary = fabricRolls > 0
+    ? ` ${fabricRolls} x 75-ft Fabric Reinforcement roll${fabricRolls === 1 ? '' : 's'} selected for cracks, joints, corners, and transitions.`
+    : ' No Fabric Reinforcement rolls were selected; add rolls if cracks, joints, corners, or transitions require reinforcement.';
 
   return `Preparation follows ${prepLabel}: ${prepSystem.label}.${cleanerBasis} ${membraneSummary}${fabricSummary}`;
 }
@@ -322,11 +324,6 @@ function formatGallonRange(minimum: number, maximum: number): string {
   const minLabel = formatGallons(minimum);
   const maxLabel = formatGallons(maximum);
   return minLabel === maxLabel ? minLabel : `${minLabel}-${maxLabel}`;
-}
-
-function formatLinearFeet(value: number): string {
-  const rounded = Math.round(value * 10) / 10;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
 function toMaterialLayer(estimate: CoverageEstimate): MaterialLayer {

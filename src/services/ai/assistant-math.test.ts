@@ -38,6 +38,9 @@ describe('Semco Guide calculator quantities', () => {
     expect(answer?.kind).toBe('quantity');
     expect(answer?.content).toContain('SEMCO Liquid Membrane');
     expect(answer?.content).toMatch(/\*\*SEMCO Liquid Membrane\*\*[\s\S]*?Applied in 2 coats/);
+    expect(answer?.content).toContain('**SEMCO Fabric Reinforcement** — Buy 1 x 6 in x 75 ft roll');
+    expect(answer?.content).toContain('Installer-selected: 1 roll × 75 linear ft = 75 linear ft total.');
+    expect(answer?.content).not.toMatch(/sq ft per 6 in x 75 ft roll/);
   });
 
   it('uses priceable Type C cleaner quantities for a pool calculation', () => {
