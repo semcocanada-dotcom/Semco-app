@@ -218,7 +218,7 @@ export function ColourAllocationPicker({
             <Text style={styles.sampleTitle}>Add colour sample</Text>
             <Text style={styles.optionalLabel}>OPTIONAL</Text>
           </View>
-          <Text style={styles.sampleDescription}>$40 flat rate · X-Bond + pigment included</Text>
+          <Text style={styles.sampleDescription}>$40 flat rate · X-Bond Liquid + pigment included</Text>
           <Text style={samplesAreComplimentary ? styles.sampleFreeQualified : styles.sampleFreePolicy}>
             FREE at 500+ sq ft
           </Text>

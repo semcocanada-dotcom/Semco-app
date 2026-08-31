@@ -82,7 +82,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
         <View key={`tint-sample-${sample.colourId}`} style={styles.line}>
           <View style={styles.lineCopy}>
             <Text style={styles.lineName}>{sample.colourName} prepared colour sample</Text>
-            <Text style={styles.lineMeta}>{sample.colourCode} · Prepared 1 quart / 946 mL included</Text>
+            <Text style={styles.lineMeta}>{sample.colourCode} · Prepared 1 quart / 946 mL X-Bond Liquid included</Text>
             <Text style={sample.isSampleComplimentary && !needsSamplePricingRecalculation ? styles.freeLineMeta : styles.lineCoverage}>
               {needsSamplePricingRecalculation
                 ? 'Saved sample policy — recalculate before ordering'
@@ -116,7 +116,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
           {needsBatchRecalculation
             ? 'Recalculate this saved tint plan before ordering so it uses only 1- and 5-gallon project batches.'
             : needsSamplePricingRecalculation
-            ? 'Recalculate this saved sample plan for the $40 flat rate with X-Bond and pigment included.'
+            ? 'Recalculate this saved sample plan for the $40 flat rate with X-Bond Liquid and pigment included.'
             : hasProjectFormulaReview && hasSampleFormulaReview
             ? 'Project and sample colour formulas need dealer review before pricing and mixing can be finalized.'
             : hasSampleFormulaReview
@@ -126,7 +126,7 @@ export function MaterialRetailEstimateCard({ result, dealerContext = UNASSIGNED_
       ) : null}
       {tintPlan?.samplePlan && !needsSamplePricingRecalculation ? (
         <Text style={styles.sampleLiquidNote}>
-          The $40 flat rate includes a prepared X-Bond quart and pigment from dealer sample stock. No extra project pail is added.
+          The $40 flat rate includes a prepared quart of X-Bond Liquid and pigment from dealer sample stock. No extra project pail is added.
         </Text>
       ) : null}
     </Card>
@@ -145,7 +145,7 @@ function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
   const flatRate = sample.flatRateCad != null
     ? formatCadCompact(sample.flatRateCad)
     : 'Flat-rate review required';
-  return `${flatRate} flat rate · X-Bond + pigment included${sample.isSampleComplimentary ? ' · waived' : ''}`;
+  return `${flatRate} flat rate · X-Bond Liquid + pigment included${sample.isSampleComplimentary ? ' · waived' : ''}`;
 }
 
 const styles = StyleSheet.create({

@@ -260,7 +260,7 @@ export default function OrdersScreen() {
     if (result && needsTintRecalculation) {
       Alert.alert(
         'Recalculate colour tint',
-        'This saved tint plan uses older batch or sample rules. Recalculate it for the current $40 flat sample rate, included X-Bond and pigment, and 500+ sq ft waiver.',
+        'This saved tint plan uses older batch or sample rules. Recalculate it for the current $40 flat sample rate, included X-Bond Liquid and pigment, and 500+ sq ft waiver.',
       );
       return;
     }
@@ -441,7 +441,7 @@ export default function OrdersScreen() {
                 <View style={styles.tintRequiredCopy}>
                   <Text style={styles.tintRequiredTitle}>Recalculate tint before this request can be saved</Text>
                   <Text style={styles.bodySmall}>
-                    This saved tint plan uses older batch or sample rules. Recalculate it for the current $40 flat sample rate, included X-Bond and pigment, and 500+ sq ft waiver.
+                    This saved tint plan uses older batch or sample rules. Recalculate it for the current $40 flat sample rate, included X-Bond Liquid and pigment, and 500+ sq ft waiver.
                   </Text>
                   <Button label="Recalculate in Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} fullWidth />
                 </View>

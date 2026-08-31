@@ -31,7 +31,7 @@ export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
   if (hasLegacySamplePricing(plan)) {
     return [
       'Colour tint preparation:',
-      'RECALCULATION REQUIRED: this saved plan used an older sample policy. Recalculate it for the $40 flat sample rate with X-Bond and pigment included before ordering.',
+      'RECALCULATION REQUIRED: this saved plan used an older sample policy. Recalculate it for the $40 flat sample rate with X-Bond Liquid and pigment included before ordering.',
     ];
   }
 
@@ -40,7 +40,7 @@ export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
     'Project orders use 1-gallon and 5-gallon tint batches.',
   ];
   if (plan.samplePlan) {
-    lines.push('Each sample is a $40 flat rate including a prepared X-Bond quart and pigment from dealer sample stock, so no extra project pail is added. All sample fees are waived at 500+ sq ft.');
+    lines.push('Each sample is a $40 flat rate including a prepared quart of X-Bond Liquid and pigment from dealer sample stock, so no extra project pail is added. All sample fees are waived at 500+ sq ft.');
   }
   for (const allocation of plan.allocations) {
     lines.push(
@@ -93,7 +93,7 @@ export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
 
 function formatSamplePriceSummary(sample: ColourTintSampleLine): string {
   const flatRate = sample.flatRateCad != null
-    ? `${formatCadCompact(sample.flatRateCad)} flat rate (prepared X-Bond + pigment included)`
+    ? `${formatCadCompact(sample.flatRateCad)} flat rate (prepared X-Bond Liquid + pigment included)`
     : 'FLAT-RATE REVIEW REQUIRED';
   if (sample.isSampleComplimentary) {
     const waived = sample.discountCad != null ? `${formatCad(sample.discountCad)} sample fee waived` : 'sample fee waived';
@@ -111,9 +111,9 @@ function formatSamplePlanPriceSummary(plan: ColourTintSamplePlan): string {
       ? `${formatNumber(plan.sampleComplimentaryThresholdSqft)} sq ft or more`
       : 'the qualifying project size';
     const waived = plan.totalDiscountCad != null ? `${formatCad(plan.totalDiscountCad)} sample fees waived` : 'sample fees waived';
-    return `Sample pricing: Flat rates ${flatRate}; prepared X-Bond + pigment included; ${waived}; FREE at ${threshold}; sample total ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : '$0.00'}.`;
+    return `Sample pricing: Flat rates ${flatRate}; prepared X-Bond Liquid + pigment included; ${waived}; FREE at ${threshold}; sample total ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : '$0.00'}.`;
   }
-  return `Sample pricing: Flat rates ${flatRate}; prepared X-Bond + pigment included; sample total ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'pending dealer review'}.`;
+  return `Sample pricing: Flat rates ${flatRate}; prepared X-Bond Liquid + pigment included; sample total ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'pending dealer review'}.`;
 }
 
 function formatBatches(batches: ColourTintPlan['allocations'][number]['batches']): string {

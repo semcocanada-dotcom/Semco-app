@@ -41,7 +41,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
           <Text style={styles.recalculationWarningText}>
             {needsBatchRecalculation
               ? 'This saved plan used a quart job batch. Recalculate before ordering so it uses 1- and 5-gallon project batches.'
-              : 'This saved sample used an older policy. Recalculate for the $40 flat rate with X-Bond and pigment included.'}
+              : 'This saved sample used an older policy. Recalculate for the $40 flat rate with X-Bond Liquid and pigment included.'}
           </Text>
         </View>
       ) : null}
@@ -99,7 +99,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
                   <ColourSwatch hex={sample.swatchHex ?? getColourChargeRecord(sample.colourId)?.swatchHex ?? undefined} />
                   <View style={styles.allocationCopy}>
                     <Text style={styles.sampleColourName}>{sample.colourName}</Text>
-                    <Text style={styles.colourMeta}>{sample.colourCode} · 1 quart / 946 mL</Text>
+                    <Text style={styles.colourMeta}>{sample.colourCode} · 1 quart / 946 mL X-Bond Liquid</Text>
                     {usesCurrentPricing ? (
                       <Text style={sample.isSampleComplimentary ? styles.sampleWaivedMeta : styles.samplePricingMeta}>
                         {formatSamplePriceBreakdown(sample)}
@@ -143,7 +143,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
       {showDetails && !needsRecalculation ? (
         <View style={styles.detailsPanel}>
           <Text style={styles.batchPolicy}>
-            Project orders use 1-gallon and 5-gallon tint batches. The $40 sample flat rate includes a prepared X-Bond quart and pigment from dealer sample stock, so no extra project pail is added.
+            Project orders use 1-gallon and 5-gallon tint batches. The $40 sample flat rate includes a prepared quart of X-Bond Liquid and pigment from dealer sample stock, so no extra project pail is added.
           </Text>
           {plan.allocations.map((allocation) => (
             <View key={`details-${allocation.colourId}`} style={styles.detailAllocation}>
@@ -223,7 +223,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
       </View>
       <Text style={styles.disclaimer}>
         {usesCurrentSamplePricing
-          ? 'The $40 flat rate includes a prepared X-Bond quart and pigment from dealer sample stock. No extra project pail is added. Production pigment charging is unchanged.'
+          ? 'The $40 flat rate includes a prepared quart of X-Bond Liquid and pigment from dealer sample stock. No extra project pail is added. Production pigment charging is unchanged.'
           : 'Tint charge only. X-Bond Liquid, labour, freight, tax, and other material charges are separate.'}
       </Text>
     </Card>
@@ -241,7 +241,7 @@ function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
   const flatRate = sample.flatRateCad != null
     ? formatCadCompact(sample.flatRateCad)
     : 'Flat-rate review required';
-  return `${flatRate} flat rate · X-Bond + pigment included${sample.isSampleComplimentary ? ' · waived' : ''}`;
+  return `${flatRate} flat rate · X-Bond Liquid + pigment included${sample.isSampleComplimentary ? ' · waived' : ''}`;
 }
 
 function formatSampleThreshold(plan: ColourTintSamplePlan): string {

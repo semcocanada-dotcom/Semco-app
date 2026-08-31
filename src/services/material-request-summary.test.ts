@@ -62,12 +62,12 @@ describe('dealer material request tint summary', () => {
     const body = lines.join('\n');
 
     expect(body).toContain('Colour samples — 1-quart sample (946 mL) each:');
-    expect(body).toContain('Each sample is a $40 flat rate including a prepared X-Bond quart and pigment from dealer sample stock, so no extra project pail is added.');
-    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $40 flat rate (prepared X-Bond + pigment included); sample total $40.00");
+    expect(body).toContain('Each sample is a $40 flat rate including a prepared quart of X-Bond Liquid and pigment from dealer sample stock, so no extra project pail is added.');
+    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $40 flat rate (prepared X-Bond Liquid + pigment included); sample total $40.00");
     expect(body).toContain('Quart sample tint-machine formula:');
     expect(body).toContain('5 gal staged for purchase. Sample quarts come from dealer sample stock; no additional X-Bond Liquid or pail is added to the project order.');
     expect(body).not.toContain('gal for colour samples');
-    expect(body).toContain('Sample pricing: Flat rates $40.00; prepared X-Bond + pigment included; sample total $40.00.');
+    expect(body).toContain('Sample pricing: Flat rates $40.00; prepared X-Bond Liquid + pigment included; sample total $40.00.');
     expect(body).toContain('The $40 per-sample flat rate includes one prepared quart of X-Bond Liquid and its pigment.');
     expect(body).toContain('Production pigment charging is unchanged.');
     expect(body).toContain('Total colour charges: $61.66');
@@ -77,7 +77,7 @@ describe('dealer material request tint summary', () => {
   it('waives the full $40 sample fee at 500 square feet', () => {
     const body = buildTintRequestSummaryLines(currentSamplePlanFixture(true)).join('\n');
 
-    expect(body).toContain('$40 flat rate (prepared X-Bond + pigment included); FREE — $40.00 sample fee waived; sample total $0.00');
+    expect(body).toContain('$40 flat rate (prepared X-Bond Liquid + pigment included); FREE — $40.00 sample fee waived; sample total $0.00');
     expect(body).toContain('$40.00 sample fees waived; FREE at 500 sq ft or more; sample total $0.00.');
     expect(body).toContain('Total colour charges: $21.66');
   });
@@ -85,7 +85,7 @@ describe('dealer material request tint summary', () => {
   it('keeps formula review visible when the full sample fee is waived', () => {
     const body = buildTintRequestSummaryLines(complimentaryReviewSampleFixture()).join('\n');
 
-    expect(body).toContain('$40 flat rate (prepared X-Bond + pigment included); FREE — $40.00 sample fee waived; sample total $0.00');
+    expect(body).toContain('$40 flat rate (prepared X-Bond Liquid + pigment included); FREE — $40.00 sample fee waived; sample total $0.00');
     expect(body).toContain('Review: Published quart formula requires dealer review.');
     expect(body).toContain('Total colour charges: $21.66');
   });
@@ -118,7 +118,7 @@ describe('dealer material request tint summary', () => {
     expect(canSaveMaterialRequest(result, '')).toBe(false);
     expect(body).toContain('RECALCULATION REQUIRED');
     expect(body).not.toContain('$2.71');
-    expect(body).not.toContain('$40 flat rate (prepared X-Bond + pigment included)');
+    expect(body).not.toContain('$40 flat rate (prepared X-Bond Liquid + pigment included)');
   });
 
   it('blocks saved v2 sample plans so they cannot retain the superseded fee and liquid source', () => {
