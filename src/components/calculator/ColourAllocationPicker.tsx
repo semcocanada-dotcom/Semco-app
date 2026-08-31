@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Keyboard,
   Modal,
+  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -38,7 +39,8 @@ interface ColourAllocationPickerProps {
   includeSamples: boolean;
   onIncludeSamplesChange: (include: boolean) => void;
   onPickerOpen?: () => void;
-  onPickerClose?: () => void;
+  onPickerWillClose?: () => void;
+  onPickerDismiss?: () => void;
 }
 
 export function ColourAllocationPicker({
@@ -53,10 +55,12 @@ export function ColourAllocationPicker({
   includeSamples,
   onIncludeSamplesChange,
   onPickerOpen,
-  onPickerClose,
+  onPickerWillClose,
+  onPickerDismiss,
 }: ColourAllocationPickerProps) {
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const closingRef = useRef(false);
   const options = useMemo(() => searchTintColours(query), [query]);
   const totalArea = Number.parseFloat(totalAreaSqft);
   const samplesAreComplimentary = isColourSampleComplimentaryProject(totalArea);
@@ -75,16 +79,33 @@ export function ColourAllocationPicker({
   }, 0);
 
   function openPicker(slotId: string) {
+    closingRef.current = false;
     onPickerOpen?.();
     setActiveSlotId(slotId);
     setQuery('');
   }
 
   function closePicker() {
+    if (closingRef.current) return;
+    closingRef.current = true;
     Keyboard.dismiss();
-    setActiveSlotId(null);
-    setQuery('');
-    onPickerClose?.();
+    requestAnimationFrame(() => {
+      // Restore behind the still-visible sheet, so no corrective scroll is visible.
+      onPickerWillClose?.();
+      requestAnimationFrame(() => {
+        setActiveSlotId(null);
+        setQuery('');
+        if (Platform.OS !== 'ios') {
+          closingRef.current = false;
+          onPickerDismiss?.();
+        }
+      });
+    });
+  }
+
+  function pickerDidDismiss() {
+    closingRef.current = false;
+    onPickerDismiss?.();
   }
 
   function chooseColour(colourId: string) {
@@ -252,7 +273,7 @@ export function ColourAllocationPicker({
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={closePicker}
-        onDismiss={onPickerClose}
+        onDismiss={pickerDidDismiss}
       >
         <SafeAreaView style={styles.modalSafe}>
           <View style={styles.modalContent}>

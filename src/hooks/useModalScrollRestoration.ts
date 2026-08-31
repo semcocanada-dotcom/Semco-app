@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 import {
-  InteractionManager,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type ScrollView,
@@ -22,12 +21,8 @@ export function useModalScrollRestoration() {
 
   const restoreScrollPosition = useCallback(() => {
     const targetY = capturedScrollY.current;
-    InteractionManager.runAfterInteractions(() => {
-      requestAnimationFrame(() => {
-        scrollViewRef.current?.scrollTo({ y: targetY, animated: false });
-        currentScrollY.current = targetY;
-      });
-    });
+    scrollViewRef.current?.scrollTo({ y: targetY, animated: false });
+    currentScrollY.current = targetY;
   }, []);
 
   return {

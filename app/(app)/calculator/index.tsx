@@ -111,6 +111,7 @@ export default function CalculatorScreen() {
   } = useCalculator();
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
+  const [colourPickerOpen, setColourPickerOpen] = useState(false);
   const {
     scrollViewRef,
     onScroll,
@@ -164,6 +165,7 @@ export default function CalculatorScreen() {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={!colourPickerOpen}
       >
         <ScrollView
           ref={scrollViewRef}
@@ -284,8 +286,12 @@ export default function CalculatorScreen() {
                 onRemoveColour={removeColourSelection}
                 includeSamples={form.includeColourSamples}
                 onIncludeSamplesChange={setIncludeColourSamples}
-                onPickerOpen={captureScrollPosition}
-                onPickerClose={restoreScrollPosition}
+                onPickerOpen={() => {
+                  captureScrollPosition();
+                  setColourPickerOpen(true);
+                }}
+                onPickerWillClose={restoreScrollPosition}
+                onPickerDismiss={() => setColourPickerOpen(false)}
               />
 
               <View style={styles.section}>
