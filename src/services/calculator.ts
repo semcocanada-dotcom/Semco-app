@@ -1,6 +1,10 @@
 import type { SubstrateId } from '@/constants/substrates';
 import { SUBSTRATE_MAP } from '@/constants/substrates';
 import {
+  STANDARD_SHOWER_POLICY_PAGE,
+  STANDARD_SHOWER_POLICY_SOURCE,
+} from '@/constants/shower-policy';
+import {
   CLEANER_COVERAGE_CAVEAT,
   CLEANER_COVERAGE_SOURCE,
   SIP_PREP_SOURCE,
@@ -48,6 +52,9 @@ export interface CalculatorInput {
   colourAllocations?: ColourAllocationInput[];
   includeColourSamples?: boolean;
 }
+
+const FOUR_BY_EIGHT_SHARED_SEAM_LF_PER_SQFT = (1 / 4) + (1 / 8);
+const FABRIC_REINFORCEMENT_ROLL_LF = 75;
 
 export function calculate(input: CalculatorInput): CalculationResult {
   const {
@@ -127,7 +134,11 @@ export function calculate(input: CalculatorInput): CalculationResult {
   estimates.push(estimateCoverage(sealerProduct, getSealerRange(sealerProduct, substrateType), areaSqft, wastePct));
 
   const result: CalculationResult = {
-    layers: [...getPrepLayers(prepSystem, areaSqft, wastePct), ...estimates.map(toMaterialLayer)],
+    layers: [
+      ...getPrepLayers(prepSystem, areaSqft, wastePct),
+      ...getWetAreaFabricLayers(substrateType, installationScope, areaSqft, wastePct),
+      ...estimates.map(toMaterialLayer),
+    ],
     totalKg: 0,
     wastePct,
     areaSqm,
@@ -164,6 +175,51 @@ export function calculate(input: CalculatorInput): CalculationResult {
   }
 
   return result;
+}
+
+function getWetAreaFabricLayers(
+  substrateType: SubstrateId,
+  installationScope: InstallationScope,
+  areaSqft: number,
+  wastePct: number,
+): MaterialLayer[] {
+  if (installationScope !== 'wet_area') return [];
+
+  const usesFourByEightSheetEstimate = substrateType === 'plywood';
+  const adjustedSqft = areaSqft * (1 + wastePct / 100);
+  const estimatedLinearFeet = usesFourByEightSheetEstimate
+    ? adjustedSqft * FOUR_BY_EIGHT_SHARED_SEAM_LF_PER_SQFT
+    : FABRIC_REINFORCEMENT_ROLL_LF;
+  const exactRolls = estimatedLinearFeet / FABRIC_REINFORCEMENT_ROLL_LF;
+  const roundedRolls = Math.max(1, Math.ceil(exactRolls));
+  const quantityLabel = usesFourByEightSheetEstimate
+    ? `${formatLinearFeet(estimatedLinearFeet)} lin ft estimated`
+    : '1 roll minimum allowance';
+
+  return [{
+    productId: 'semco-fabric-reinforcement-fr675',
+    productSku: 'FR675',
+    productName: 'SEMCO Fabric Reinforcement',
+    category: 'reinforcement',
+    coats: 1,
+    quantityKg: 0,
+    quantityPacks: roundedRolls,
+    packSizeKg: 0,
+    coverageRateSqmPerKg: 0,
+    quantityLabel,
+    purchaseLabel: `Buy ${roundedRolls} x 6 in x 75 ft roll${roundedRolls === 1 ? '' : 's'}`,
+    packLabel: '6 in x 75 ft roll',
+    coverageLabel: usesFourByEightSheetEstimate
+      ? 'Plywood wet-area seams - shared 4 x 8 sheet-joint average'
+      : 'Wet-area joints and inside corners - minimum allowance',
+    sourceDocument: STANDARD_SHOWER_POLICY_SOURCE,
+    sourcePage: STANDARD_SHOWER_POLICY_PAGE,
+    sourceNote: usesFourByEightSheetEstimate
+      ? 'Uses 0.375 linear ft per sq ft for a repeating 4 x 8 sheet layout: one joint every 4 ft plus one joint every 8 ft, with each shared seam counted once. The selected waste percentage is included. Add the actual inside-corner and transition length, and add rolls if the field total exceeds 75 linear ft per roll.'
+      : 'Fabric Reinforcement is required at wet-area joints and inside corners. One roll is included as a minimum allowance; verify the actual joint, corner, and transition length and add one roll per 75 linear ft as needed.',
+    exactQuantity: exactRolls,
+    roundedQuantity: roundedRolls,
+  }];
 }
 
 function getPrepLayers(prepSystem: PrepSystem, areaSqft: number, wastePct: number): MaterialLayer[] {
@@ -220,7 +276,7 @@ function createAssemblyPrepLayer(prepSystem: PrepSystem): MaterialLayer {
     packSizeKg: 0,
     coverageRateSqmPerKg: 0,
     quantityLabel: 'No cleaner quantity',
-    purchaseLabel: isWood ? 'Liquid Membrane is included in the material rows' : 'Verify the actual top surface before coating',
+    purchaseLabel: isWood ? 'Liquid Membrane is included; wet-area fabric appears in its own material row' : 'Verify the actual top surface before coating',
     coverageLabel: prepSystem.label,
     sourceDocument: SIP_PREP_SOURCE,
     sourcePage: prepSystem.sourcePage,
@@ -249,8 +305,11 @@ function buildSourceSummary(
             ? 'Liquid Membrane is optional for this wall in a non-wet area and is not included.'
             : 'Liquid Membrane is optional for this floor or other non-wet calculation and is not included.'
           : 'Liquid Membrane was included by selection.';
+  const fabricSummary = installationScope === 'wet_area'
+    ? ' Fabric Reinforcement is included for joints and inside corners; plywood quantity uses a shared-seam average for 4 x 8 sheets and must be checked against the field layout.'
+    : '';
 
-  return `Preparation follows ${prepLabel}: ${prepSystem.label}.${cleanerBasis} ${membraneSummary}`;
+  return `Preparation follows ${prepLabel}: ${prepSystem.label}.${cleanerBasis} ${membraneSummary}${fabricSummary}`;
 }
 
 function formatGallons(value: number): string {
@@ -263,6 +322,11 @@ function formatGallonRange(minimum: number, maximum: number): string {
   const minLabel = formatGallons(minimum);
   const maxLabel = formatGallons(maximum);
   return minLabel === maxLabel ? minLabel : `${minLabel}-${maxLabel}`;
+}
+
+function formatLinearFeet(value: number): string {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
 }
 
 function toMaterialLayer(estimate: CoverageEstimate): MaterialLayer {

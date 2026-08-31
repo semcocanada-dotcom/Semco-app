@@ -175,6 +175,27 @@ describe('useCalculator preparation and membrane controls', () => {
     });
   });
 
+  it('keeps fabric and the $40 sample policy together for 150 sq ft of plywood in a wet area', () => {
+    const { result } = renderHook(() => useCalculator());
+
+    act(() => result.current.setAreaSqft('150'));
+    act(() => result.current.setSubstrate('plywood'));
+    act(() => result.current.setInstallationScope('wet_area'));
+    act(() => result.current.setColourSelection('colour-1', 'col-xbond-2053t'));
+    act(() => result.current.setIncludeColourSamples(true));
+    act(() => result.current.runCalculation());
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.result?.layers.find((layer) => layer.productSku === 'FR675')).toMatchObject({
+      quantityLabel: '61.9 lin ft estimated',
+      roundedQuantity: 1,
+    });
+    expect(result.current.result?.colourTintPlan?.samplePlan).toMatchObject({
+      totalChargeCad: 40,
+      isSampleComplimentary: false,
+    });
+  });
+
   it('requires multi-colour areas to total the project area', () => {
     const { result } = renderHook(() => useCalculator());
 

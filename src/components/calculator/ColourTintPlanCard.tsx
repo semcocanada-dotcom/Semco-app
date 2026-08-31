@@ -121,6 +121,16 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
             );
           })}
         </View>
+      ) : !needsRecalculation ? (
+        <View style={styles.samplePolicyNotice}>
+          <Ionicons name="flask-outline" size={17} color={Colors.darkTeal} />
+          <View style={styles.samplePolicyCopy}>
+            <Text style={styles.samplePolicyTitle}>No colour sample added</Text>
+            <Text style={styles.samplePolicyText}>
+              Optional prepared 1-quart X-Bond Liquid sample: $40 flat rate with pigment included. FREE at 500+ sq ft.
+            </Text>
+          </View>
+        </View>
       ) : null}
 
       {!needsRecalculation ? (
@@ -322,6 +332,10 @@ const styles = StyleSheet.create({
   formulaLine: { color: Colors.navy, fontFamily: Fonts.medium, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.35 },
   review: { color: Colors.danger, fontFamily: Fonts.semibold, fontSize: Typography.size.xs },
   sampleSection: { gap: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: Spacing.sm },
+  samplePolicyNotice: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm, borderRadius: Radius.md, backgroundColor: Colors.primaryMuted, padding: Spacing.sm },
+  samplePolicyCopy: { flex: 1, gap: 2 },
+  samplePolicyTitle: { color: Colors.navy, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
+  samplePolicyText: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.35 },
   sampleHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: Spacing.sm },
   sampleHeaderCopy: { flex: 1, gap: 2 },
   sampleTitle: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.base },

@@ -165,6 +165,26 @@ describe('Liquid Membrane package pricing', () => {
   });
 });
 
+describe('Fabric Reinforcement pricing', () => {
+  it('prices the 6 in x 75 ft wet-area roll at the confirmed Canadian price', () => {
+    const result = calculate({
+      areaSqft: 150,
+      substrateType: 'plywood',
+      wastePct: 10,
+      installationScope: 'wet_area',
+    });
+    const fabric = result.layers.find((layer) => layer.productSku === 'FR675');
+    const [line] = priceMaterialLayers([fabric!]);
+
+    expect(line).toMatchObject({ priceSku: 'FR675', quantity: 1, lineTotalCad: 92.14 });
+    expect(line.price).toMatchObject({
+      product: 'Fabric Reinforcement',
+      size: '6 in x 75 ft roll',
+      retailPriceCad: 92.14,
+    });
+  });
+});
+
 describe('X-Bond Liquid package pricing', () => {
   it('uses one priced 5-gallon pail and one priced 1-gallon pail for six gallons', () => {
     const liquid = {

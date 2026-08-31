@@ -14,6 +14,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   x_bond_liquid: 'X-Bond Liquid',
   microbond_finish: 'MicroBond',
   waterproofing: 'Membrane',
+  reinforcement: 'Fabric',
   sealer: 'Sealer',
   pigment: 'Pigment',
 };
@@ -60,7 +61,7 @@ function formatArea(value: number): string {
 function LayerRow({ layer }: { layer: MaterialLayer }) {
   const badgeVariant =
     layer.category === 'prep' ? 'success' :
-    layer.category === 'primer' || layer.category === 'waterproofing' ? 'warning' :
+    layer.category === 'primer' || layer.category === 'waterproofing' || layer.category === 'reinforcement' ? 'warning' :
     layer.category === 'sealer' ? 'primary' :
     layer.category === 'x_bond_liquid' ? 'neutral' :
     layer.category === 'microcement' ? 'accent' :

@@ -248,6 +248,47 @@ describe('calculator preparation and membrane behavior', () => {
     expect(result.liquidMembraneRequired).toBe(true);
     expect(membrane?.coats).toBe(2);
     expect(result.sourceSummary).toContain('2-coat above-grade system');
+    expect(result.layers.find((layer) => layer.productSku === 'FR675')).toMatchObject({
+      roundedQuantity: 1,
+      purchaseLabel: 'Buy 1 x 6 in x 75 ft roll',
+    });
+  });
+
+  it('estimates one shared seam once for 4 x 8 plywood sheets and adds priced wet-area fabric', () => {
+    const result = calculate({
+      areaSqft: 150,
+      substrateType: 'plywood',
+      wastePct: 10,
+      installationScope: 'wet_area',
+      waterproofingMode: 'none',
+    });
+    const fabric = result.layers.find((layer) => layer.productSku === 'FR675');
+
+    expect(fabric).toMatchObject({
+      productName: 'SEMCO Fabric Reinforcement',
+      quantityLabel: '61.9 lin ft estimated',
+      purchaseLabel: 'Buy 1 x 6 in x 75 ft roll',
+      packLabel: '6 in x 75 ft roll',
+      roundedQuantity: 1,
+    });
+    expect(fabric?.exactQuantity).toBeCloseTo((150 * 1.1 * 0.375) / 75, 8);
+    expect(fabric?.sourceNote).toContain('each shared seam counted once');
+    expect(result.sourceSummary).toContain('shared-seam average for 4 x 8 sheets');
+  });
+
+  it('rounds the 4 x 8 plywood shared-seam estimate up to additional fabric rolls', () => {
+    const fabric = calculate({
+      areaSqft: 400,
+      substrateType: 'plywood',
+      wastePct: 10,
+      installationScope: 'wet_area',
+    }).layers.find((layer) => layer.productSku === 'FR675');
+
+    expect(fabric).toMatchObject({
+      quantityLabel: '165 lin ft estimated',
+      roundedQuantity: 3,
+      purchaseLabel: 'Buy 3 x 6 in x 75 ft rolls',
+    });
   });
 
   it('orders two 1-gallon Liquid Membrane pails for the 384 sq ft Atlantic quote', () => {
@@ -405,6 +446,26 @@ describe('calculator preparation and membrane behavior', () => {
     expect(liquid).toMatchObject({
       roundedQuantity: 5,
       purchaseLabel: 'Buy 1 x 5 gal pail',
+    });
+  });
+
+  it('keeps the current $40 sample policy in the exact 150 sq ft plywood wet-area path', () => {
+    const baseInput = {
+      areaSqft: 150,
+      substrateType: 'plywood' as const,
+      wastePct: 10,
+      installationScope: 'wet_area' as const,
+      colourAllocations: [{ colourId: 'col-xbond-2053t', areaSqft: 150 }],
+    };
+    const withoutSample = calculate(baseInput);
+    const withSample = calculate({ ...baseInput, includeColourSamples: true });
+
+    expect(withoutSample.colourTintPlan?.samplePlan).toBeUndefined();
+    expect(withSample.colourTintPlan?.samplePlan).toMatchObject({
+      totalChargeCad: 40,
+      isSampleComplimentary: false,
+      liquidSource: 'dealer_sample_stock',
+      samples: [{ flatRateCad: 40, totalChargeCad: 40 }],
     });
   });
 
