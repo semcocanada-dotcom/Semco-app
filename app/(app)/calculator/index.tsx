@@ -24,6 +24,7 @@ import type { InstallerProfile } from '@/database/schema/installers';
 import { getInstallerProfile, LOCAL_INSTALLER_ID, profileToDealerInput } from '@/services/installer-profile';
 import { savePendingMaterialRequest } from '@/services/pending-material-request';
 import { useAuthStore } from '@/store/auth';
+import { useModalScrollRestoration } from '@/hooks/useModalScrollRestoration';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
 
 const ESTIMATOR_POINTS = [
@@ -110,6 +111,12 @@ export default function CalculatorScreen() {
   } = useCalculator();
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [profile, setProfile] = useState<InstallerProfile | null>(null);
+  const {
+    scrollViewRef,
+    onScroll,
+    captureScrollPosition,
+    restoreScrollPosition,
+  } = useModalScrollRestoration();
   const isPool = form.substrateType === 'pool';
   const membraneRequired = Boolean(
     form.substrateType
@@ -158,7 +165,13 @@ export default function CalculatorScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+        >
           <View style={styles.content}>
             <AppHeader title="Calculator" subtitle="Fast field material estimating." rightIcon="calculator-outline" />
 
@@ -271,6 +284,8 @@ export default function CalculatorScreen() {
                 onRemoveColour={removeColourSelection}
                 includeSamples={form.includeColourSamples}
                 onIncludeSamplesChange={setIncludeColourSamples}
+                onPickerOpen={captureScrollPosition}
+                onPickerClose={restoreScrollPosition}
               />
 
               <View style={styles.section}>

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   FlatList,
+  Keyboard,
   Modal,
   SafeAreaView,
   StyleSheet,
@@ -36,6 +37,8 @@ interface ColourAllocationPickerProps {
   onRemoveColour: (slotId: string) => void;
   includeSamples: boolean;
   onIncludeSamplesChange: (include: boolean) => void;
+  onPickerOpen?: () => void;
+  onPickerClose?: () => void;
 }
 
 export function ColourAllocationPicker({
@@ -49,6 +52,8 @@ export function ColourAllocationPicker({
   onRemoveColour,
   includeSamples,
   onIncludeSamplesChange,
+  onPickerOpen,
+  onPickerClose,
 }: ColourAllocationPickerProps) {
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -70,15 +75,22 @@ export function ColourAllocationPicker({
   }, 0);
 
   function openPicker(slotId: string) {
+    onPickerOpen?.();
     setActiveSlotId(slotId);
     setQuery('');
+  }
+
+  function closePicker() {
+    Keyboard.dismiss();
+    setActiveSlotId(null);
+    setQuery('');
+    onPickerClose?.();
   }
 
   function chooseColour(colourId: string) {
     if (!activeSlotId) return;
     onSelectColour(activeSlotId, colourId);
-    setActiveSlotId(null);
-    setQuery('');
+    closePicker();
   }
 
   return (
@@ -239,7 +251,8 @@ export function ColourAllocationPicker({
         visible={activeSlotId !== null}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setActiveSlotId(null)}
+        onRequestClose={closePicker}
+        onDismiss={onPickerClose}
       >
         <SafeAreaView style={styles.modalSafe}>
           <View style={styles.modalContent}>
@@ -249,7 +262,7 @@ export function ColourAllocationPicker({
                 <Text style={styles.modalSubtitle}>Alphabetical by colour name.</Text>
               </View>
               <TouchableOpacity
-                onPress={() => setActiveSlotId(null)}
+                onPress={closePicker}
                 style={styles.closeButton}
                 accessibilityRole="button"
                 accessibilityLabel="Close colour picker"
