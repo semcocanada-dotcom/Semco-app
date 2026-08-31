@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { QuantityControl } from '@/components/ui/QuantityControl';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { getMaterialPrice } from '@/knowledge/material-pricing';
@@ -20,7 +20,7 @@ export function FabricRollSelector({ rolls, required, onChange }: FabricRollSele
       <View style={styles.card}>
         <View style={styles.headerRow}>
           <View style={styles.icon}>
-            <Ionicons name="git-merge-outline" size={19} color={Colors.darkTeal} />
+            <MaterialCommunityIcons name="paper-roll-outline" size={21} color={Colors.darkTeal} />
           </View>
           <View style={styles.copy}>
             <Text style={styles.title}>6 in × 75 ft roll</Text>

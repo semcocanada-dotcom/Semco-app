@@ -4,6 +4,7 @@ import { FabricRollSelector } from '@/components/calculator/FabricRollSelector';
 
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: () => null,
+  MaterialCommunityIcons: () => null,
 }));
 
 describe('FabricRollSelector', () => {
