@@ -41,7 +41,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
           <Text style={styles.recalculationWarningText}>
             {needsBatchRecalculation
               ? 'This saved plan used a quart job batch. Recalculate before ordering so it uses 1- and 5-gallon project batches.'
-              : 'This saved sample used old pigment-only pricing. Recalculate to apply the $30 sample preparation and free-at-300-sq-ft policy.'}
+              : 'This saved sample used an older policy. Recalculate to apply the $30 prepared-quart fee without adding extra X-Bond Liquid.'}
           </Text>
         </View>
       ) : null}
@@ -78,7 +78,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
         <View style={styles.sampleSection}>
           <View style={styles.sampleHeader}>
             <View style={styles.sampleHeaderCopy}>
-              <Text style={styles.sampleTitle}>Sample mixing</Text>
+              <Text style={styles.sampleTitle}>Prepared colour samples</Text>
               <Text style={styles.sampleSubtitle}>
                 {plan.samplePlan.samples.length} × {plan.samplePlan.sampleLabel}
               </Text>
@@ -143,7 +143,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
       {showDetails && !needsRecalculation ? (
         <View style={styles.detailsPanel}>
           <Text style={styles.batchPolicy}>
-            Project orders use 1-gallon and 5-gallon tint batches. Quart formulas are reserved for samples.
+            Project orders use 1-gallon and 5-gallon tint batches. Sample quarts are drawn from the X-Bond Liquid ordered for the job and do not add extra liquid.
           </Text>
           {plan.allocations.map((allocation) => (
             <View key={`details-${allocation.colourId}`} style={styles.detailAllocation}>
@@ -180,7 +180,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
           ))}
           {plan.samplePlan ? (
             <View style={styles.sampleDetailSection}>
-              <Text style={styles.detailColourTitle}>One-quart sample formulas</Text>
+              <Text style={styles.detailColourTitle}>Prepared one-quart sample formulas</Text>
               {plan.samplePlan.samples.map((sample) => (
                 <View key={`sample-detail-${sample.colourId}`} style={styles.detailAllocation}>
                   <Text style={styles.batchFormulaTitle}>{sample.colourName} · {sample.colourCode}</Text>
@@ -212,8 +212,8 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
               ? 'Saved sample pricing needs an update'
               : usesCurrentSamplePricing
               ? plan.samplePlan?.isComplimentary
-                ? `Pigment tint · samples free at ${formatComplimentaryThreshold(plan.samplePlan)}`
-                : 'Pigment tint + sample preparation'
+                ? `Prepared samples + pigment free at ${formatComplimentaryThreshold(plan.samplePlan)}`
+                : 'Prepared samples + pigment tint'
               : `${plan.samplePlan ? 'Project and sample tint' : 'SEMCO machine ounces'} at ${formatCad(plan.ratePerTintOunceCad)}/oz`}
           </Text>
         </View>
@@ -223,7 +223,7 @@ export function ColourTintPlanCard({ plan }: { plan: ColourTintPlan }) {
       </View>
       <Text style={styles.disclaimer}>
         {usesCurrentSamplePricing
-          ? 'X-Bond Liquid, labour, freight, tax, and other material charges are separate.'
+          ? 'Sample quarts come from the job\'s ordered X-Bond Liquid; no extra liquid is added for samples. Labour, freight, tax, and other material charges are separate.'
           : 'Tint charge only. X-Bond Liquid, labour, freight, tax, and other material charges are separate.'}
       </Text>
     </Card>
@@ -241,9 +241,9 @@ function hasCurrentSampleLinePricing(sample: ColourTintSampleLine): boolean {
 function formatSamplePriceBreakdown(sample: ColourTintSampleLine): string {
   const pigment = sample.pigmentChargeCad != null ? formatCad(sample.pigmentChargeCad) : 'review required';
   const preparation = sample.preparationFeeCad != null
-    ? `${formatCadCompact(sample.preparationFeeCad)} sample preparation`
-    : 'Sample preparation review required';
-  return `Pigment tint ${pigment} · ${preparation}${sample.isComplimentary ? ' · waived' : ''}`;
+    ? `${formatCadCompact(sample.preparationFeeCad)} prepared quart`
+    : 'Prepared-quart fee review required';
+  return `${preparation} from job liquid · Pigment ${pigment}${sample.isComplimentary ? ' · waived' : ''}`;
 }
 
 function formatComplimentaryThreshold(plan: ColourTintSamplePlan): string {

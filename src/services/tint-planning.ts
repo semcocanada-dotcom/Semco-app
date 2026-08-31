@@ -69,7 +69,10 @@ export function hasLegacyQuartTintBatch(plan?: Pick<ColourTintPlan, 'allocations
 export function hasLegacySamplePricing(plan?: Pick<ColourTintPlan, 'samplePlan'>): boolean {
   return Boolean(
     plan?.samplePlan
-    && plan.samplePlan.pricingPolicyVersion !== COLOUR_SAMPLE_PRICING_POLICY_VERSION,
+    && (
+      plan.samplePlan.pricingPolicyVersion !== COLOUR_SAMPLE_PRICING_POLICY_VERSION
+      || plan.samplePlan.liquidSource !== 'ordered_project_material'
+    ),
   );
 }
 
@@ -151,7 +154,6 @@ export function buildColourTintPlan(
     0,
   );
   const purchasedLiquidGallons = getPurchasedXBondLiquidGallons(result.layers);
-  const totalLiquidToStage = preparedLiquidGallons + (samplePlan?.totalLiquidGallons ?? 0);
   const projectTintOunces = allocations.reduce(
     (total, allocation) => total + (allocation.totalTintOunces ?? 0),
     0,
@@ -172,7 +174,12 @@ export function buildColourTintPlan(
       samplePlan,
       exactLiquidGallons,
       preparedLiquidGallons,
-      baseLiquidPurchaseGallons: Math.max(purchasedLiquidGallons, nextWholeGallonPurchase(totalLiquidToStage)),
+      // A dealer-prepared sample is taken from the X-Bond Liquid already in
+      // the customer's project order, so it must never add another container.
+      baseLiquidPurchaseGallons: Math.max(
+        purchasedLiquidGallons,
+        nextWholeGallonPurchase(preparedLiquidGallons),
+      ),
       totalTintOunces: hasKnownTotalTintOunces
         ? round8(projectTintOunces + (samplePlan?.totalTintOunces ?? 0))
         : undefined,
@@ -214,6 +221,7 @@ function buildSamplePlan(
     sampleSize: 'quart',
     sampleLabel: '1-quart sample (946 mL)',
     pricingPolicyVersion: COLOUR_SAMPLE_PRICING_POLICY_VERSION,
+    liquidSource: 'ordered_project_material',
     totalLiquidGallons: samples.length * 0.25,
     totalTintOunces: isFullyPriced
       ? round8(samples.reduce((total, sample) => total + (sample.totalTintOunces ?? 0), 0))
@@ -316,7 +324,7 @@ export function ensureXBondLiquidPurchaseCoversTintPlan(
       purchaseLabel: formatGallonPackagePurchase(roundedQuantity),
       sourceNote: [
         layer.sourceNote,
-        'Base liquid was increased to cover project tint batches and selected colour samples.',
+        'Base liquid was increased to cover whole-gallon project tint batches.',
       ].filter(Boolean).join(' '),
     };
   });

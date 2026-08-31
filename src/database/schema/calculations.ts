@@ -84,7 +84,10 @@ export interface ColourTintSampleLine {
   totalTintOunces?: number;
   /** Pigment-only charge at the configured per-ounce tint rate. */
   pigmentChargeCad?: number;
-  /** Dealer preparation fee before any complimentary-project discount. */
+  /**
+   * Prepared-quart fee before any complimentary-project discount. Includes
+   * liquid drawn from the project order; pigment is recorded separately.
+   */
   preparationFeeCad?: number;
   /** Pigment plus preparation before any discount. */
   subtotalChargeCad?: number;
@@ -101,11 +104,15 @@ export interface ColourTintSamplePlan {
   samples: ColourTintSampleLine[];
   sampleSize: 'quart';
   sampleLabel: string;
-  /** Snapshot of the pricing rules used so older pigment-only plans can be recalculated. */
+  /** Snapshot used to recalculate plans with older fee or liquid-source rules. */
   pricingPolicyVersion?: string;
+  /** Samples are prepared from X-Bond Liquid already included in the project material order. */
+  liquidSource?: 'ordered_project_material';
+  /** Amount the dealer sets aside from the ordered project liquid for sample preparation. */
   totalLiquidGallons: number;
   totalTintOunces?: number;
   totalPigmentChargeCad?: number;
+  /** Total prepared-quart fees, including liquid drawn from the project order. */
   totalPreparationFeeCad?: number;
   subtotalChargeCad?: number;
   totalDiscountCad?: number;

@@ -38,7 +38,7 @@ describe('tint batch sizing', () => {
 });
 
 describe('colour tint allocation', () => {
-  it('detects stored pigment-only sample pricing but not current or sample-free plans', () => {
+  it('detects stored sample plans from older pricing or liquid-source rules', () => {
     const currentPlan = buildColourTintPlan(
       fixtureResult(75, [liquidLayer(2, 2)]),
       [{ colourId: 'col-xbond-2053t', areaSqft: 75 }],
@@ -47,7 +47,10 @@ describe('colour tint allocation', () => {
 
     expect(currentPlan.ok).toBe(true);
     if (!currentPlan.ok) return;
-    expect(currentPlan.plan.samplePlan?.pricingPolicyVersion).toBe('2026-08-30-v1');
+    expect(currentPlan.plan.samplePlan).toMatchObject({
+      pricingPolicyVersion: '2026-08-30-v2',
+      liquidSource: 'ordered_project_material',
+    });
     expect(hasLegacySamplePricing(currentPlan.plan)).toBe(false);
     expect(hasLegacySamplePricing({ samplePlan: undefined })).toBe(false);
     expect(hasLegacySamplePricing({
@@ -59,7 +62,19 @@ describe('colour tint allocation', () => {
     expect(hasLegacySamplePricing({
       samplePlan: {
         ...currentPlan.plan.samplePlan!,
-        pricingPolicyVersion: 'older-policy',
+        pricingPolicyVersion: '2026-08-30-v1',
+      },
+    })).toBe(true);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
+        liquidSource: undefined,
+      },
+    })).toBe(true);
+    expect(hasLegacySamplePricing({
+      samplePlan: {
+        ...currentPlan.plan.samplePlan!,
+        liquidSource: 'extra_sample_material' as never,
       },
     })).toBe(true);
   });
@@ -174,6 +189,7 @@ describe('colour tint allocation', () => {
     expect(planned.plan.samplePlan).toMatchObject({
       sampleSize: 'quart',
       sampleLabel: '1-quart sample (946 mL)',
+      liquidSource: 'ordered_project_material',
       totalLiquidGallons: 0.25,
       totalPigmentChargeCad: 2.71,
       totalPreparationFeeCad: 30,
@@ -253,7 +269,8 @@ describe('colour tint allocation', () => {
     expect(belowThreshold.plan.totalChargeCad).toBe(43.54);
     expect(atThreshold.plan.totalChargeCad).toBe(10.83);
     expect(atThreshold.plan.samplePlan?.totalLiquidGallons).toBe(0.25);
-    expect(atThreshold.plan.baseLiquidPurchaseGallons).toBe(2);
+    expect(atThreshold.plan.samplePlan?.liquidSource).toBe('ordered_project_material');
+    expect(atThreshold.plan.baseLiquidPurchaseGallons).toBe(1);
   });
 
   it('requires dealer review when a published quart sample formula is unavailable', () => {
@@ -320,7 +337,7 @@ describe('colour tint allocation', () => {
   });
 
   it('creates one separate quart sample for every selected project colour', () => {
-    const result = fixtureResult(187.5, [liquidLayer(5, 6)]);
+    const result = fixtureResult(187.5, [liquidLayer(5, 5)]);
     const planned = buildColourTintPlan(
       result,
       [
@@ -333,6 +350,7 @@ describe('colour tint allocation', () => {
     expect(planned.ok).toBe(true);
     if (!planned.ok) return;
     expect(planned.plan.samplePlan).toMatchObject({
+      liquidSource: 'ordered_project_material',
       totalLiquidGallons: 0.5,
       totalPigmentChargeCad: 4.13,
       totalPreparationFeeCad: 60,
@@ -345,7 +363,7 @@ describe('colour tint allocation', () => {
       ],
     });
     expect(planned.plan.preparedLiquidGallons).toBe(5);
-    expect(planned.plan.baseLiquidPurchaseGallons).toBe(6);
+    expect(planned.plan.baseLiquidPurchaseGallons).toBe(5);
     expect(planned.plan.totalChargeCad).toBe(104.3);
   });
 

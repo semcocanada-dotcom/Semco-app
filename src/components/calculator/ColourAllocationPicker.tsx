@@ -203,8 +203,8 @@ export function ColourAllocationPicker({
         accessibilityRole="checkbox"
         accessibilityState={{ checked: includeSamples }}
         accessibilityLabel={samplesAreComplimentary
-          ? 'Add one free 1-quart sample for each selected colour. The 30 dollar sample preparation and pigment tint are waived for this project.'
-          : 'Add one 1-quart sample for each selected colour. Each sample is 30 dollars preparation plus pigment tint, and is free at 300 square feet or more.'}
+          ? 'Add one free prepared 1-quart sample for each selected colour. The sample is drawn from the X-Bond Liquid ordered for the job, so no extra liquid is purchased. The 30 dollar sample fee and pigment tint are waived.'
+          : 'Add one prepared 1-quart sample for each selected colour. Each is drawn from the X-Bond Liquid ordered for the job, so no extra liquid is purchased. The fee is 30 dollars plus pigment tint, and both are free at 300 square feet or more.'}
       >
         <View style={[styles.sampleIcon, includeSamples && styles.sampleIconSelected]}>
           <Ionicons
@@ -218,11 +218,11 @@ export function ColourAllocationPicker({
             <Text style={styles.sampleTitle}>Add colour sample</Text>
             <Text style={styles.optionalLabel}>OPTIONAL</Text>
           </View>
-          <Text style={styles.sampleDescription}>One 1-quart sample (946 mL) per selected colour.</Text>
+          <Text style={styles.sampleDescription}>One prepared quart per colour, drawn from the job&apos;s X-Bond Liquid.</Text>
           <Text style={samplesAreComplimentary ? styles.sampleFreeQualified : styles.sampleFreePolicy}>
             {samplesAreComplimentary
-              ? 'FREE — $30 sample preparation + Pigment tint waived'
-              : '$30 sample preparation + Pigment tint · Free at 300+ sq ft'}
+              ? 'FREE — $30 sample fee + pigment waived'
+              : '$30 prepared sample + pigment · Free at 300+ sq ft'}
           </Text>
           {includeSamples && sampleReviewCount > 0 ? (
             <Text style={styles.sampleWarning}>

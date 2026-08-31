@@ -260,7 +260,7 @@ export default function OrdersScreen() {
     if (result && needsTintRecalculation) {
       Alert.alert(
         'Recalculate colour tint',
-        'This saved tint plan uses older batch or sample-pricing rules. Return to the calculator and calculate again before ordering.',
+        'This saved tint plan uses older batch or sample rules. Return to the calculator and calculate again so prepared samples use the current fee without adding extra X-Bond Liquid.',
       );
       return;
     }
@@ -441,7 +441,7 @@ export default function OrdersScreen() {
                 <View style={styles.tintRequiredCopy}>
                   <Text style={styles.tintRequiredTitle}>Recalculate tint before this request can be saved</Text>
                   <Text style={styles.bodySmall}>
-                    This saved tint plan uses older batch or sample-pricing rules. Recalculate it so the dealer receives the current formulas and charges.
+                    This saved tint plan uses older batch or sample rules. Recalculate it so the dealer receives the current formulas, prepared-sample charges, and X-Bond Liquid quantity.
                   </Text>
                   <Button label="Recalculate in Calculator" variant="secondary" onPress={() => router.push('/calculator' as any)} fullWidth />
                 </View>

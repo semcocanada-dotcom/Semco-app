@@ -371,7 +371,7 @@ describe('calculator preparation and membrane behavior', () => {
     });
   });
 
-  it('stages extra X-Bond Liquid when a one-quart colour sample is selected', () => {
+  it('takes a selected one-quart sample from the ordered project X-Bond Liquid', () => {
     const result = calculate({
       areaSqft: 187.5,
       substrateType: 'concrete',
@@ -383,9 +383,10 @@ describe('calculator preparation and membrane behavior', () => {
 
     expect(result.colourTintPlan).toMatchObject({
       preparedLiquidGallons: 5,
-      baseLiquidPurchaseGallons: 6,
+      baseLiquidPurchaseGallons: 5,
       totalChargeCad: 86.88,
       samplePlan: {
+        liquidSource: 'ordered_project_material',
         totalLiquidGallons: 0.25,
         totalPigmentChargeCad: 2.71,
         totalPreparationFeeCad: 30,
@@ -402,8 +403,8 @@ describe('calculator preparation and membrane behavior', () => {
       },
     });
     expect(liquid).toMatchObject({
-      roundedQuantity: 6,
-      purchaseLabel: 'Buy 1 x 5 gal pail + 1 x 1 gal pail (6 gal)',
+      roundedQuantity: 5,
+      purchaseLabel: 'Buy 1 x 5 gal pail',
     });
   });
 

@@ -12,7 +12,7 @@ describe('dealer material request tint summary', () => {
     const body = lines.join('\n');
 
     expect(body).toContain("Aaron's Rod (2053T)");
-    expect(body).toContain('Project orders use 1-gallon and 5-gallon tint batches; quart formulas are reserved for samples.');
+    expect(body).toContain("Project orders use 1-gallon and 5-gallon tint batches. Sample quarts are drawn from the job's ordered X-Bond Liquid and do not add extra liquid purchase quantity.");
     expect(body).toContain('2 x 1 gallon tint batches');
     expect(body).not.toContain('1 quart tint batch');
     expect(body).toContain('formula below is per batch');
@@ -61,17 +61,19 @@ describe('dealer material request tint summary', () => {
     const body = lines.join('\n');
 
     expect(body).toContain('Colour samples — 1-quart sample (946 mL) each:');
-    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); Pigment tint $2.71; $30 sample preparation; sample total $32.71");
+    expect(body).toContain("Aaron's Rod (2053T): 1-quart sample (946 mL); $30 prepared-quart fee (from ordered X-Bond Liquid); pigment tint $2.71; sample total $32.71");
     expect(body).toContain('Quart sample tint-machine formula:');
-    expect(body).toContain('0.25 gal for colour samples');
-    expect(body).toContain('Sample pricing: Pigment tint $2.71; sample preparation $30.00; sample total $32.71.');
+    expect(body).toContain('5 gal staged for purchase. Sample quarts are drawn from that staged job quantity; no additional X-Bond Liquid is purchased for samples.');
+    expect(body).not.toContain('gal for colour samples');
+    expect(body).toContain('Sample pricing: Prepared-quart fees $30.00; pigment tint $2.71; sample total $32.71.');
+    expect(body).toContain("The prepared-sample fee includes making the quart from the customer's ordered X-Bond Liquid; pigment is charged separately.");
     expect(body).toContain('Total colour charges: $54.37');
   });
 
   it('shows the pigment and preparation discount when samples are free at 300 square feet', () => {
     const body = buildTintRequestSummaryLines(currentSamplePlanFixture(true)).join('\n');
 
-    expect(body).toContain('Pigment tint $2.71; $30 sample preparation; FREE — $32.71 waived');
+    expect(body).toContain('$30 prepared-quart fee (from ordered X-Bond Liquid); pigment tint $2.71; FREE — $32.71 waived');
     expect(body).toContain('$32.71 waived; FREE at 300 sq ft or more — both charges waived.');
     expect(body).toContain('Total colour charges: $21.66');
   });
@@ -79,7 +81,7 @@ describe('dealer material request tint summary', () => {
   it('keeps formula review visible even when a complimentary sample has a final zero charge', () => {
     const body = buildTintRequestSummaryLines(complimentaryReviewSampleFixture()).join('\n');
 
-    expect(body).toContain('Pigment tint DEALER FORMULA REVIEW REQUIRED; $30 sample preparation; FREE — both charges waived');
+    expect(body).toContain('$30 prepared-quart fee (from ordered X-Bond Liquid); pigment tint DEALER FORMULA REVIEW REQUIRED; FREE — both charges waived');
     expect(body).toContain('Review: Published quart formula requires dealer review.');
     expect(body).toContain('Total colour charges: $21.66');
   });
@@ -99,7 +101,26 @@ describe('dealer material request tint summary', () => {
     expect(canSaveMaterialRequest(result, '')).toBe(false);
     expect(body).toContain('RECALCULATION REQUIRED');
     expect(body).not.toContain('$2.71');
-    expect(body).not.toContain('$30 sample preparation; sample total');
+    expect(body).not.toContain('$30 prepared-quart fee (from ordered X-Bond Liquid)');
+  });
+
+  it('blocks saved v1 sample plans so they cannot retain an added liquid purchase quantity', () => {
+    const plan = currentSamplePlanFixture(false);
+    plan.samplePlan = {
+      ...plan.samplePlan!,
+      pricingPolicyVersion: '2026-08-30-v1',
+    };
+    const result = {
+      layers: [],
+      totalKg: 0,
+      wastePct: 0,
+      areaSqm: 10,
+      colourTintPlan: plan,
+    };
+
+    expect(requiresWholeGallonTintRecalculation(result)).toBe(true);
+    expect(canSaveMaterialRequest(result, '')).toBe(false);
+    expect(buildTintRequestSummaryLines(plan).join('\n')).toContain('RECALCULATION REQUIRED');
   });
 });
 
@@ -166,6 +187,7 @@ function currentSamplePlanFixture(isComplimentary: boolean): ColourTintPlan {
     samplePlan: {
       ...legacySamplePlan,
       pricingPolicyVersion: COLOUR_SAMPLE_PRICING_POLICY_VERSION,
+      liquidSource: 'ordered_project_material',
       totalPigmentChargeCad: 2.71,
       totalPreparationFeeCad: 30,
       subtotalChargeCad: 32.71,

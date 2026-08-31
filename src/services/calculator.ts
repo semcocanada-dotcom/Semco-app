@@ -153,8 +153,7 @@ export function calculate(input: CalculatorInput): CalculationResult {
     }
     result.layers = ensureXBondLiquidPurchaseCoversTintPlan(
       result.layers,
-      tintPlanResult.plan.preparedLiquidGallons
-        + (tintPlanResult.plan.samplePlan?.totalLiquidGallons ?? 0),
+      tintPlanResult.plan.preparedLiquidGallons,
     );
     result.colourTintPlan = {
       ...tintPlanResult.plan,

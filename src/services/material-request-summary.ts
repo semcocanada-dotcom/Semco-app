@@ -31,13 +31,13 @@ export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
   if (hasLegacySamplePricing(plan)) {
     return [
       'Colour tint preparation:',
-      'RECALCULATION REQUIRED: this saved plan used old pigment-only sample pricing. Recalculate it to apply the $30 sample preparation and free-at-300-sq-ft policy before ordering.',
+      'RECALCULATION REQUIRED: this saved plan used an older sample policy. Recalculate it to apply the $30 prepared-quart fee without adding extra X-Bond Liquid before ordering.',
     ];
   }
 
   const lines = [
     'Colour tint preparation:',
-    'Project orders use 1-gallon and 5-gallon tint batches; quart formulas are reserved for samples.',
+    'Project orders use 1-gallon and 5-gallon tint batches. Sample quarts are drawn from the job\'s ordered X-Bond Liquid and do not add extra liquid purchase quantity.',
   ];
   for (const allocation of plan.allocations) {
     lines.push(
@@ -80,9 +80,9 @@ export function buildTintRequestSummaryLines(plan?: ColourTintPlan): string[] {
     plan.samplePlan
       ? `Total colour charges: ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'Dealer review required'} (project pigment tint + sample charges).`
       : `Total tint charge: ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'Dealer review required'}.`,
-    `X-Bond Liquid: ${formatNumber(plan.exactLiquidGallons)} gal exact for the project; ${formatNumber(plan.preparedLiquidGallons)} gal prepared for project batches${plan.samplePlan ? `; ${formatNumber(plan.samplePlan.totalLiquidGallons)} gal for colour samples` : ''}; ${formatNumber(plan.baseLiquidPurchaseGallons)} gal staged for purchase.`,
+    `X-Bond Liquid: ${formatNumber(plan.exactLiquidGallons)} gal exact for the project; ${formatNumber(plan.preparedLiquidGallons)} gal prepared for project batches; ${formatNumber(plan.baseLiquidPurchaseGallons)} gal staged for purchase.${plan.samplePlan ? ' Sample quarts are drawn from that staged job quantity; no additional X-Bond Liquid is purchased for samples.' : ''}`,
     plan.samplePlan
-      ? 'X-Bond Liquid, labour, freight, tax, and other material charges are separate from the colour charges above.'
+      ? 'The prepared-sample fee includes making the quart from the customer\'s ordered X-Bond Liquid; pigment is charged separately. Labour, freight, tax, and other material charges are separate.'
       : 'Tint charge only; X-Bond Liquid, labour, freight, tax, and other material charges are separate.',
   );
   return lines;
@@ -93,13 +93,13 @@ function formatSamplePriceSummary(sample: ColourTintSampleLine): string {
     ? formatCad(sample.pigmentChargeCad)
     : 'DEALER FORMULA REVIEW REQUIRED';
   const preparation = sample.preparationFeeCad != null
-    ? `${formatCadCompact(sample.preparationFeeCad)} sample preparation`
-    : 'SAMPLE PREPARATION REVIEW REQUIRED';
+    ? `${formatCadCompact(sample.preparationFeeCad)} prepared-quart fee (from ordered X-Bond Liquid)`
+    : 'PREPARED-QUART FEE REVIEW REQUIRED';
   if (sample.isComplimentary) {
     const waived = sample.discountCad != null ? `${formatCad(sample.discountCad)} waived` : 'both charges waived';
-    return `Pigment tint ${pigment}; ${preparation}; FREE — ${waived}`;
+    return `${preparation}; pigment tint ${pigment}; FREE — ${waived}`;
   }
-  return `Pigment tint ${pigment}; ${preparation}; sample total ${sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'PENDING DEALER REVIEW'}`;
+  return `${preparation}; pigment tint ${pigment}; sample total ${sample.totalChargeCad != null ? formatCad(sample.totalChargeCad) : 'PENDING DEALER REVIEW'}`;
 }
 
 function formatSamplePlanPriceSummary(plan: ColourTintSamplePlan): string {
@@ -114,9 +114,9 @@ function formatSamplePlanPriceSummary(plan: ColourTintSamplePlan): string {
       ? `${formatNumber(plan.complimentaryThresholdSqft)} sq ft or more`
       : 'the complimentary project threshold';
     const waived = plan.totalDiscountCad != null ? `${formatCad(plan.totalDiscountCad)} waived; ` : '';
-    return `Sample pricing: Pigment tint ${pigment}; sample preparation ${preparation}; ${waived}FREE at ${threshold} — both charges waived.`;
+    return `Sample pricing: Prepared-quart fees ${preparation}; pigment tint ${pigment}; ${waived}FREE at ${threshold} — both charges waived.`;
   }
-  return `Sample pricing: Pigment tint ${pigment}; sample preparation ${preparation}; sample total ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'pending dealer review'}.`;
+  return `Sample pricing: Prepared-quart fees ${preparation}; pigment tint ${pigment}; sample total ${plan.totalChargeCad != null ? formatCad(plan.totalChargeCad) : 'pending dealer review'}.`;
 }
 
 function formatBatches(batches: ColourTintPlan['allocations'][number]['batches']): string {
