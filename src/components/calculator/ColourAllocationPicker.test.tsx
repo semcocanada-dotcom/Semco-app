@@ -1,6 +1,6 @@
 import React from 'react';
-import { act, fireEvent, render } from '@testing-library/react-native';
-import { Modal } from 'react-native';
+import { fireEvent, render } from '@testing-library/react-native';
+import { Keyboard, Modal, TextInput } from 'react-native';
 import { ColourAllocationPicker } from '@/components/calculator/ColourAllocationPicker';
 import { searchTintColours } from '@/knowledge/colour-charges';
 
@@ -20,49 +20,49 @@ function renderPicker(overrides: Partial<React.ComponentProps<typeof ColourAlloc
     onRemoveColour: jest.fn(),
     includeSamples: false,
     onIncludeSamplesChange: jest.fn(),
-    onPickerOpen: jest.fn(),
-    onPickerWillClose: jest.fn(),
-    onPickerDismiss: jest.fn(),
     ...overrides,
   };
   return { screen: render(<ColourAllocationPicker {...props} />), props };
 }
 
-describe('ColourAllocationPicker modal position callbacks', () => {
+describe('ColourAllocationPicker modal behaviour', () => {
   beforeEach(() => {
-    jest.spyOn(global, 'requestAnimationFrame').mockImplementation((callback: FrameRequestCallback) => {
-      callback(0);
-      return 1;
-    });
+    jest.spyOn(Keyboard, 'dismiss').mockImplementation(jest.fn());
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('captures before opening and restores after a colour is selected', () => {
+  it('selects a colour and closes without moving the parent calculator', () => {
     const { screen, props } = renderPicker();
     const firstColour = searchTintColours('')[0];
 
     fireEvent.press(screen.getByLabelText('Choose colour 1'));
-    expect(props.onPickerOpen).toHaveBeenCalledTimes(1);
+    expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(true);
 
     fireEvent.press(screen.getByLabelText(`${firstColour.name}, ${firstColour.code}`));
     expect(props.onSelectColour).toHaveBeenCalledWith('colour-1', firstColour.id);
-    expect(props.onPickerWillClose).toHaveBeenCalledTimes(1);
-    expect(props.onPickerDismiss).not.toHaveBeenCalled();
-
-    act(() => screen.UNSAFE_getByType(Modal).props.onDismiss());
-    expect(props.onPickerDismiss).toHaveBeenCalledTimes(1);
+    expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(false);
+    expect(Keyboard.dismiss).toHaveBeenCalledTimes(2);
   });
 
-  it('restores after the picker is closed without choosing a colour', () => {
+  it('uses a full-screen fade and does not auto-open the search keyboard', () => {
     const { screen, props } = renderPicker();
 
     fireEvent.press(screen.getByLabelText('Choose colour 1'));
+
+    const modal = screen.UNSAFE_getByType(Modal);
+    const searchInput = screen.UNSAFE_getAllByType(TextInput)
+      .find((input) => input.props.placeholder === 'Search colour name or code...');
+
+    expect(modal.props.presentationStyle).toBe('fullScreen');
+    expect(modal.props.animationType).toBe('fade');
+    expect(searchInput?.props.autoFocus).toBe(false);
+
     fireEvent.press(screen.getByLabelText('Close colour picker'));
 
     expect(props.onSelectColour).not.toHaveBeenCalled();
-    expect(props.onPickerWillClose).toHaveBeenCalledTimes(1);
+    expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(false);
   });
 });

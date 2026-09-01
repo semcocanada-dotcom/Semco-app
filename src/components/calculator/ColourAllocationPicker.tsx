@@ -1,9 +1,8 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   FlatList,
   Keyboard,
   Modal,
-  Platform,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -38,9 +37,6 @@ interface ColourAllocationPickerProps {
   onRemoveColour: (slotId: string) => void;
   includeSamples: boolean;
   onIncludeSamplesChange: (include: boolean) => void;
-  onPickerOpen?: () => void;
-  onPickerWillClose?: () => void;
-  onPickerDismiss?: () => void;
 }
 
 export function ColourAllocationPicker({
@@ -54,13 +50,9 @@ export function ColourAllocationPicker({
   onRemoveColour,
   includeSamples,
   onIncludeSamplesChange,
-  onPickerOpen,
-  onPickerWillClose,
-  onPickerDismiss,
 }: ColourAllocationPickerProps) {
   const [activeSlotId, setActiveSlotId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const closingRef = useRef(false);
   const options = useMemo(() => searchTintColours(query), [query]);
   const totalArea = Number.parseFloat(totalAreaSqft);
   const samplesAreComplimentary = isColourSampleComplimentaryProject(totalArea);
@@ -79,33 +71,17 @@ export function ColourAllocationPicker({
   }, 0);
 
   function openPicker(slotId: string) {
-    closingRef.current = false;
-    onPickerOpen?.();
     setActiveSlotId(slotId);
     setQuery('');
+    // Let the full-screen picker cover the calculator before the previous
+    // field keyboard finishes closing. The parent ScrollView never moves.
+    Keyboard.dismiss();
   }
 
   function closePicker() {
-    if (closingRef.current) return;
-    closingRef.current = true;
     Keyboard.dismiss();
-    requestAnimationFrame(() => {
-      // Restore behind the still-visible sheet, so no corrective scroll is visible.
-      onPickerWillClose?.();
-      requestAnimationFrame(() => {
-        setActiveSlotId(null);
-        setQuery('');
-        if (Platform.OS !== 'ios') {
-          closingRef.current = false;
-          onPickerDismiss?.();
-        }
-      });
-    });
-  }
-
-  function pickerDidDismiss() {
-    closingRef.current = false;
-    onPickerDismiss?.();
+    setActiveSlotId(null);
+    setQuery('');
   }
 
   function chooseColour(colourId: string) {
@@ -270,10 +246,9 @@ export function ColourAllocationPicker({
 
       <Modal
         visible={activeSlotId !== null}
-        animationType="slide"
-        presentationStyle="pageSheet"
+        animationType="fade"
+        presentationStyle="fullScreen"
         onRequestClose={closePicker}
-        onDismiss={pickerDidDismiss}
       >
         <SafeAreaView style={styles.modalSafe}>
           <View style={styles.modalContent}>
@@ -295,7 +270,7 @@ export function ColourAllocationPicker({
               value={query}
               onChangeText={setQuery}
               placeholder="Search colour name or code..."
-              autoFocus
+              autoFocus={false}
               autoCorrect={false}
             />
             <View style={styles.resultMeta}>
