@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { desc, eq } from 'drizzle-orm';
 import { ActionCard, EmptyState, SearchBar } from '@/components/ui';
 import { ProjectCard } from '@/components/projects/ProjectCard';
+import { XBondToolPromotionCard } from '@/components/promotions/XBondToolPromotionCard';
 import { db } from '@/database/client';
 import { projects } from '@/database/schema/projects';
 import type { Project } from '@/database/schema/projects';
@@ -99,6 +100,11 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.content}>
+          <XBondToolPromotionCard
+            variant="overview"
+            onOpenCalculator={() => push('/calculator')}
+          />
+
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Projects</Text>
             <TouchableOpacity onPress={() => push('/(app)/projects')} activeOpacity={0.75}>

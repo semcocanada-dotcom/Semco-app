@@ -11,6 +11,7 @@ jest.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
       signUp: jest.fn(),
+      resend: jest.fn(),
       resetPasswordForEmail: jest.fn(),
       signOut: jest.fn(),
     },
@@ -23,6 +24,7 @@ jest.mock('@/services/local-account-data', () => ({
 
 const signOut = supabase.auth.signOut as jest.Mock;
 const signUp = supabase.auth.signUp as jest.Mock;
+const resend = supabase.auth.resend as jest.Mock;
 const resetPasswordForEmail = supabase.auth.resetPasswordForEmail as jest.Mock;
 const clearDeviceData = clearLocalAccountData as jest.Mock;
 const user = { id: 'installer-1', email: 'installer@example.com' } as User;
@@ -59,6 +61,7 @@ describe('device sign-out cleanup', () => {
 describe('authentication email redirects', () => {
   beforeEach(() => {
     signUp.mockReset().mockResolvedValue({ data: { session: null, user: null }, error: null });
+    resend.mockReset().mockResolvedValue({ data: {}, error: null });
     resetPasswordForEmail.mockReset().mockResolvedValue({ error: null });
     useAuthStore.setState({ session: null, user: null, isInitialized: true, isLoading: false });
   });
@@ -81,6 +84,16 @@ describe('authentication email redirects', () => {
 
     expect(resetPasswordForEmail).toHaveBeenCalledWith('installer@example.com', {
       redirectTo: AUTH_PASSWORD_RESET_REDIRECT,
+    });
+  });
+
+  it('resends signup confirmation to the app sign-in screen', async () => {
+    await useAuthStore.getState().resendSignupConfirmation(' installer@example.com ');
+
+    expect(resend).toHaveBeenCalledWith({
+      type: 'signup',
+      email: 'installer@example.com',
+      options: { emailRedirectTo: AUTH_EMAIL_CONFIRM_REDIRECT },
     });
   });
 });

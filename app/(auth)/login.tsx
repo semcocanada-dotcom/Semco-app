@@ -25,6 +25,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const signIn = useAuthStore((state) => state.signIn);
   const signUp = useAuthStore((state) => state.signUp);
+  const resendSignupConfirmation = useAuthStore((state) => state.resendSignupConfirmation);
   const sendPasswordReset = useAuthStore((state) => state.sendPasswordReset);
   const isLoading = useAuthStore((state) => state.isLoading);
   const [mode, setMode] = useState<AuthMode>('sign_in');
@@ -34,6 +35,7 @@ export default function LoginScreen() {
   const [contactName, setContactName] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [resendingConfirmation, setResendingConfirmation] = useState(false);
 
   const submit = async () => {
     setError(null);
@@ -108,6 +110,33 @@ export default function LoginScreen() {
     else Alert.alert('Reset email sent', 'Use the secure link in your email to choose a new password.');
   };
 
+  const resendConfirmation = async () => {
+    if (!email.trim()) {
+      setError('Enter your email first.');
+      return;
+    }
+
+    setError(null);
+    setResendingConfirmation(true);
+    try {
+      const resendError = await resendSignupConfirmation(email);
+      if (resendError) {
+        setError(
+          resendError.toLowerCase().includes('rate limit')
+            ? 'Please wait a minute before requesting another confirmation email.'
+            : resendError,
+        );
+        return;
+      }
+      Alert.alert(
+        'Confirmation email sent',
+        'Open only the newest SEMCO Pro confirmation email. Older confirmation links will no longer work.',
+      );
+    } finally {
+      setResendingConfirmation(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -140,9 +169,21 @@ export default function LoginScreen() {
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <Button label={mode === 'create' ? 'Create Installer Account' : 'Sign In'} onPress={submit} isLoading={isLoading} fullWidth size="lg" />
             {mode === 'sign_in' ? (
-              <TouchableOpacity onPress={resetPassword} accessibilityRole="button" style={styles.resetButton}>
-                <Text style={styles.resetText}>Forgot password?</Text>
-              </TouchableOpacity>
+              <View style={styles.accountHelp}>
+                <TouchableOpacity onPress={resetPassword} accessibilityRole="button" style={styles.helpButton}>
+                  <Text style={styles.helpText}>Forgot password?</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={resendConfirmation}
+                  accessibilityRole="button"
+                  disabled={resendingConfirmation}
+                  style={[styles.helpButton, resendingConfirmation && styles.helpButtonDisabled]}
+                >
+                  <Text style={styles.helpText}>
+                    {resendingConfirmation ? 'Sending confirmation…' : 'Resend confirmation email'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             ) : null}
             <Text style={styles.privacy}>By creating an account, you agree that project and warranty records will be stored securely for Semco review.</Text>
             <TouchableOpacity
@@ -169,8 +210,10 @@ const styles = StyleSheet.create({
   title: { color: Colors.navy, fontFamily: Fonts.bold, fontSize: Typography.size.xxl, textAlign: 'center' },
   subtitle: { color: Colors.textSecondary, fontFamily: Fonts.regular, fontSize: Typography.size.sm, lineHeight: Typography.size.sm * 1.45, textAlign: 'center' },
   error: { color: Colors.danger, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
-  resetButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  resetText: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.sm },
+  accountHelp: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: Spacing.xs },
+  helpButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.md },
+  helpButtonDisabled: { opacity: 0.55 },
+  helpText: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.sm, textAlign: 'center' },
   privacy: { color: Colors.textDisabled, fontFamily: Fonts.regular, fontSize: Typography.size.xs, lineHeight: Typography.size.xs * 1.45, textAlign: 'center' },
   privacyLinkButton: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   privacyLink: { color: Colors.darkTeal, fontFamily: Fonts.semibold, fontSize: Typography.size.xs },

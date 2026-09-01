@@ -28,6 +28,7 @@ import {
   hasColourTintPlan,
   requiresWholeGallonTintRecalculation,
 } from '@/services/material-request-summary';
+import { buildXBondToolPromotionReviewLines } from '@/knowledge/pro-installer-promotion';
 import {
   fetchInstallerProjectsFromCloud,
   fetchProjectWorkspaceFromCloud,
@@ -632,6 +633,7 @@ function buildDealerEmailBody({
     .filter((layer) => (layer.roundedQuantity ?? layer.quantityPacks ?? 0) > 0)
     .map((layer) => `- ${layer.productName}: ${layer.purchaseLabel ?? layer.quantityLabel ?? `${layer.roundedQuantity ?? layer.quantityPacks} ${layer.packLabel ?? ''}`.trim()}`);
   const tintLines = buildTintRequestSummaryLines(result?.colourTintPlan);
+  const promotionLines = buildXBondToolPromotionReviewLines(result?.areaSqft);
 
   return [
     'Semco material request',
@@ -649,6 +651,7 @@ function buildDealerEmailBody({
     ...(materialLines ?? []),
     '',
     ...(tintLines.length ? [...tintLines, ''] : []),
+    ...(promotionLines.length ? [...promotionLines, ''] : []),
     requestNotes ? 'Request notes:' : null,
     requestNotes,
     '',

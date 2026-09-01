@@ -12,6 +12,7 @@ import { FabricRollSelector } from '@/components/calculator/FabricRollSelector';
 import { PrepSystemPicker } from '@/components/calculator/PrepSystemPicker';
 import { SubstratePicker } from '@/components/calculator/SubstratePicker';
 import { WasteToggle } from '@/components/calculator/WasteToggle';
+import { XBondToolPromotionCard } from '@/components/promotions/XBondToolPromotionCard';
 import { SEALER_OPTIONS, WATERPROOFING_OPTIONS, XBOND_FINISH_OPTIONS } from '@/constants/product-coverage';
 import {
   getPrepSystem,
@@ -26,6 +27,7 @@ import { savePendingMaterialRequest } from '@/services/pending-material-request'
 import { useAuthStore } from '@/store/auth';
 import { useModalScrollRestoration } from '@/hooks/useModalScrollRestoration';
 import { Colors, Fonts, Layout, Radius, Spacing, Typography } from '@/constants/theme';
+import { isXBondToolPromotionAreaEligible } from '@/knowledge/pro-installer-promotion';
 
 const ESTIMATOR_POINTS = [
   'X-Bond Stone plus required X-Bond Liquid',
@@ -398,6 +400,12 @@ export default function CalculatorScreen() {
             {result ? (
               <View style={styles.resultSection}>
                 <MaterialBreakdownCard result={result} />
+                {isXBondToolPromotionAreaEligible(result.areaSqft) ? (
+                  <XBondToolPromotionCard
+                    variant="eligible"
+                    areaSqft={result.areaSqft}
+                  />
+                ) : null}
                 {result.colourTintPlan ? <ColourTintPlanCard plan={result.colourTintPlan} /> : (
                   <Card style={styles.colourRequiredCard}>
                     <Ionicons name="color-palette-outline" size={21} color={Colors.semcoOrange} />

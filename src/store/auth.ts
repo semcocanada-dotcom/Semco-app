@@ -15,6 +15,7 @@ interface AuthState {
   initialize: () => Promise<() => void>;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string, profile: { companyName: string; contactName: string; postalCode: string }) => Promise<{ error: string | null; needsEmailConfirmation: boolean }>;
+  resendSignupConfirmation: (email: string) => Promise<string | null>;
   sendPasswordReset: (email: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   setSession: (session: Session | null) => void;
@@ -68,6 +69,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       error: error?.message ?? null,
       needsEmailConfirmation: !error && !data.session,
     };
+  },
+
+  resendSignupConfirmation: async (email) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+      options: { emailRedirectTo: AUTH_EMAIL_CONFIRM_REDIRECT },
+    });
+    return error?.message ?? null;
   },
 
   sendPasswordReset: async (email) => {
