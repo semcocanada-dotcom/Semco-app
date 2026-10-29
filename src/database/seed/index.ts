@@ -5,10 +5,26 @@ import { eq } from 'drizzle-orm';
 import productsData from './products.json';
 import colorsData from './colors.json';
 import { DEPRECATED_SEALER_SKUS } from '@/constants/stocked-sealers';
+import { guideKnowledge } from '../schema/guide-knowledge';
+import { GUIDE_KNOWLEDGE_VERSION, GUIDE_PRODUCTS, GUIDE_TERMS } from '@/knowledge/guide-products';
+import { GUIDE_VIDEOS } from '@/knowledge/guide-videos';
 
 const SQLITE_INSERT_CHUNK_SIZE = 40;
 
 export async function seedDatabase() {
+  // Additive local knowledge updates never delete installer chats or projects.
+  const guideRows = [
+    ...GUIDE_PRODUCTS.map((content) => ({ id: `product:${content.id}`, kind: 'product', content })),
+    ...GUIDE_TERMS.map((content) => ({ id: `term:${content.term}`, kind: 'term', content })),
+    ...GUIDE_VIDEOS.map((content) => ({ id: `video:${content.id}`, kind: 'video', content })),
+  ];
+  for (const row of guideRows) {
+    await db.insert(guideKnowledge).values({ ...row, version: GUIDE_KNOWLEDGE_VERSION }).onConflictDoUpdate({
+      target: guideKnowledge.id,
+      set: { content: row.content, kind: row.kind, version: GUIDE_KNOWLEDGE_VERSION },
+    });
+  }
+
   for (const sku of DEPRECATED_SEALER_SKUS) {
     await db.delete(products).where(eq(products.sku, sku));
   }

@@ -20,30 +20,36 @@
 
 ### Short description
 
-Field tools, project records and material estimates for Semco installers.
+Plan Semco jobs, estimate materials and document warranty stages.
 
 ### Full description
 
-Semco Pro is a free field companion for independent professional installers and contractors who use Semco products.
+Semco Pro brings the essential tools for a SEMCO installation into one organized field app. Built for independent professional installers and contractors, it helps you plan materials, document every stage of the job, and keep project records ready for review—from initial planning through final sign-off.
 
-Organize fictional or customer-authorized project records, calculate deterministic material estimates, document project stages, and keep technical references available in one place.
+PLAN MATERIALS WITH CONFIDENCE
 
-Key features:
+• Select the project scope and substrate for clearer Liquid Membrane requirements across non-wet walls, wet areas, showers, pools and submerged work
+• Estimate X-Bond, Liquid Membrane, MicroBond, SIP preparation cleaners and sealers
+• Review estimated package quantities and pricing
+• Turn calculator results into material requests for dealer review
 
-- Create and organize installer projects
-- Calculate coverage and estimated material quantities
-- Select non-wet wall, wet-area or submerged installation scope for the appropriate Liquid Membrane requirement
-- Estimate SIP preparation cleaners, package quantities and prices
-- Route material requests to the appropriate eastern or western Canadian supplier at the same national prices
-- Record colours, products, batches and project progress
-- Capture project photos and colour samples
-- Prepare customer-authorized project forms and sign-offs
-- Submit material requests for dealer review
-- Access Semco technical documents and installation guidance
-- Use Semco Guide for on-device deterministic reference answers
-- Permanently delete your account and associated app data
+KEEP EVERY JOB ORGANIZED
 
-Semco Guide processes its questions and saved conversations on the device. Semco Pro has no subscription, paid digital content, advertising or in-app purchases. Material requests do not place an order or collect payment; physical material purchases are arranged separately outside the app.
+• Create project records with site, system, colour and finish details
+• Capture required installation-stage photos for warranty review
+• Record product batches, quantities and coverage
+• Complete customer approvals and sign-off forms
+• Submit purchase receipts and warranty records for review
+
+KEEP SEMCO REFERENCES CLOSE
+
+• Browse colour references, installation details, product sheets and safety data sheets
+• Record custom colour formulas and scale them for larger batches
+• Use Semco Guide for on-device answers drawn from technical references installed with the app
+
+For Canadian projects, material requests are routed to the appropriate regional supplier using the same national price catalog.
+
+Semco Pro is free to use, with no ads, subscriptions or in-app purchases. Material requests do not place orders or collect payment. Material estimates and displayed pricing are planning references and must be confirmed by the supplier. Warranty records require review. Always follow current SEMCO documentation and confirm final colours with approved physical samples.
 
 ## App access for review
 

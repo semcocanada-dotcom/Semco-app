@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   Alert,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +24,13 @@ import { lightImpactHaptic, mediumImpactHaptic, selectionHaptic } from '@/utils/
 import { Colors, Fonts, Layout, Typography, Spacing, Radius, TAP_TARGET_MIN } from '@/constants/theme';
 import type { ConversationMessage } from '@/database/schema/conversations';
 
+const STARTER_QUESTIONS = [
+  'What is the difference between X-Bond and MicroBond?',
+  'The coating is peeling. What should I check?',
+  'My sealer looks cloudy. Can you help?',
+  'How do I prepare the surface before I start?',
+];
+
 export default function AssistantScreen() {
   const router = useRouter();
   const {
@@ -31,6 +39,7 @@ export default function AssistantScreen() {
     conversationId,
     conversationTitle,
     isLoading,
+    isBusy,
     error,
     send,
     clearHistory,
@@ -40,16 +49,27 @@ export default function AssistantScreen() {
   } = useAssistant();
   const [inputText, setInputText] = React.useState('');
   const [isChatSheetOpen, setChatSheetOpen] = React.useState(false);
+  const [showLatestButton, setShowLatestButton] = React.useState(false);
   const listRef = useRef<FlatList<ConversationMessage>>(null);
+  const followLatestRef = useRef(true);
+  const lastContentMessageRef = useRef<string | null>(null);
+
+  React.useLayoutEffect(() => {
+    followLatestRef.current = true;
+    lastContentMessageRef.current = null;
+    setShowLatestButton(false);
+  }, [conversationId]);
 
   const submitMessage = useCallback(async (value: string, clearInput: boolean) => {
     const text = value.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || isBusy) return;
 
     mediumImpactHaptic();
+    followLatestRef.current = true;
+    setShowLatestButton(false);
     if (clearInput) setInputText('');
     await send(text);
-  }, [isLoading, send]);
+  }, [isBusy, isLoading, send]);
 
   const handleSend = () => {
     void submitMessage(inputText, true);
@@ -63,6 +83,19 @@ export default function AssistantScreen() {
   const chipSource = !isLoading && lastMessage?.role === 'assistant' ? lastMessage : null;
   const quickReplies = chipSource?.quickReplies ?? [];
   const followUps = quickReplies.length === 0 ? chipSource?.suggestedFollowUps ?? [] : [];
+
+  const handleContentSizeChange = () => {
+    const messageId = lastMessage?.id ?? null;
+    if (messageId === lastContentMessageRef.current) return;
+    const firstLayout = lastContentMessageRef.current === null;
+    lastContentMessageRef.current = messageId;
+    // Expanding an old answer/reference must never move the installer's place.
+    if (followLatestRef.current) {
+      listRef.current?.scrollToEnd({ animated: !firstLayout });
+    } else {
+      setShowLatestButton(true);
+    }
+  };
 
   const handleBack = () => {
     lightImpactHaptic();
@@ -113,7 +146,7 @@ export default function AssistantScreen() {
             <Text style={styles.title}>Semco Guide</Text>
           </View>
           <Text style={styles.chatTitle} numberOfLines={1}>
-            {conversationTitle} - installed references
+            {conversationTitle} · offline guide
           </Text>
         </View>
         <View style={styles.headerActions}>
@@ -123,7 +156,8 @@ export default function AssistantScreen() {
               Keyboard.dismiss();
               setChatSheetOpen(true);
             }}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, isBusy && styles.controlDisabled]}
+            disabled={isBusy}
             accessibilityLabel="Open saved chats"
             accessibilityRole="button"
           >
@@ -131,7 +165,8 @@ export default function AssistantScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleStartNewChat}
-            style={styles.iconBtn}
+            style={[styles.iconBtn, isBusy && styles.controlDisabled]}
+            disabled={isBusy}
             accessibilityLabel="Start new chat"
             accessibilityRole="button"
           >
@@ -140,7 +175,8 @@ export default function AssistantScreen() {
           {messages.length > 0 && (
             <TouchableOpacity
               onPress={handleClearHistory}
-              style={styles.iconBtn}
+              style={[styles.iconBtn, isBusy && styles.controlDisabled]}
+              disabled={isBusy}
               accessibilityLabel="Clear conversation history"
             >
               <Ionicons name="trash-outline" size={20} color={Colors.danger} />
@@ -150,34 +186,79 @@ export default function AssistantScreen() {
       </View>
 
       {messages.length === 0 ? (
-        <View style={styles.emptyState}>
+        <ScrollView style={styles.messagePane} contentContainerStyle={styles.emptyState} keyboardShouldPersistTaps="handled">
           <View style={styles.heroCard}>
-            <Ionicons name="document-text-outline" size={34} color={Colors.primary} />
-            <Text style={styles.emptyTitle}>Search Semco installation guidance</Text>
+            <Ionicons name="chatbubble-ellipses-outline" size={34} color={Colors.primary} />
+            <Text style={styles.emptyTitle}>Let's work through your job</Text>
             <Text style={styles.emptyBody}>
-              Semco Guide uses deterministic calculators, coded field rules, and technical references installed with the app. Questions and saved guide conversations stay on this device.
+              Tell me what you're working on and what isn't going as expected. I'll help you check the next step using the Semco guidance saved in this app.
+            </Text>
+            <Text style={styles.guideNote}>
+              Free, offline guidance. Chats stay on this device. I can't inspect your job or confirm a diagnosis; uncertain repairs need Semco technical support.
             </Text>
           </View>
-        </View>
+          <View style={styles.starters}>
+            <Text style={styles.starterTitle}>Not sure where to start?</Text>
+            {STARTER_QUESTIONS.map((question) => (
+              <TouchableOpacity
+                key={question}
+                style={styles.starterButton}
+                onPress={() => handleReplyChip(question)}
+                disabled={isLoading || isBusy}
+                accessibilityRole="button"
+                accessibilityLabel={`Ask: ${question}`}
+              >
+                <Text style={styles.starterText}>{question}</Text>
+                <Ionicons name="arrow-forward" size={17} color={Colors.primary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       ) : (
         <FlatList
+          key={conversationId ?? 'unsaved-chat'}
           style={styles.messagePane}
           ref={listRef}
           data={messages}
           keyExtractor={(m) => m.id}
           renderItem={({ item }) => <ChatBubble message={item} />}
-          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={handleContentSizeChange}
+          onScroll={({ nativeEvent }) => {
+            const distanceFromEnd = nativeEvent.contentSize.height
+              - nativeEvent.layoutMeasurement.height - nativeEvent.contentOffset.y;
+            const nearEnd = distanceFromEnd <= 100;
+            followLatestRef.current = nearEnd;
+            setShowLatestButton(!nearEnd);
+          }}
+          scrollEventThrottle={100}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.messageList}
           ListFooterComponent={
             isLoading ? (
               <TypingIndicator />
             ) : quickReplies.length > 0 ? (
-              <ReplyChips replies={quickReplies} variant="answer" onSelect={handleReplyChip} />
+              <ReplyChips replies={quickReplies} variant="answer" onSelect={handleReplyChip} disabled={isBusy} />
             ) : followUps.length > 0 ? (
-              <ReplyChips replies={followUps} variant="suggestion" onSelect={handleReplyChip} />
+              <ReplyChips replies={followUps} variant="suggestion" onSelect={handleReplyChip} disabled={isBusy} />
             ) : null
           }
         />
+      )}
+
+      {messages.length > 0 && showLatestButton && (
+        <TouchableOpacity
+          style={styles.latestButton}
+          onPress={() => {
+            followLatestRef.current = true;
+            setShowLatestButton(false);
+            listRef.current?.scrollToEnd({ animated: true });
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Jump to latest message"
+        >
+          <Text style={styles.starterText}>Latest message</Text>
+          <Ionicons name="arrow-down" size={16} color={Colors.primary} />
+        </TouchableOpacity>
       )}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -202,7 +283,8 @@ export default function AssistantScreen() {
             style={styles.input}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Ask a technical question..."
+            placeholder="Tell me what's happening..."
+            accessibilityLabel="Message to Semco Guide"
             placeholderTextColor={Colors.textDisabled}
             selectionColor={Colors.primary}
             multiline
@@ -212,8 +294,8 @@ export default function AssistantScreen() {
           />
           <TouchableOpacity
             onPress={handleSend}
-            style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnDisabled]}
-            disabled={!inputText.trim() || isLoading}
+            style={[styles.sendBtn, (!inputText.trim() || isLoading || isBusy) && styles.sendBtnDisabled]}
+            disabled={!inputText.trim() || isLoading || isBusy}
             accessibilityLabel="Send message"
           >
             <Ionicons name="arrow-up" size={20} color={Colors.white} />
@@ -222,7 +304,7 @@ export default function AssistantScreen() {
       </KeyboardAvoidingView>
 
       <SavedChatsSheet
-        visible={isChatSheetOpen}
+        visible={isChatSheetOpen && !isBusy}
         chats={savedChats}
         activeChatId={conversationId}
         onClose={() => setChatSheetOpen(false)}
@@ -303,7 +385,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: Layout.screenMaxWidth,
     alignSelf: 'center',
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     padding: Spacing.base,
     gap: Spacing.md,
@@ -325,6 +407,47 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: Typography.size.base,
     lineHeight: Typography.size.base * 1.5,
+  },
+  guideNote: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.sm * 1.5,
+  },
+  starters: { gap: Spacing.sm },
+  starterTitle: {
+    color: Colors.navy,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.semibold,
+  },
+  starterButton: {
+    minHeight: TAP_TARGET_MIN,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
+  },
+  starterText: {
+    flexShrink: 1,
+    color: Colors.primary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.medium,
+  },
+  latestButton: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    minHeight: TAP_TARGET_MIN,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.xs,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.primaryMuted,
   },
   error: {
     width: '100%',
@@ -380,4 +503,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendBtnDisabled: { opacity: 0.4 },
+  controlDisabled: { opacity: 0.4 },
 });

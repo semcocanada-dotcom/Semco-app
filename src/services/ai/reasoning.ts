@@ -495,15 +495,10 @@ function materialEstimateAnswer(
 
 function documentGapAnswer(): string {
   return [
-    'If the approved Semco documents do not answer the question, do not guess. Say that clearly and keep the installer out of unsupported decisions.',
+    "I can't confirm that from the installed SEMCO references, and I don't want you risking the job on a guess.",
     '',
-    'Use this response:',
-    '"I cannot confirm that from the approved Semco technical documents."',
-    '',
-    'Then say what is missing: product, substrate, exposure, mixing ratio, coverage, dry time, warranty detail, or compatibility. If the decision affects warranty, safety, compatibility, or material quantity, escalate to Semco technical review.',
-    '',
-    'Field rule:',
-    'Do not fill the gap with general construction knowledge. Calculator quantities come from formulas, and install/warranty answers must trace back to approved Semco sources.',
+    'Which product are you using, and what surface is underneath it?',
+    'If the missing detail affects safety, bonding, waterproofing or warranty, pause that step and ask SEMCO technical support to confirm it. I can help you put the job details into a clear handoff note.',
   ].join('\n');
 }
 
@@ -963,7 +958,7 @@ function concreteBuildUpAnswer(): string {
     '',
     '**Step 6: Build the finish.**',
     'Apply the second X-Bond scratch/base coat after membrane/detail work is ready. Use X-Bond Brown Coat only where leveling or build-up is required by the detail.',
-    'For the selected X-Bond finish, when that finish procedure applies, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone and spread tight in one direction with a trowel or X-Bond smoother at about 1/16 inch / 2 mil.',
+    'For the selected X-Bond finish, when that finish procedure applies, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone and spread tight in one direction with a trowel or X-Bond smoother. Confirm the thickness in the selected finish detail with SEMCO; the guide notes previously paired conflicting inch and mil measurements.',
     'If a second finish coat is required, wait until the coat is dry slightly to the touch, about 20-30 minutes, and use shoe covers.',
     'Optional MicroBond smooth finish: prime with X-Bond Liquid, then mix 1 part X-Bond Liquid to 2 parts MicroBond Stone and apply with a Magic Trowel.',
     '',
@@ -1153,7 +1148,7 @@ function xBondFinishCoatAnswer(facts: ExtractedJobFacts): string {
     'For the selected X-Bond finish procedure, mix 1 part X-Bond Liquid to 2 1/2 parts X-Bond Stone. Add liquid first, then powder, and mix with a square paddle at low speed, 180-200 RPM.',
     '',
     '**Step 4: Apply the finish tight and even.**',
-    'Spread it tightly in one direction with a trowel or X-Bond smoother at about 1/16 inch / 2 mil. Keep the pressure consistent so you do not leave heavy ridges or thin spots.',
+    'Spread it tightly in one direction with a trowel or X-Bond smoother. Keep the pressure consistent so you do not leave heavy ridges or thin spots. Confirm the required thickness for your selected finish with SEMCO; do not treat 1/16 inch and 2 mil as equivalent.',
     '',
     '**Step 5: If a second finish coat is needed, wait before going back on it.**',
     'Let the first coat dry slightly to the touch, about 20-30 minutes, before the next coat when a second coat is required. Use shoe covers between coats so you do not mark or contaminate the surface.',

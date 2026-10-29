@@ -1,11 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import MarkdownDisplay, { MarkdownIt } from 'react-native-markdown-display';
 import { Colors, Fonts, Typography, Spacing, Radius } from '@/constants/theme';
 import { lightImpactHaptic } from '@/utils/haptics';
+import { TECHNICAL_DOCS, TECHNICAL_DOC_PAGES } from '@/knowledge/technical-docs';
+import { getPrimaryDocGroup } from '@/knowledge/doc-catalog';
 import type { AssistantCitation, ConversationMessage } from '@/database/schema/conversations';
+import { GUIDE_VIDEOS, GUIDE_VIDEO_NOTICE } from '@/knowledge/guide-videos';
 
 const COLLAPSE_THRESHOLD = 900;
 const COLLAPSED_MAX_HEIGHT = 360;
@@ -73,9 +76,6 @@ interface ChatBubbleProps {
   message: ConversationMessage;
 }
 
-const MAX_SOURCE_CHIPS = 3;
-const SHOW_INSTALLER_SOURCE_CHIPS = false;
-
 function dedupeCitations(citations: AssistantCitation[] | undefined): AssistantCitation[] {
   if (!citations?.length) return [];
   const seen = new Set<string>();
@@ -85,7 +85,6 @@ function dedupeCitations(citations: AssistantCitation[] | undefined): AssistantC
     if (seen.has(key)) continue;
     seen.add(key);
     unique.push(citation);
-    if (unique.length >= MAX_SOURCE_CHIPS) break;
   }
   return unique;
 }
@@ -99,21 +98,30 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   const router = useRouter();
   const isUser = message.role === 'user';
   const displayContent = React.useMemo(
-    () => (isUser ? message.content : normalizeDisplayedAnswer(message.content)).slice(0, MAX_RENDERED_ANSWER_LENGTH),
-    [isUser, message.content],
+    () => (isUser ? message.content : normalizeDisplayedAnswer(message.content, Boolean(message.citations?.length))).slice(0, MAX_RENDERED_ANSWER_LENGTH),
+    [isUser, message.content, message.citations],
   );
   const isLongAssistantAnswer = !isUser && displayContent.length > COLLAPSE_THRESHOLD;
+  const isDealerDraft = !isUser && message.provider === 'local-instructor'
+    && displayContent.startsWith('Here is a draft you can copy');
   const [isExpanded, setExpanded] = React.useState(!isLongAssistantAnswer);
+  const [showReferences, setShowReferences] = React.useState(false);
+  const [expandedReference, setExpandedReference] = React.useState<string | null>(null);
   const sourceChips = React.useMemo(
-    () => (isUser || !SHOW_INSTALLER_SOURCE_CHIPS ? [] : dedupeCitations(message.citations)),
+    () => (isUser ? [] : dedupeCitations(message.citations)),
     [isUser, message.citations],
   );
-
-  const openCitation = (citation: AssistantCitation) => {
-    if (!citation.docId) return;
-    lightImpactHaptic();
-    router.push(`/products/${citation.docId}` as any);
-  };
+  const videoLinks = React.useMemo(() => {
+    if (isUser) return [];
+    const seen = new Set<string>();
+    return (message.videos ?? []).flatMap((saved) => {
+      // Saved chat metadata cannot inject arbitrary deep links or websites.
+      const verified = GUIDE_VIDEOS.find((item) => item.id === saved.id && item.url === saved.url);
+      if (!verified || seen.has(verified.id)) return [];
+      seen.add(verified.id);
+      return [verified];
+    }).slice(0, 3);
+  }, [isUser, message.videos]);
 
   return (
     <View style={[styles.wrapper, isUser ? styles.wrapperUser : styles.wrapperAssistant]}>
@@ -126,11 +134,16 @@ export function ChatBubble({ message }: ChatBubbleProps) {
               <View style={styles.answerIcon}>
                 <Ionicons name="chatbubble-ellipses-outline" size={16} color={Colors.primary} />
               </View>
-              <Text style={styles.answerTitle}>Semco answer</Text>
+              <Text style={styles.answerTitle}>Semco Guide</Text>
             </View>
             <View style={!isExpanded && styles.collapsedAnswer}>
-              <MarkdownDisplay style={assistantMarkdownStyles} markdownit={safeMarkdownParser}>{displayContent}</MarkdownDisplay>
+              {isDealerDraft ? (
+                <Text selectable style={[styles.text, styles.textAssistant]}>{displayContent}</Text>
+              ) : (
+                <MarkdownDisplay style={assistantMarkdownStyles} markdownit={safeMarkdownParser}>{displayContent}</MarkdownDisplay>
+              )}
             </View>
+            {isDealerDraft && <Text style={styles.referenceNote}>Long-press the draft to select and copy it.</Text>}
             {isLongAssistantAnswer && (
               <TouchableOpacity
                 onPress={() => {
@@ -151,23 +164,91 @@ export function ChatBubble({ message }: ChatBubbleProps) {
                 />
               </TouchableOpacity>
             )}
-            {sourceChips.length > 0 && (
-              <View style={styles.sourceRow}>
-                {sourceChips.map((citation) => (
+            {videoLinks.length > 0 && (
+              <View style={styles.references}>
+                <Text style={styles.referenceNote}>{GUIDE_VIDEO_NOTICE}</Text>
+                {videoLinks.map((video) => (
                   <TouchableOpacity
-                    key={citation.id}
-                    onPress={() => openCitation(citation)}
-                    disabled={!citation.docId}
-                    style={styles.sourceChip}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Open source ${citationLabel(citation)}`}
+                    key={video.id}
+                    style={styles.referenceCard}
+                    accessibilityRole="link"
+                    accessibilityLabel={`Watch ${video.title} on YouTube`}
+                    onPress={async () => {
+                      try { await Linking.openURL(video.url); }
+                      catch { Alert.alert('Could not open video', 'Check your internet connection and try again. Your chat is saved on this device.'); }
+                    }}
                   >
-                    <Ionicons name="document-text-outline" size={12} color={Colors.textSecondary} />
-                    <Text style={styles.sourceChipText} numberOfLines={1}>
-                      {citationLabel(citation)}
-                    </Text>
+                    <View style={styles.referenceToggle}>
+                      <Ionicons name="play-circle-outline" size={23} color={Colors.primary} />
+                      <Text style={styles.referenceLink}>{video.title}</Text>
+                    </View>
+                    <Text style={styles.referenceNote}>{video.publisher}{video.legacy ? ' · Older demonstration' : ''}</Text>
                   </TouchableOpacity>
                 ))}
+              </View>
+            )}
+            {sourceChips.length > 0 && (
+              <View style={styles.references}>
+                <TouchableOpacity
+                  onPress={() => setShowReferences((value) => !value)}
+                  style={styles.referenceToggle}
+                  accessibilityRole="button"
+                  accessibilityLabel={showReferences ? 'Hide references' : 'Show references'}
+                  accessibilityState={{ expanded: showReferences }}
+                >
+                  <Ionicons name="document-text-outline" size={15} color={Colors.textSecondary} />
+                  <Text style={styles.sourceChipText}>References ({sourceChips.length})</Text>
+                  <Ionicons name={showReferences ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.textSecondary} />
+                </TouchableOpacity>
+                {showReferences && sourceChips.map((citation) => {
+                  // Only open a page we actually have, not a guessed product route.
+                  const page = TECHNICAL_DOC_PAGES.find((item) => (
+                    item.sourceDocument === citation.documentName
+                    && item.pageNumber === citation.pageNumber
+                  ));
+                  const doc = TECHNICAL_DOCS.find((item) => item.sourceDocument === citation.documentName);
+                  const referenceKey = `${citation.documentName}::${citation.pageNumber ?? ''}`;
+                  const expanded = expandedReference === referenceKey;
+                  return (
+                    <View key={referenceKey} style={styles.referenceCard}>
+                      {page ? (
+                        <TouchableOpacity
+                          onPress={() => setExpandedReference(expanded ? null : referenceKey)}
+                          style={styles.referenceToggle}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Read saved reference ${citationLabel(citation)}`}
+                          accessibilityState={{ expanded }}
+                        >
+                          <Text style={styles.referenceLink}>{citationLabel(citation)}</Text>
+                          <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={14} color={Colors.primary} />
+                        </TouchableOpacity>
+                      ) : (
+                        <Text style={styles.sourceChipText}>{citationLabel(citation)}</Text>
+                      )}
+                      {expanded && page ? (
+                        <>
+                          <Text style={styles.referenceNote}>Saved reference text · wording from the source</Text>
+                          <Text selectable style={styles.referenceText}>{page.text}</Text>
+                        </>
+                      ) : null}
+                      {!page && <Text style={styles.referenceNote}>Reference label only; the page text is not saved here.</Text>}
+                      {doc && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            lightImpactHaptic();
+                            router.push({ pathname: '/products', params: { group: getPrimaryDocGroup(doc) } } as any);
+                          }}
+                          style={styles.referenceToggle}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Browse Product Docs for ${citationLabel(citation)}`}
+                        >
+                          <Text style={styles.referenceLink}>Browse Product Docs</Text>
+                          <Ionicons name="arrow-forward" size={14} color={Colors.primary} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                })}
               </View>
             )}
           </>
@@ -177,17 +258,23 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   );
 }
 
-function normalizeDisplayedAnswer(content: string): string {
+function normalizeDisplayedAnswer(content: string, hasStructuredCitations: boolean): string {
   const original = content.trim();
   let next = original.replace(/\r\n/g, '\n').trim();
+
+  // Older saved chats can have a source footer without citation metadata.
+  // Keep that attribution unless the References controls can replace it.
+  if (hasStructuredCitations) {
+    next = next
+      .replace(/\n\s*Sources:\s*[\s\S]*$/i, '')
+      .replace(/\n\s*Closest confirmed source:\s*[\s\S]*$/i, '')
+      .replace(/\n\s*Source:\s*[^\n]+$/i, '');
+  }
 
   next = next
     .replace(/^\s*Direct answer\s*\n+/i, '')
     .replace(/^\s*Answer:\s*/i, '')
     .replace(/\n\s*Direct answer\s*\n/gi, '\n')
-    .replace(/\n\s*Sources:\s*[\s\S]*$/i, '')
-    .replace(/\n\s*Closest confirmed source:\s*[\s\S]*$/i, '')
-    .replace(/\n\s*Source:\s*[^\n]+$/i, '')
     .replace(/\bJobsite path:\s*/i, "Here's the field sequence:\n")
     .split('\n')
     .map(formatStepLine)
@@ -310,23 +397,41 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semibold,
     fontWeight: Typography.weight.semibold,
   },
-  sourceRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  references: {
     gap: Spacing.xs,
     marginTop: Spacing.sm,
   },
-  sourceChip: {
+  referenceToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    maxWidth: 220,
-    borderRadius: Radius.full,
+    gap: Spacing.xs,
+    minHeight: 44,
+  },
+  referenceCard: {
+    borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.softGrey,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 5,
+    padding: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  referenceLink: {
+    color: Colors.primary,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.medium,
+    flexShrink: 1,
+  },
+  referenceNote: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.xs * 1.5,
+  },
+  referenceText: {
+    color: Colors.navy,
+    fontSize: Typography.size.sm,
+    fontFamily: Fonts.regular,
+    lineHeight: Typography.size.sm * 1.5,
   },
   sourceChipText: {
     color: Colors.textSecondary,

@@ -1,5 +1,5 @@
 import { buildMathAnswer } from './assistant-math';
-import type { AssistantJobContext } from './job-context';
+import { extractJobContext, type AssistantJobContext } from './job-context';
 
 const dryConcrete: AssistantJobContext = {
   substrate: 'concrete',
@@ -11,6 +11,74 @@ const dryConcrete: AssistantJobContext = {
 };
 
 describe('Semco Guide calculator quantities', () => {
+  it.each(['1,500 sq ft', '1500 sq. ft.', '1,500 ft²'])('preserves thousands in %s', (area) => {
+    const answer = buildMathAnswer(dryConcrete, `How much material for ${area}?`);
+    expect(answer?.kind).toBe('quantity');
+    expect(answer?.content).toContain('**1500 sq ft**');
+  });
+
+  it.each(['500 sq ft + 300 sq ft', '500 plus 300 sq ft', '500 and 300 square feet', '20 by 30 ft + 10 by 20 ft'])('adds clear separate areas: %s', (area) => {
+    const answer = buildMathAnswer(dryConcrete, `How much material for ${area}?`);
+    expect(answer?.kind).toBe('quantity');
+    expect(answer?.content).toContain('**800 sq ft**');
+  });
+
+  it.each(['-500 sq ft', '−500 sq ft', '0 sq ft', '1,50 sq ft', '1 500 sq ft', '-20 by 30 ft', 'minus 20 by 30 ft'])('rejects invalid measurement %s', (area) => {
+    const answer = buildMathAnswer(dryConcrete, `How much material for ${area}?`, [{ role: 'user', content: 'Earlier it was 600 sq ft' }]);
+    expect(answer?.kind).toBe('quantity_input');
+    expect(answer?.content).toContain('positive number');
+    expect(answer?.content).not.toContain('**600 sq ft**');
+  });
+
+  it.each(['500 sq ft or 300 sq ft', '500 sq ft includes 100 sq ft', '500 sq ft plus 20 sq m', '500 sq ft plus 10 by 20 ft', '500 sq ft plus 300'])('asks rather than guessing %s', (area) => {
+    const answer = buildMathAnswer(dryConcrete, `How much material for ${area}?`);
+    expect(answer?.kind).toBe('quantity_input');
+    expect(answer?.content).toContain('more than one measurement');
+  });
+
+  it('converts an explicitly metric area', () => {
+    const answer = buildMathAnswer(dryConcrete, 'How much material for 100 m²?');
+    expect(answer?.content).toContain('**1076 sq ft**');
+  });
+
+  it('does not replace an area estimate with a generic coverage fact', () => {
+    const answer = buildMathAnswer(dryConcrete, 'How many bags do I need to cover 1,500 sq ft?');
+    expect(answer?.kind).toBe('quantity');
+    expect(answer?.content).toContain('**1500 sq ft**');
+  });
+
+  it('does not reuse the previous job area after a reset', () => {
+    const answer = buildMathAnswer(dryConcrete, 'New project: how much material do I need?', [
+      { role: 'user', content: 'Concrete pool 1500 sq ft' },
+    ]);
+    expect(answer?.kind).toBe('quantity_input');
+    expect(answer?.content).toContain('What area are we covering?');
+  });
+
+  it('uses described oil contamination for the calculator prep selection', () => {
+    const question = 'How much material for 500 sq ft of concrete with oil and grease?';
+    const answer = buildMathAnswer(extractJobContext([], question), question);
+    expect(answer?.kind).toBe('quantity');
+    expect(answer?.content).toContain('Step 1: SEMCO Power Cleaner');
+    expect(answer?.content).toContain('Step 2: SEMCO Stone Soap');
+  });
+
+  it('takes dry drywall coverage and allowance from the calculator', () => {
+    const question = 'How much material for 500 sq ft on dry non-wet drywall?';
+    const answer = buildMathAnswer(extractJobContext([], question), question);
+    expect(answer?.content).toContain('500 sq ft ÷ 100 sq ft per bag = 5');
+    expect(answer?.content).toContain('Stone rate already includes the wall allowance');
+    const coverageQuestion = 'How much does one bag cover on dry drywall?';
+    const coverage = buildMathAnswer(extractJobContext([], coverageQuestion), coverageQuestion);
+    expect(coverage?.content).toContain('**100 sq ft of dry, non-wet drywall**');
+  });
+
+  it('states the shared four-coat submerged membrane coverage', () => {
+    const answer = buildMathAnswer(dryConcrete, 'How far does a gallon of liquid membrane go?');
+    expect(answer?.kind).toBe('coverage_fact');
+    expect(answer?.content).toContain('50-75 sq ft per gallon for the complete 4-coat application');
+  });
+
   it('keeps Liquid Membrane optional for a wall in a non-wet area', () => {
     const dryWall: AssistantJobContext = {
       ...dryConcrete,

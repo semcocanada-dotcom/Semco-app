@@ -31,6 +31,26 @@ export interface ConversationMessage {
   quickReplies?: string[];
   /** Suggested next questions after a full answer. */
   suggestedFollowUps?: string[];
+  /** Local-only state for walking through an installed procedure. */
+  guideLesson?: GuideLesson;
+  /** Reviewed reference links, never automatically opened or treated as instructions. */
+  videos?: AssistantVideo[];
+  guideEducation?: { productId: string };
+}
+
+export interface AssistantVideo {
+  id: string;
+  title: string;
+  url: string;
+  publisher: string;
+  legacy?: boolean;
+}
+
+export interface GuideLesson {
+  intro: string;
+  steps: string[];
+  cursor: number;
+  safetyNote: string;
 }
 
 export const conversations = sqliteTable(

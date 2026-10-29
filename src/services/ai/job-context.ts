@@ -1,11 +1,12 @@
 import type { ConversationMessage } from '@/database/schema/conversations';
+import type { PrepConditionId } from '@/constants/prep-systems';
 
 /**
  * Deterministic job-context tracking for Semco Guide.
  *
  * The assistant must understand follow-up questions from the active chat:
  * substrate, application, exposure, system, and finish are extracted from the
- * installer's recent messages and merged newest-wins, so "Then what do I do
+ * installer's active job messages and merged newest-wins, so "Then what do I do
  * for finish coats?" keeps pointing at the same job. Everything here is
  * keyword-driven and works entirely on the device.
  */
@@ -43,6 +44,8 @@ export interface AssistantJobContext {
   exposure: JobExposure;
   system: JobSystem;
   finish: JobFinish;
+  /** Only explicitly described surface conditions; the Calculator still enforces substrate rules. */
+  prepCondition?: PrepConditionId;
   missingInputs: string[];
 }
 
@@ -50,8 +53,6 @@ export interface ClarifyingPrompt {
   content: string;
   quickReplies: string[];
 }
-
-const MAX_CONTEXT_USER_MESSAGES = 6;
 
 // Longer phrases first so "concrete board" resolves to board, not concrete.
 const SUBSTRATE_TERMS: { value: Exclude<JobSubstrate, 'unknown'>; terms: string[] }[] = [
@@ -71,18 +72,45 @@ const APPLICATION_TERMS: { value: Exclude<JobApplication, 'unknown'>; terms: str
   { value: 'pond', terms: ['pond', 'fountain', 'water feature'] },
   { value: 'deck', terms: ['deck'] },
   { value: 'countertop', terms: ['countertop', 'counter top', 'vanity top', 'counters'] },
-  { value: 'wall', terms: ['wall'] },
+  { value: 'wall', terms: ['wall', 'walls'] },
   { value: 'floor', terms: ['floor', 'flooring'] },
   { value: 'exterior', terms: ['exterior', 'outside', 'outdoor'] },
   { value: 'interior', terms: ['interior', 'indoor', 'inside'] },
 ];
 
 const EXPOSURE_TERMS: { value: Exclude<JobExposure, 'unknown'>; terms: string[] }[] = [
+  { value: 'dry', terms: ['dry area', 'dry wall', 'dry drywall', 'dry room', 'dry interior', 'dry indoor', 'dry exposure', 'non wet', 'non water', 'no water exposure'] },
   { value: 'submerged', terms: ['submerged', 'underwater', 'under water', 'holding water', 'holds water', 'water containment', 'pool', 'pond', 'fountain', 'jacuzzi'] },
   { value: 'steam', terms: ['steam shower', 'steam room'] },
   { value: 'wet', terms: ['shower', 'wet room', 'wetroom', 'wet area', 'waterproof', 'bathroom'] },
   { value: 'exterior', terms: ['exterior', 'outside', 'outdoor'] },
 ];
+
+export function startsNewJob(text: string): boolean {
+  return /\b(?:(?:new|different|another|separate|next) (?:job|project)|start (?:over|again)|forget (?:the |that |this )?(?:previous |last |old )?(?:job|project))\b/.test(normalize(text));
+}
+
+/** Do not let a new job inherit quantities, wet exposure, or earlier assistant advice. */
+export function getActiveJobHistory<T extends { role: string; content: string }>(history: T[], currentMessage: string): T[] {
+  if (startsNewJob(currentMessage)) return [];
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    if (history[index].role === 'user' && startsNewJob(history[index].content)) return history.slice(index);
+  }
+  return history;
+}
+
+function extractPrepCondition(text: string): PrepConditionId | undefined {
+  text = text.replace(/\bnon[- ]waxed\b/g, 'unsealed');
+  const explicitType = text.match(/\b(?:sip\s+)?type\s+([a-e])\b/);
+  if (explicitType) return `type_${explicitType[1]}` as PrepConditionId;
+  const oily = /\b(oil|oily|grease|greasy|wax|waxed|glue|adhesive|epoxy|painted|sealed|coating residue|(?:old|existing) (?:paint|sealer|coating))\b/.test(text);
+  const mineral = /\b(mineral deposits?|efflorescence|calcium|alkali|magnesium)\b/.test(text);
+  if ((oily && mineral) || /\b(unknown surface|unsure.*surface|stamped concrete|exterior|outside|outdoor|pool|pond)\b/.test(text)) return 'type_c';
+  if (mineral) return 'type_d';
+  if (oily) return 'type_b';
+  if (/\b(clean and unsealed|clean unsealed|unsealed|non-waxed|non waxed)\b/.test(text)) return 'type_a';
+  return undefined;
+}
 
 const SYSTEM_TERMS: { value: Exclude<JobSystem, 'unknown'>; terms: string[] }[] = [
   { value: 'x_bond', terms: ['x-bond', 'xbond', 'x bond', 'seamless stone'] },
@@ -97,6 +125,18 @@ const FINISH_TERMS: { value: Exclude<JobFinish, 'unknown'>; terms: string[] }[] 
   { value: 'titan_gloss', terms: ['titan gloss', 'titan shield', 'high gloss'] },
   { value: 'matte', terms: ['matte'] },
 ];
+
+const SURFACE_CONDITION_TERMS = [
+  'mineral deposits', 'mineral deposit', 'efflorescence', 'calcium', 'alkali', 'magnesium',
+  'oil', 'oily', 'grease', 'greasy', 'wax', 'waxed', 'glue', 'adhesive', 'epoxy', 'painted', 'paint',
+  'sealed', 'sealer', 'coating residue', 'old coating', 'existing coating',
+];
+const ALL_CONTEXT_TERMS = [...new Set([
+  ...SUBSTRATE_TERMS, ...APPLICATION_TERMS, ...EXPOSURE_TERMS, ...SYSTEM_TERMS, ...FINISH_TERMS,
+].flatMap((entry) => entry.terms).concat(SURFACE_CONDITION_TERMS))].map(normalize).sort((a, b) => b.length - a.length);
+const NEGATION_FILLER = '(?:a|an|the|my|our|any|using|use|have|has|on|over|in|with|actually|really|regular|standard|existing|old)\\s+';
+const NEGATION_BRIDGE = `(?:${ALL_CONTEXT_TERMS.join('|')})\\s+(?:or|and|nor)\\s+`;
+const NEGATED_PREFIX = new RegExp(`\\b(?:not|no|without|no longer|instead of|rather than)\\s+(?:${NEGATION_FILLER}|${NEGATION_BRIDGE})*$`);
 
 const SUBSTRATE_LABELS: Record<Exclude<JobSubstrate, 'unknown'>, string> = {
   concrete: 'concrete',
@@ -124,35 +164,78 @@ const FINISH_LABELS: Record<Exclude<JobFinish, 'unknown'>, string> = {
 };
 
 function normalize(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9/-\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  return text.toLowerCase()
+    .replace(/[’']/g, '')
+    .replace(/\b(isnt|arent|wasnt|werent|dont|doesnt|didnt|cant)\b/g, (word) => ({
+      isnt: 'is not', arent: 'are not', wasnt: 'was not', werent: 'were not',
+      dont: 'do not', doesnt: 'does not', didnt: 'did not', cant: 'cannot',
+    })[word] ?? word)
+    .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-/**
- * Remove corrected values before matching so "pond not floor" and
- * "the finish is Liquid Membrane not X-Bond" keep only what the
- * installer actually confirmed.
- */
-function stripNegatedTerms(normalized: string): string {
-  return normalized
-    .replace(/\b(?:not|isn t|isnt|no longer|instead of|rather than)\s+(?:a\s|an\s|the\s)?[\w/-]+(?:\s[\w/-]+)?/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+interface TermMention<T> {
+  value: T;
+  start: number;
+  end: number;
+  negated: boolean;
 }
 
-function matchTerm<T extends string>(normalized: string, table: { value: T; terms: string[] }[]): T | undefined {
+/** Match whole phrases, not e.g. "wall" inside drywall or "tile" inside textile. */
+function termMentions<T extends string>(normalized: string, table: { value: T; terms: string[] }[]): TermMention<T>[] {
+  const mentions: TermMention<T>[] = [];
   for (const entry of table) {
-    if (entry.terms.some((term) => normalized.includes(term))) return entry.value;
+    for (const term of entry.terms) {
+      const expression = new RegExp(`\\b${normalize(term).replace(/ /g, '\\s+')}\\b`, 'g');
+      for (const match of normalized.matchAll(expression)) {
+        const start = match.index!;
+        const before = normalized.slice(0, start);
+        // Only grammatical filler is allowed between a negation and this
+        // value. "Not tile anymore, concrete" must not negate concrete too.
+        const negated = NEGATED_PREFIX.test(before)
+          && !/\bnot (?:only|just)\s+$/.test(before);
+        mentions.push({ value: entry.value, start, end: start + match[0].length, negated });
+      }
+    }
   }
-  return undefined;
+  // A specific phrase owns its nested words: cement board is not concrete;
+  // a concrete pool shell is not a second, later mention of concrete.
+  return mentions.filter((mention, index) => !mentions.some((other, otherIndex) => (
+    otherIndex !== index && other.start <= mention.start && other.end >= mention.end
+    && (other.end - other.start > mention.end - mention.start || otherIndex < index && other.start === mention.start && other.end === mention.end)
+  ))).sort((a, b) => a.start - b.start);
+}
+
+function confirmedValue<T extends string>(normalized: string, table: { value: T; terms: string[] }[], previous: T | 'unknown'): T | 'unknown' {
+  const mentions = termMentions(normalized, table);
+  const positive = mentions.filter((mention) => !mention.negated);
+  // More specific applications (shower, pool) beat their wall/floor/location
+  // description, unless the installer explicitly corrects that application.
+  if (positive.length) {
+    const corrections = [...normalized.matchAll(/\b(?:actually|correction|i mean|now it is|now its|changed to|switch(?:ed|ing)? to|instead it is|instead its)\b/g)];
+    const correction = corrections.length ? corrections[corrections.length - 1].index! : -1;
+    const corrected = correction >= 0 ? positive.filter((mention) => mention.start >= correction) : [];
+    for (const entry of table) {
+      if ((corrected.length ? corrected : positive).some((mention) => mention.value === entry.value)) return entry.value;
+    }
+  }
+  return mentions.some((mention) => mention.negated && mention.value === previous) ? 'unknown' : previous;
+}
+
+/** Remove only named, negated surface conditions, never arbitrary next words. */
+function prepTextWithoutNegations(text: string): string {
+  let cleaned = text.replace(/\b(?:not|no longer) (?:already |previously )?sealed\b/g, 'unsealed');
+  const negated = termMentions(cleaned, [{ value: 'condition', terms: ALL_CONTEXT_TERMS }])
+    .filter((mention) => mention.negated).sort((a, b) => b.start - a.start);
+  for (const mention of negated) cleaned = cleaned.slice(0, mention.start) + ' '.repeat(mention.end - mention.start) + cleaned.slice(mention.end);
+  return cleaned;
 }
 
 export function extractJobContext(history: ConversationMessage[], currentMessage: string): AssistantJobContext {
   // Only installer turns carry job facts. Assistant answers enumerate
   // options ("concrete, GlasRoc, plywood/OSB, or tile?"), which would
   // pollute every dimension if matched.
-  const userTexts = history
+  const userTexts = getActiveJobHistory(history, currentMessage)
     .filter((message) => message.role === 'user')
-    .slice(-MAX_CONTEXT_USER_MESSAGES)
     .map((message) => message.content);
   userTexts.push(currentMessage);
 
@@ -164,24 +247,35 @@ export function extractJobContext(history: ConversationMessage[], currentMessage
     finish: 'unknown',
     missingInputs: [],
   };
+  let exposureBasedPrep = false;
 
   // Oldest to newest so the most recent statement (including corrections)
   // wins each dimension.
   for (const text of userTexts) {
-    const normalized = stripNegatedTerms(normalize(text));
+    // Resolve explicit dry statements before removing negations ("not wet").
+    const normalized = normalize(text).replace(/\b(?:non (?:wet|water)(?: area)?|not (?:a )?wet(?: area)?|no water exposure)\b/g, 'dry area');
     if (!normalized) continue;
+    // Asking to compare alternatives is not choosing one for the job.
+    if (/\b(difference between|compare|versus|vs|which is better|which one is better)\b/.test(normalized)) continue;
 
-    const substrate = matchTerm(normalized, SUBSTRATE_TERMS);
-    const application = matchTerm(normalized, APPLICATION_TERMS);
-    const exposure = matchTerm(normalized, EXPOSURE_TERMS);
-    const system = matchTerm(normalized, SYSTEM_TERMS);
-    const finish = matchTerm(normalized, FINISH_TERMS);
-
-    if (substrate) context.substrate = substrate;
-    if (application) context.application = application;
-    if (exposure) context.exposure = exposure;
-    if (system) context.system = system;
-    if (finish) context.finish = finish;
+    context.substrate = confirmedValue(normalized, SUBSTRATE_TERMS, context.substrate);
+    context.application = confirmedValue(normalized, APPLICATION_TERMS, context.application);
+    const exposureText = normalized.replace(/\bdry (?:concrete|tile|drywall|plywood|osb|interior|indoor) (?:walls?|floors?|room)\b/g, 'dry area');
+    context.exposure = /^(?:it is |its |this is |an? )?dry$/.test(normalized)
+      ? 'dry' : confirmedValue(exposureText, EXPOSURE_TERMS, context.exposure);
+    context.system = confirmedValue(normalized, SYSTEM_TERMS, context.system);
+    context.finish = confirmedValue(normalized, FINISH_TERMS, context.finish);
+    const prepText = prepTextWithoutNegations(normalized);
+    const prepCondition = extractPrepCondition(prepText);
+    if (prepCondition) {
+      context.prepCondition = prepCondition;
+      exposureBasedPrep = prepCondition === 'type_c'
+        && /\b(exterior|outside|outdoor|pool|pond)\b/.test(prepText)
+        && !/\b(type [a-e]|unknown surface|unsure|stamped concrete|oil|oily|grease|greasy|wax|waxed|glue|adhesive|epoxy|painted|sealed|mineral|efflorescence|calcium|alkali|magnesium)\b/.test(prepText);
+    } else if (exposureBasedPrep && !['submerged', 'exterior'].includes(context.exposure)) {
+      delete context.prepCondition;
+      exposureBasedPrep = false;
+    }
   }
 
   // Cheap derivations that do not invent facts.
@@ -229,6 +323,7 @@ export function formatJobContextLine(context: AssistantJobContext): string {
   }
   if (context.system !== 'unknown') parts.push(`system is ${SYSTEM_LABELS[context.system]}`);
   if (context.finish !== 'unknown') parts.push(`finish is ${FINISH_LABELS[context.finish]}`);
+  if (context.prepCondition) parts.push(`surface preparation is SIP ${context.prepCondition.replace('_', ' ').toUpperCase()}`);
   return parts.length ? `Known job context: ${parts.join('; ')}.` : '';
 }
 
@@ -346,9 +441,9 @@ export function buildSuggestedFollowUps(intent: string, context: AssistantJobCon
 
 /**
  * Builds the retrieval/reasoning question for the current turn. Follow-up
- * turns inherit a compact job-context line plus the recent exchange so the
- * downstream keyword rules and retrieval see the whole job, not just the
- * fragment the installer typed.
+ * turns inherit the confirmed job facts, not old answers or disproved values.
+ * Assistant answers often list several alternatives; feeding them back into
+ * keyword retrieval makes those alternatives look like installer facts.
  */
 export function resolveContextualQuestion(
   userMessage: string,
@@ -358,29 +453,31 @@ export function resolveContextualQuestion(
   const clean = userMessage.replace(/\s+/g, ' ').trim();
   if (!clean) return clean;
 
-  const contextMessages = getRecentConversationContext(history);
+  const contextMessages = getRecentConversationContext(getActiveJobHistory(history, userMessage));
   if (contextMessages.length === 0) return clean;
 
-  const contextText = contextMessages.join('\n');
-  if (!shouldUseConversationContext(clean, contextText)) return clean;
-
   const jobContextLine = formatJobContextLine(context);
+  const contextText = jobContextLine || contextMessages.join('\n');
+  if (!shouldUseConversationContext(clean, contextText)) return clean;
 
   return [
     'Conversation context for this installer question:',
     jobContextLine,
-    contextMessages.join('\n'),
+    // When structured facts exist, old free text adds ambiguity rather than
+    // memory. Keep a single user-only antecedent only for otherwise unknown
+    // topics (for example, "What does that mean?").
+    jobContextLine ? '' : contextMessages.join('\n'),
     `Follow-up question: ${redactPrivateText(clean)}`,
   ].filter(Boolean).join('\n');
 }
 
 function getRecentConversationContext(history: ConversationMessage[]): string[] {
   return history
-    .slice(-6)
+    .filter((message) => message.role === 'user')
+    .slice(-1)
     .map((message) => {
-      const role = message.role === 'assistant' ? 'Semco answer' : 'Installer';
-      const content = truncate(redactPrivateText(message.content), message.role === 'assistant' ? 320 : 220);
-      return content ? `${role}: ${content}` : '';
+      const content = truncate(redactPrivateText(message.content), 320);
+      return content ? `Installer: ${content}` : '';
     })
     .filter(Boolean);
 }
@@ -389,6 +486,7 @@ function shouldUseConversationContext(message: string, contextText: string): boo
   const normalized = message.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').replace(/\s+/g, ' ').trim();
   const words = normalized.split(' ').filter(Boolean);
   if (words.length === 0) return false;
+  if (/\b(difference between|compare|versus|vs|which is better|which one is better)\b/.test(normalized)) return false;
 
   const hasOwnSubstrate = /\b(concrete|tile|plywood|osb|wood|metal|drywall|gypsum|pool|pond|fountain|water containment|underwater|submerged|shower|icf|block|cmu|x-bond|xbond)\b/.test(normalized);
   const explicitContinuation = /^(what about|and then|then|after that|afterwards|next|what next|also|from there|once that)\b/.test(normalized);
@@ -400,11 +498,11 @@ function shouldUseConversationContext(message: string, contextText: string): boo
     && !hasOwnSubstrate;
   const contextHasJobFacts = /\b(concrete|tile|plywood|osb|wood|deck|metal|drywall|gypsum|pool|pond|fountain|water containment|underwater|shower|icf|block|cmu|exterior|outside|submerged|wet|x-bond|xbond|liquid membrane)\b/i.test(contextText);
 
-  if (hasOwnSubstrate && !referencesPriorContext && !asksForContinuation) return false;
-
   return contextHasJobFacts && (
     referencesPriorContext
     || asksForContinuation
+    || hasOwnSubstrate
+    || isProcedureAsk(normalized)
     || productOnlyQuestion
     || words.length <= 8
   );

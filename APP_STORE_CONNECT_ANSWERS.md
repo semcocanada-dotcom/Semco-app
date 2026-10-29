@@ -11,6 +11,41 @@ Prepared: 2026-08-12
 - Content rights: The app contains third-party content, and Semco Canada must confirm that it has the necessary rights to use it.
 - Age rating: 4+
 
+## Store Listing Copy
+
+### Promotional Text
+
+Plan Semco jobs, estimate materials and SIP cleaners, document warranty stages, access technical guidance, and route Canadian material requests.
+
+### Description
+
+Semco Pro brings the essential tools for a SEMCO installation into one organized field app. Built for independent professional installers and contractors, it helps you plan materials, document every stage of the job, and keep project records ready for review—from initial planning through final sign-off.
+
+PLAN MATERIALS WITH CONFIDENCE
+
+• Select the project scope and substrate for clearer Liquid Membrane requirements across non-wet walls, wet areas, showers, pools and submerged work
+• Estimate X-Bond, Liquid Membrane, MicroBond, SIP preparation cleaners and sealers
+• Review estimated package quantities and pricing
+• Turn calculator results into material requests for dealer review
+
+KEEP EVERY JOB ORGANIZED
+
+• Create project records with site, system, colour and finish details
+• Capture required installation-stage photos for warranty review
+• Record product batches, quantities and coverage
+• Complete customer approvals and sign-off forms
+• Submit purchase receipts and warranty records for review
+
+KEEP SEMCO REFERENCES CLOSE
+
+• Browse colour references, installation details, product sheets and safety data sheets
+• Record custom colour formulas and scale them for larger batches
+• Use Semco Guide for on-device answers drawn from technical references installed with the app
+
+For Canadian projects, material requests are routed to the appropriate regional supplier using the same national price catalog.
+
+Semco Pro is free to use, with no ads, subscriptions or in-app purchases. Material requests do not place orders or collect payment. Material estimates and displayed pricing are planning references and must be confirmed by the supplier. Warranty records require review. Always follow current SEMCO documentation and confirm final colours with approved physical samples.
+
 ## Pricing and Availability
 
 - Price: Free

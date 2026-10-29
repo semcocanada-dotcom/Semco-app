@@ -1,11 +1,11 @@
 import type { SubstrateId } from '@/constants/substrates';
 import type { InstallationScope } from '@/constants/prep-systems';
-import { SQFT_PER_SQM } from '@/constants/product-coverage';
+import { SQFT_PER_SQM, getXBondRange, getLiquidMembraneRange, getMicroBondRange, type CoverageRange } from '@/constants/product-coverage';
 import { calculate } from '@/services/calculator';
 import { getFormulaForBatch, type BatchSize } from '@/services/color-scaler';
 import type { PigmentRatio } from '@/database/schema/colors';
 import colorsData from '@/database/seed/colors.json';
-import type { AssistantJobContext } from './job-context';
+import { getActiveJobHistory, type AssistantJobContext } from './job-context';
 
 /**
  * Deterministic in-chat math for Semco Guide.
@@ -49,13 +49,13 @@ export function buildMathAnswer(
     glossaryAnswer(normalized)
     ?? tintFormulaAnswer(normalized)
     ?? mixRatioAnswer(normalized)
-    ?? coverageFactAnswer(normalized)
-    ?? quantityAnswer(context, normalized, history)
+    ?? coverageFactAnswer(normalized, context)
+    ?? quantityAnswer(context, normalized, getActiveJobHistory(history, userMessage))
   );
 }
 
 function normalize(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9/.%x-\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  return text.toLowerCase().replace(/²/g, '2').replace(/[−–]/g, '-').replace(/[^a-z0-9/.,+.%x-\s]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 /* ------------------------------------------------------------------ */
@@ -211,8 +211,8 @@ const NUMBER_WORDS: Record<string, number> = {
 };
 
 function parseCount(normalized: string, unitPattern: string): number | null {
-  const numeric = normalized.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:x\\s*)?${unitPattern}`));
-  if (numeric?.[1]) return Number(numeric[1]);
+  const numeric = normalized.match(new RegExp(`(-?\\d[\\d,]*(?:\\.\\d+)?)\\s*(?:x\\s*)?${unitPattern}`));
+  if (numeric?.[1]) return readAreaNumber(numeric[1]);
 
   const word = normalized.match(new RegExp(`\\b(half|one|two|three|four|five|six|seven|eight|nine|ten)\\b[a-z\\s]{0,12}${unitPattern}`));
   if (word?.[1]) return NUMBER_WORDS[word[1]] ?? null;
@@ -283,51 +283,64 @@ function mixRatioAnswer(normalized: string): MathAnswer | null {
 /* Coverage facts — "how much does one bag cover" style  */
 /* --------------------------------------------------- */
 
-const COVERAGE_FACTS: { match: string[]; unitWords: string[]; lines: string[] }[] = [
+const COVERAGE_FACTS: { match: string[]; unitWords: string[] }[] = [
   {
     match: ['x-bond', 'xbond', 'x bond', 'bag'],
     unitWords: ['bag'],
-    lines: [
-      'One 50 lb bag of X-Bond Stone covers about **75 sq ft of finished system at 1/8 inch**, mixed with 2 gallons of X-Bond Liquid.',
-      '',
-      'That 75 sq ft is for the complete build-up — all the X-Bond coats together — not per coat.',
-      '',
-      'Rougher substrates, thicker builds, and heavy texture eat into that number, which is why orders carry a waste factor.',
-    ],
   },
   {
     match: ['liquid membrane', 'membrane'],
     unitWords: ['gal', 'gallon', 'pail', 'cover', 'coverage', 'go'],
-    lines: [
-      'SEMCO Liquid Membrane coverage per gallon:',
-      '',
-      '**Normal (above-grade) work:** about 200-250 sq ft per gallon, applied in 2 coats.',
-      '',
-      '**Submerged work (pool, pond, holding water):** about 50-75 sq ft per gallon because it is built much thicker — 3+ coats.',
-      '',
-      'Tell me the area and whether it is submerged, and I can work out the gallons.',
-    ],
   },
   {
     match: ['microbond', 'micro bond'],
     unitWords: ['pail', 'cover', 'coverage'],
-    lines: [
-      'One 5 gal / 30 lb MicroBond pail finishes about **1000 sq ft in 2 coats**, mixed with about 2 1/2 gallons of X-Bond Liquid.',
-    ],
   },
 ];
 
-function coverageFactAnswer(normalized: string): MathAnswer | null {
+function coverageFactAnswer(normalized: string, context: AssistantJobContext): MathAnswer | null {
   if (!/cover|coverage|how far|go per|get out of/.test(normalized)) return null;
+  if (isQuantityAsk(normalized) && parseAreaSqft(normalized).kind !== 'missing') return null;
 
   const fact = COVERAGE_FACTS.find((entry) =>
     entry.match.some((term) => normalized.includes(term))
     && entry.unitWords.some((word) => normalized.includes(word)));
   if (!fact) return null;
 
+  let lines: string[];
+  if (/liquid membrane|membrane/.test(normalized)) {
+    const standard = getLiquidMembraneRange('above_grade')!;
+    const submerged = getLiquidMembraneRange('submerged')!;
+    lines = [
+      'Liquid Membrane goes further on ordinary wet-area work than in a pool:',
+      '',
+      `**Above-grade work:** ${coverageRangeLabel(standard)} sq ft per gallon for the complete ${standard.coats}-coat application.`,
+      '',
+      `**Submerged work, such as a pool or pond:** ${coverageRangeLabel(submerged)} sq ft per gallon for the complete ${submerged.coats}-coat application.`,
+      '',
+      'Tell me the area and whether it will hold water, and I can work out the quantity.',
+    ];
+  } else if (/microbond|micro bond/.test(normalized)) {
+    const range = getMicroBondRange();
+    lines = [`One MicroBond pail covers about **${coverageRangeLabel(range)} sq ft across ${range.coats} coats**.`];
+  } else {
+    const substrate = SUBSTRATE_FROM_CONTEXT[context.substrate] ?? 'concrete';
+    const dryWall = context.substrate === 'drywall' && context.exposure === 'dry';
+    const range = getXBondRange(substrate, dryWall ? 'non_wet_wall' : installationScopeFor(context, substrate));
+    lines = [
+      `One 50 lb bag of X-Bond Stone covers about **${coverageRangeLabel(range)} sq ft${dryWall ? ' of dry, non-wet drywall' : ' of finished system at 1/8 inch'}**.`,
+      '',
+      dryWall
+        ? 'That is the measured wall area for the two finish coats, without a scratch coat. This field rate already includes the wall allowance; do not add the general waste percentage to the Stone bags again.'
+        : `That is all the X-Bond coats together, not per coat. Dry, non-wet drywall has a separate ${getXBondRange('gypsum_board', 'non_wet_wall').minSqftPerUnit} sq ft per bag field rate when no scratch coat is needed.`,
+      '',
+      'Rough surfaces, thicker builds and heavy texture can use more material. Confirm the area and conditions before ordering.',
+    ];
+  }
+
   return {
     kind: 'coverage_fact',
-    content: [...fact.lines, '', 'These are the same coverage numbers the app Calculator uses.'].join('\n'),
+    content: [...lines, '', 'These are the same coverage numbers the app Calculator uses.'].join('\n'),
     followUps: ['How much X-Bond do I need for my area?', 'What does waste factor mean?'],
   };
 }
@@ -414,7 +427,7 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
   }
 
   // Quart remains available only when explicitly requested for a sample.
-  const gallonsAsk = normalized.match(/(\d+(?:\.\d+)?)\s*gal/);
+  const gallonsAsk = normalized.match(/(-?\d[\d,]*(?:\.\d+)?)\s*gal/);
   const wantsQuart = /quart/.test(normalized);
 
   let batch: BatchSize = 'gallon';
@@ -424,7 +437,10 @@ function tintFormulaAnswer(normalized: string): MathAnswer | null {
   if (wantsQuart) {
     batch = 'quart';
   } else if (gallonsAsk) {
-    const gallons = Number(gallonsAsk[1]);
+    const gallons = readAreaNumber(gallonsAsk[1]);
+    if (gallons == null) {
+      return { kind: 'tint_formula', content: 'Please give me a positive batch size. Project tinting uses whole 1-gallon or 5-gallon batches; quarts are for samples.' };
+    }
     if (gallons === 5) {
       batch = 'five_gallon';
     } else if (gallons > 0 && Number.isInteger(gallons) && gallons % 5 === 0) {
@@ -495,6 +511,12 @@ function formatTintLabel(code: string, name: string): string {
   return cleanName || `Tint code ${cleanCode || 'unknown'}`;
 }
 
+function coverageRangeLabel(range: CoverageRange): string {
+  return range.minSqftPerUnit === range.maxSqftPerUnit
+    ? formatNumber(range.minSqftPerUnit)
+    : `${formatNumber(range.minSqftPerUnit)}-${formatNumber(range.maxSqftPerUnit)}`;
+}
+
 const QUANTITY_ASK_WORDS = ['how much', 'how many', 'do i need', 'materials for', 'material for', 'order for', 'quantities for'];
 const QUANTITY_PRODUCT_WORDS = ['x-bond', 'xbond', 'x bond', 'bag', 'bags', 'liquid membrane', 'membrane', 'microbond', 'sealer', 'satin stone', 'natural shield', 'titan', 'matte', 'material', 'materials', 'product', 'stone'];
 
@@ -544,22 +566,71 @@ function installationScopeFor(
   return 'floor_or_other';
 }
 
-function parseAreaSqft(normalized: string): number | null {
-  const sqft = normalized.match(/(\d+(?:\.\d+)?)\s*(?:sq\s?ft|sqft|square\s?feet|square\s?foot|ft2|sf)\b/);
-  if (sqft?.[1]) return Number(sqft[1]);
+type AreaParse = { kind: 'valid'; sqft: number } | { kind: 'missing' } | { kind: 'invalid' } | { kind: 'ambiguous' };
 
-  const sqm = normalized.match(/(\d+(?:\.\d+)?)\s*(?:sq\s?m|sqm|square\s?met(?:er|re)s?|m2)\b/);
-  if (sqm?.[1]) return Number(sqm[1]) * SQFT_PER_SQM;
+const AREA_NUMBER = '-?\\d[\\d,]*(?:\\.\\d+)?';
+const AREA_UNIT = '(?:sq\\.?\\s*ft\\.?|sqft|square\\s*(?:feet|foot)|ft2|sf|sq\\.?\\s*m\\.?|sqm|square\\s*met(?:er|re)s?|m2)';
 
-  // Room dimensions like "20 by 30", "20x30", "20 x 30 ft" — summed.
-  const dims = [...normalized.matchAll(/(\d+(?:\.\d+)?)\s*(?:x|by)\s*(\d+(?:\.\d+)?)/g)];
-  if (dims.length > 0) {
-    const metric = /met(?:er|re)|\bm\b/.test(normalized) && !/feet|ft\b/.test(normalized);
-    const total = dims.reduce((sum, match) => sum + Number(match[1]) * Number(match[2]), 0);
-    return metric ? total * SQFT_PER_SQM : total;
+function readAreaNumber(text: string): number | null {
+  if (!/^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(text)) return null;
+  const value = Number(text.replace(/,/g, ''));
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function isAdditiveConnector(text: string): boolean {
+  return /^(?:\s|[+,]|and\b|plus\b|another\b|an additional\b)+$/.test(text);
+}
+
+function parseAreaSqft(normalized: string): AreaParse {
+  const expression = `${AREA_NUMBER}(?:\\s*(?:\\+|plus|and)\\s*${AREA_NUMBER})*`;
+  const matches = [...normalized.matchAll(new RegExp(`(${expression})\\s*(${AREA_UNIT})(?![a-z0-9])`, 'g'))];
+  if (matches.length) {
+    let total = 0;
+    let unit: 'metric' | 'imperial' | undefined;
+    for (let index = 0; index < matches.length; index += 1) {
+      const match = matches[index];
+      const prefix = normalized.slice(0, match.index);
+      // Ranges and subtraction must not be silently truncated to the last number.
+      if (/[\d,.-]$/.test(prefix) || /\d[\s,.-]+$/.test(prefix) || /\bminus\s*$/.test(prefix)) return { kind: 'invalid' };
+      const values = match[1].split(/\s*(?:\+|plus|and)\s*/).map(readAreaNumber);
+      if (values.some((value) => value == null)) return { kind: 'invalid' };
+      const currentUnit = /\bm2\b|sqm|sq\.?\s*m|met(?:er|re)/.test(match[2]) ? 'metric' : 'imperial';
+      if (unit && currentUnit !== unit) return { kind: 'ambiguous' };
+      unit = currentUnit;
+      if (index > 0) {
+        const previous = matches[index - 1];
+        const connector = normalized.slice(previous.index! + previous[0].length, match.index);
+        if (!isAdditiveConnector(connector)) return { kind: 'ambiguous' };
+      }
+      total += (values as number[]).reduce((sum, value) => sum + value, 0);
+    }
+    const withoutAreas = normalized.replace(new RegExp(`(${expression})\\s*(${AREA_UNIT})(?![a-z0-9])`, 'g'), '');
+    if (/\d\s*(?:x|by)\s*\d/.test(withoutAreas)) return { kind: 'ambiguous' };
+    if (/(?:\+|\bplus\b|\band\b)\s*\d/.test(withoutAreas)) return { kind: 'ambiguous' };
+    return { kind: 'valid', sqft: total * (unit === 'metric' ? SQFT_PER_SQM : 1) };
   }
 
-  return null;
+  const dims = [...normalized.matchAll(new RegExp(`(${AREA_NUMBER})\\s*(?:x|by)\\s*(${AREA_NUMBER})\\s*(feet|ft|metres?|meters?|m)?(?![a-z0-9])`, 'g'))];
+  if (dims.length) {
+    let total = 0;
+    const metricUnits = dims.map((match) => Boolean(match[3] && /^(m|met)/.test(match[3])));
+    if (metricUnits.some(Boolean) && !metricUnits.every(Boolean)) return { kind: 'ambiguous' };
+    for (let index = 0; index < dims.length; index += 1) {
+      const match = dims[index];
+      const width = readAreaNumber(match[1]);
+      const length = readAreaNumber(match[2]);
+      if (width == null || length == null) return { kind: 'invalid' };
+      if (/\bminus\s*$/.test(normalized.slice(0, match.index))) return { kind: 'invalid' };
+      if (index > 0) {
+        const previous = dims[index - 1];
+        if (!isAdditiveConnector(normalized.slice(previous.index! + previous[0].length, match.index))) return { kind: 'ambiguous' };
+      }
+      total += width * length;
+    }
+    return { kind: 'valid', sqft: total * (metricUnits[0] ? SQFT_PER_SQM : 1) };
+  }
+
+  return { kind: 'missing' };
 }
 
 function parseWastePct(normalized: string): number | null {
@@ -587,22 +658,34 @@ function quantityAnswer(
 
   // Pull the area from this message, or from the installer's recent
   // messages so "600 sq ft" said two turns ago still counts.
-  let areaSqft = parseAreaSqft(normalized);
-  if (areaSqft == null) {
-    const recentUser = history.filter((message) => message.role === 'user').slice(-4).reverse();
-    for (const message of recentUser) {
-      areaSqft = parseAreaSqft(normalize(message.content));
-      if (areaSqft != null) break;
+  let area = parseAreaSqft(normalized);
+  if (area.kind === 'missing' && answeringOurAreaQuestion) {
+    const bare = normalized.match(/^(-?\d[\d,]*(?:\.\d+)?)$/);
+    if (bare) {
+      const sqft = readAreaNumber(bare[1]);
+      area = sqft == null ? { kind: 'invalid' } : { kind: 'valid', sqft };
     }
   }
-  if (areaSqft == null && answeringOurAreaQuestion) {
-    const bare = normalized.match(/^(\d+(?:\.\d+)?)$/);
-    if (bare?.[1]) areaSqft = Number(bare[1]);
+  if (area.kind === 'missing') {
+    const recentUser = history.filter((message) => message.role === 'user').slice(-4).reverse();
+    for (const message of recentUser) {
+      area = parseAreaSqft(normalize(message.content));
+      if (area.kind !== 'missing') break;
+    }
   }
 
   const substrate = SUBSTRATE_FROM_CONTEXT[context.substrate];
 
-  if (areaSqft == null) {
+  if (area.kind === 'invalid' || area.kind === 'ambiguous') {
+    return {
+      kind: 'quantity_input',
+      content: area.kind === 'invalid'
+        ? `Let’s check the measurement before counting materials. The area must be a positive number, such as 1,500 sq ft. ${AREA_QUESTION_MARKER}`
+        : `I see more than one measurement, and I don’t want to count the wrong area. ${AREA_QUESTION_MARKER} Give me one total, or add separate areas in the same units, such as 500 sq ft + 300 sq ft. If they have different surfaces or wet/dry conditions, calculate each area separately.`,
+    };
+  }
+
+  if (area.kind === 'missing') {
     return {
       kind: 'quantity_input',
       content: [
@@ -612,6 +695,8 @@ function quantityAnswer(
       ].join('\n'),
     };
   }
+
+  const areaSqft = area.sqft;
 
   if (!substrate) {
     return {
@@ -644,6 +729,7 @@ function quantityAnswer(
     result = calculate({
       areaSqft,
       substrateType: substrate,
+      prepCondition: context.prepCondition,
       wastePct,
       sealerSku: SEALER_FROM_CONTEXT[context.finish],
       waterproofingMode: submerged ? 'submerged' : membraneRequested ? 'above_grade' : 'none',
@@ -667,16 +753,20 @@ function quantityAnswer(
 
   for (const layer of quantified) {
     const exact = layer.exactQuantity ?? layer.quantityPacks;
-    const perUnit = exact > 0 ? adjustedSqft / exact : 0;
+    // Use the Calculator's actual coverage, not an estimate from rounded area.
+    const perUnit = layer.coverageRateSqmPerKg * SQFT_PER_SQM;
+    const layerArea = exact * perUnit;
     const selectedRolls = layer.roundedQuantity ?? layer.quantityPacks ?? 0;
     const mathLine = layer.category === 'reinforcement'
       ? `Installer-selected: ${formatNumber(selectedRolls)} roll${selectedRolls === 1 ? '' : 's'} × 75 linear ft = ${formatNumber(selectedRolls * 75)} linear ft total.`
       : exact > 0 && perUnit > 0
-        ? `${formatNumber(adjustedSqft)} sq ft ÷ ~${formatNumber(Math.round(perUnit))} sq ft per ${layer.packLabel ?? 'unit'} = ${formatNumber(Math.round(exact * 10) / 10)}`
+        ? `${formatNumber(layerArea)} sq ft ÷ ${formatNumber(perUnit)} sq ft per ${layer.category === 'microcement' ? 'bag' : layer.category === 'microbond_finish' ? 'pail' : 'gallon'} = ${formatNumber(Math.round(exact * 10) / 10)}`
         : '';
 
-    const coatsNote = layer.productSku === 'XBOND'
-      ? 'Covers the complete system build-up, not per coat.'
+    const coatsNote = layer.productSku === 'XBOND-STONE'
+      ? substrate === 'gypsum_board'
+        ? 'Dry, non-wet drywall: two finish coats, no scratch coat. The Stone rate already includes the wall allowance.'
+        : 'Covers the complete system build-up, not per coat.'
       : layer.coats > 1
         ? `Applied in ${layer.coats} coats — the coverage number already includes all coats.`
         : '';

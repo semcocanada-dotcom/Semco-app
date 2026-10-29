@@ -156,6 +156,13 @@ export async function initDatabase() {
     );
     CREATE INDEX IF NOT EXISTS conversations_installer_idx ON conversations(installer_id);
 
+    CREATE TABLE IF NOT EXISTS guide_knowledge (
+      id TEXT PRIMARY KEY,
+      kind TEXT NOT NULL,
+      version TEXT NOT NULL,
+      content TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS installer_profiles (
       id TEXT PRIMARY KEY,
       installer_id TEXT NOT NULL,

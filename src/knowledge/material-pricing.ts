@@ -39,6 +39,7 @@ const SKU_ALIASES: Record<string, string> = {
   'XBOND-LIQUID': 'XB805',
   'SEMCO-LIQUID-MEMBRANE': 'XME805',
   'MICROBOND-STONE': 'XBM50',
+  'NATURAL-SHIELD': 'NAS501',
   'SATIN-STONE': 'XTS100',
   'TITAN-SHIELD': 'TSG705',
   'MATTE-SEALER': 'MS601',
@@ -57,6 +58,8 @@ export const MATERIAL_PRICES: MaterialPrice[] = [
   { sku: 'XB801', product: 'X-Bond Liquid', category: 'X-Bond Microcement System', size: '1 gallon pail', coverageRate: 'Based on X-Bond system mix requirements', retailPriceCad: 154.82, minimumQty: 1, source: 'Modern Arc price confirmation dated 2026-08-30' },
   { sku: 'XB805', product: 'X-Bond Liquid', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Based on 2 x 50 lb X-Bond Stone and 5 gal liquid at 1/8 in thickness', retailPriceCad: 623.57, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.1' },
   { sku: 'XBM50', product: 'Microbond', category: 'X-Bond Microcement System', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft', retailPriceCad: 455.18, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
+  { sku: 'NAS501', product: 'SEMCO Natural Shield', category: 'Sealers and Stains', size: '1 gallon pail', coverageRate: 'X-Bond 200-250 sq ft; Pool / below grade 150-200 sq ft, based on 3 coats', retailPriceCad: 211.70, minimumQty: 1, source: 'Semco Canada approved derived pricing 2026-09-10' },
+  { sku: 'NAS505', product: 'SEMCO Natural Shield', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'X-Bond 1000-1250 sq ft; Pool / below grade 750-1000 sq ft, based on 3 coats', retailPriceCad: 838.55, minimumQty: 1, source: 'Semco Canada approved derived pricing 2026-09-10' },
   { sku: 'MS601', product: 'Semco Sealer Matte', category: 'Sealers and Stains', size: '1 gallon pail', coverageRate: 'Coverage 200 sq ft, based on 2 coats', retailPriceCad: 266.00, minimumQty: 1, source: 'Modern Arc Sales Order 1018 dated 2026-08-19' },
   { sku: 'MS605', product: 'Semco Sealer Matte', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft, based on 2 coats', retailPriceCad: 1057.97, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
   { sku: 'TSG705', product: 'Titan Shield Gloss', category: 'Sealers and Stains', size: '5 gallon pail', coverageRate: 'Coverage 1000 sq ft, based on 3 coats', retailPriceCad: 957.68, minimumQty: 1, source: 'Modern Arc Ontario Dealer Pricing 2026 PDF p.2' },
@@ -89,6 +92,7 @@ const MATERIAL_PACKAGE_SKUS: Record<string, { oneGallon: string; fiveGallon: str
   // The product data sheet confirms 1- and 5-gallon X-Bond Liquid pails.
   XBONDLIQUID: { oneGallon: 'XB801', fiveGallon: 'XB805' },
   SEMCOLIQUIDMEMBRANE: { oneGallon: 'XME801', fiveGallon: 'XME805' },
+  NATURALSHIELD: { oneGallon: 'NAS501', fiveGallon: 'NAS505' },
   MATTESEALER: { oneGallon: 'MS601', fiveGallon: 'MS605' },
 };
 

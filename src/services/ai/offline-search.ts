@@ -1,4 +1,5 @@
 import { sqlite } from '@/database/client';
+import { technicalSearchTerms } from './manual-knowledge';
 
 export interface OfflineSearchResult {
   productId: string;
@@ -17,11 +18,7 @@ const EXCERPT_LENGTH = 180;
  * Used when the device is offline. Returns structured result cards.
  */
 export async function searchProductsOffline(query: string): Promise<OfflineSearchResult[]> {
-  const sanitized = query
-    .trim()
-    .replace(/['"*]/g, '') // strip FTS special chars
-    .split(/\s+/)
-    .filter(Boolean)
+  const sanitized = technicalSearchTerms(query)
     .map((w) => `"${w}"`)
     .join(' OR ');
 
@@ -84,8 +81,10 @@ export function formatOfflineResponse(results: OfflineSearchResult[]): string {
 
   const first = results[0];
   return [
-    `Answer: For ${first.name}, this is the relevant Semco information.`,
+    `I found a related note for ${first.name}. This is a reference excerpt, not a confirmed answer for your job:`,
     '',
     first.relevantExcerpt,
+    '',
+    'What are you trying to do with this product, and what surface is underneath it?',
   ].join('\n');
 }

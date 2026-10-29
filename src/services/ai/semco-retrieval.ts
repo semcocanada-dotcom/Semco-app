@@ -507,7 +507,10 @@ export async function retrieveSemcoChunks(
     .slice(0, MAX_CHUNKS);
 
   const topScore = chunks[0]?.score ?? 0;
-  const confidence = chunks.length === 0 ? 'none' : chunks.length >= 2 || topScore >= 2 ? 'high' : 'low';
+  // Several weak keyword matches do not make a reliable technical answer.
+  // Pinned, task-specific references carry the strongest evidence; ordinary
+  // search needs a meaningful score before it is treated as a strong match.
+  const confidence = chunks.length === 0 ? 'none' : topScore >= 10 ? 'high' : 'low';
 
   return { chunks, confidence, retrievalNotes };
 }
@@ -533,7 +536,7 @@ export function formatLocalGroundedAnswer(
   if (chunks.length === 0) {
     return reasonedAnswer
       ? `${reasonedAnswer}\n\nI cannot confirm more detail from the approved Semco technical documents.`
-      : 'I cannot confirm that from the approved Semco technical documents.';
+      : "I don't have enough information in the installed SEMCO references to give you a reliable answer. Tell me the product, the surface underneath it, and what you are trying to do. If the references still do not cover it, SEMCO technical support will need to confirm the next step.";
   }
 
   // Never surface raw document/OCR text in the user-facing answer. When a
@@ -569,9 +572,9 @@ export function formatLocalGroundedAnswer(
   });
 
   return [
-    `${reasonOnly} I cannot build the full guided answer, so here is the closest approved Semco documentation instead.`,
+    "I found related references, but they do not give me a clear answer for your exact situation. I don't want to send you down the wrong path. What product are you using, and what are you seeing?",
     '',
-    'Semco document matches you can open:',
+    'Related references (not a confirmed diagnosis):',
     ...matchLines,
   ].join('\n');
 }

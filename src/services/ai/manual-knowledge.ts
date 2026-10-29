@@ -21,11 +21,20 @@ function normalize(text: string): string {
     .trim();
 }
 
-function tokenize(query: string): string[] {
-  return normalize(query)
+const SEARCH_STOP_WORDS = new Set([
+  'the', 'and', 'for', 'that', 'this', 'with', 'from', 'have', 'has', 'had',
+  'what', 'which', 'when', 'where', 'why', 'how', 'does', 'did', 'can', 'could',
+  'would', 'should', 'will', 'are', 'was', 'were', 'you', 'your', 'about',
+  'please', 'tell', 'help', 'need', 'want', 'know', 'some', 'any', 'there',
+  'here', 'just', 'really', 'thanks', 'thank', 'hello', 'hey', 'current',
+]);
+
+/** Shared by document and product search: filler words are not evidence. */
+export function technicalSearchTerms(query: string): string[] {
+  return [...new Set(normalize(query)
     .split(' ')
     .map((word) => word.trim())
-    .filter((word) => word.length >= 3);
+    .filter((word) => word.length >= 3 && !SEARCH_STOP_WORDS.has(word)))];
 }
 
 function extractExcerpt(text: string, terms: string[]): string {
@@ -49,7 +58,7 @@ function extractExcerpt(text: string, terms: string[]): string {
 }
 
 export function searchSipManual(query: string, limit = DEFAULT_LIMIT): ManualKnowledgeHit[] {
-  const terms = tokenize(query);
+  const terms = technicalSearchTerms(query);
   if (terms.length === 0 || TECHNICAL_DOC_PAGES.length === 0) return [];
 
   const normalizedQuery = normalize(query);

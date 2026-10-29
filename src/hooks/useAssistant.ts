@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { sendMessage } from '@/services/ai/assistant';
 import { useAuthStore } from '@/store/auth';
 import { db } from '@/database/client';
@@ -74,15 +74,33 @@ export function useAssistant() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [savedChats, setSavedChats] = useState<AssistantConversationSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string>('');
   const [conversationTitle, setConversationTitle] = useState(DEFAULT_CHAT_TITLE);
   const installerId = useAuthStore((s) => s.user?.id);
+  const operationInFlight = useRef(false);
+  const activeConversation = useRef({ id: '', title: DEFAULT_CHAT_TITLE, messages: [] as ConversationMessage[] });
+
+  // A ref closes the same-render double-tap gap that a state flag cannot.
+  // Reads, sends and destructive chat operations share this lock so an old
+  // response cannot replace a newly selected job's conversation.
+  const beginOperation = useCallback(() => {
+    if (operationInFlight.current) return false;
+    operationInFlight.current = true;
+    setIsBusy(true);
+    return true;
+  }, []);
+  const finishOperation = useCallback(() => {
+    operationInFlight.current = false;
+    setIsBusy(false);
+  }, []);
 
   const applyConversation = useCallback((conv: Conversation) => {
+    activeConversation.current = { id: conv.id, title: conv.title?.trim() || DEFAULT_CHAT_TITLE, messages: normalizeMessages(conv.messages) };
     setConversationId(conv.id);
     setConversationTitle(conv.title?.trim() || DEFAULT_CHAT_TITLE);
-    setMessages(normalizeMessages(conv.messages).slice(-80));
+    setMessages(normalizeMessages(conv.messages));
   }, []);
 
   const createConversation = useCallback(async () => {
@@ -104,11 +122,14 @@ export function useAssistant() {
 
   const loadConversationList = useCallback(
     async (preferredId?: string) => {
+      if (!beginOperation()) return;
       if (!installerId) {
+        activeConversation.current = { id: '', title: DEFAULT_CHAT_TITLE, messages: [] };
         setConversationId('');
         setConversationTitle(DEFAULT_CHAT_TITLE);
         setMessages([]);
         setSavedChats([]);
+        finishOperation();
         return;
       }
 
@@ -133,12 +154,15 @@ export function useAssistant() {
       } catch (err) {
         console.warn('[useAssistant] failed to load conversations:', err);
         const newConvId = generateConversationId();
+        activeConversation.current = { id: newConvId, title: DEFAULT_CHAT_TITLE, messages: [] };
         setConversationId(newConvId);
         setConversationTitle(DEFAULT_CHAT_TITLE);
         setMessages([]);
+      } finally {
+        finishOperation();
       }
     },
-    [applyConversation, createConversation, installerId],
+    [applyConversation, beginOperation, createConversation, finishOperation, installerId],
   );
 
   useEffect(() => {
@@ -175,7 +199,7 @@ export function useAssistant() {
         const now = new Date().toISOString();
         const createdAt = existing?.createdAt ?? now;
         const normalizedTitle = nextTitle.trim() || DEFAULT_CHAT_TITLE;
-        const normalizedMessages = nextMessages.slice(-80);
+        const normalizedMessages = nextMessages;
 
         if (existing) {
           await db
@@ -213,6 +237,7 @@ export function useAssistant() {
         });
       } catch (err) {
         console.warn('[useAssistant] failed to persist conversation:', err);
+        throw new Error('Your chat could not be saved on this device. Please try again before leaving this chat.');
       }
     },
     [installerId],
@@ -220,40 +245,42 @@ export function useAssistant() {
 
   const send = useCallback(
     async (text: string) => {
-      if (!text.trim() || isLoading) return;
+      if (!text.trim() || !beginOperation()) return;
       setIsLoading(true);
       setError(null);
 
-      let activeConversationId = conversationId;
-      if (!activeConversationId) {
-        const created = await createConversation();
-        if (!created) {
-          setError('The chat could not be saved. Please try again.');
-          setIsLoading(false);
-          return;
-        }
-        activeConversationId = created.id;
-        applyConversation(created);
-        await refreshSavedChats();
-      }
-
-      const baseMessages = messages.slice(-80);
-      const userMsg: ConversationMessage = {
-        id: generateId(),
-        role: 'user',
-        content: text.trim(),
-        source: 'local_guide',
-        timestamp: new Date().toISOString(),
-      };
-      const messagesWithUser = [...baseMessages, userMsg].slice(-80);
-      const nextTitle = shouldAutoTitle(conversationTitle)
-        ? titleFromQuestion(userMsg.content)
-        : conversationTitle;
-
-      setMessages(messagesWithUser);
-      await persistConversationState(activeConversationId, messagesWithUser, nextTitle);
-
       try {
+        // Read the current snapshot, not the state captured by an older handler.
+        let current = activeConversation.current;
+        if (!current.id) {
+          const created = await createConversation();
+          if (!created) {
+            setError('The chat could not be saved. Please try again.');
+            return;
+          }
+          applyConversation(created);
+          current = activeConversation.current;
+          await refreshSavedChats();
+        }
+
+        // This guide runs locally: no token window is needed. Older installer
+        // facts must still be available when a long saved chat is reopened.
+        const baseMessages = current.messages;
+        const userMsg: ConversationMessage = {
+          id: generateId(),
+          role: 'user',
+          content: text.trim(),
+          source: 'local_guide',
+          timestamp: new Date().toISOString(),
+        };
+        // Keep the full conversation; individual search excerpts remain bounded.
+        const messagesWithUser = [...current.messages, userMsg];
+        const nextTitle = shouldAutoTitle(current.title) ? titleFromQuestion(userMsg.content) : current.title;
+
+        activeConversation.current = { id: current.id, title: nextTitle, messages: messagesWithUser };
+        setMessages(messagesWithUser);
+        await persistConversationState(current.id, messagesWithUser, nextTitle);
+
         const response = await sendMessage(text, baseMessages);
 
         const assistantMsg: ConversationMessage = {
@@ -266,35 +293,42 @@ export function useAssistant() {
           provider: response.provider,
           quickReplies: response.quickReplies,
           suggestedFollowUps: response.suggestedFollowUps,
+          guideLesson: response.guideLesson,
+          videos: response.videos,
+          guideEducation: response.guideEducation,
         };
-        const messagesWithAssistant = [...messagesWithUser, assistantMsg].slice(-80);
+        const messagesWithAssistant = [...messagesWithUser, assistantMsg];
 
+        activeConversation.current = { id: current.id, title: nextTitle, messages: messagesWithAssistant };
         setMessages(messagesWithAssistant);
-        await persistConversationState(activeConversationId, messagesWithAssistant, nextTitle);
+        await persistConversationState(current.id, messagesWithAssistant, nextTitle);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
         setError(msg);
       } finally {
         setIsLoading(false);
+        finishOperation();
       }
     },
     [
       applyConversation,
-      conversationId,
-      conversationTitle,
+      beginOperation,
       createConversation,
-      isLoading,
-      messages,
+      finishOperation,
       persistConversationState,
       refreshSavedChats,
     ],
   );
 
   const startNewChat = useCallback(async () => {
+    if (!beginOperation()) return;
     if (!installerId) {
-      setConversationId(generateConversationId());
+      const id = generateConversationId();
+      activeConversation.current = { id, title: DEFAULT_CHAT_TITLE, messages: [] };
+      setConversationId(id);
       setConversationTitle(DEFAULT_CHAT_TITLE);
       setMessages([]);
+      finishOperation();
       return;
     }
 
@@ -307,12 +341,14 @@ export function useAssistant() {
     } catch (err) {
       console.warn('[useAssistant] failed to create conversation:', err);
       setError('Failed to create a new chat');
+    } finally {
+      finishOperation();
     }
-  }, [applyConversation, createConversation, installerId, refreshSavedChats]);
+  }, [applyConversation, beginOperation, createConversation, finishOperation, installerId, refreshSavedChats]);
 
   const selectChat = useCallback(
     async (id: string) => {
-      if (!installerId) return;
+      if (!installerId || !beginOperation()) return;
 
       try {
         const [row] = await db
@@ -328,14 +364,16 @@ export function useAssistant() {
       } catch (err) {
         console.warn('[useAssistant] failed to select conversation:', err);
         setError('Failed to open saved chat');
+      } finally {
+        finishOperation();
       }
     },
-    [applyConversation, installerId],
+    [applyConversation, beginOperation, finishOperation, installerId],
   );
 
   const deleteChat = useCallback(
     async (id: string) => {
-      if (!installerId) return;
+      if (!installerId || !beginOperation()) return;
 
       try {
         await db
@@ -357,20 +395,22 @@ export function useAssistant() {
         }
 
         setSavedChats(rows.map(summarizeConversation));
-        if (id === conversationId) applyConversation(rows[0]);
+        if (id === activeConversation.current.id) applyConversation(rows[0]);
       } catch (err) {
         console.warn('[useAssistant] failed to delete conversation:', err);
         setError('Failed to delete saved chat');
+      } finally {
+        finishOperation();
       }
     },
-    [applyConversation, conversationId, createConversation, installerId],
+    [applyConversation, beginOperation, createConversation, finishOperation, installerId],
   );
 
   const clearHistory = useCallback(async () => {
-    if (!conversationId || !installerId) return;
+    if (!activeConversation.current.id || !installerId || !beginOperation()) return;
 
     try {
-      setMessages([]);
+      const id = activeConversation.current.id;
       const now = new Date().toISOString();
       await db
         .update(conversations)
@@ -379,14 +419,18 @@ export function useAssistant() {
           title: DEFAULT_CHAT_TITLE,
           updatedAt: now,
         })
-        .where(eq(conversations.id, conversationId));
+        .where(and(eq(conversations.id, id), eq(conversations.installerId, installerId)));
+      activeConversation.current = { id, title: DEFAULT_CHAT_TITLE, messages: [] };
+      setMessages([]);
       setConversationTitle(DEFAULT_CHAT_TITLE);
       await refreshSavedChats();
     } catch (err) {
       console.warn('[useAssistant] failed to clear history:', err);
       setError('Failed to clear conversation history');
+    } finally {
+      finishOperation();
     }
-  }, [conversationId, installerId, refreshSavedChats]);
+  }, [beginOperation, finishOperation, installerId, refreshSavedChats]);
 
   return {
     messages,
@@ -394,6 +438,7 @@ export function useAssistant() {
     conversationId,
     conversationTitle,
     isLoading,
+    isBusy,
     error,
     send,
     clearHistory,

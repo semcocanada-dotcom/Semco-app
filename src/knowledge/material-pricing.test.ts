@@ -1,6 +1,8 @@
 import type { MaterialLayer } from '@/database/schema/calculations';
+import { STOCKED_SEALERS } from '@/constants/stocked-sealers';
 import {
   getCleanerPackagePlan,
+  getMaterialPrice,
   getMaterialPriceTotal,
   priceMaterialLayers,
 } from '@/knowledge/material-pricing';
@@ -267,5 +269,129 @@ describe('Matte sealer package pricing', () => {
 
     expect(line).toMatchObject({ priceSku: 'MS605', quantity: 1, lineTotalCad: 1057.97 });
     expect(line.price?.size).toBe('5 gallon pail');
+  });
+});
+
+describe('Natural Shield package pricing', () => {
+  it('prices the screenshot pool as twelve 5-gallon pails, not sixty pails', () => {
+    const result = calculate({
+      areaSqft: 9800,
+      substrateType: 'pool',
+      wastePct: 0,
+      fabricRolls: 5,
+    });
+    const naturalShield = result.layers.find((layer) => layer.productSku === 'NATURAL-SHIELD');
+    const lines = priceMaterialLayers(result.layers);
+    const naturalShieldLines = lines.filter((line) => line.layer.productSku === 'NATURAL-SHIELD');
+
+    expect(naturalShield).toMatchObject({
+      exactQuantity: 56,
+      roundedQuantity: 60,
+      quantityLabel: '56 gal',
+      purchaseLabel: 'Buy 12 x 5 gal pails (60 gal)',
+    });
+    expect(naturalShieldLines).toHaveLength(1);
+    expect(naturalShieldLines[0]).toMatchObject({
+      priceSku: 'NAS505',
+      packageLabel: '5 gallon pail',
+      quantity: 12,
+      price: { size: '5 gallon pail', retailPriceCad: 838.55 },
+    });
+    expect(naturalShieldLines[0].lineTotalCad).toBeCloseTo(10062.60, 2);
+
+    // Pricing this previously missing sealer must not change the other screenshot rows.
+    expect(lines.filter((line) => line.layer.productSku !== 'NATURAL-SHIELD').map((line) => ({
+      priceSku: line.priceSku,
+      quantity: line.quantity,
+      total: Number(line.lineTotalCad?.toFixed(2)),
+    }))).toEqual([
+      { priceSku: 'PC 205', quantity: 13, total: 7670 },
+      { priceSku: 'PC 201', quantity: 1, total: 117.60 },
+      { priceSku: 'NL 105', quantity: 9, total: 4580.82 },
+      { priceSku: 'NL 101', quantity: 4, total: 407.36 },
+      { priceSku: 'FR675', quantity: 5, total: 460.70 },
+      { priceSku: 'XBT50', quantity: 131, total: 17994.16 },
+      { priceSku: 'XB805', quantity: 53, total: 33049.21 },
+      { priceSku: 'XME805', quantity: 31, total: 22351 },
+      { priceSku: 'XME801', quantity: 2, total: 379.22 },
+    ]);
+    expect(lines.every((line) => line.quantity === 0 || line.price)).toBe(true);
+  });
+
+  it('prices one 1-gallon pail for a small Natural Shield calculation', () => {
+    const result = calculate({
+      areaSqft: 100,
+      substrateType: 'concrete',
+      wastePct: 0,
+      sealerSku: 'NATURAL-SHIELD',
+    });
+    const naturalShield = result.layers.find((layer) => layer.productSku === 'NATURAL-SHIELD');
+    const lines = priceMaterialLayers([naturalShield!]);
+
+    expect(naturalShield).toMatchObject({
+      roundedQuantity: 1,
+      purchaseLabel: 'Buy 1 x 1 gal pail',
+    });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({
+      priceSku: 'NAS501',
+      packageLabel: '1 gallon pail',
+      quantity: 1,
+      lineTotalCad: 211.70,
+      price: { size: '1 gallon pail', retailPriceCad: 211.70 },
+    });
+  });
+
+  it('prices an exact five-gallon requirement as one 5-gallon pail', () => {
+    const result = calculate({
+      areaSqft: 1125,
+      substrateType: 'concrete',
+      wastePct: 0,
+      sealerSku: 'NATURAL-SHIELD',
+    });
+    const naturalShield = result.layers.find((layer) => layer.productSku === 'NATURAL-SHIELD');
+    const lines = priceMaterialLayers([naturalShield!]);
+
+    expect(naturalShield).toMatchObject({ exactQuantity: 5, roundedQuantity: 5 });
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({ priceSku: 'NAS505', quantity: 1, lineTotalCad: 838.55 });
+  });
+
+  it('preserves a saved six-gallon purchase as one 5-gallon plus one 1-gallon pail', () => {
+    const layer = {
+      ...cleanerLayer('NATURAL-SHIELD', 5.1, 6),
+      productName: 'SEMCO Natural Shield',
+      category: 'sealer',
+    };
+    const lines = priceMaterialLayers([layer]);
+
+    expect(lines).toMatchObject([
+      { priceSku: 'NAS505', quantity: 1, packageLabel: '5 gallon pail', lineTotalCad: 838.55 },
+      { priceSku: 'NAS501', quantity: 1, packageLabel: '1 gallon pail', lineTotalCad: 211.70 },
+    ]);
+    expect(getMaterialPriceTotal(lines)).toBeCloseTo(1050.25, 2);
+  });
+
+  it('does not create a Natural Shield purchase for a zero quantity', () => {
+    const lines = priceMaterialLayers([cleanerLayer('NATURAL-SHIELD', 0, 0)]);
+
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatchObject({ priceSku: 'NAS501', quantity: 0 });
+    expect(lines[0].lineTotalCad).toBeUndefined();
+    expect(getMaterialPriceTotal(lines)).toBe(0);
+  });
+
+  it('has an approved price for every current stocked sealer alias', () => {
+    for (const sealer of STOCKED_SEALERS) {
+      expect(getMaterialPrice(sealer.sku)?.retailPriceCad).toBeGreaterThan(0);
+    }
+    expect(getMaterialPrice('NAS501')).toMatchObject({
+      retailPriceCad: 211.70,
+      source: 'Semco Canada approved derived pricing 2026-09-10',
+    });
+    expect(getMaterialPrice('NAS505')).toMatchObject({
+      retailPriceCad: 838.55,
+      source: 'Semco Canada approved derived pricing 2026-09-10',
+    });
   });
 });
