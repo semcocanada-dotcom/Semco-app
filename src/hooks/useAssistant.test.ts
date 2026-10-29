@@ -126,17 +126,34 @@ describe('useAssistant conversation operation safety', () => {
     expect(mockRows[0].messages).toHaveLength(102);
   });
 
-  it('releases the lock on save failure and tells the installer instead of silently losing the chat', async () => {
+  it('still answers when the first save fails, then clears the marker if the retry saves', async () => {
     const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const { result } = await openHook();
     mockUpdate.mockRejectedValueOnce(new Error('Storage failed'));
-    await act(async () => { await result.current.send('Question that cannot save'); });
+    await act(async () => { await result.current.send('  Question that cannot save  '); });
+    expect(mockSendMessage).toHaveBeenCalledWith('Question that cannot save', [msg('Original A')]);
+    expect(result.current.messages.at(-1)?.content).toBe(response.content);
+    expect(result.current.notSaved).toBe(false);
+    expect(result.current.error).toBeNull();
     expect(result.current.isBusy).toBe(false);
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.error).toContain('could not be saved');
-    expect(mockSendMessage).not.toHaveBeenCalled();
+    expect(mockRows.find((row) => row.id === 'A')?.messages).toHaveLength(3);
+    warning.mockRestore();
+  });
+
+  it('shows a not-saved marker instead of blocking when every save fails', async () => {
+    const warning = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { result } = await openHook();
+    mockUpdate.mockRejectedValue(new Error('Storage failed'));
+    await act(async () => { await result.current.send('Question that cannot save'); });
+    expect(mockSendMessage).toHaveBeenCalledTimes(1);
+    expect(result.current.messages.at(-1)?.content).toBe(response.content);
+    expect(result.current.notSaved).toBe(true);
+    expect(result.current.error).toBeNull();
+    expect(result.current.isBusy).toBe(false);
     await act(async () => { await result.current.startNewChat(); });
     expect(result.current.conversationId).toBe('new-chat-1');
+    expect(result.current.notSaved).toBe(false);
     warning.mockRestore();
   });
 });

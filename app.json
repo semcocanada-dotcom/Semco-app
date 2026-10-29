@@ -43,6 +43,7 @@
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.semcocanada.semcopro",
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA"
       ],

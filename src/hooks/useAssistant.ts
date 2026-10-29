@@ -76,6 +76,7 @@ export function useAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notSaved, setNotSaved] = useState(false);
   const [conversationId, setConversationId] = useState<string>('');
   const [conversationTitle, setConversationTitle] = useState(DEFAULT_CHAT_TITLE);
   const installerId = useAuthStore((s) => s.user?.id);
@@ -150,7 +151,10 @@ export function useAssistant() {
         const selected = rows.find((row) => row.id === preferredId)
           ?? rows.find((row) => normalizeMessages(row.messages).length > 0)
           ?? rows[0];
-        if (selected) applyConversation(selected);
+        if (selected) {
+          applyConversation(selected);
+          setNotSaved(false);
+        }
       } catch (err) {
         console.warn('[useAssistant] failed to load conversations:', err);
         const newConvId = generateConversationId();
@@ -237,18 +241,37 @@ export function useAssistant() {
         });
       } catch (err) {
         console.warn('[useAssistant] failed to persist conversation:', err);
-        throw new Error('Your chat could not be saved on this device. Please try again before leaving this chat.');
+        throw new Error('Chat was not saved on this device.');
       }
     },
     [installerId],
   );
 
+  const saveConversation = useCallback(
+    async (
+      targetConversationId: string,
+      nextMessages: ConversationMessage[],
+      nextTitle: string,
+    ) => {
+      try {
+        await persistConversationState(targetConversationId, nextMessages, nextTitle);
+        return true;
+      } catch (err) {
+        console.warn('[useAssistant] chat not saved:', err);
+        return false;
+      }
+    },
+    [persistConversationState],
+  );
+
   const send = useCallback(
     async (text: string) => {
-      if (!text.trim() || !beginOperation()) return;
+      const trimmed = text.trim();
+      if (!trimmed || !beginOperation()) return;
       setIsLoading(true);
       setError(null);
 
+      let userTurnSaved = true;
       try {
         // Read the current snapshot, not the state captured by an older handler.
         let current = activeConversation.current;
@@ -269,7 +292,7 @@ export function useAssistant() {
         const userMsg: ConversationMessage = {
           id: generateId(),
           role: 'user',
-          content: text.trim(),
+          content: trimmed,
           source: 'local_guide',
           timestamp: new Date().toISOString(),
         };
@@ -279,9 +302,10 @@ export function useAssistant() {
 
         activeConversation.current = { id: current.id, title: nextTitle, messages: messagesWithUser };
         setMessages(messagesWithUser);
-        await persistConversationState(current.id, messagesWithUser, nextTitle);
+        // A failed save must not stop the answer. The post-answer save is the retry.
+        userTurnSaved = await saveConversation(current.id, messagesWithUser, nextTitle);
 
-        const response = await sendMessage(text, baseMessages);
+        const response = await sendMessage(trimmed, baseMessages);
 
         const assistantMsg: ConversationMessage = {
           id: generateId(),
@@ -301,8 +325,11 @@ export function useAssistant() {
 
         activeConversation.current = { id: current.id, title: nextTitle, messages: messagesWithAssistant };
         setMessages(messagesWithAssistant);
-        await persistConversationState(current.id, messagesWithAssistant, nextTitle);
+        let saved = await saveConversation(current.id, messagesWithAssistant, nextTitle);
+        if (!saved) saved = await saveConversation(current.id, messagesWithAssistant, nextTitle);
+        setNotSaved(!saved);
       } catch (err) {
+        if (!userTurnSaved) setNotSaved(true);
         const msg = err instanceof Error ? err.message : 'Unknown error';
         setError(msg);
       } finally {
@@ -315,8 +342,8 @@ export function useAssistant() {
       beginOperation,
       createConversation,
       finishOperation,
-      persistConversationState,
       refreshSavedChats,
+      saveConversation,
     ],
   );
 
@@ -336,6 +363,7 @@ export function useAssistant() {
       const created = await createConversation();
       if (created) {
         applyConversation(created);
+        setNotSaved(false);
         await refreshSavedChats();
       }
     } catch (err) {
@@ -360,6 +388,7 @@ export function useAssistant() {
         if (row) {
           applyConversation(row);
           setError(null);
+          setNotSaved(false);
         }
       } catch (err) {
         console.warn('[useAssistant] failed to select conversation:', err);
@@ -423,6 +452,7 @@ export function useAssistant() {
       activeConversation.current = { id, title: DEFAULT_CHAT_TITLE, messages: [] };
       setMessages([]);
       setConversationTitle(DEFAULT_CHAT_TITLE);
+      setNotSaved(false);
       await refreshSavedChats();
     } catch (err) {
       console.warn('[useAssistant] failed to clear history:', err);
@@ -440,6 +470,7 @@ export function useAssistant() {
     isLoading,
     isBusy,
     error,
+    notSaved,
     send,
     clearHistory,
     startNewChat,

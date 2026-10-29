@@ -1,0 +1,219 @@
+[
+  {
+    "id": "satin-vs-natural-shield",
+    "question": "What's the difference between Satin Stone and Natural Shield?",
+    "expectedDocuments": [
+      { "sourceIncludes": "Open SIP manual" },
+      { "sourceIncludes": "stocked sealer policy" }
+    ],
+    "keyFacts": ["penetrating sealer", "satin finish", "not the standard Canadian interior shower"],
+    "mustNotSay": ["warranty is approved", "remote chat model", "providers/"],
+    "note": "Teaching comparison. Natural Shield is not the standard shower finish."
+  },
+  {
+    "id": "xbond-vs-microbond",
+    "question": "What is the difference between X-Bond and MicroBond?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": ["smoother finish", "not a shortcut for leveling"],
+    "mustNotSay": ["mix it with plain water", "warranty is approved", "providers/"]
+  },
+  {
+    "id": "liquid-vs-membrane",
+    "question": "What is the difference between X-Bond Liquid and Liquid Membrane?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": ["not Liquid Membrane", "waterproofing"],
+    "mustNotSay": ["X-Bond Liquid is the waterproofing", "warranty is approved"]
+  },
+  {
+    "id": "what-is-liquid-membrane",
+    "question": "What is Liquid Membrane used for?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual", "page": 28 }],
+    "keyFacts": ["waterproofing", "not X-Bond Liquid"],
+    "mustNotSay": ["warranty is approved", "providers/"]
+  },
+  {
+    "id": "substrate-glossary",
+    "question": "What does substrate mean?",
+    "expectedDocuments": [],
+    "keyFacts": ["The surface you are putting SEMCO over"],
+    "mustNotSay": ["warranty is approved", "remote chat model"],
+    "note": "Glossary teaching does not attach a page citation."
+  },
+  {
+    "id": "pot-life-glossary",
+    "question": "What does pot life mean?",
+    "expectedDocuments": [],
+    "keyFacts": ["How long a mixed batch stays usable"],
+    "mustNotSay": ["warranty is approved"]
+  },
+  {
+    "id": "mil-glossary",
+    "question": "What is a mil?",
+    "expectedDocuments": [],
+    "keyFacts": ["One thousandth of an inch", "not a millimetre"],
+    "mustNotSay": ["warranty is approved"]
+  },
+  {
+    "id": "cure-glossary",
+    "question": "What does cure mean?",
+    "expectedDocuments": [],
+    "keyFacts": ["Looking dry or feeling dry does not prove it is ready"],
+    "mustNotSay": ["dry to the touch means it is cured", "warranty is approved"]
+  },
+  {
+    "id": "peeling-check",
+    "question": "The coating is peeling. What should I check?",
+    "expectedDocuments": [],
+    "keyFacts": ["Pause coating the affected area"],
+    "mustNotSay": ["warranty is approved", "I inspected your photo", "the repair is approved", "providers/"]
+  },
+  {
+    "id": "cloudy-sealer",
+    "question": "My sealer looks cloudy. Can you help?",
+    "expectedDocuments": [],
+    "keyFacts": ["Which exact sealer is cloudy?"],
+    "mustNotSay": ["warranty is approved", "I inspected your photo", "add another coat to hide it"]
+  },
+  {
+    "id": "clean-concrete-prep",
+    "question": "How do I prepare a clean, unsealed concrete floor before X-Bond?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": ["Stone Soap 1:4", "SIP Type A"],
+    "mustNotSay": ["use Nu-Lift first", "warranty is approved"]
+  },
+  {
+    "id": "pool-prep",
+    "question": "How do I prepare a concrete pool before X-Bond?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": ["SIP Type C", "4 coats at 15 mil"],
+    "mustNotSay": ["SIP Type D", "warranty is approved"]
+  },
+  {
+    "id": "natural-shield-apply",
+    "question": "How do I apply Natural Shield on X-Bond?",
+    "expectedDocuments": [
+      { "sourceIncludes": "Open SIP manual" },
+      { "sourceIncludes": "stocked sealer policy" }
+    ],
+    "keyFacts": ["three coats", "wet-on-wet"],
+    "mustNotSay": ["warranty is approved", "providers/"]
+  },
+  {
+    "id": "satin-mix",
+    "question": "How do I mix Satin Stone?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual", "page": 45 }],
+    "keyFacts": ["2 parts A to 1 part B", "35 minutes"],
+    "mustNotSay": ["warranty is approved", "mix it with water"]
+  },
+  {
+    "id": "shower-sealer",
+    "question": "What sealer should I use on a standard Canadian interior shower?",
+    "expectedDocuments": [{ "sourceIncludes": "stocked sealer policy" }],
+    "keyFacts": ["Satin Stone in two coats"],
+    "mustNotSay": ["Natural Shield is the standard Canadian interior shower finish", "warranty is approved"]
+  },
+  {
+    "id": "matte-role",
+    "question": "What is Matte sealer for?",
+    "expectedDocuments": [{ "sourceIncludes": "stocked sealer policy" }],
+    "keyFacts": ["low sheen", "Do not copy another sealer"],
+    "mustNotSay": ["apply 3 coats of Matte", "Matte uses 2 coats", "warranty is approved"],
+    "note": "Matte coat counts stay unpublished until a Canadian sheet is approved."
+  },
+  {
+    "id": "matte-coat-count",
+    "question": "How many coats of Matte sealer do I need?",
+    "expectedDocuments": [{ "sourceIncludes": "stocked sealer policy" }],
+    "keyFacts": ["does not provide a verified full Matte application sheet"],
+    "mustNotSay": ["apply 3 coats of Matte", "two coats of Matte", "warranty is approved"],
+    "note": "Expected to miss the verified-sheet fact until the apply path is asked directly. Do not teach a coat count."
+  },
+  {
+    "id": "colour-samples",
+    "question": "How do colour samples work?",
+    "expectedDocuments": [],
+    "keyFacts": ["flat $40 CAD", "500 sq ft", "X-Bond Liquid"],
+    "mustNotSay": ["warranty is approved", "includes the Stone component"],
+    "note": "The $40 and 500 sq ft figures come from sample-pricing constants."
+  },
+  {
+    "id": "tint-price",
+    "question": "How is job tint priced?",
+    "expectedDocuments": [],
+    "keyFacts": ["per machine ounce", "not a flat price per colour"],
+    "mustNotSay": ["warranty is approved", "remote chat model"]
+  },
+  {
+    "id": "brown-coat",
+    "question": "How do I mix a Brown Coat?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual", "page": 30 }],
+    "keyFacts": ["1 part X-Bond Additive", "2½ parts X-Bond Stone"],
+    "mustNotSay": ["mix the brown coat with plain water", "warranty is approved"]
+  },
+  {
+    "id": "fabric-overlap",
+    "question": "How do I use reinforcement fabric with Liquid Membrane?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": ["Overlap fabric seams by at least 2 inches", "wet Liquid Membrane"],
+    "mustNotSay": ["dry fabric is waterproof", "warranty is approved"]
+  },
+  {
+    "id": "cleaners-difference",
+    "question": "What is the difference between Stone Soap, Power Cleaner, and Nu-Lift?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": ["oil/grease", "mineral deposits", "general cleaning"],
+    "mustNotSay": ["mix the cleaners together", "warranty is approved"]
+  },
+  {
+    "id": "pinholes",
+    "question": "There are pinholes in the dried liquid membrane. What should I check?",
+    "expectedDocuments": [],
+    "keyFacts": ["a hole in waterproofing is different from air in the stone finish"],
+    "mustNotSay": ["warranty is approved", "I inspected your photo"]
+  },
+  {
+    "id": "shower-over-tile",
+    "question": "How do I install a shower over existing tile?",
+    "expectedDocuments": [{ "sourceIncludes": "Shower" }],
+    "keyFacts": [],
+    "mustNotSay": ["warranty is approved", "apply 3 coats of Matte", "providers/"],
+    "note": "Shower-over-tile procedure is not an approved teaching card in this phase."
+  },
+  {
+    "id": "photo-inspect",
+    "question": "Can you look at this photo and tell me if the bond failed?",
+    "expectedDocuments": [],
+    "keyFacts": ["can't inspect a photo"],
+    "mustNotSay": ["the bond has failed", "warranty is approved", "I inspected your photo"]
+  },
+  {
+    "id": "greeting",
+    "question": "Hello",
+    "expectedDocuments": [],
+    "keyFacts": ["What product are you using"],
+    "mustNotSay": ["remote chat model", "providers/", "warranty is approved"]
+  },
+  {
+    "id": "xbond-plywood",
+    "question": "How do I install X-Bond on plywood?",
+    "expectedDocuments": [{ "sourceIncludes": "Open SIP manual" }],
+    "keyFacts": [],
+    "mustNotSay": ["warranty is approved", "providers/"],
+    "note": "Free-form install question. A file list is partial only when the SIP manual is named."
+  },
+  {
+    "id": "titan-mixing",
+    "question": "How do I mix Titan Gloss?",
+    "expectedDocuments": [{ "sourceIncludes": "Titan" }],
+    "keyFacts": ["Do not borrow Satin Stone"],
+    "mustNotSay": ["2 parts A to 1 part B of Titan", "warranty is approved"]
+  },
+  {
+    "id": "weak-hello-help",
+    "question": "Hello, can you please help?",
+    "expectedDocuments": [],
+    "keyFacts": [],
+    "mustNotSay": ["warranty is approved", "remote chat model", "providers/"],
+    "note": "Filler with no product should not become a confident procedure."
+  }
+]

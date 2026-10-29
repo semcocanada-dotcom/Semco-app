@@ -49,16 +49,25 @@ export async function sendMessage(
   _isOnline = false,
   _installerId?: string,
 ): Promise<AssistantResponse> {
-  const turns = [...getActiveJobHistory(history, userMessage)];
-  if (turns.at(-1)?.role === 'user' && turns.at(-1)?.content === userMessage) turns.pop();
+  const message = userMessage.trim();
+  if (!message) {
+    return {
+      content: 'Tell me the product, the surface underneath it, and what you are trying to do.',
+      source: 'local_guide',
+      isOffline: true,
+      provider: 'local-clarification',
+    };
+  }
+  const turns = [...getActiveJobHistory(history, message)];
+  if (turns.at(-1)?.role === 'user' && turns.at(-1)?.content === message) turns.pop();
   const previous = turns.at(-1)?.role === 'assistant' ? turns.at(-1) : undefined;
-  const reportedFailure = /\b(?:my|our|the|it|bond|membrane|sealer)\s+(?:is |has |keeps |was |are |went |looks? |seems? )?(?:peeling|bubbling|crack(?:ed|ing)|cloudy|sticky|soft|blistering|leaking)|\b(?:wont|won't|will not) dry\b/i.test(userMessage);
-  const videoRequest = !reportedFailure && /\b(?:video|youtube|watch|tutorial link)\b/i.test(userMessage);
+  const reportedFailure = /\b(?:my|our|the|it|bond|membrane|sealer)\s+(?:is |has |keeps |was |are |went |looks? |seems? )?(?:peeling|bubbling|crack(?:ed|ing)|cloudy|sticky|soft|blistering|leaking)|\b(?:wont|won't|will not) dry\b/i.test(message);
+  const videoRequest = !reportedFailure && /\b(?:video|youtube|watch|tutorial link)\b/i.test(message);
   if (videoRequest) {
-    const explicit = findGuideVideos(userMessage);
+    const explicit = findGuideVideos(message);
     // Only an explicitly referential request may inherit a video topic. An
     // unknown named topic ("video about epoxy") must not borrow the last one.
-    const contextual = /\b(?:for|about|of|on) (?:this|that|it)\b|\b(?:show|see|watch) (?:me )?(?:a |the )?video[.!?]*$/i.test(userMessage);
+    const contextual = /\b(?:for|about|of|on) (?:this|that|it)\b|\b(?:show|see|watch) (?:me )?(?:a |the )?video[.!?]*$/i.test(message);
     const priorLinks = previous?.videos?.flatMap((saved) => {
       const video = GUIDE_VIDEOS.find((item) => item.id === saved.id && item.url === saved.url);
       return video ? [video] : [];
@@ -74,11 +83,11 @@ export async function sendMessage(
       guideLesson: previous?.guideLesson,
     };
   }
-  const response = await buildResponse(userMessage, history);
+  const response = await buildResponse(message, history);
   // Keep diagnosis and quantity answers focused. Videos supplement teaching,
   // not safety decisions, and no connection is made until the installer taps.
   if (response.videos === undefined && ['local-education', 'local-lesson', 'local-field-rules'].includes(response.provider ?? '')) {
-    const query = response.guideLesson?.steps[response.guideLesson.cursor] ?? userMessage;
+    const query = response.guideLesson?.steps[response.guideLesson.cursor] ?? message;
     response.videos = findGuideVideos(query, 1).map(({ id, title, url, publisher, legacy }) => ({ id, title, url, publisher, legacy }));
   }
   return response;
@@ -173,6 +182,8 @@ async function buildResponse(userMessage: string, history: ConversationMessage[]
 
   const content = formatLocalGroundedAnswer(
     retrieval.chunks,
+    // A low substring score still keeps the closest references. Only 'none'
+    // (no chunks) uses the cannot-confirm line, matching the live guide.
     retrieval.confidence === 'none'
       ? 'I cannot confirm that from the installed Semco technical references.'
       : 'I found related information in the installed SEMCO references.',

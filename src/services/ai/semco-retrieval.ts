@@ -28,6 +28,23 @@ const MAX_CHUNKS = 16;
 const LOCAL_CONTEXT_CHARS = 1800;
 const NEIGHBOR_CONTEXT_CHARS = 520;
 const PROCESS_CONTEXT_SCORE = 120;
+/**
+ * Substring hits are small: body +1, category +2, file name +3, title +4,
+ * and +8 when the whole query is in the title or file name. A bar of 10
+ * marks an ordinary title match as low. Phase 2 replaces this with a
+ * normalised BM25 margin. Until then, keep the live guide rule.
+ */
+export const SUBSTRING_HIGH_CONFIDENCE_SCORE = 2;
+
+export function retrievalConfidence(
+  chunkCount: number,
+  topScore: number,
+): RetrievalResult['confidence'] {
+  if (chunkCount <= 0) return 'none';
+  if (chunkCount >= 2 || topScore >= SUBSTRING_HIGH_CONFIDENCE_SCORE) return 'high';
+  return 'low';
+}
+
 const SIP_MANUAL = 'Open SIP manual - master copy v2019-3 2.pdf';
 
 function cleanText(text: string, maxLength = LOCAL_CONTEXT_CHARS): string {
@@ -507,10 +524,8 @@ export async function retrieveSemcoChunks(
     .slice(0, MAX_CHUNKS);
 
   const topScore = chunks[0]?.score ?? 0;
-  // Several weak keyword matches do not make a reliable technical answer.
-  // Pinned, task-specific references carry the strongest evidence; ordinary
-  // search needs a meaningful score before it is treated as a strong match.
-  const confidence = chunks.length === 0 ? 'none' : topScore >= 10 ? 'high' : 'low';
+  // Low is a weak single body hit, not an empty answer. Only zero chunks is 'none'.
+  const confidence = retrievalConfidence(chunks.length, topScore);
 
   return { chunks, confidence, retrievalNotes };
 }
