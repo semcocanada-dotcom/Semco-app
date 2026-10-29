@@ -1,29 +1,45 @@
-import { db } from '../client';
+import { db, GUIDE_KNOWLEDGE_PERSISTENCE } from '../client';
 import { products } from '../schema/products';
 import { colors } from '../schema/colors';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import productsData from './products.json';
 import colorsData from './colors.json';
 import { DEPRECATED_SEALER_SKUS } from '@/constants/stocked-sealers';
 import { guideKnowledge } from '../schema/guide-knowledge';
-import { GUIDE_KNOWLEDGE_VERSION, GUIDE_PRODUCTS, GUIDE_TERMS } from '@/knowledge/guide-products';
-import { GUIDE_VIDEOS } from '@/knowledge/guide-videos';
+import {
+  GUIDE_KNOWLEDGE_SEED_ID,
+  buildGuideKnowledgeSeedRows,
+  isGuideKnowledgeSeedCurrent,
+} from './guide-knowledge-seed';
 
 const SQLITE_INSERT_CHUNK_SIZE = 40;
 
+async function seedGuideKnowledge() {
+  // Web preview has no guide_knowledge table. Callers use the bundled guide.
+  if (GUIDE_KNOWLEDGE_PERSISTENCE !== 'sqlite') return;
+
+  const rows = buildGuideKnowledgeSeedRows();
+  const [stored] = await db.select().from(guideKnowledge).where(eq(guideKnowledge.id, GUIDE_KNOWLEDGE_SEED_ID)).limit(1);
+  if (isGuideKnowledgeSeedCurrent(stored, rows)) return;
+
+  db.transaction((tx) => {
+    for (let index = 0; index < rows.length; index += SQLITE_INSERT_CHUNK_SIZE) {
+      const chunk = rows.slice(index, index + SQLITE_INSERT_CHUNK_SIZE);
+      tx.insert(guideKnowledge).values(chunk).onConflictDoUpdate({
+        target: guideKnowledge.id,
+        set: {
+          content: sql`excluded.content`,
+          kind: sql`excluded.kind`,
+          version: sql`excluded.version`,
+        },
+      }).run();
+    }
+  });
+}
+
 export async function seedDatabase() {
   // Additive local knowledge updates never delete installer chats or projects.
-  const guideRows = [
-    ...GUIDE_PRODUCTS.map((content) => ({ id: `product:${content.id}`, kind: 'product', content })),
-    ...GUIDE_TERMS.map((content) => ({ id: `term:${content.term}`, kind: 'term', content })),
-    ...GUIDE_VIDEOS.map((content) => ({ id: `video:${content.id}`, kind: 'video', content })),
-  ];
-  for (const row of guideRows) {
-    await db.insert(guideKnowledge).values({ ...row, version: GUIDE_KNOWLEDGE_VERSION }).onConflictDoUpdate({
-      target: guideKnowledge.id,
-      set: { content: row.content, kind: row.kind, version: GUIDE_KNOWLEDGE_VERSION },
-    });
-  }
+  await seedGuideKnowledge();
 
   for (const sku of DEPRECATED_SEALER_SKUS) {
     await db.delete(products).where(eq(products.sku, sku));

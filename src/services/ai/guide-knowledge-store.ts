@@ -1,10 +1,17 @@
 import { GUIDE_KNOWLEDGE_VERSION, GUIDE_PRODUCTS, type GuideProductKnowledge } from '@/knowledge/guide-products';
 
+/** Web sets this to bundled-fallback. Any other value, including a test mock, still tries SQLite. */
+export function shouldUseBundledGuideKnowledge(persistence: string | undefined): boolean {
+  return persistence === 'bundled-fallback';
+}
+
 /** Read a versioned local snapshot. The bundle is also the offline/recovery source. */
 async function readSavedProductRows(): Promise<{ id: string; content: unknown }[]> {
-  const { db } = await import('@/database/client');
+  const { db, GUIDE_KNOWLEDGE_PERSISTENCE } = await import('@/database/client');
   const { guideKnowledge } = await import('@/database/schema/guide-knowledge');
   const { and, eq } = await import('drizzle-orm');
+  // Web has no guide_knowledge table. An empty read makes every row use the bundle.
+  if (shouldUseBundledGuideKnowledge(GUIDE_KNOWLEDGE_PERSISTENCE)) return [];
   return db.select().from(guideKnowledge).where(and(
     eq(guideKnowledge.kind, 'product'), eq(guideKnowledge.version, GUIDE_KNOWLEDGE_VERSION),
   ));

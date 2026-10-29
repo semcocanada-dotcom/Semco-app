@@ -13,7 +13,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { eq } from 'drizzle-orm';
 import { Ionicons } from '@expo/vector-icons';
 import { db, initDatabase } from '@/database/client';
-import { seedDatabase } from '@/database/seed';
 import colorsData from '@/database/seed/colors.json';
 import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
@@ -79,7 +78,6 @@ export default function ColorDetailScreen() {
     async function loadColor() {
       try {
         await initDatabase();
-        await seedDatabase();
         const rows = await db.select().from(colors).where(eq(colors.id, resolvedColorId));
         if (isMounted) setColor(rows[0] ?? fallbackColor);
       } catch (error) {

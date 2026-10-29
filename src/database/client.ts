@@ -6,6 +6,9 @@ const sqlite = SQLite.openDatabaseSync('semco_pro.db', { enableChangeListener: t
 
 export const db = drizzle(sqlite, { schema });
 
+/** Native builds persist guide_knowledge. Web must export the bundled fallback instead. */
+export const GUIDE_KNOWLEDGE_PERSISTENCE = 'sqlite' as const;
+
 export async function initDatabase() {
   await sqlite.execAsync(`PRAGMA journal_mode = WAL;`);
   await sqlite.execAsync(`PRAGMA foreign_keys = ON;`);

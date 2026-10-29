@@ -1,5 +1,12 @@
 import * as schema from './schema';
 
+/**
+ * Web preview has no SQLite file and no guide_knowledge table.
+ * Selects return no rows and inserts are ignored. Guide teaching must use the
+ * bundled modules (GUIDE_PRODUCTS, GUIDE_TERMS, GUIDE_VIDEOS), not this database.
+ */
+export const GUIDE_KNOWLEDGE_PERSISTENCE = 'bundled-fallback' as const;
+
 type Row = Record<string, unknown>;
 
 class NoopQuery<T = unknown> implements PromiseLike<T> {

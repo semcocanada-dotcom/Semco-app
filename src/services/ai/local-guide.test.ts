@@ -1,7 +1,7 @@
 import { buildMathAnswer } from './assistant-math';
 import { extractJobContext } from './job-context';
 import { buildReasoningProfile } from './reasoning';
-import { retrieveSemcoChunks } from './semco-retrieval';
+import { formatLocalGroundedAnswer, retrievalConfidence, retrieveSemcoChunks } from './semco-retrieval';
 
 describe('Semco Guide local responses', () => {
   it('answers glossary questions with deterministic installed logic', () => {
@@ -19,6 +19,32 @@ describe('Semco Guide local responses', () => {
     expect(result.chunks.length).toBeGreaterThan(0);
     expect(result.chunks.every((chunk) => chunk.retrieval === 'local')).toBe(true);
     expect(result.retrievalNotes.some((note) => note.startsWith('local:'))).toBe(true);
+    expect(result.confidence).toBe('high');
+  });
+
+  it('keeps the live substring confidence bar instead of a raw score of 10', () => {
+    expect(retrievalConfidence(0, 99)).toBe('none');
+    expect(retrievalConfidence(1, 1)).toBe('low');
+    expect(retrievalConfidence(1, 2)).toBe('high');
+    expect(retrievalConfidence(1, 4)).toBe('high');
+    expect(retrievalConfidence(1, 9)).toBe('high');
+    expect(retrievalConfidence(2, 1)).toBe('high');
+  });
+
+  it('still lists the closest documents when a match exists and no hand-written answer does', () => {
+    const text = formatLocalGroundedAnswer([{
+      id: 'local-1',
+      documentName: 'Open SIP manual - master copy v2019-3 2.pdf',
+      title: 'SIP',
+      pageNumber: 14,
+      score: 4,
+      retrieval: 'local',
+      text: 'hidden page text',
+    }]);
+
+    expect(text).toContain('Related references');
+    expect(text).toContain('p. 14');
+    expect(text).not.toContain("I don't have enough information");
   });
 
   it('uses SIP Type A Stone Soap for clean concrete instead of a universal Nu-Lift path', () => {

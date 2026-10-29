@@ -8,11 +8,11 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   Alert,
   Keyboard,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAssistant } from '@/hooks/useAssistant';
@@ -46,13 +46,31 @@ export default function AssistantScreen() {
     startNewChat,
     selectChat,
     deleteChat,
+    notSaved,
   } = useAssistant();
+  const insets = useSafeAreaInsets();
+  const [headerHeight, setHeaderHeight] = React.useState(0);
+  const [keyboardOpen, setKeyboardOpen] = React.useState(false);
+  // Android app.json uses softwareKeyboardLayoutMode "resize", so the window
+  // already shrinks and KeyboardAvoidingView must not add a second offset.
+  const keyboardVerticalOffset = headerHeight + insets.top;
   const [inputText, setInputText] = React.useState('');
   const [isChatSheetOpen, setChatSheetOpen] = React.useState(false);
   const [showLatestButton, setShowLatestButton] = React.useState(false);
   const listRef = useRef<FlatList<ConversationMessage>>(null);
   const followLatestRef = useRef(true);
   const lastContentMessageRef = useRef<string | null>(null);
+
+  React.useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
 
   React.useLayoutEffect(() => {
     followLatestRef.current = true;
@@ -130,9 +148,18 @@ export default function AssistantScreen() {
     );
   };
 
+  const inputBottomPad = Spacing.md + (keyboardOpen ? 0 : insets.bottom);
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View
+        style={styles.header}
+        testID="assistant-header"
+        onLayout={(event) => {
+          const nextHeight = event.nativeEvent.layout.height;
+          setHeaderHeight((current) => (current === nextHeight ? current : nextHeight));
+        }}
+      >
         <TouchableOpacity
           onPress={handleBack}
           style={styles.backBtn}
@@ -185,6 +212,11 @@ export default function AssistantScreen() {
         </View>
       </View>
 
+      <KeyboardAvoidingView
+        style={styles.conversation}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={keyboardVerticalOffset}
+      >
       {messages.length === 0 ? (
         <ScrollView style={styles.messagePane} contentContainerStyle={styles.emptyState} keyboardShouldPersistTaps="handled">
           <View style={styles.heroCard}>
@@ -261,13 +293,15 @@ export default function AssistantScreen() {
         </TouchableOpacity>
       )}
 
+      {notSaved ? (
+        <Text style={styles.notSaved} accessibilityLiveRegion="polite">
+          Not saved on this device
+        </Text>
+      ) : null}
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: inputBottomPad }]}>
           <TouchableOpacity
             onPress={() => {
               lightImpactHaptic();
@@ -318,6 +352,7 @@ export default function AssistantScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.appBackground },
+  conversation: { flex: 1 },
   header: {
     width: '100%',
     maxWidth: Layout.screenMaxWidth,
@@ -448,6 +483,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     borderRadius: Radius.full,
     backgroundColor: Colors.primaryMuted,
+  },
+  notSaved: {
+    width: '100%',
+    maxWidth: Layout.screenMaxWidth,
+    alignSelf: 'center',
+    color: Colors.offlineAmber,
+    fontSize: Typography.size.xs,
+    fontFamily: Fonts.medium,
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.xs,
   },
   error: {
     width: '100%',

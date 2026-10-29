@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet, SafeAreaView, TouchableOpacity, useWi
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { db, initDatabase } from '@/database/client';
-import { seedDatabase } from '@/database/seed';
 import colorsData from '@/database/seed/colors.json';
 import { colors } from '@/database/schema/colors';
 import type { Color } from '@/database/schema/colors';
@@ -104,7 +103,6 @@ export default function ColorsScreen() {
     async function loadColors() {
       try {
         await initDatabase();
-        await seedDatabase();
         const rows = await db.select().from(colors);
         if (isMounted && rows.length > 0) setAllColors(rows);
       } catch (error) {
