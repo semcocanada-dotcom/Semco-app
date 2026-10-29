@@ -4,6 +4,9 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, SectionHeader, Badge } from '@/components/ui';
 import { Colors, Fonts, Layout, Radius, Typography, Spacing } from '@/constants/theme';
+import { useTenderOwner } from '@/hooks/useTenderReviewAccess';
+import { decisionInboxHref } from '@/services/tender-review';
+import { useAuthStore } from '@/store/auth';
 
 const MORE_ACTIONS = [
   {
@@ -49,6 +52,12 @@ const MORE_ACTIONS = [
     route: '/projects',
   },
   {
+    title: 'Project board',
+    description: 'Boards shared with profiles the owner selects.',
+    icon: 'albums-outline' as const,
+    route: '/board',
+  },
+  {
     title: 'Privacy policy',
     description: 'How installer, project, and customer information is handled.',
     icon: 'lock-closed-outline' as const,
@@ -58,6 +67,20 @@ const MORE_ACTIONS = [
 
 export default function MoreScreen() {
   const router = useRouter();
+  const userId = useAuthStore((state) => state.user?.id ?? null);
+  const isOwner = useTenderOwner(userId);
+  const inboxHref = decisionInboxHref(isOwner);
+  const actions = inboxHref
+    ? [
+        ...MORE_ACTIONS,
+        {
+          title: 'Decision inbox',
+          description: 'Approve, deny, or suggest alternate packs and scout items.',
+          icon: 'checkmark-done-outline' as const,
+          route: inboxHref,
+        },
+      ]
+    : [...MORE_ACTIONS];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -74,7 +97,7 @@ export default function MoreScreen() {
         <View style={styles.section}>
           <SectionHeader title="Open" subtitle="Additional tools for field and account workflows." />
           <View style={styles.actionList}>
-            {MORE_ACTIONS.map((item) => (
+            {actions.map((item) => (
               <TouchableOpacity
                 key={item.title}
                 onPress={() => router.push(item.route as any)}
